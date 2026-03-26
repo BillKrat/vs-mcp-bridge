@@ -1,0 +1,17 @@
+using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Shell;
+
+namespace VsMcpBridge.Vsix.ToolWindows;
+
+/// <summary>
+/// Tool window that displays MCP request logs and pending approval prompts.
+/// </summary>
+[Guid("b2c3d4e5-f6a7-8901-bcde-f12345678901")]
+public sealed class LogToolWindow : ToolWindowPane
+{
+    public LogToolWindow() : base(null)
+    {
+        Caption = "VS MCP Bridge";
+        Content = new LogToolWindowControl();
+    }
+}
