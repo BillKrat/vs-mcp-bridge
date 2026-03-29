@@ -1,0 +1,217 @@
+A few concrete notes for you before you switch over:
+
+Your instinct on DI and tests is good, but the order should be:
+	•	runtime proof first
+	•	then DI seams
+	•	then tests around those seams
+
+For this repo, the first useful seams will likely be:
+	•	pipe message handling
+	•	request/response contracts
+	•	tool dispatch abstraction
+	•	VS service abstraction
+
+The easiest early tests will likely be:
+	•	shared contract serialization/deserialization
+	•	tool request validation
+	•	IPC message framing/parsing
+	•	MCP-server-side dispatch behavior with mocked VS-facing interfaces
+
+I would avoid trying to make the Visual Studio package itself deeply unit-testable in the first pass. Better to isolate the VS-dependent parts behind interfaces and test everything around them.
+
+On MEF: acceptable on the VSIX side if it fits naturally with Visual Studio composition, but I would not force MEF across the whole solution just for purity. For the out-of-process server and shared logic, plain constructor injection is usually simpler.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Noted, I'm considering the experience I gained in working with EFCorePowerTools GitHub project.   I created a WPF wizard for it and the coding was harder than it needed to be, with no ability to write unit test because of hard dependencies.   The biggest issue I had to overcome was UI thread deadlocks, particularly with WPF Wizard (as the main UI thread) clashing with background processes switching to the UI thread - something I'm seeing in this code coming out of the gate. 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+That maps exactly to the failure mode I’d expect here.
+
+What bit you in EFCorePowerTools is the same class of risk in this project: UI-owned orchestration plus background work that sometimes re-enters the UI thread in the wrong place. In a VSIX/WPF setup, that turns into deadlocks, hangs, or brittle “works on my machine” timing bugs fast.
+
+For VS MCP Bridge, I’d treat this as an architectural constraint now, not a cleanup item later.
+
+What to do with that lesson
+
+The safest rule is:
+
+keep the UI thin, and keep it out of the request pipeline as much as possible.
+
+In practice:
+	•	The tool window should display state, logs, approvals, and results.
+	•	It should not own orchestration.
+	•	The VSIX service layer should coordinate Visual Studio interactions.
+	•	Anything not requiring Visual Studio APIs should stay off the UI thread and ideally outside the WPF layer entirely.
+
+The deadlock pattern to avoid
+
+The dangerous shape is:
+	1.	background work starts
+	2.	it needs something from Visual Studio/WPF
+	3.	it switches to UI thread
+	4.	UI thread is waiting on the background task
+	5.	deadlock
+
+So in this repo, avoid all of these patterns:
+	•	.Result
+	•	.Wait()
+	•	synchronous blocking on async work
+	•	UI code calling into services that later marshal back to UI thread while the UI is blocked
+	•	background services raising callbacks that synchronously update WPF controls
+
+The design rule I’d hand to Codex later
+
+Use this rule:
+
+only the smallest possible Visual Studio-facing boundary may switch to the main thread, and only for the shortest possible duration.
+
+That means:
+	•	collect VS state on UI thread only when required
+	•	immediately copy the needed data into plain typed models
+	•	return to background processing
+	•	never carry WPF/VS objects across that boundary
+
+That one rule will save you a lot of pain.
+
+For your current codebase
+
+Given what you’re already seeing, I would bias toward these seams once runtime validation is done:
+
+1. Separate UI from services
+
+Create a service boundary like:
+	•	IVsContextService
+	•	IApprovalService
+	•	ILogService
+	•	IPipeHostService
+
+The tool window talks to interfaces, not directly to pipe/runtime code.
+
+2. Make the tool window passive
+
+The WPF window should:
+	•	bind to state
+	•	issue simple commands
+	•	render logs/approvals
+
+It should not:
+	•	manage pipe lifecycle
+	•	manage request dispatch
+	•	own threading decisions
+
+3. Isolate main-thread-only code
+
+Anything requiring Visual Studio thread affinity should be in one narrow layer, something like:
+	•	VsThreadBoundService
+	•	VsShellService
+	•	VsDocumentService
+
+That layer can explicitly switch to main thread, gather what it needs, and get out.
+
+4. Keep shared models POCO-only
+
+No WPF types, no DTE objects, no VS SDK types in shared contracts.
+
+That keeps:
+	•	serialization easy
+	•	tests easy
+	•	collaboration easier
+
+Unit-test implications
+
+Your EFCorePowerTools experience is a strong signal that you should establish tests around the non-UI pipeline first.
+
+Best early test targets here:
+	•	pipe message framing/parsing
+	•	request/response DTOs
+	•	tool dispatch
+	•	diff proposal logic
+	•	policy checks
+	•	path guardrails
+
+Avoid trying to unit test WPF behavior directly in the first pass. Instead, test the logic behind it.
+
+About DI / MEF in light of this
+
+Your reason for DI is strong here, because it helps break the exact hard dependencies that caused pain before.
+
+My recommendation:
+	•	constructor injection for shared/server/testable code
+	•	narrow VSIX-facing interfaces for Visual Studio-dependent services
+	•	MEF only where Visual Studio composition naturally benefits from it
+
+I would not let MEF become the architecture. Use it as integration glue if needed, not as the center of everything.
+
+Threading rule of thumb for this repo
+
+A good discipline for contributors would be:
+	•	default to background thread
+	•	switch to main thread only inside Visual Studio-facing service methods
+	•	never block the UI waiting for background work
+	•	never let WPF controls directly trigger deep async orchestration
+
+What this means for your next phase
+
+You’re still right to do runtime validation first.
+
+But once that’s green, your first structural improvement should probably be:
+
+move pipe lifecycle and request handling out of WPF/tool-window code and behind interfaces.
+
+That will give you:
+	•	fewer UI thread hazards
+	•	easier tests
+	•	easier contributor collaboration
+	•	less coupling
+
+
+A concise note you can hand to Codex after runtime is green
+
+:::writing{variant=“chat_message” id=“73418”}
+Important design constraint for future refactoring:
+
+This project must avoid UI-thread deadlock patterns common in VSIX/WPF code. The tool window should remain thin and passive. Move orchestration, pipe lifecycle, and request handling out of WPF code and behind interfaces.
+
+Rules:
+	•	no blocking waits on async work (.Wait(), .Result)
+	•	only switch to the Visual Studio UI thread in narrow service-layer methods that require it
+	•	copy Visual Studio/WPF state into plain typed models immediately, then continue processing off-thread
+	•	do not let shared contracts or server-side logic depend on WPF or Visual Studio SDK types
+	•	favor constructor injection for testable logic; MEF is acceptable only where it fits naturally on the VSIX side
+
+After runtime validation is green, propose the smallest refactor that improves:
+	1.	thread-safety
+	2.	testability
+	3.	separation between WPF UI, VS services, and IPC/request handling
+:::
+
+You’re reading this situation correctly. The threading issue is not incidental here; it is one of the main architectural risks.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Perfect, I'll follow your guidance.  Thanks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sounds good — you’re on a very solid path.
+
+You’ve made the right calls in the right order:
+	•	stabilize build ✔️
+	•	move to runtime validation ✔️
+	•	keep scope tight ✔️
+	•	think about threading and testability early ✔️
+
+That combination is what prevents this kind of project from turning into a fragile, hard-to-maintain extension.
+
+When you pick it back up:
+	•	stay disciplined about the checkpoint sequence
+	•	don’t let Codex “helpfully” expand scope
+	•	treat threading boundaries as a first-class concern
+
+When you get your first:
+	•	experimental instance run
+	•	tool window open
+	•	pipe connection attempt
+
+bring the output back and I’ll help you tighten the next layer without introducing unnecessary complexity.
+
+Good luck with work — we’ll pick it up cleanly from here 👍

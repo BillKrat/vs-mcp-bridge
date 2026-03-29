@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="VsMcpBridge.McpServer/VsMcpBridge.McpServer.csproj" />
   <Project Path="VsMcpBridge.Shared/VsMcpBridge.Shared.csproj" />
-  <Project Path="VsMcpBridge.Vsix/VsMcpBridge.Vsix.csproj" />
+  <Project Path="VsMcpBridge.Vsix/VsMcpBridge.Vsix.csproj" Id="53f38b92-57a3-4d74-86d0-89d72a57a5a9" />
 </Solution>

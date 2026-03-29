@@ -12,6 +12,7 @@ namespace VsMcpBridge.Vsix;
 /// </summary>
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 [Guid(PackageGuidString)]
+[ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [ProvideMenuResource("Menus.ctmenu", 1)]
 [ProvideToolWindow(typeof(ToolWindows.LogToolWindow))]
 public sealed class VsMcpBridgePackage : AsyncPackage
@@ -22,6 +23,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
+        await Commands.ShowLogToolWindowCommand.InitializeAsync(this);
         await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
         var vsService = new Services.VsService(this);

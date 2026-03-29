@@ -111,41 +111,43 @@ public sealed class VsService
     public async Task<GetErrorListResponse> GetErrorListAsync()
     {
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-        var errorList = await _package.GetServiceAsync(typeof(SVsErrorList)) as IVsTaskList2;
+        var dte = await GetDteAsync();
         var diagnostics = new List<DiagnosticItem>();
 
-        if (errorList != null)
+        try
         {
-            errorList.EnumTaskItems(out var enumItems);
-            var items = new IVsTaskItem[1];
-
-            while (enumItems.Next(1, items, out var fetched) == 0 && fetched == 1)
+            dynamic? errorItems = dte.ToolWindows?.ErrorList?.ErrorItems;
+            if (errorItems != null)
             {
-                var item = items[0];
-                item.get_Text(out var text);
-                item.get_Document(out var file);
-                item.get_Line(out var line);
-                item.get_Column(out var col);
-                item.get_Category(out var category);
-
-                diagnostics.Add(new DiagnosticItem
+                int count = errorItems.Count;
+                for (int index = 1; index <= count; index++)
                 {
-                    Severity = CategoryToSeverity(category),
-                    Description = text ?? string.Empty,
-                    File = file ?? string.Empty,
-                    Line = line + 1,
-                    Column = col + 1
-                });
+                    dynamic item = errorItems.Item(index);
+                    diagnostics.Add(new DiagnosticItem
+                    {
+                        Severity = ErrorLevelToSeverity(item.ErrorLevel),
+                        Code = string.Empty,
+                        Description = item.Description ?? string.Empty,
+                        File = item.FileName ?? string.Empty,
+                        Line = item.Line,
+                        Column = 0,
+                        Project = item.Project ?? string.Empty
+                    });
+                }
             }
+        }
+        catch
+        {
+            return new GetErrorListResponse { Success = false, ErrorMessage = "Failed to read the Visual Studio Error List." };
         }
 
         return new GetErrorListResponse { Success = true, Diagnostics = diagnostics };
     }
 
-    private static string CategoryToSeverity(VSTASKCATEGORY category) => category switch
+    private static string ErrorLevelToSeverity(vsBuildErrorLevel level) => level switch
     {
-        VSTASKCATEGORY.CAT_BUILDCOMPILE => "Error",
-        VSTASKCATEGORY.CAT_CODESENSE => "Warning",
+        vsBuildErrorLevel.vsBuildErrorLevelHigh => "Error",
+        vsBuildErrorLevel.vsBuildErrorLevelMedium => "Warning",
         _ => "Message"
     };
 
