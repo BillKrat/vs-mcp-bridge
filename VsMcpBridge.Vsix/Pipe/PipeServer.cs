@@ -25,6 +25,7 @@ public sealed class PipeServer : IPipeServer
     private readonly object _sync = new();
     private CancellationTokenSource? _cts;
     private Thread? _listenThread;
+    private int _hasHandledFirstRequest;
 
     public PipeServer(IVsService vsService, IBridgeLogger logger)
     {
@@ -42,6 +43,7 @@ public sealed class PipeServer : IPipeServer
                 return;
             }
 
+            _logger.LogVerbose("Starting pipe server listener thread.");
             _cts = new CancellationTokenSource();
             _listenThread = new Thread(() => ListenLoop(_cts.Token))
             {
@@ -80,6 +82,28 @@ public sealed class PipeServer : IPipeServer
         {
             cts.Dispose();
         }
+    }
+
+    internal async Task<string?> ProcessRequestAsync(string? requestJson)
+    {
+        if (string.IsNullOrWhiteSpace(requestJson))
+        {
+            _logger.LogWarning("Received an empty pipe request.");
+            return null;
+        }
+
+        if (Interlocked.CompareExchange(ref _hasHandledFirstRequest, 1, 0) == 0)
+            _logger.LogVerbose("Handling first bridge request.");
+
+        var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
+        if (envelope == null)
+        {
+            _logger.LogWarning("Received a pipe request that could not be deserialized.");
+            return null;
+        }
+
+        _logger.LogInformation($"Dispatching pipe command '{envelope.Command}'.");
+        return await DispatchAsync(envelope);
     }
 
     private void ListenLoop(CancellationToken ct)
@@ -125,21 +149,10 @@ public sealed class PipeServer : IPipeServer
             using var writer = new StreamWriter(pipe, Encoding.UTF8, bufferSize: 1024, leaveOpen: true) { AutoFlush = true };
 
             var requestJson = await reader.ReadLineAsync();
-            if (string.IsNullOrWhiteSpace(requestJson))
-            {
-                _logger.LogWarning("Received an empty pipe request.");
+            var responseJson = await ProcessRequestAsync(requestJson);
+            if (responseJson == null)
                 return;
-            }
 
-            var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson, JsonOptions);
-            if (envelope == null)
-            {
-                _logger.LogWarning("Received a pipe request that could not be deserialized.");
-                return;
-            }
-
-            _logger.LogInformation($"Dispatching pipe command '{envelope.Command}'.");
-            var responseJson = await DispatchAsync(envelope);
             await writer.WriteLineAsync(responseJson);
         }
         catch (OperationCanceledException)
@@ -195,3 +208,4 @@ public sealed class PipeServer : IPipeServer
 
     private sealed class VsResponseBaseUnknown : VsResponseBase { }
 }
+

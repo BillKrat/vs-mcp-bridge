@@ -1,5 +1,6 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
+using VsMcpBridge.Vsix.Logging;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 
@@ -11,7 +12,12 @@ public sealed class LogToolWindow : ToolWindowPane
 {
     public LogToolWindow() : base(null)
     {
+        var logger = new ActivityLogBridgeLogger();
+        logger.LogVerbose("Creating VS MCP Bridge tool window.");
+
         Caption = "VS MCP Bridge";
         Content = new LogToolWindowControl();
+
+        logger.LogInformation("VS MCP Bridge tool window created.");
     }
 }

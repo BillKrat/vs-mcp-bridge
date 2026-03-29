@@ -23,6 +23,7 @@ public sealed class VsService : IVsService
     {
         _package = package;
         _logger = logger;
+        _logger.LogVerbose("Bridge service startup complete.");
     }
 
     public async Task<GetActiveDocumentResponse> GetActiveDocumentAsync()

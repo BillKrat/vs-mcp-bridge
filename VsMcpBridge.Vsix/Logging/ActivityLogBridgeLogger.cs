@@ -7,6 +7,11 @@ public sealed class ActivityLogBridgeLogger : IBridgeLogger
 {
     private const string Source = nameof(VsMcpBridgePackage);
 
+    public void LogVerbose(string message)
+    {
+        ActivityLog.TryLogInformation(Source, $"[Verbose] {message}");
+    }
+
     public void LogInformation(string message)
     {
         ActivityLog.TryLogInformation(Source, message);

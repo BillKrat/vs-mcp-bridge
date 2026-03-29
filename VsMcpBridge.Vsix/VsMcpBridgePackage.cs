@@ -4,9 +4,9 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using VsMcpBridge.Vsix.Composition;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Pipe;
-using VsMcpBridge.Vsix.Services;
 using Task = System.Threading.Tasks.Task;
 
 namespace VsMcpBridge.Vsix;
@@ -28,24 +28,26 @@ public sealed class VsMcpBridgePackage : AsyncPackage
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
+        var bootstrapLogger = new ActivityLogBridgeLogger();
+        bootstrapLogger.LogVerbose("Package initialization starting.");
+
         await Commands.ShowLogToolWindowCommand.InitializeAsync(this);
         await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
+        bootstrapLogger.LogVerbose("Building VS MCP Bridge service collection.");
         _serviceProvider = new ServiceCollection()
-            .AddSingleton<AsyncPackage>(this)
-            .AddSingleton(this)
-            .AddSingleton<IBridgeLogger, ActivityLogBridgeLogger>()
-            .AddSingleton<IVsService, VsService>()
-            .AddSingleton<IPipeServer, PipeServer>()
+            .AddVsMcpBridgeServices(this)
             .BuildServiceProvider();
 
         var logger = _serviceProvider.GetRequiredService<IBridgeLogger>();
         logger.LogInformation("Initializing VS MCP Bridge package.");
+        logger.LogVerbose("Starting bridge services.");
 
         _pipeServer = _serviceProvider.GetRequiredService<IPipeServer>();
         _pipeServer.Start();
 
         logger.LogInformation("VS MCP Bridge package initialized.");
+        logger.LogVerbose("Package initialization completed.");
     }
 
     protected override void Dispose(bool disposing)
