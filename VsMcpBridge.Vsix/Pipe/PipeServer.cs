@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Services;
 
@@ -22,15 +23,17 @@ public sealed class PipeServer : IPipeServer
 
     private readonly IVsService _vsService;
     private readonly IBridgeLogger _logger;
+    private readonly IUnhandledExceptionSink _exceptionSink;
     private readonly object _sync = new();
     private CancellationTokenSource? _cts;
     private Thread? _listenThread;
     private int _hasHandledFirstRequest;
 
-    public PipeServer(IVsService vsService, IBridgeLogger logger)
+    public PipeServer(IVsService vsService, IBridgeLogger logger, IUnhandledExceptionSink exceptionSink)
     {
         _vsService = vsService;
         _logger = logger;
+        _exceptionSink = exceptionSink;
     }
 
     public void Start()
@@ -137,6 +140,7 @@ public sealed class PipeServer : IPipeServer
                     break;
 
                 _logger.LogError("Pipe server listen loop failed.", ex);
+                _exceptionSink.Save("PipeServer.ListenLoop", ex);
             }
         }
     }
@@ -162,6 +166,7 @@ public sealed class PipeServer : IPipeServer
         catch (Exception ex)
         {
             _logger.LogError("Pipe connection handling failed.", ex);
+            _exceptionSink.Save("PipeServer.HandleConnectionAsync", ex);
         }
         finally
         {
@@ -173,6 +178,7 @@ public sealed class PipeServer : IPipeServer
             catch (Exception ex)
             {
                 _logger.LogError("Failed to disconnect pipe cleanly.", ex);
+                _exceptionSink.Save("PipeServer.Disconnect", ex);
             }
 
             pipe.Dispose();
@@ -208,4 +214,3 @@ public sealed class PipeServer : IPipeServer
 
     private sealed class VsResponseBaseUnknown : VsResponseBase { }
 }
-

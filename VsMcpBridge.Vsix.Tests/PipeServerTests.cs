@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
@@ -17,7 +18,7 @@ public sealed class PipeServerTests
     {
         var logger = new RecordingBridgeLogger();
         var service = new StubVsService();
-        var server = new PipeServer(service, logger);
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
         var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.GetActiveDocument, Payload = string.Empty }, JsonOptions);
 
         var responseJson = await server.ProcessRequestAsync(requestJson);
@@ -36,7 +37,7 @@ public sealed class PipeServerTests
     {
         var logger = new RecordingBridgeLogger();
         var service = new StubVsService();
-        var server = new PipeServer(service, logger);
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
         var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.GetSelectedText, Payload = string.Empty }, JsonOptions);
 
         await server.ProcessRequestAsync(requestJson);
@@ -50,7 +51,7 @@ public sealed class PipeServerTests
     public async Task ProcessRequestAsync_returns_null_for_empty_request_and_logs_warning()
     {
         var logger = new RecordingBridgeLogger();
-        var server = new PipeServer(new StubVsService(), logger);
+        var server = new PipeServer(new StubVsService(), logger, new RecordingUnhandledExceptionSink());
 
         var responseJson = await server.ProcessRequestAsync(string.Empty);
 
@@ -62,7 +63,7 @@ public sealed class PipeServerTests
     public async Task ProcessRequestAsync_returns_error_response_for_unknown_command()
     {
         var logger = new RecordingBridgeLogger();
-        var server = new PipeServer(new StubVsService(), logger);
+        var server = new PipeServer(new StubVsService(), logger, new RecordingUnhandledExceptionSink());
         var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = "unknown_command", Payload = string.Empty }, JsonOptions);
 
         var responseJson = await server.ProcessRequestAsync(requestJson);
@@ -77,7 +78,7 @@ public sealed class PipeServerTests
     {
         var logger = new RecordingBridgeLogger();
         var service = new StubVsService();
-        var server = new PipeServer(service, logger);
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
         var payload = JsonSerializer.Serialize(new ProposeTextEditRequest
         {
             FilePath = "sample.cs",
@@ -93,5 +94,19 @@ public sealed class PipeServerTests
         Assert.True(response!.Success);
         Assert.Equal(1, service.ProposeTextEditCalls);
         Assert.Contains("sample.cs", response.Diff);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsync_propagates_dispatch_failures_without_writing_to_exception_sink()
+    {
+        var logger = new RecordingBridgeLogger();
+        var exceptionSink = new RecordingUnhandledExceptionSink();
+        var server = new PipeServer(new ThrowingVsService(), logger, exceptionSink);
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.GetActiveDocument, Payload = string.Empty }, JsonOptions);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => server.ProcessRequestAsync(requestJson));
+
+        Assert.Equal("Boom from GetActiveDocumentAsync.", exception.Message);
+        Assert.Empty(exceptionSink.Entries);
     }
 }

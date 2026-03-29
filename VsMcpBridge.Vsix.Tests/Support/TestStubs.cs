@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Services;
 
 namespace VsMcpBridge.Vsix.Tests.Support;
@@ -85,5 +87,24 @@ internal sealed class StubVsService : IVsService
             FilePath = filePath,
             Diff = $"--- a/{filePath}\n+++ b/{filePath}\n-{originalText}\n+{proposedText}\n"
         });
+    }
+}
+
+internal sealed class ThrowingVsService : IVsService
+{
+    public Task<GetActiveDocumentResponse> GetActiveDocumentAsync() => throw new InvalidOperationException("Boom from GetActiveDocumentAsync.");
+    public Task<GetSelectedTextResponse> GetSelectedTextAsync() => throw new InvalidOperationException("Boom from GetSelectedTextAsync.");
+    public Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync() => throw new InvalidOperationException("Boom from ListSolutionProjectsAsync.");
+    public Task<GetErrorListResponse> GetErrorListAsync() => throw new InvalidOperationException("Boom from GetErrorListAsync.");
+    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText) => throw new InvalidOperationException("Boom from ProposeTextEditAsync.");
+}
+
+internal sealed class RecordingUnhandledExceptionSink : IUnhandledExceptionSink
+{
+    public List<(string Source, Exception Exception)> Entries { get; } = new();
+
+    public void Save(string source, Exception exception)
+    {
+        Entries.Add((source, exception));
     }
 }

@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Vsix.Composition;
+using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Pipe;
 using VsMcpBridge.Vsix.Services;
@@ -21,9 +22,11 @@ public sealed class BridgeServiceCollectionExtensionsTests
 
         Assert.Same(package, provider.GetRequiredService<Microsoft.VisualStudio.Shell.AsyncPackage>());
         Assert.IsType<ActivityLogBridgeLogger>(provider.GetRequiredService<IBridgeLogger>());
+        Assert.IsType<FileUnhandledExceptionSink>(provider.GetRequiredService<IUnhandledExceptionSink>());
         Assert.IsType<VsService>(provider.GetRequiredService<IVsService>());
         Assert.IsType<PipeServer>(provider.GetRequiredService<IPipeServer>());
         Assert.Same(provider.GetRequiredService<IVsService>(), provider.GetRequiredService<IVsService>());
         Assert.Same(provider.GetRequiredService<IPipeServer>(), provider.GetRequiredService<IPipeServer>());
+        Assert.Same(provider.GetRequiredService<IUnhandledExceptionSink>(), provider.GetRequiredService<IUnhandledExceptionSink>());
     }
 }
