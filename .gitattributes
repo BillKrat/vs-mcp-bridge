@@ -1,0 +1,26 @@
+* text=auto
+
+*.sln text eol=crlf
+*.slnx text eol=crlf
+*.csproj text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.vsct text eol=crlf
+*.vsixmanifest text eol=crlf
+*.config text eol=crlf
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+
+*.png binary
+*.ico binary
+*.dll binary
+*.pdb binary
+*.vsix binary
+*.cto binary
+*.cache binary
+*.resources binary
+*.mpack binary
+*.bin binary
