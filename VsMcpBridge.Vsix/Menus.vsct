@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
+
+  <Commands package="guidVsMcpBridgePackage">
+    <Groups>
+      <Group guid="guidVsMcpBridgeCmdSet" id="VsMcpBridgeGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_VIEW" />
+      </Group>
+    </Groups>
+
+    <Buttons>
+      <Button guid="guidVsMcpBridgeCmdSet" id="ShowLogToolWindowCommand" priority="0x0100" type="Button">
+        <Parent guid="guidVsMcpBridgeCmdSet" id="VsMcpBridgeGroup" />
+        <Strings>
+          <ButtonText>VS MCP Bridge</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="guidVsMcpBridgePackage" value="{a1b2c3d4-e5f6-7890-abcd-ef1234567890}" />
+    <GuidSymbol name="guidVsMcpBridgeCmdSet" value="{f3d8d4b3-6a41-4bc6-8fdd-89bf4cbe0b6b}">
+      <IDSymbol name="VsMcpBridgeGroup" value="0x1020" />
+      <IDSymbol name="ShowLogToolWindowCommand" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>
+

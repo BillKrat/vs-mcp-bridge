@@ -1,4 +1,6 @@
+﻿using System;
 using System.Windows.Controls;
+using Microsoft.VisualStudio.Shell;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 
@@ -16,8 +18,15 @@ public partial class LogToolWindowControl : UserControl
     /// <summary>Appends a line to the log text box.</summary>
     public void AppendLog(string message)
     {
-        Dispatcher.Invoke(() =>
+        if (Dispatcher.CheckAccess())
         {
+            LogTextBox.Text += $"\n{message}";
+            return;
+        }
+
+        var updateTask = ThreadHelper.JoinableTaskFactory.RunAsync(async delegate
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             LogTextBox.Text += $"\n{message}";
         });
     }
@@ -26,31 +35,43 @@ public partial class LogToolWindowControl : UserControl
     /// Shows an approval prompt for a pending text edit diff.
     /// The caller provides callbacks for the approve and reject actions.
     /// </summary>
-    public void ShowApprovalPrompt(string description, System.Action onApprove, System.Action onReject)
+    public void ShowApprovalPrompt(string description, Action onApprove, Action onReject)
     {
-        Dispatcher.Invoke(() =>
+        if (Dispatcher.CheckAccess())
         {
-            PendingLabel.Text = description;
-            ApproveButton.IsEnabled = true;
-            RejectButton.IsEnabled = true;
+            ApplyApprovalPrompt(description, onApprove, onReject);
+            return;
+        }
 
-            ApproveButton.Tag = onApprove;
-            RejectButton.Tag = onReject;
+        var updateTask = ThreadHelper.JoinableTaskFactory.RunAsync(async delegate
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            ApplyApprovalPrompt(description, onApprove, onReject);
         });
     }
 
     private void ApproveButton_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        var action = ApproveButton.Tag as System.Action;
+        var action = ApproveButton.Tag as Action;
         ClearApproval();
         action?.Invoke();
     }
 
     private void RejectButton_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        var action = RejectButton.Tag as System.Action;
+        var action = RejectButton.Tag as Action;
         ClearApproval();
         action?.Invoke();
+    }
+
+    private void ApplyApprovalPrompt(string description, Action onApprove, Action onReject)
+    {
+        PendingLabel.Text = description;
+        ApproveButton.IsEnabled = true;
+        RejectButton.IsEnabled = true;
+
+        ApproveButton.Tag = onApprove;
+        RejectButton.Tag = onReject;
     }
 
     private void ClearApproval()
