@@ -1,86 +1,117 @@
-# vs-mcp-bridge
+# VS MCP Bridge
 
-VS MCP Bridge — a minimal C# solution that exposes Visual Studio IDE state to an AI model via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/).
+`vs-mcp-bridge` is a local integration that exposes selected Visual Studio IDE state to AI tooling through the Model Context Protocol (MCP).
+
+The solution is split into two runtime processes plus a shared contract:
+
+- `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
+- `VsMcpBridge.Vsix`: a Visual Studio extension that runs inside the IDE
+- `VsMcpBridge.Shared`: shared request/response and pipe contract models
+- `VsMcpBridge.Vsix.Tests`: unit tests for the decoupled VSIX services and infrastructure
+
+## What It Does Today
+
+Current supported capabilities:
+
+- read the active Visual Studio document
+- read the current text selection
+- list solution projects
+- read the Visual Studio Error List
+- propose text edits as diffs without directly writing files
+
+The bridge is intentionally conservative at this stage:
+
+- Visual Studio API access stays inside the VSIX
+- the MCP server only talks to the VSIX over a local named pipe
+- edits are proposed, not automatically applied
+- diagnostics and unhandled exception capture are built in
 
 ## Solution Structure
 
-```
+```text
 VsMcpBridge.slnx
-├── VsMcpBridge.Shared/          # netstandard2.0 — strongly-typed request/response models
-│   └── Models/
-│       ├── PipeMessage.cs       # Named-pipe envelope & well-known command names
-│       ├── VsRequests.cs        # One class per VS operation request
-│       └── VsResponses.cs       # One class per VS operation response
-│
-├── VsMcpBridge.McpServer/       # net8.0 console app — local MCP server (stdio)
-│   ├── Program.cs               # Host builder; registers MCP + pipe client
-│   ├── Pipe/
-│   │   └── PipeClient.cs        # Named-pipe client → VSIX
-│   └── Tools/
-│       └── VsTools.cs           # MCP tool definitions (5 tools)
-│
-└── VsMcpBridge.Vsix/            # net472 Visual Studio extension (Windows/VS only)
-    ├── VsMcpBridgePackage.cs    # AsyncPackage entry point
-    ├── source.extension.vsixmanifest
-    ├── Pipe/
-    │   └── PipeServer.cs        # Named-pipe server; dispatches to VsService
-    ├── Services/
-    │   └── VsService.cs         # DTE/error-list wrappers; diff generation
-    └── ToolWindows/
-        ├── LogToolWindow.cs          # Tool-window pane
-        ├── LogToolWindowControl.xaml # WPF layout (log + approve/reject bar)
-        └── LogToolWindowControl.xaml.cs
+|- VsMcpBridge.Shared/       shared contract models
+|- VsMcpBridge.McpServer/    MCP stdio host and named-pipe client
+|- VsMcpBridge.Vsix/         Visual Studio extension and named-pipe server
+`- VsMcpBridge.Vsix.Tests/   unit tests for VSIX infrastructure and logic
 ```
 
 ## Architecture
 
-```
-AI model (Codex / Claude / …)
-      │  MCP over stdio
-      ▼
-VsMcpBridge.McpServer   (console app)
-      │  JSON over named pipe "VsMcpBridge"
-      ▼
-VsMcpBridge.Vsix        (Visual Studio extension)
-      │  DTE / VS SDK APIs
-      ▼
+Runtime flow:
+
+```text
+AI client
+  -> MCP over stdio
+VsMcpBridge.McpServer
+  -> JSON over named pipe "VsMcpBridge"
+VsMcpBridge.Vsix
+  -> Visual Studio SDK / DTE APIs
 Visual Studio IDE
 ```
 
-**Responsibilities:**
+For the detailed living technical reference, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
 
-| Layer | Responsibility |
-|-------|----------------|
-| McpServer | Receives MCP tool calls, validates inputs, forwards to VSIX via pipe |
-| VSIX | Owns all VS interactions; only applies edits after user approval |
-| Shared | Strongly-typed models shared by both layers |
+That document is the best place to understand:
 
-## MCP Tools
+- current architecture and control flow
+- DI, diagnostics, and exception handling strategy
+- testing posture
+- known limitations and architectural gaps
+- roadmap recommendations and future capabilities
 
-| Tool | Description |
-|------|-------------|
-| `vs_get_active_document` | File path, language, and full text of the active editor |
-| `vs_get_selected_text` | Currently selected text |
-| `vs_list_solution_projects` | All projects in the open solution |
-| `vs_get_error_list` | Errors, warnings, and messages from the Error List |
-| `vs_propose_text_edit` | Returns a unified diff — **does not write files** |
+## Build
 
-## Constraints (by design)
+### MCP Server And Shared
 
-- No file writes — all edits are proposed as diffs; the user approves in the VSIX tool window.
-- No shell execution.
-- No network calls beyond the MCP stdio transport.
-- No autonomous/agent loops.
-
-## Building
-
-**McpServer + Shared** (cross-platform):
-```bash
-dotnet build VsMcpBridge.Shared/VsMcpBridge.Shared.csproj
-dotnet build VsMcpBridge.McpServer/VsMcpBridge.McpServer.csproj
+```powershell
+dotnet build .\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj
+dotnet build .\VsMcpBridge.McpServer\VsMcpBridge.McpServer.csproj
 ```
 
-**VSIX** (Windows with Visual Studio 2022 + VSSDK workload):
+### VSIX
+
+The VSIX project targets Visual Studio 2022 on Windows and requires the Visual Studio SDK tooling/workload.
+
+From a Developer PowerShell or Visual Studio MSBuild environment:
+
+```powershell
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe' .\VsMcpBridge.Vsix\VsMcpBridge.Vsix.csproj /restore /t:Build /p:Configuration=Debug
 ```
-Open VsMcpBridge.slnx in Visual Studio 2022 and build VsMcpBridge.Vsix.
+
+You can also open `VsMcpBridge.slnx` in Visual Studio and build `VsMcpBridge.Vsix` there.
+
+## Test
+
+```powershell
+dotnet test .\VsMcpBridge.Vsix.Tests\VsMcpBridge.Vsix.Tests.csproj
 ```
+
+## Current Status
+
+The repository is now in a solid early-platform state:
+
+- VSIX build, packaging, and install have been verified
+- the extension loads in the Experimental instance
+- the bridge uses DI and interface-based services
+- verbose diagnostics are in place
+- unhandled exceptions are persisted through a swappable sink abstraction
+- unit tests cover the current decoupled logic
+
+## Next Steps
+
+The most important next capability is completing the approval-and-apply workflow for proposed edits.
+
+Other strong candidates are:
+
+- bridge health and capabilities reporting
+- request correlation and protocol versioning
+- richer Visual Studio query tools
+- SQLite-backed persistence for exception and approval history
+
+## Documentation Guidance
+
+Use these docs together:
+
+- `README.md`: quick orientation and build/test entry point
+- `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
