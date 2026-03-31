@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Vsix.MvpVm;
-using VsMcpBridge.Vsix.ToolWindows;
 
 namespace VsMcpBridge.Vsix.Composition
 {
@@ -10,10 +9,8 @@ namespace VsMcpBridge.Vsix.Composition
         {
             services.AddSingleton<ILogToolWindowPresenter, LogToolWindowPresenter>();
             services.AddSingleton<ILogToolWindowViewModel, LogToolWindowViewModel>();
-            services.AddSingleton<ILogToolWindowControl, LogToolWindowControl>();
 
             return services;
         }
-
     }
 }

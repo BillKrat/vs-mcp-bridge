@@ -26,6 +26,17 @@ The bridge is intentionally conservative at this stage:
 - edits are proposed, not automatically applied
 - diagnostics and unhandled exception capture are built in
 
+The VSIX also includes a WPF tool window shell for bridge status and future approval UX:
+
+- the view is now a passive WPF control
+- tool window state is exposed through a viewmodel
+- UI orchestration lives in a presenter using an MVPVM-style split
+- bindings and commands use `CommunityToolkit.Mvvm`
+
+Current limitation:
+
+- the tool window architecture is in place, but runtime bridge events are not yet routed into the presenter end-to-end
+
 ## Solution Structure
 
 ```text
@@ -72,6 +83,7 @@ dotnet build .\VsMcpBridge.McpServer\VsMcpBridge.McpServer.csproj
 ### VSIX
 
 The VSIX project targets Visual Studio 2022 on Windows and requires the Visual Studio SDK tooling/workload.
+The project also references `CommunityToolkit.Mvvm` for tool window bindings and commands.
 
 From a Developer PowerShell or Visual Studio MSBuild environment:
 
@@ -94,13 +106,14 @@ The repository is now in a solid early-platform state:
 - VSIX build, packaging, and install have been verified
 - the extension loads in the Experimental instance
 - the bridge uses DI and interface-based services
+- the tool window now uses a passive view plus presenter/viewmodel split
 - verbose diagnostics are in place
 - unhandled exceptions are persisted through a swappable sink abstraction
 - unit tests cover the current decoupled logic
 
 ## Next Steps
 
-The most important next capability is completing the approval-and-apply workflow for proposed edits.
+The most important next capability is wiring the edit proposal and approval flow into the tool window presenter, then completing the approval-and-apply workflow for proposed edits.
 
 Other strong candidates are:
 

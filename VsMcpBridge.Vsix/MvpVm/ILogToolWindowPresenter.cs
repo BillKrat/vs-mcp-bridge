@@ -1,10 +1,14 @@
-﻿namespace VsMcpBridge.Vsix.MvpVm
+using System;
+
+namespace VsMcpBridge.Vsix.MvpVm
 {
     internal interface ILogToolWindowPresenter
     {
-        public ILogToolWindowControl LogToolWindowControl { get; set; }
-        public ILogToolWindowViewModel LogToolWindowViewModel { get; set; }
+        ILogToolWindowControl LogToolWindowControl { get; set; }
+        ILogToolWindowViewModel LogToolWindowViewModel { get; set; }
 
         void Initialize();
+        void AppendLog(string message);
+        void ShowApprovalPrompt(string description, Action onApprove, Action onReject);
     }
 }
