@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.Windows.Controls;
+using VsMcpBridge.Vsix.MvpVm;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 
@@ -8,11 +9,12 @@ namespace VsMcpBridge.Vsix.ToolWindows;
 /// Code-behind for <see cref="LogToolWindowControl"/>.
 /// Provides methods to append log entries and surface pending approvals.
 /// </summary>
-public partial class LogToolWindowControl : UserControl
+public partial class LogToolWindowControl : UserControl, ILogToolWindowControl
 {
     public LogToolWindowControl()
     {
         InitializeComponent();
+        this.DataContext = this;
     }
 
     /// <summary>Appends a line to the log text box.</summary>

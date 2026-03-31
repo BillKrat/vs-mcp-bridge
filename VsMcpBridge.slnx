@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/SolutionFolder/">
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/SolutionFolder/Docs/">
+    <File Path="docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md" />
+  </Folder>
   <Project Path="VsMcpBridge.McpServer/VsMcpBridge.McpServer.csproj" />
   <Project Path="VsMcpBridge.Shared/VsMcpBridge.Shared.csproj" />
   <Project Path="VsMcpBridge.Vsix.Tests/VsMcpBridge.Vsix.Tests.csproj" />

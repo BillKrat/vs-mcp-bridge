@@ -4,9 +4,7 @@
     <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
-
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -34,7 +32,6 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -44,7 +41,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -53,14 +49,20 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="Commands\ShowLogToolWindowCommand.cs" />
+    <Compile Include="Composition\MvpVmServiceExtensions.cs" />
     <Compile Include="Composition\BridgeServiceCollectionExtensions.cs" />
+    <Compile Include="Composition\ServiceProviderExtensions.cs" />
     <Compile Include="Diagnostics\FileUnhandledExceptionSink.cs" />
     <Compile Include="Diagnostics\IUnhandledExceptionSink.cs" />
     <Compile Include="Logging\ActivityLogBridgeLogger.cs" />
     <Compile Include="Logging\IBridgeLogger.cs" />
+    <Compile Include="MvpVm\ILogToolWindowControl.cs" />
+    <Compile Include="MvpVm\ILogToolWindowPresenter.cs" />
+    <Compile Include="MvpVm\ILogToolWindowViewModel.cs" />
+    <Compile Include="MvpVm\LogToolWindowPresenter.cs" />
+    <Compile Include="MvpVm\LogToolWindowViewModel.cs" />
     <Compile Include="Pipe\IPipeServer.cs" />
     <Compile Include="Pipe\PipeServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -72,26 +74,22 @@
     </Compile>
     <Compile Include="VsMcpBridgePackage.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Page Include="ToolWindows\LogToolWindowControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-
   <ItemGroup>
     <VSCTCompile Include="Menus.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
   </ItemGroup>
-
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
@@ -105,21 +103,18 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj">
       <Project>{F2A8D317-241C-4494-BF87-3D8E485C1943}</Project>
       <Name>VsMcpBridge.Shared</Name>
     </ProjectReference>
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.31902.203" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
-
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
 </Project>

@@ -29,6 +29,9 @@ public sealed class VsMcpBridgePackage : AsyncPackage
     private IUnhandledExceptionSink? _exceptionSink;
     private IBridgeLogger? _logger;
 
+    public IBridgeLogger Logger { get { return _logger!; } }
+    public Microsoft.Extensions.DependencyInjection.ServiceProvider ServiceProvider { get { return _serviceProvider!; } }
+
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
         var bootstrapLogger = new ActivityLogBridgeLogger();
@@ -42,6 +45,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage
             bootstrapLogger.LogVerbose("Building VS MCP Bridge service collection.");
             _serviceProvider = new ServiceCollection()
                 .AddVsMcpBridgeServices(this)
+                .AddMvpVmServices()
                 .BuildServiceProvider();
 
             _logger = _serviceProvider.GetRequiredService<IBridgeLogger>();
