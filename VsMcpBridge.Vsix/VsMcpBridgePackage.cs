@@ -1,9 +1,9 @@
-using System;
-using System.Runtime.InteropServices;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using VsMcpBridge.Vsix.Composition;
 using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;

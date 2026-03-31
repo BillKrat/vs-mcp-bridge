@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using EnvDTE;
+﻿using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Vsix.Logging;
 using Task = System.Threading.Tasks.Task;

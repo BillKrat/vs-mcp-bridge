@@ -1,8 +1,8 @@
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Services;

@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.Windows.Controls;
-using Microsoft.VisualStudio.Shell;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 
