@@ -22,6 +22,7 @@ Current topology:
 - `VsMcpBridge.McpServer` is a local MCP server running over stdio
 - `VsMcpBridge.Vsix` is a Visual Studio extension running inside the IDE
 - `VsMcpBridge.Shared` contains shared contracts, abstractions, diagnostics plumbing, pipe dispatch, and tool-window orchestration types
+- `VsMcpBridge.Shared.Wpf` contains the reusable WPF tool-window views
 - `VsMcpBridge.Shared.Tests` covers shared behavior
 - `VsMcpBridge.Vsix.Tests` covers VSIX-specific composition and service logic
 
@@ -29,7 +30,7 @@ The design is intentionally conservative:
 
 - the MCP side does not directly touch Visual Studio APIs
 - the VSIX side owns all IDE interaction
-- text edits are proposed as diffs instead of being written directly to disk
+- text edits are proposed as diffs and only applied after explicit approval in the tool window
 - communication is local-only over a named pipe
 
 The project is in a good early-platform state:
@@ -39,9 +40,10 @@ The project is in a good early-platform state:
 - diagnostics exist at the package, tool window, service, pipe, and first-request levels
 - unhandled exception persistence exists through a swappable sink abstraction
 - shared bridge infrastructure is no longer coupled to the VSIX project
-- unit coverage exists for DI registration, pipe dispatch, presenter/viewmodel behavior, diff generation, and exception persistence
+- the approval workflow now covers proposal creation, pending approval, reject, approve, apply, and failure states
+- unit coverage exists for DI registration, pipe dispatch, presenter/viewmodel behavior, approval workflow behavior, diff generation, and exception persistence
 
-The largest remaining product gap is still approval-and-apply for proposed edits.
+The largest remaining product gap is a robust machine-applicable edit model that preserves exact file formatting and line endings when approved edits are applied.
 
 ## Solution Layout
 
@@ -64,9 +66,12 @@ Current contents include:
 - `IThreadHelper`
 - `IVsService`
 - `IPipeServer`
+- `IApprovalWorkflowService`
+- `IEditApplier`
 - tool-window interfaces
 - `PipeServer`
 - `FileUnhandledExceptionSink`
+- `InMemoryApprovalWorkflowService`
 - `LogToolWindowPresenter`
 - `LogToolWindowViewModel`
 - DI extensions for shared presenter/viewmodel services
@@ -74,6 +79,20 @@ Current contents include:
 Important note:
 
 - the shared project still contains behavior that conceptually serves the Visual Studio host, but it no longer requires direct VSIX project references
+
+### `VsMcpBridge.Shared.Wpf`
+
+Target: `.NET Framework 4.7.2`
+
+Purpose:
+
+- hosts reusable WPF views that can stay outside the VSIX assembly
+- keeps the view passive while presenter/viewmodel logic remains in the shared layer
+
+Primary files:
+
+- `Views/LogToolWindowControl.xaml`
+- `Views/LogToolWindowControl.xaml.cs`
 
 ### `VsMcpBridge.Shared.Tests`
 
@@ -123,12 +142,11 @@ Primary files:
 - `VsMcpBridgePackage.cs`
 - `Composition/BridgeServiceCollectionExtensions.cs`
 - `Services/VsService.cs`
+- `Services/VsixEditApplier.cs`
 - `Services/ThreadHelperAdapter.cs`
 - `Logging/*`
 - `Commands/ShowLogToolWindowCommand.cs`
 - `ToolWindows/LogToolWindow.cs`
-- `ToolWindows/LogToolWindowControl.xaml`
-- `ToolWindows/LogToolWindowControl.xaml.cs`
 
 ### `VsMcpBridge.Vsix.Tests`
 
@@ -143,7 +161,8 @@ Current tested areas:
 
 - DI registration
 - package/service abstraction wiring
-- `VsService` diff generation behavior
+- `VsService` proposal lifecycle behavior
+- `VsixEditApplier` reconstruction behavior through service-level tests
 
 ## Runtime Architecture
 
@@ -184,6 +203,8 @@ Registered services in the VSIX host:
 
 - `IBridgeLogger -> ActivityLogBridgeLogger`
 - `IUnhandledExceptionSink -> FileUnhandledExceptionSink`
+- `IApprovalWorkflowService -> InMemoryApprovalWorkflowService`
+- `IEditApplier -> VsixEditApplier`
 - `IThreadHelper -> ThreadHelperAdapter`
 - `IVsService -> VsService`
 - `IPipeServer -> PipeServer`
@@ -249,11 +270,12 @@ Current limitation:
 Returns:
 
 - a unified-diff-like string
-- no file writes
+- a pending approval entry in the tool window
+- approval-triggered application through the VSIX host when the user accepts the proposal
 
 Current limitation:
 
-- the project still stops at proposal rather than approval-and-apply
+- the generated diff is both the user-facing preview and the apply source, so the apply path still reconstructs the entire document rather than applying a structured edit
 
 ## Tool Window UX
 
@@ -264,6 +286,7 @@ The VSIX currently exposes:
 
 The tool window currently has:
 
+- manual proposal-entry fields
 - a log text area
 - pending approval text
 - approve/reject buttons
@@ -276,8 +299,8 @@ Implementation shape:
 
 Most important gap:
 
-- runtime bridge events are not yet routed into the presenter end-to-end
-- there is still no complete approval request model or apply-edits implementation
+- runtime logs are still not broadly forwarded into the presenter, so the log pane is underused
+- the apply path still relies on diff reconstruction instead of a structured edit model
 
 ## Diagnostics and Observability
 
@@ -310,7 +333,7 @@ Current gaps:
 - no protocol versioning
 - no capabilities or health endpoint
 - no structured metrics
-- no runtime event forwarding into the tool window presenter
+- limited runtime event forwarding into the tool window presenter
 
 ## Testing Posture
 
@@ -322,6 +345,7 @@ Current automated coverage includes:
 - first-request logging behavior
 - unknown command handling
 - diff generation behavior
+- proposal approval/rejection/application behavior
 - file-backed exception persistence
 - presenter/viewmodel behavior and command wiring
 
@@ -331,7 +355,7 @@ Current missing layers:
 - live named-pipe round trips between the two runtime processes
 - package initialization in an Experimental instance
 - MCP server formatting tests
-- approval/apply workflow tests
+- end-to-end Visual Studio apply verification against real documents
 
 ## Build and Tooling Notes
 
@@ -340,7 +364,7 @@ Current missing layers:
 The VSIX project must be built with Visual Studio MSBuild, for example:
 
 ```powershell
-& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe' .\VsMcpBridge.Vsix\VsMcpBridge.Vsix.csproj /restore /t:Build /p:Configuration=Debug
+.\scripts\build-vsix.ps1 -Restore
 ```
 
 `dotnet test` or SDK-hosted MSBuild is not the correct top-level build entry point for the whole solution because the old-style VSIX project depends on Visual Studio VSSDK build tasks.
@@ -358,29 +382,31 @@ Current split:
 2. clear shared abstraction layer after the recent decoupling
 3. incremental DI adoption without unnecessary framework complexity
 4. safety-first edit posture
-5. early exception-sink abstraction
-6. better tool-window separation of concerns through presenter/viewmodel split
+5. explicit approval workflow with distinct proposal states
+6. early exception-sink abstraction
+7. better tool-window separation of concerns through presenter/viewmodel split
+8. view extraction into `VsMcpBridge.Shared.Wpf` keeps the VSIX assembly thinner
 
 ## Architectural Weak Spots
 
-1. no completed approval-and-apply pipeline yet
+1. the apply path rebuilds full document text from a display-oriented diff and can normalize line endings or other non-targeted formatting
 2. no explicit protocol versioning or compatibility strategy
 3. request IDs exist conceptually but are not fully exploited
 4. tool coverage is still intentionally narrow
-5. diff generation is simple and not yet a robust machine-applicable edit model
-6. `VsService` is still broad and will likely need decomposition
-7. error-list access is dynamic and brittle
-8. no configuration model yet
-9. no capabilities discovery surface
-10. no persistence or audit model for user approvals
+5. `VsService` is still broad and will likely need decomposition
+6. error-list access is dynamic and brittle
+7. no configuration model yet
+8. no capabilities discovery surface
+9. no durable persistence or audit model for user approvals
+10. runtime tool-window logging is still only partially wired
 
 ## Suggested Near-Term Roadmap
 
 ### Phase 1
 
 1. Route runtime bridge events into the tool window presenter.
-2. Implement end-to-end edit proposal approval and application.
-3. Add proposal IDs and request correlation IDs.
+2. Separate machine-applicable edits from the display diff used in the approval UI.
+3. Add proposal IDs and request correlation IDs as first-class tracing data.
 4. Add a bridge health/capabilities tool.
 5. Add configuration for logging and exception sink selection.
 
@@ -409,8 +435,8 @@ Current split:
 - `IBridgeConfigurationProvider`
 - `IRequestContextAccessor`
 - `IApprovalWorkflowService`
-- `IEditProposalStore`
 - `IEditApplier`
+- `IEditProposalStore`
 - `ICapabilitiesService`
 - `IBridgeHealthService`
 - `IDocumentService`
@@ -438,7 +464,7 @@ The architecture is directionally good.
 
 The project does not need a rewrite. It needs the next layer of platform completeness:
 
-- finish approval/apply
+- harden approval/apply so it uses a structured edit model
 - formalize protocol/version/configuration concerns
 - route live bridge state into the presenter
 - expand capabilities without letting `VsService` become a dumping ground

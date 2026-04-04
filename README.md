@@ -7,6 +7,7 @@ The solution is split into two runtime processes plus shared infrastructure:
 - `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
 - `VsMcpBridge.Vsix`: a Visual Studio extension that runs inside the IDE
 - `VsMcpBridge.Shared`: shared contracts, abstractions, diagnostics, pipe dispatch, and tool-window orchestration
+- `VsMcpBridge.Shared.Wpf`: reusable WPF views for the tool window UI
 - `VsMcpBridge.Shared.Tests`: unit tests for the shared layer
 - `VsMcpBridge.Vsix.Tests`: unit tests for VSIX-specific composition and service logic
 
@@ -18,32 +19,39 @@ Current supported capabilities:
 - read the current text selection
 - list solution projects
 - read the Visual Studio Error List
-- propose text edits as diffs without directly writing files
+- propose text edits as diffs
+- route proposed edits into the tool window for approval or rejection
+- apply approved edits inside Visual Studio through the VSIX host
 
 The bridge is intentionally conservative at this stage:
 
 - Visual Studio API access stays inside the VSIX
 - the MCP server only talks to the VSIX over a local named pipe
-- edits are proposed, not automatically applied
+- edits still require explicit approval in the tool window before they are applied
 - diagnostics and unhandled exception capture are built in
 - shared bridge infrastructure is now decoupled from the VSIX so other hosts can provide their own implementations
 
-The VSIX also includes a WPF tool window shell for bridge status and future approval UX:
+The VSIX includes a WPF tool window for bridge status and approval UX:
 
-- the view is a passive WPF control
+- the view lives in `VsMcpBridge.Shared.Wpf` as a passive WPF control
 - tool window state is exposed through a viewmodel
 - UI orchestration lives in a presenter using an MVPVM-style split
 - bindings and commands use `CommunityToolkit.Mvvm`
 
+Developer note:
+
+- the repository uses MVP/VM so the view stays passive, the viewmodel owns bindable state and commands, and the presenter coordinates workflow and service interaction; see [docs/MVPVM_OVERVIEW.md](docs/MVPVM_OVERVIEW.md) for the repo-specific pattern guide and examples
+
 Current limitation:
 
-- the tool window architecture is in place, but runtime bridge events are not yet routed into the presenter end-to-end
+- edit application rebuilds the full document from the generated diff, so preserving exact formatting and line endings still needs hardening
 
 ## Solution Structure
 
 ```text
 VsMcpBridge.slnx
 |- VsMcpBridge.Shared/       shared contracts, services, presenter/viewmodel, diagnostics abstractions
+|- VsMcpBridge.Shared.Wpf/   shared WPF tool-window views
 |- VsMcpBridge.Shared.Tests/ unit tests for shared logic
 |- VsMcpBridge.McpServer/    MCP stdio host and named-pipe client
 |- VsMcpBridge.Vsix/         Visual Studio extension and Visual Studio-specific implementations
@@ -134,26 +142,28 @@ The repository is now in a solid early-platform state:
 - the extension loads in the Experimental instance
 - the bridge uses DI and interface-based services across the shared and VSIX layers
 - shared infrastructure is no longer coupled to the VSIX project
-- the tool window uses a passive view plus presenter/viewmodel split
+- the tool window uses a passive shared-WPF view plus presenter/viewmodel split
+- proposal submission, approval, rejection, and apply are wired end-to-end through the tool window
 - verbose diagnostics are in place
 - unhandled exceptions are persisted through a swappable sink abstraction
 - unit tests cover both the shared layer and the VSIX-specific layer
 
 ## Next Steps
 
-The most important next capability is wiring the edit proposal and approval flow into the tool window presenter, then completing the approval-and-apply workflow for proposed edits.
+The most important next capability is hardening the edit-application model so approved edits preserve exact file content details instead of rebuilding the entire document from a display-oriented diff.
 
 Other strong candidates are:
 
 - bridge health and capabilities reporting
 - request correlation and protocol versioning
 - richer Visual Studio query tools
-- SQLite-backed persistence for exception and approval history
+- durable persistence for exception and approval history
 
 ## Documentation Guidance
 
 Use these docs together:
 
 - `README.md`: quick orientation and build/test entry point
+- `docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
 - `docs/CHATGPT_HANDOFF.md`: current-state hand-off for external analysis and next-step planning

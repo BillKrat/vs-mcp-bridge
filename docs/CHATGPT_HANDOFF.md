@@ -8,12 +8,13 @@ This document is optimized for handing the repository to ChatGPT or another exte
 
 ## One-Paragraph Summary
 
-`vs-mcp-bridge` is a local bridge between an AI client and Visual Studio. A `net8.0` MCP server (`VsMcpBridge.McpServer`) speaks stdio to the AI client and forwards JSON commands over a named pipe to a Visual Studio extension (`VsMcpBridge.Vsix`, .NET Framework 4.7.2). The VSIX owns all Visual Studio SDK/DTE interaction. The shared layer (`VsMcpBridge.Shared`) now contains protocol models plus shared abstractions, diagnostics plumbing, pipe dispatch, and the presenter/viewmodel logic for the tool window. The system currently supports read/query operations plus diff proposal, but not approval-and-apply.
+`vs-mcp-bridge` is a local bridge between an AI client and Visual Studio. A `net8.0` MCP server (`VsMcpBridge.McpServer`) speaks stdio to the AI client and forwards JSON commands over a named pipe to a Visual Studio extension (`VsMcpBridge.Vsix`, .NET Framework 4.7.2). The VSIX owns all Visual Studio SDK/DTE interaction. The shared layer (`VsMcpBridge.Shared`) contains protocol models plus shared abstractions, diagnostics plumbing, pipe dispatch, and presenter/viewmodel logic, while `VsMcpBridge.Shared.Wpf` contains the reusable tool-window views. The system currently supports read/query operations plus diff proposal, approval, rejection, and apply inside Visual Studio.
 
 ## Current Project Layout
 
 ```text
 VsMcpBridge.Shared/        shared contracts, abstractions, pipe server, diagnostics, MVP/VM
+VsMcpBridge.Shared.Wpf/    shared WPF tool-window views
 VsMcpBridge.Shared.Tests/  tests for shared behavior
 VsMcpBridge.McpServer/     MCP stdio host and named-pipe client
 VsMcpBridge.Vsix/          Visual Studio extension, VS service implementation, package bootstrap
@@ -49,12 +50,14 @@ Implemented MCP-facing operations:
 - list solution projects
 - get error list
 - propose text edit as a diff
+- approve or reject a pending proposal in the tool window
+- apply an approved proposal through the VSIX host
 
 Current operating model:
 
 - Visual Studio API access stays inside the VSIX
 - transport is a local named pipe
-- no direct write/apply path exists yet
+- edits require explicit tool-window approval before they are applied
 - diagnostics and unhandled exception persistence are built in
 
 ## Important Current State
@@ -70,9 +73,7 @@ What is solid:
 
 What is still incomplete:
 
-- `vs_propose_text_edit` stops at diff generation
-- no approval workflow coordinator exists
-- no apply-edits implementation exists
+- the apply path rebuilds full document text from the generated diff instead of using a structured edit model
 - runtime bridge events are not fully routed into the presenter/tool window
 - protocol/version/capabilities handling is still minimal
 - `VsService` is still a broad service that will likely need decomposition
@@ -91,12 +92,11 @@ That includes:
 
 Follow-up work completed after that refactor:
 
-- fixed `VsService` so its injected `IThreadHelper` is stored and used
-- fixed `VsMcpBridgePackage` so `IAsyncPackage.GetServiceAsync<T>` forwards to `AsyncPackage` instead of throwing
-- added `ThreadHelperAdapter` and registered it in DI
-- created `VsMcpBridge.Shared.Tests`
-- moved shared-only tests out of `VsMcpBridge.Vsix.Tests`
-- updated the VSIX test project to reference the VSIX project directly instead of a stale built DLL
+- added `IApprovalWorkflowService`, `EditProposal`, and proposal status tracking
+- completed tool-window proposal submission plus approve/reject/apply flow
+- added `VsixEditApplier` for Visual Studio-hosted application of approved proposals
+- moved the WPF control into the new `VsMcpBridge.Shared.Wpf` project
+- added `scripts/build-vsix.ps1` to standardize VSIX builds across Insiders and Community MSBuild installs
 
 ## Current Test Status
 
@@ -114,11 +114,11 @@ Important caveat:
 
 Focus on these:
 
-1. approval/apply workflow is still missing
+1. approved edits are still applied by reconstructing full file text from a diff preview
 2. request identity and protocol versioning are still weak
 3. `VsService` is at risk of becoming an overly broad service
 4. error-list access uses dynamic typing and is brittle
-5. current diff generation is display-friendly but not a robust machine-applicable edit model
+5. current diff generation is display-friendly but not yet a robust machine-applicable edit model
 6. there is still no real capabilities or bridge-health surface
 
 ## Questions To Ask ChatGPT
@@ -126,7 +126,7 @@ Focus on these:
 Use questions like these:
 
 1. Given the current split, what is the best design for a safe approval/apply workflow?
-2. Should proposal/application be modeled as structured edits instead of plain diffs?
+2. How should proposal/application be modeled as structured edits instead of plain diffs?
 3. How should `VsService` be decomposed next without adding unnecessary complexity?
 4. What protocol/versioning changes should be introduced before tool count grows?
 5. What minimum observability model should be added next?
@@ -134,9 +134,9 @@ Use questions like these:
 
 ## Most Likely Best Next Steps
 
-1. Introduce an approval workflow service with proposal IDs and status.
-2. Route proposal/log events into the tool window presenter.
-3. Separate machine-applicable edit models from human-readable diff output.
+1. Separate machine-applicable edit models from the human-readable diff output used in the approval UI.
+2. Route more runtime proposal/log events into the tool window presenter.
+3. Add durable storage for proposal history and approval/application outcomes.
 4. Add bridge capabilities/health reporting and protocol versioning.
 5. Start decomposing `VsService` into document, solution, diagnostics, and edit-related services.
 
