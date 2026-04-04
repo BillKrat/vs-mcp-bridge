@@ -8,7 +8,7 @@ namespace VsMcpBridge.McpServer.Pipe;
 /// Sends requests to the VSIX named pipe server and awaits the response.
 /// Each public method corresponds to one VS operation.
 /// </summary>
-public sealed class PipeClient
+public sealed class PipeClient : IPipeClient
 {
     private const string PipeName = "VsMcpBridge";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

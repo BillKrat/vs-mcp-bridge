@@ -1,8 +1,8 @@
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -22,21 +22,45 @@ internal sealed class VsixEditApplier : IEditApplier
 
     public async Task ApplyAsync(EditProposal proposal)
     {
-        await _threadHelper.SwitchToMainThreadAsync();
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
         var dte = await _package.GetServiceAsync<DTE2>(typeof(DTE));
         if (dte == null)
             throw new InvalidOperationException("DTE service unavailable.");
 
-        var document = dte.Documents.Open(proposal.FilePath);
-        var textDocument = document.Object("TextDocument") as TextDocument;
+        var document = OpenDocument(dte, proposal.FilePath);
+        var textDocument = GetTextDocument(document);
         if (textDocument == null)
             throw new InvalidOperationException($"Document '{proposal.FilePath}' does not support text edits.");
 
         var updatedText = BuildUpdatedText(proposal.Diff);
+        ApplyUpdatedText(textDocument, updatedText);
+        SaveDocument(document);
+    }
+
+    private static TextDocument? GetTextDocument(Document document)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return document.Object("TextDocument") as TextDocument;
+    }
+
+    private static Document OpenDocument(DTE2 dte, string filePath)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return dte.Documents.Open(filePath);
+    }
+
+    private static void ApplyUpdatedText(TextDocument textDocument, string updatedText)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
         var editPoint = textDocument.StartPoint.CreateEditPoint();
         editPoint.Delete(textDocument.EndPoint);
         editPoint.Insert(updatedText);
+    }
+
+    private static void SaveDocument(Document document)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
         document.Save();
     }
 

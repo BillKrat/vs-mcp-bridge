@@ -1,5 +1,5 @@
-using System.ComponentModel;
 using ModelContextProtocol.Server;
+using System.ComponentModel;
 using VsMcpBridge.McpServer.Pipe;
 
 namespace VsMcpBridge.McpServer.Tools;
@@ -11,9 +11,9 @@ namespace VsMcpBridge.McpServer.Tools;
 [McpServerToolType]
 public sealed class VsTools
 {
-    private readonly PipeClient _pipe;
+    private readonly IPipeClient _pipe;
 
-    public VsTools(PipeClient pipe) => _pipe = pipe;
+    public VsTools(IPipeClient pipe) => _pipe = pipe;
 
     [McpServerTool(Name = "vs_get_active_document")]
     [Description("Returns the file path, language, and full text of the document currently active in Visual Studio.")]

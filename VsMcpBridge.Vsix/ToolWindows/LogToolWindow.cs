@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.Shell;
-using System;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using System.Runtime.InteropServices;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
@@ -29,31 +27,9 @@ public sealed class LogToolWindow : ToolWindowPane
 
         var viewModel = package.ServiceProvider.Resolve<ILogToolWindowViewModel>();
         _presenter = package.ServiceProvider.Resolve<ILogToolWindowPresenter>();
-        var logger = package.ServiceProvider.Resolve<IBridgeLogger>();
-        var vsService = package.ServiceProvider.Resolve<IVsService>();
 
         _presenter.LogToolWindowControl = (ILogToolWindowControl)Content;
         _presenter.LogToolWindowViewModel = viewModel;
-        _presenter.SetProposalSubmissionHandler((filePath, originalText, proposedText) =>
-            _ = SubmitProposalAsync(vsService, logger, filePath, originalText, proposedText));
-
         _presenter.Initialize();
-    }
-
-    private static async Task SubmitProposalAsync(
-        IVsService vsService,
-        IBridgeLogger logger,
-        string filePath,
-        string originalText,
-        string proposedText)
-    {
-        try
-        {
-            await vsService.ProposeTextEditAsync(Guid.NewGuid().ToString("N"), filePath, originalText, proposedText);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError($"Manual proposal submission failed for '{filePath}'.", ex);
-        }
     }
 }

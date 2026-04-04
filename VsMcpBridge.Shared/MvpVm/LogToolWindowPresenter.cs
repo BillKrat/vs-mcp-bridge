@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Shared.MvpVm
@@ -7,16 +9,19 @@ namespace VsMcpBridge.Shared.MvpVm
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
+        private readonly IServiceProvider _serviceProvider;
         private readonly IBridgeLogger _logger;
         private readonly IThreadHelper _threadHelper;
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
 
-        public LogToolWindowPresenter(IBridgeLogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
+        public LogToolWindowPresenter(IServiceProvider serviceProvider, IBridgeLogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
         {
+            _serviceProvider = serviceProvider;
             _logger = logger;
             _threadHelper = threadHelper;
             LogToolWindowViewModel = logToolWindowViewModel;
+            LogToolWindowViewModel.SetProposalSubmissionHandler(OnSubmitProposalRequested);
             LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
         }
 
@@ -43,11 +48,6 @@ namespace VsMcpBridge.Shared.MvpVm
                         ? message
                         : $"{existingLog}{Environment.NewLine}{message}";
             });
-        }
-
-        public void SetProposalSubmissionHandler(Action<string, string, string> onSubmitProposal)
-        {
-            LogToolWindowViewModel.SetProposalSubmissionHandler(onSubmitProposal);
         }
 
         public void ShowApprovalPrompt(string description, Action onApprove, Action onReject)
@@ -85,6 +85,24 @@ namespace VsMcpBridge.Shared.MvpVm
             });
 
             rejectionAction?.Invoke();
+        }
+
+        private void OnSubmitProposalRequested(string filePath, string originalText, string proposedText)
+        {
+            _ = SubmitProposalAsync(filePath, originalText, proposedText);
+        }
+
+        private async Task SubmitProposalAsync(string filePath, string originalText, string proposedText)
+        {
+            try
+            {
+                var vsService = _serviceProvider.GetRequiredService<IVsService>();
+                await vsService.ProposeTextEditAsync(Guid.NewGuid().ToString("N"), filePath, originalText, proposedText);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Manual proposal submission failed for '{filePath}'.", ex);
+            }
         }
 
         private void ClearApproval()

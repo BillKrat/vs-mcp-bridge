@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
@@ -9,12 +10,20 @@ namespace VsMcpBridge.Shared.Tests;
 
 public sealed class MvpVmTests
 {
+    private static IServiceProvider CreateServiceProvider(IVsService vsService)
+    {
+        return new ServiceCollection()
+            .AddSingleton(vsService)
+            .BuildServiceProvider();
+    }
+
     [Fact]
     public void AddMvpVmServices_registers_shared_presenter_and_view_model()
     {
         var services = new ServiceCollection();
         services.AddSingleton<IBridgeLogger, RecordingBridgeLogger>();
         services.AddSingleton<IThreadHelper, TestThreadHelper>();
+        services.AddSingleton<IVsService, StubVsService>();
 
         services.AddMvpVmServices();
         using var provider = services.BuildServiceProvider();
@@ -29,7 +38,7 @@ public sealed class MvpVmTests
         var logger = new RecordingBridgeLogger();
         var threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var control = new FakeLogToolWindowControl();
 
         presenter.LogToolWindowControl = control;
@@ -45,7 +54,7 @@ public sealed class MvpVmTests
     public void AppendLog_replaces_initial_placeholder_and_appends_on_subsequent_calls()
     {
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
         presenter.LogToolWindowControl = new FakeLogToolWindowControl();
 
@@ -60,7 +69,7 @@ public sealed class MvpVmTests
     {
         var control = new FakeLogToolWindowControl();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
         var approved = false;
         var rejected = false;
 
@@ -87,7 +96,7 @@ public sealed class MvpVmTests
         var logger = new RecordingBridgeLogger();
         var threadHelper = new TestThreadHelper { HasAccess = false };
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel)
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel)
         {
             LogToolWindowControl = new FakeLogToolWindowControl()
         };
@@ -103,7 +112,7 @@ public sealed class MvpVmTests
     public void ShowApprovalPrompt_before_initialize_updates_shared_view_model_state()
     {
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
         presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
 
@@ -114,20 +123,11 @@ public sealed class MvpVmTests
     }
 
     [Fact]
-    public void SubmitProposalCommand_invokes_submission_handler_with_entered_values()
+    public void SubmitProposalCommand_submits_entered_values_through_vs_service()
     {
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
-        string? submittedFilePath = null;
-        string? submittedOriginalText = null;
-        string? submittedProposedText = null;
-
-        presenter.SetProposalSubmissionHandler((filePath, originalText, proposedText) =>
-        {
-            submittedFilePath = filePath;
-            submittedOriginalText = originalText;
-            submittedProposedText = proposedText;
-        });
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
         viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
         viewModel.ProposalOriginalText = "before";
@@ -137,18 +137,17 @@ public sealed class MvpVmTests
 
         viewModel.SubmitProposalCommand.Execute(null);
 
-        Assert.Equal(@"C:\repo\Sample.cs", submittedFilePath);
-        Assert.Equal("before", submittedOriginalText);
-        Assert.Equal("after", submittedProposedText);
+        Assert.Equal(1, vsService.ProposeTextEditCalls);
+        Assert.Equal(@"C:\repo\Sample.cs", viewModel.ProposalFilePath);
+        Assert.NotNull(vsService.LastProposeRequestId);
     }
 
     [Fact]
     public void SubmitProposalCommand_is_disabled_while_a_proposal_is_pending()
     {
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
-        presenter.SetProposalSubmissionHandler((_, _, _) => { });
         viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
         viewModel.ProposalOriginalText = "before";
         viewModel.ProposalProposedText = "after";
@@ -158,5 +157,23 @@ public sealed class MvpVmTests
         presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
 
         Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_logs_error_when_vs_service_throws()
+    {
+        var logger = new RecordingBridgeLogger();
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new ThrowingVsService()), logger, new TestThreadHelper(), viewModel);
+
+        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
+        viewModel.ProposalOriginalText = "before";
+        viewModel.ProposalProposedText = "after";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        var error = Assert.Single(logger.Errors);
+        Assert.Contains("Manual proposal submission failed for 'C:\\repo\\Sample.cs'.", error.Message);
+        Assert.IsType<InvalidOperationException>(error.Exception);
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Shared.MvpVm;
@@ -10,13 +12,20 @@ namespace VsMcpBridge.Vsix.Tests;
 
 public sealed class VsServiceTests
 {
+    private static IServiceProvider CreateServiceProvider(IVsService vsService)
+    {
+        return new ServiceCollection()
+            .AddSingleton(vsService)
+            .BuildServiceProvider();
+    }
+
     [Fact]
     public void Constructor_logs_bridge_service_startup()
     {
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         _ = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, new InMemoryApprovalWorkflowService(), new RecordingEditApplier(), presenter);
 
         Assert.Contains("Bridge service startup complete.", logger.VerboseMessages);
@@ -28,7 +37,7 @@ public sealed class VsServiceTests
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
         var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new RecordingEditApplier(), presenter);
 
@@ -50,7 +59,7 @@ public sealed class VsServiceTests
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
         var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new RecordingEditApplier(), presenter);
 
@@ -78,7 +87,7 @@ public sealed class VsServiceTests
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
         var editApplier = new RecordingEditApplier();
         var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
@@ -104,7 +113,7 @@ public sealed class VsServiceTests
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
         var editApplier = new RecordingEditApplier();
         var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
@@ -127,7 +136,7 @@ public sealed class VsServiceTests
         var logger = new RecordingBridgeLogger();
         IThreadHelper threadHelper = new TestThreadHelper();
         var viewModel = new LogToolWindowViewModel();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
         var editApplier = new ThrowingEditApplier();
         var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);

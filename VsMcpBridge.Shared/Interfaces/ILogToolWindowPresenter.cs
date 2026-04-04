@@ -9,7 +9,6 @@ namespace VsMcpBridge.Shared.Interfaces
 
         void Initialize();
         void AppendLog(string message);
-        void SetProposalSubmissionHandler(Action<string, string, string> onSubmitProposal);
         void ShowApprovalPrompt(string description, Action onApprove, Action onReject);
     }
 }

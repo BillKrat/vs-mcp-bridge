@@ -6,7 +6,7 @@ using VsMcpBridge.McpServer.Tools;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services
-    .AddSingleton<PipeClient>()
+    .AddSingleton<IPipeClient, PipeClient>()
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<VsTools>();

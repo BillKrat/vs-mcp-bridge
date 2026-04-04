@@ -1,5 +1,6 @@
-﻿using EnvDTE;
+using EnvDTE;
 using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -45,21 +46,23 @@ public sealed class VsService : IVsService
 
         try
         {
-            await _threadHelper.SwitchToMainThreadAsync();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
-            Document? doc = dte.ActiveDocument;
+            var doc = GetActiveDocumentOnUIThread(dte);
             if (doc == null)
                 return new GetActiveDocumentResponse { Success = false, ErrorMessage = "No active document." };
 
             var textDoc = doc.Object("TextDocument") as TextDocument;
-            var content = textDoc?.StartPoint?.CreateEditPoint().GetText(textDoc.EndPoint) ?? string.Empty;
+            var content = GetDocumentText(textDoc);
+            var filePath = doc.FullName;
+            var language = doc.Language;
 
             return new GetActiveDocumentResponse
             {
                 Success = true,
-                FilePath = doc.FullName,
-                Language = doc.Language,
+                FilePath = filePath,
+                Language = language,
                 Content = content
             };
         }
@@ -76,21 +79,21 @@ public sealed class VsService : IVsService
 
         try
         {
-            await _threadHelper.SwitchToMainThreadAsync();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
-            Document? doc = dte.ActiveDocument;
+            var doc = GetActiveDocumentOnUIThread(dte);
             if (doc == null)
                 return new GetSelectedTextResponse { Success = false, ErrorMessage = "No active document." };
 
             var textDoc = doc.Object("TextDocument") as TextDocument;
-            var selection = textDoc?.Selection as TextSelection;
-            var text = selection?.Text ?? string.Empty;
+            var text = GetSelectedText(textDoc);
+            var filePath = doc.FullName;
 
             return new GetSelectedTextResponse
             {
                 Success = true,
-                FilePath = doc.FullName,
+                FilePath = filePath,
                 SelectedText = text
             };
         }
@@ -107,25 +110,17 @@ public sealed class VsService : IVsService
 
         try
         {
-            await _threadHelper.SwitchToMainThreadAsync();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
-            Solution? solution = dte.Solution;
+            var solution = GetSolution(dte);
             if (solution == null)
                 return new ListSolutionProjectsResponse { Success = false, ErrorMessage = "No solution open." };
 
             var projects = new List<ProjectInfo>();
-            foreach (Project project in solution.Projects)
+            foreach (var project in EnumerateSolutionProjects(solution))
             {
-                if (project.Kind == EnvDTE.Constants.vsProjectKindSolutionItems)
-                    continue;
-
-                projects.Add(new ProjectInfo
-                {
-                    Name = project.Name,
-                    FullPath = project.FullName,
-                    TargetFramework = GetTargetFramework(project)
-                });
+                projects.Add(CreateProjectInfo(project));
             }
 
             return new ListSolutionProjectsResponse { Success = true, Projects = projects };
@@ -143,7 +138,7 @@ public sealed class VsService : IVsService
 
         try
         {
-            await _threadHelper.SwitchToMainThreadAsync();
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
             var diagnostics = new List<DiagnosticItem>();
@@ -220,7 +215,7 @@ public sealed class VsService : IVsService
 
     private async Task<DTE2> GetDteAsync()
     {
-        await _threadHelper.SwitchToMainThreadAsync();
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
         var dte = await _package.GetServiceAsync<DTE2>(typeof(DTE));
         if (dte == null)
             throw new InvalidOperationException("DTE service unavailable.");
@@ -228,9 +223,58 @@ public sealed class VsService : IVsService
         return dte;
     }
 
-    private string GetTargetFramework(Project project)
+    private static Document? GetActiveDocumentOnUIThread(DTE2 dte)
     {
-        _threadHelper.ThrowIfNotOnUIThread();
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return dte.ActiveDocument;
+    }
+
+    private static Solution? GetSolution(DTE2 dte)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return dte.Solution;
+    }
+
+    private static IEnumerable<Project> EnumerateSolutionProjects(Solution solution)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+
+        foreach (Project project in solution.Projects)
+        {
+            if (project.Kind == EnvDTE.Constants.vsProjectKindSolutionItems)
+                continue;
+
+            yield return project;
+        }
+    }
+
+    private static ProjectInfo CreateProjectInfo(Project project)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return new ProjectInfo
+        {
+            Name = project.Name,
+            FullPath = project.FullName,
+            TargetFramework = GetTargetFramework(project)
+        };
+    }
+
+    private static string GetDocumentText(TextDocument? textDocument)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return textDocument?.StartPoint?.CreateEditPoint().GetText(textDocument.EndPoint) ?? string.Empty;
+    }
+
+    private static string GetSelectedText(TextDocument? textDocument)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        var selection = textDocument?.Selection as TextSelection;
+        return selection?.Text ?? string.Empty;
+    }
+
+    private static string GetTargetFramework(Project project)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
         try
         {
             return project.Properties?.Item("TargetFrameworkMoniker")?.Value?.ToString() ?? string.Empty;
