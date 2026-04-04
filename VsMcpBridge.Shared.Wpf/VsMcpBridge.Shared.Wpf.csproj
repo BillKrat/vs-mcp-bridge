@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>VsMcpBridge.Shared.Wpf</RootNamespace>
+    <AssemblyName>VsMcpBridge.Shared.Wpf</AssemblyName>
+    <ProjectGuid>{3F4A5B6C-7D8E-9F0A-1B2C-3D4E5F6A7B8C}</ProjectGuid>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\" />
+  </ItemGroup>
+
+</Project>

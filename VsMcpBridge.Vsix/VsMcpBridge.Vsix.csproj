@@ -93,6 +93,10 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VsMcpBridge.Shared.Wpf\VsMcpBridge.Shared.Wpf.csproj">
+      <Project>{3F4A5B6C-7D8E-9F0A-1B2C-3D4E5F6A7B8C}</Project>
+      <Name>VsMcpBridge.Shared.Wpf</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj">
       <Project>{F2A8D317-241C-4494-BF87-3D8E485C1943}</Project>
       <Name>VsMcpBridge.Shared</Name>
