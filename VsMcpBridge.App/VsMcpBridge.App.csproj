@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>VsMcpBridge.App</RootNamespace>
+    <AssemblyName>VsMcpBridge.App</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj" />
+    <ProjectReference Include="..\VsMcpBridge.Shared.Wpf\VsMcpBridge.Shared.Wpf.csproj" />
+  </ItemGroup>
+
+</Project>

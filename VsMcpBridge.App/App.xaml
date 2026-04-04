@@ -1,0 +1,11 @@
+<Application x:Class="VsMcpBridge.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnMainWindowClose">
+  <Application.Resources>
+    <!-- Map Visual Studio dynamic brush keys to standard WPF colors -->
+    <SolidColorBrush x:Key="VsBrush.Window" Color="White" />
+    <SolidColorBrush x:Key="VsBrush.CommandBarBorder" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="VsBrush.WindowText" Color="#1E1E1E" />
+  </Application.Resources>
+</Application>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
     <RootNamespace>VsMcpBridge.Shared.Wpf</RootNamespace>
     <AssemblyName>VsMcpBridge.Shared.Wpf</AssemblyName>

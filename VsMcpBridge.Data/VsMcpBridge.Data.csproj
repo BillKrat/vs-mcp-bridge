@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Single target avoids EF Core 10 multi-TFM tool requirement (see
+         https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/breaking-changes).
+         EF Core Power Tools and dotnet-ef work against this project directly. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>VsMcpBridge.Data</RootNamespace>
+    <AssemblyName>VsMcpBridge.Data</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core packages go here, not in any multi-targeted project -->
+    <!--
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    -->
+  </ItemGroup>
+
+</Project>
