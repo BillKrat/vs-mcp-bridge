@@ -51,10 +51,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Commands\ShowLogToolWindowCommand.cs" />
-    <Compile Include="Composition\MvpVmServiceExtensions.cs" />
     <Compile Include="Composition\BridgeServiceCollectionExtensions.cs" />
-    <Compile Include="Composition\ServiceProviderExtensions.cs" />
-    <Compile Include="Diagnostics\FileUnhandledExceptionSink.cs" />
     <Compile Include="Logging\ActivityLogBridgeLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\VsService.cs" />

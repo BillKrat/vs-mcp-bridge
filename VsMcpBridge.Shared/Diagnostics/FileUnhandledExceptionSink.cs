@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using VsMcpBridge.Shared.Interfaces;
 
-namespace VsMcpBridge.Vsix.Diagnostics;
+namespace VsMcpBridge.Shared.Diagnostics;
 
 public sealed class FileUnhandledExceptionSink : IUnhandledExceptionSink
 {
@@ -17,7 +17,7 @@ public sealed class FileUnhandledExceptionSink : IUnhandledExceptionSink
     {
     }
 
-    internal FileUnhandledExceptionSink(IBridgeLogger logger, Func<DateTimeOffset> clock, string logDirectory)
+    public FileUnhandledExceptionSink(IBridgeLogger logger, Func<DateTimeOffset> clock, string logDirectory)
     {
         _logger = logger;
         _clock = clock;

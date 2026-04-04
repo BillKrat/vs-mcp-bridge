@@ -4,10 +4,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.Composition;
 using VsMcpBridge.Vsix.Logging;
-using VsMcpBridge.Vsix.Pipe;
 using Task = System.Threading.Tasks.Task;
 
 namespace VsMcpBridge.Vsix;

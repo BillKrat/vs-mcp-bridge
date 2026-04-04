@@ -85,7 +85,7 @@ public sealed class PipeServer : IPipeServer
         }
     }
 
-    internal async Task<string?> ProcessRequestAsync(string? requestJson)
+    public async Task<string?> ProcessRequestAsync(string? requestJson)
     {
         if (string.IsNullOrWhiteSpace(requestJson))
         {

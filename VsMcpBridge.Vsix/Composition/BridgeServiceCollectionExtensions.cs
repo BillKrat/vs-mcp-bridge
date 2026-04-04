@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
-using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Pipe;
 using VsMcpBridge.Vsix.Services;

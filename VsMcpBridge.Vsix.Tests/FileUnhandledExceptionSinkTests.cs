@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using VsMcpBridge.Vsix.Diagnostics;
+using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Vsix.Tests.Support;
 using Xunit;
 

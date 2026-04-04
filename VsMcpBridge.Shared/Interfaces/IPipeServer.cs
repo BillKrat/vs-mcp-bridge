@@ -1,4 +1,4 @@
-namespace VsMcpBridge.Vsix.Pipe;
+namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IPipeServer
 {

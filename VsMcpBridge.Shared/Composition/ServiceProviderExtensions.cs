@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace VsMcpBridge.Vsix.Composition
+namespace VsMcpBridge.Shared.Composition
 {
     public static class ServiceProviderExtensions
     {

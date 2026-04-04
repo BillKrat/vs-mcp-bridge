@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.MvpVm;
 
-namespace VsMcpBridge.Vsix.Composition
+namespace VsMcpBridge.Shared.Composition
 {
     public static class MvpVmServiceExtensions
     {

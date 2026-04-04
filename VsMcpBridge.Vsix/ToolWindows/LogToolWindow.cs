@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using System.Runtime.InteropServices;
+using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
-using VsMcpBridge.Vsix.Composition;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 
