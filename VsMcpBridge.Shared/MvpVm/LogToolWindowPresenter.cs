@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Interfaces;
@@ -12,6 +13,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private readonly IServiceProvider _serviceProvider;
         private readonly IBridgeLogger _logger;
         private readonly IThreadHelper _threadHelper;
+        private readonly IProposalDraftState? _proposalDraftState;
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
 
@@ -20,9 +22,13 @@ namespace VsMcpBridge.Shared.MvpVm
             _serviceProvider = serviceProvider;
             _logger = logger;
             _threadHelper = threadHelper;
+            _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
             LogToolWindowViewModel = logToolWindowViewModel;
             LogToolWindowViewModel.SetProposalSubmissionHandler(OnSubmitProposalRequested);
             LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
+
+            if (LogToolWindowViewModel is INotifyPropertyChanged notifyPropertyChanged)
+                notifyPropertyChanged.PropertyChanged += OnViewModelPropertyChanged;
         }
 
         public ILogToolWindowControl LogToolWindowControl { get; set; } = null!;
@@ -34,6 +40,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _logger.LogInformation("Initializing VS MCP Bridge tool window...");
 
             LogToolWindowControl.DataContext = LogToolWindowViewModel;
+            SyncProposalDraftState();
 
             _logger.LogInformation("VS MCP Bridge tool window Initialized.");
         }
@@ -96,6 +103,8 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             try
             {
+                _proposalDraftState?.SetActiveFilePath(filePath);
+                _proposalDraftState?.SetSelectedText(originalText);
                 var vsService = _serviceProvider.GetRequiredService<IVsService>();
                 await vsService.ProposeTextEditAsync(Guid.NewGuid().ToString("N"), filePath, originalText, proposedText);
             }
@@ -111,6 +120,27 @@ namespace VsMcpBridge.Shared.MvpVm
             _pendingRejectAction = null;
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
             LogToolWindowViewModel.HasPendingApproval = false;
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (_proposalDraftState == null)
+                return;
+
+            if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalFilePath))
+            {
+                _proposalDraftState.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
+            }
+            else if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalOriginalText))
+            {
+                _proposalDraftState.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
+            }
+        }
+
+        private void SyncProposalDraftState()
+        {
+            _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
+            _proposalDraftState?.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
         }
 
         public void RunOnUiThread(Action action)

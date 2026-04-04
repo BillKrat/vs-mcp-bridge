@@ -11,15 +11,13 @@ namespace VsMcpBridge.App.Windows;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly ILogToolWindowPresenter _presenter;
-
     public MainWindow(ServiceProvider serviceProvider)
     {
         InitializeComponent();
 
-        _presenter = serviceProvider.Resolve<ILogToolWindowPresenter>();
-        _presenter.LogToolWindowControl = LogControl;
-        _presenter.LogToolWindowViewModel = serviceProvider.Resolve<ILogToolWindowViewModel>();
-        _presenter.Initialize();
+        var presenter = serviceProvider.Resolve<ILogToolWindowPresenter>();
+        presenter.LogToolWindowControl = LogControl;
+        presenter.LogToolWindowViewModel = serviceProvider.Resolve<ILogToolWindowViewModel>();
+        presenter.Initialize();
     }
 }

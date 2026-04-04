@@ -15,12 +15,13 @@ For a shorter external-review hand-off, also see [CHATGPT_HANDOFF.md](CHATGPT_HA
 
 ## Executive Summary
 
-`vs-mcp-bridge` is a two-process local integration that exposes selected Visual Studio IDE state to AI tooling through MCP.
+`vs-mcp-bridge` is a local integration that exposes selected IDE or workspace state to AI tooling through MCP.
 
 Current topology:
 
 - `VsMcpBridge.McpServer` is a local MCP server running over stdio
 - `VsMcpBridge.Vsix` is a Visual Studio extension running inside the IDE
+- `VsMcpBridge.App` is a standalone WPF host that exercises the same shared bridge outside Visual Studio
 - `VsMcpBridge.Shared` contains shared contracts, abstractions, diagnostics plumbing, pipe dispatch, and tool-window orchestration types
 - `VsMcpBridge.Shared.Wpf` contains the reusable WPF tool-window views
 - `VsMcpBridge.Shared.Tests` covers shared behavior
@@ -29,7 +30,7 @@ Current topology:
 The design is intentionally conservative:
 
 - the MCP side does not directly touch Visual Studio APIs
-- the VSIX side owns all IDE interaction
+- each host owns its own runtime-specific interaction layer
 - text edits are proposed as diffs and only applied after explicit approval in the tool window
 - communication is local-only over a named pipe
 
@@ -41,6 +42,7 @@ The project is in a good early-platform state:
 - unhandled exception persistence exists through a swappable sink abstraction
 - shared bridge infrastructure is no longer coupled to the VSIX project
 - the approval workflow now covers proposal creation, pending approval, reject, approve, apply, and failure states
+- the standalone app is now functionally aligned with the current VSIX feature set within its non-VSIX host model
 - unit coverage exists for DI registration, pipe dispatch, presenter/viewmodel behavior, approval workflow behavior, diff generation, and exception persistence
 
 The largest remaining product gap is a robust machine-applicable edit model that preserves exact file formatting and line endings when approved edits are applied.
@@ -117,7 +119,7 @@ Purpose:
 
 - hosts an MCP server over stdio
 - exposes tool methods to the AI client
-- forwards each tool call to the VSIX through a named pipe
+- forwards each tool call to the active host through a named pipe
 - converts typed responses into MCP-friendly strings
 
 Primary files:
@@ -125,6 +127,24 @@ Primary files:
 - `Program.cs`
 - `Pipe/PipeClient.cs`
 - `Tools/VsTools.cs`
+
+### `VsMcpBridge.App`
+
+Target: `net8.0-windows`
+
+Purpose:
+
+- standalone reference host for developers who want to use the bridge outside a VSIX
+- validates that non-VSIX runtime behavior can live outside the VSIX project
+- reuses the shared pipe server, presenter/viewmodel, approval workflow, and WPF view
+
+Primary files:
+
+- `App.xaml.cs`
+- `Composition/BridgeServiceCollectionExtensions.cs`
+- `Services/StandaloneVsService.cs`
+- `Services/FileEditApplier.cs`
+- `Windows/MainWindow.xaml.cs`
 
 ### `VsMcpBridge.Vsix`
 
@@ -171,9 +191,9 @@ AI client
   -> MCP over stdio
 VsMcpBridge.McpServer
   -> JSON line messages over named pipe "VsMcpBridge"
-VsMcpBridge.Vsix
-  -> DTE / Visual Studio SDK / tool window
-Visual Studio IDE
+host implementation
+  -> DTE / Visual Studio SDK / tool window   (VSIX)
+  -> workspace / file system / build / window (App)
 ```
 
 ### Startup Flow
@@ -213,6 +233,19 @@ Registered services in the VSIX host:
 - `IAsyncPackage` as the current package instance
 - `AsyncPackage` when the package instance supports the concrete Visual Studio type
 
+Registered services in the standalone app host:
+
+- `IBridgeLogger -> ConsoleBridgeLogger`
+- `IUnhandledExceptionSink -> FileUnhandledExceptionSink`
+- `IApprovalWorkflowService -> InMemoryApprovalWorkflowService`
+- `IEditApplier -> FileEditApplier`
+- `IThreadHelper -> DispatcherThreadHelper`
+- `IVsService -> StandaloneVsService`
+- `IPipeServer -> PipeServer`
+- `ILogToolWindowPresenter -> LogToolWindowPresenter`
+- `ILogToolWindowViewModel -> LogToolWindowViewModel`
+- `IProposalDraftState -> AppSessionState`
+
 Why this matters:
 
 - testability is materially better than the original tightly-coupled shape
@@ -220,9 +253,9 @@ Why this matters:
 - the shared layer is now reusable by other hosts
 - Visual Studio-specific concerns are kept in the VSIX project instead of leaking through every shared type
 
-Current limitation:
+Current note:
 
-- the DI setup is still only used inside the VSIX process
+- the shared DI seams are now exercised by both the VSIX and the standalone app, which is intentional because one of the app's purposes is to demonstrate non-VSIX hosting without polluting the VSIX project
 
 ## Implemented Capabilities
 
@@ -234,12 +267,21 @@ Returns:
 - language
 - full text content
 
+Host note:
+
+- in the VSIX host this comes from Visual Studio's active document
+- in the standalone app this comes from the current proposal/session state or a workspace fallback
+
 ### `vs_get_selected_text`
 
 Returns:
 
 - current document path
 - selected text in the active editor
+
+Host note:
+
+- in the standalone app this is backed by proposal/session state rather than a live editor selection
 
 ### `vs_list_solution_projects`
 
@@ -264,6 +306,11 @@ Current limitation:
 
 - `Code` and `Column` are not fully populated
 - enumeration uses dynamic access and is fragile
+
+Host note:
+
+- the VSIX host reads the Visual Studio Error List
+- the standalone app derives diagnostics from `dotnet build` output
 
 ### `vs_propose_text_edit`
 
@@ -301,6 +348,11 @@ Most important gap:
 
 - runtime logs are still not broadly forwarded into the presenter, so the log pane is underused
 - the apply path still relies on diff reconstruction instead of a structured edit model
+
+The standalone app exposes the same shared WPF control in a normal window and exists primarily as:
+
+- a reference implementation for non-VSIX hosts
+- a guardrail against pushing non-VSIX runtime behavior into the VSIX project
 
 ## Diagnostics and Observability
 
@@ -354,6 +406,7 @@ Current missing layers:
 - live Visual Studio integration tests
 - live named-pipe round trips between the two runtime processes
 - package initialization in an Experimental instance
+- standalone app integration coverage against a real workspace
 - MCP server formatting tests
 - end-to-end Visual Studio apply verification against real documents
 
@@ -374,6 +427,7 @@ The VSIX project must be built with Visual Studio MSBuild, for example:
 Current split:
 
 - `VsMcpBridge.Shared.Tests` can be run with `dotnet test`
+- `VsMcpBridge.App` can be built with `dotnet build`
 - `VsMcpBridge.Vsix.Tests` should be built with Visual Studio `MSBuild.exe` and executed with `vstest.console.exe`
 
 ## Design Strengths
@@ -399,6 +453,7 @@ Current split:
 8. no capabilities discovery surface
 9. no durable persistence or audit model for user approvals
 10. runtime tool-window logging is still only partially wired
+11. host parity now exists, but it still relies on one broad service contract that may want decomposition into host-neutral sub-services later
 
 ## Suggested Near-Term Roadmap
 

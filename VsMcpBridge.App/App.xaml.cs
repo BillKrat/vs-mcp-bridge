@@ -1,9 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Windows;
 using VsMcpBridge.App.Composition;
 using VsMcpBridge.Shared.Composition;
-using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.App;
@@ -12,6 +10,7 @@ public partial class App : Application
 {
     private ServiceProvider? _serviceProvider;
     private IUnhandledExceptionSink? _exceptionSink;
+    private IPipeServer? _pipeServer;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -23,7 +22,9 @@ public partial class App : Application
             .BuildServiceProvider();
 
         _exceptionSink = _serviceProvider.GetRequiredService<IUnhandledExceptionSink>();
+        _pipeServer = _serviceProvider.GetRequiredService<IPipeServer>();
         RegisterUnhandledExceptionHandlers();
+        _pipeServer.Start();
 
         var mainWindow = new Windows.MainWindow(_serviceProvider);
         MainWindow = mainWindow;
@@ -33,6 +34,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         UnregisterUnhandledExceptionHandlers();
+        _pipeServer?.Stop();
         _serviceProvider?.Dispose();
         base.OnExit(e);
     }

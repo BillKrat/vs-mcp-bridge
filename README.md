@@ -1,11 +1,12 @@
 # VS MCP Bridge
 
-`vs-mcp-bridge` is a local integration that exposes selected Visual Studio IDE state to AI tooling through the Model Context Protocol (MCP).
+`vs-mcp-bridge` is a local integration that exposes selected IDE and workspace state to AI tooling through the Model Context Protocol (MCP).
 
-The solution is split into two runtime processes plus shared infrastructure:
+The solution is split into host-specific runtimes plus shared infrastructure:
 
 - `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
 - `VsMcpBridge.Vsix`: a Visual Studio extension that runs inside the IDE
+- `VsMcpBridge.App`: a standalone WPF host that demonstrates non-VSIX reuse of the bridge
 - `VsMcpBridge.Shared`: shared contracts, abstractions, diagnostics, pipe dispatch, and tool-window orchestration
 - `VsMcpBridge.Shared.Wpf`: reusable WPF views for the tool window UI
 - `VsMcpBridge.Shared.Tests`: unit tests for the shared layer
@@ -31,6 +32,16 @@ The bridge is intentionally conservative at this stage:
 - diagnostics and unhandled exception capture are built in
 - shared bridge infrastructure is now decoupled from the VSIX so other hosts can provide their own implementations
 
+The standalone app now serves two purposes:
+
+- it is a reference host for developers who want to use the bridge outside a VSIX
+- it validates that host-specific code stays out of the VSIX when it belongs in shared or in an alternate host
+
+Host behavior today:
+
+- `VsMcpBridge.Vsix` provides Visual Studio-backed behavior through DTE and Visual Studio services
+- `VsMcpBridge.App` provides workspace/file-system-backed behavior while reusing the same shared presenter, viewmodel, pipe server, approval workflow, and WPF view
+
 The VSIX includes a WPF tool window for bridge status and approval UX:
 
 - the view lives in `VsMcpBridge.Shared.Wpf` as a passive WPF control
@@ -54,6 +65,7 @@ VsMcpBridge.slnx
 |- VsMcpBridge.Shared.Wpf/   shared WPF tool-window views
 |- VsMcpBridge.Shared.Tests/ unit tests for shared logic
 |- VsMcpBridge.McpServer/    MCP stdio host and named-pipe client
+|- VsMcpBridge.App/          standalone WPF host and non-VSIX service implementations
 |- VsMcpBridge.Vsix/         Visual Studio extension and Visual Studio-specific implementations
 `- VsMcpBridge.Vsix.Tests/   unit tests for VSIX infrastructure and logic
 ```
@@ -67,9 +79,9 @@ AI client
   -> MCP over stdio
 VsMcpBridge.McpServer
   -> JSON over named pipe "VsMcpBridge"
-VsMcpBridge.Vsix
-  -> Visual Studio SDK / DTE APIs
-Visual Studio IDE
+host implementation
+  -> Visual Studio SDK / DTE APIs    (VSIX host)
+  -> workspace / file system / build (App host)
 ```
 
 For the detailed living technical reference, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
@@ -96,6 +108,14 @@ From a Developer PowerShell or Visual Studio MSBuild environment:
 ```
 
 You can also open `VsMcpBridge.slnx` in Visual Studio and build `VsMcpBridge.Vsix` there.
+
+### Standalone App
+
+The standalone app can be built with the normal .NET SDK:
+
+```powershell
+dotnet build .\VsMcpBridge.App\VsMcpBridge.App.csproj
+```
 
 ## Test
 
@@ -140,8 +160,10 @@ The repository is now in a solid early-platform state:
 
 - VSIX build, packaging, and install have been verified
 - the extension loads in the Experimental instance
+- the standalone app is functionally aligned with the current VSIX feature set within its non-VSIX host model
 - the bridge uses DI and interface-based services across the shared and VSIX layers
 - shared infrastructure is no longer coupled to the VSIX project
+- the standalone app demonstrates how to host the bridge without polluting the VSIX project with non-VSIX runtime code
 - the tool window uses a passive shared-WPF view plus presenter/viewmodel split
 - proposal submission, approval, rejection, and apply are wired end-to-end through the tool window
 - verbose diagnostics are in place
