@@ -1,7 +1,7 @@
 using System;
 using VsMcpBridge.Shared.Interfaces;
 
-namespace VsMcpBridge.Vsix.MvpVm
+namespace VsMcpBridge.Shared.MvpVm
 {
     public class LogToolWindowPresenter(IBridgeLogger logger, IThreadHelper threadHelper) : ILogToolWindowPresenter
     {

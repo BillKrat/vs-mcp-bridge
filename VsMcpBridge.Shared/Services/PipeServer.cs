@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
-namespace VsMcpBridge.Vsix.Pipe;
+namespace VsMcpBridge.Shared.Services;
 
 /// <summary>
 /// Named pipe server that listens for requests from VsMcpBridge.McpServer.

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Interfaces;
-using VsMcpBridge.Vsix.MvpVm;
+using VsMcpBridge.Shared.MvpVm;
 
 namespace VsMcpBridge.Shared.Composition
 {

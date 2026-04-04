@@ -2,12 +2,13 @@
 
 `vs-mcp-bridge` is a local integration that exposes selected Visual Studio IDE state to AI tooling through the Model Context Protocol (MCP).
 
-The solution is split into two runtime processes plus a shared contract:
+The solution is split into two runtime processes plus shared infrastructure:
 
 - `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
 - `VsMcpBridge.Vsix`: a Visual Studio extension that runs inside the IDE
-- `VsMcpBridge.Shared`: shared request/response and pipe contract models
-- `VsMcpBridge.Vsix.Tests`: unit tests for the decoupled VSIX services and infrastructure
+- `VsMcpBridge.Shared`: shared contracts, abstractions, diagnostics, pipe dispatch, and tool-window orchestration
+- `VsMcpBridge.Shared.Tests`: unit tests for the shared layer
+- `VsMcpBridge.Vsix.Tests`: unit tests for VSIX-specific composition and service logic
 
 ## What It Does Today
 
@@ -25,10 +26,11 @@ The bridge is intentionally conservative at this stage:
 - the MCP server only talks to the VSIX over a local named pipe
 - edits are proposed, not automatically applied
 - diagnostics and unhandled exception capture are built in
+- shared bridge infrastructure is now decoupled from the VSIX so other hosts can provide their own implementations
 
 The VSIX also includes a WPF tool window shell for bridge status and future approval UX:
 
-- the view is now a passive WPF control
+- the view is a passive WPF control
 - tool window state is exposed through a viewmodel
 - UI orchestration lives in a presenter using an MVPVM-style split
 - bindings and commands use `CommunityToolkit.Mvvm`
@@ -41,9 +43,10 @@ Current limitation:
 
 ```text
 VsMcpBridge.slnx
-|- VsMcpBridge.Shared/       shared contract models
+|- VsMcpBridge.Shared/       shared contracts, services, presenter/viewmodel, diagnostics abstractions
+|- VsMcpBridge.Shared.Tests/ unit tests for shared logic
 |- VsMcpBridge.McpServer/    MCP stdio host and named-pipe client
-|- VsMcpBridge.Vsix/         Visual Studio extension and named-pipe server
+|- VsMcpBridge.Vsix/         Visual Studio extension and Visual Studio-specific implementations
 `- VsMcpBridge.Vsix.Tests/   unit tests for VSIX infrastructure and logic
 ```
 
@@ -62,14 +65,7 @@ Visual Studio IDE
 ```
 
 For the detailed living technical reference, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
-
-That document is the best place to understand:
-
-- current architecture and control flow
-- DI, diagnostics, and exception handling strategy
-- testing posture
-- known limitations and architectural gaps
-- roadmap recommendations and future capabilities
+For a concise hand-off document intended for ChatGPT or another external reviewer, see [docs/CHATGPT_HANDOFF.md](docs/CHATGPT_HANDOFF.md).
 
 ## Build
 
@@ -95,9 +91,22 @@ You can also open `VsMcpBridge.slnx` in Visual Studio and build `VsMcpBridge.Vsi
 
 ## Test
 
+Shared layer:
+
 ```powershell
-dotnet test .\VsMcpBridge.Vsix.Tests\VsMcpBridge.Vsix.Tests.csproj
+dotnet test .\VsMcpBridge.Shared.Tests\VsMcpBridge.Shared.Tests.csproj
 ```
+
+VSIX-facing tests:
+
+```powershell
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe' .\VsMcpBridge.Vsix.Tests\VsMcpBridge.Vsix.Tests.csproj /restore /t:Build /p:Configuration=Debug /p:Platform=AnyCPU
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe' .\VsMcpBridge.Vsix.Tests\bin\Debug\net472\VsMcpBridge.Vsix.Tests.dll
+```
+
+Important build note:
+
+- `dotnet test .\VsMcpBridge.slnx` is not the correct top-level runner for the repo because the legacy VSIX project depends on Visual Studio MSBuild/VSSDK tooling rather than the SDK-hosted `dotnet` MSBuild path.
 
 ## Current Status
 
@@ -105,11 +114,12 @@ The repository is now in a solid early-platform state:
 
 - VSIX build, packaging, and install have been verified
 - the extension loads in the Experimental instance
-- the bridge uses DI and interface-based services
-- the tool window now uses a passive view plus presenter/viewmodel split
+- the bridge uses DI and interface-based services across the shared and VSIX layers
+- shared infrastructure is no longer coupled to the VSIX project
+- the tool window uses a passive view plus presenter/viewmodel split
 - verbose diagnostics are in place
 - unhandled exceptions are persisted through a swappable sink abstraction
-- unit tests cover the current decoupled logic
+- unit tests cover both the shared layer and the VSIX-specific layer
 
 ## Next Steps
 
@@ -128,3 +138,4 @@ Use these docs together:
 
 - `README.md`: quick orientation and build/test entry point
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
+- `docs/CHATGPT_HANDOFF.md`: current-state hand-off for external analysis and next-step planning

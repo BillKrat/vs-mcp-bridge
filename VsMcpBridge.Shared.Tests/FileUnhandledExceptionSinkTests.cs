@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using VsMcpBridge.Shared.Diagnostics;
-using VsMcpBridge.Vsix.Tests.Support;
+using VsMcpBridge.Shared.Tests.Support;
 using Xunit;
 
-namespace VsMcpBridge.Vsix.Tests;
+namespace VsMcpBridge.Shared.Tests;
 
 public sealed class FileUnhandledExceptionSinkTests
 {
@@ -34,7 +34,7 @@ public sealed class FileUnhandledExceptionSinkTests
             Assert.Contains("Message: outer failure", contents);
             Assert.Contains("InnerException[1].Type: System.ArgumentException", contents);
             Assert.Contains("InnerException[1].Message: inner failure", contents);
-            Assert.Contains(logger.InformationMessages, message => message.Contains(files[0]));
+            Assert.Contains(logger.InformationMessages, message => message.Contains(files[0], StringComparison.Ordinal));
         }
         finally
         {

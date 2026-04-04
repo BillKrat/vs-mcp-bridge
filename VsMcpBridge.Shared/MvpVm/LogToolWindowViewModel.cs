@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using VsMcpBridge.Shared.Interfaces;
 
-namespace VsMcpBridge.Vsix.MvpVm
+namespace VsMcpBridge.Shared.MvpVm
 {
     public class LogToolWindowViewModel : ObservableObject, ILogToolWindowViewModel
     {

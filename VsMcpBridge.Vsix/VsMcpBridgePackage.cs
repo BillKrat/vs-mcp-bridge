@@ -109,8 +109,12 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
         _exceptionSink?.Save("TaskScheduler.UnobservedTaskException", args.Exception);
     }
 
-    public System.Threading.Tasks.Task<T> GetServiceAsync<T>(Type type)
+    public async System.Threading.Tasks.Task<T> GetServiceAsync<T>(Type type)
     {
-        throw new NotImplementedException();
+        var service = await base.GetServiceAsync(type);
+        if (service is null)
+            return default!;
+
+        return (T)service;
     }
 }

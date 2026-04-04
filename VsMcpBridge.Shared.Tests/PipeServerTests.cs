@@ -3,11 +3,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
-using VsMcpBridge.Vsix.Pipe;
-using VsMcpBridge.Vsix.Tests.Support;
+using VsMcpBridge.Shared.Services;
+using VsMcpBridge.Shared.Tests.Support;
 using Xunit;
 
-namespace VsMcpBridge.Vsix.Tests;
+namespace VsMcpBridge.Shared.Tests;
 
 public sealed class PipeServerTests
 {
@@ -29,7 +29,7 @@ public sealed class PipeServerTests
         Assert.Equal("active.cs", response.FilePath);
         Assert.Equal(1, service.GetActiveDocumentCalls);
         Assert.Contains("Handling first bridge request.", logger.VerboseMessages);
-        Assert.Contains(logger.InformationMessages, message => message.Contains("Dispatching pipe command 'vs_get_active_document'"));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Dispatching pipe command 'vs_get_active_document'", StringComparison.Ordinal));
     }
 
     [Fact]
