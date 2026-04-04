@@ -8,31 +8,95 @@
              Background="{DynamicResource VsBrush.Window}">
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
+    <Border Grid.Row="0"
+            Margin="4"
+            Padding="8"
+            BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+            BorderThickness="1">
+      <StackPanel>
+        <TextBlock Text="Create Proposal"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8"
+                   Foreground="{DynamicResource VsBrush.WindowText}" />
+        <TextBlock Text="File Path"
+                   Margin="0,0,0,2"
+                   Foreground="{DynamicResource VsBrush.WindowText}" />
+        <TextBox Margin="0,0,0,8"
+                 Text="{Binding ProposalFilePath, UpdateSourceTrigger=PropertyChanged}" />
+        <Grid Margin="0,0,0,8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Original Text"
+                       Margin="0,0,0,2"
+                       Foreground="{DynamicResource VsBrush.WindowText}" />
+            <TextBox AcceptsReturn="True"
+                     MinHeight="100"
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="Wrap"
+                     Text="{Binding ProposalOriginalText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Proposed Text"
+                       Margin="0,0,0,2"
+                       Foreground="{DynamicResource VsBrush.WindowText}" />
+            <TextBox AcceptsReturn="True"
+                     MinHeight="100"
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="Wrap"
+                     Text="{Binding ProposalProposedText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+        </Grid>
+        <Button HorizontalAlignment="Left"
+                Content="Submit Proposal"
+                Command="{Binding SubmitProposalCommand}" />
+      </StackPanel>
+    </Border>
+
     <!-- Log output -->
-    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-      <TextBox IsReadOnly="True"
-               TextWrapping="Wrap"
-               FontFamily="Consolas"
-               FontSize="12"
-               Background="Transparent"
-               Foreground="{DynamicResource VsBrush.WindowText}"
-               BorderThickness="0"
-               Text="{Binding LogText, Mode=OneWay}" />
-    </ScrollViewer>
+    <TextBox Grid.Row="1"
+             IsReadOnly="True"
+             TextWrapping="Wrap"
+             VerticalAlignment="Stretch"
+             VerticalScrollBarVisibility="Auto"
+             HorizontalScrollBarVisibility="Disabled"
+             FontFamily="Consolas"
+             FontSize="12"
+             Background="Transparent"
+             Foreground="{DynamicResource VsBrush.WindowText}"
+             BorderThickness="0"
+             Text="{Binding LogText, Mode=OneWay}" />
 
     <!-- Approval bar -->
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="4">
-      <TextBlock VerticalAlignment="Center" Margin="0,0,8,0"
+    <Grid Grid.Row="2" Margin="4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Grid.Column="0"
+                 VerticalAlignment="Center"
+                 Margin="0,0,8,0"
                  Text="{Binding PendingApprovalDescription}"
+                 TextWrapping="Wrap"
                  Foreground="{DynamicResource VsBrush.WindowText}" />
-      <Button Content="Approve" Margin="0,0,4,0"
+      <Button Grid.Column="1"
+              Content="Approve"
+              Margin="0,0,4,0"
+              VerticalAlignment="Top"
               Command="{Binding ApproveCommand}" />
-      <Button Content="Reject"
+      <Button Grid.Column="2"
+              Content="Reject"
+              VerticalAlignment="Top"
               Command="{Binding RejectCommand}" />
-    </StackPanel>
+    </Grid>
   </Grid>
 </UserControl>

@@ -1,0 +1,13 @@
+using VsMcpBridge.Shared.Models;
+
+namespace VsMcpBridge.Shared.Interfaces;
+
+public interface IApprovalWorkflowService
+{
+    EditProposal CreateProposal(string requestId, string filePath, string diff);
+    EditProposal? Get(string proposalId);
+    EditProposal Approve(string proposalId);
+    EditProposal Reject(string proposalId);
+    EditProposal MarkApplied(string proposalId);
+    EditProposal MarkFailed(string proposalId);
+}

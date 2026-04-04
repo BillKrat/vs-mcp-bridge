@@ -10,13 +10,21 @@ namespace VsMcpBridge.Shared.MvpVm
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
         private string _logText = InitialLogMessage;
+        private string _proposalFilePath = string.Empty;
+        private string _proposalOriginalText = string.Empty;
+        private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
         private bool _hasPendingApproval;
+        private Action<string, string, string>? _onSubmitProposalRequested;
         private Action? _onApproveRequested;
         private Action? _onRejectRequested;
 
         public LogToolWindowViewModel()
         {
+            SubmitProposalCommand = new RelayCommand(
+                execute: () => _onSubmitProposalRequested?.Invoke(ProposalFilePath, ProposalOriginalText, ProposalProposedText),
+                canExecute: CanSubmitProposal);
+
             ApproveCommand = new RelayCommand(
                 execute: () => _onApproveRequested?.Invoke(),
                 canExecute: () => HasPendingApproval);
@@ -32,6 +40,42 @@ namespace VsMcpBridge.Shared.MvpVm
             set => SetProperty(ref _logText, value);
         }
 
+        public string ProposalFilePath
+        {
+            get => _proposalFilePath;
+            set
+            {
+                if (SetProperty(ref _proposalFilePath, value))
+                {
+                    SubmitProposalCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public string ProposalOriginalText
+        {
+            get => _proposalOriginalText;
+            set
+            {
+                if (SetProperty(ref _proposalOriginalText, value))
+                {
+                    SubmitProposalCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public string ProposalProposedText
+        {
+            get => _proposalProposedText;
+            set
+            {
+                if (SetProperty(ref _proposalProposedText, value))
+                {
+                    SubmitProposalCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
         public string PendingApprovalDescription
         {
             get => _pendingApprovalDescription;
@@ -45,15 +89,24 @@ namespace VsMcpBridge.Shared.MvpVm
             {
                 if (SetProperty(ref _hasPendingApproval, value))
                 {
+                    SubmitProposalCommand.NotifyCanExecuteChanged();
                     ApproveCommand.NotifyCanExecuteChanged();
                     RejectCommand.NotifyCanExecuteChanged();
                 }
             }
         }
 
+        public IRelayCommand SubmitProposalCommand { get; }
+
         public IRelayCommand ApproveCommand { get; }
 
         public IRelayCommand RejectCommand { get; }
+
+        public void SetProposalSubmissionHandler(Action<string, string, string>? onSubmitProposalRequested)
+        {
+            _onSubmitProposalRequested = onSubmitProposalRequested;
+            SubmitProposalCommand.NotifyCanExecuteChanged();
+        }
 
         public void SetApprovalRequestHandlers(Action? onApproveRequested, Action? onRejectRequested)
         {
@@ -61,6 +114,14 @@ namespace VsMcpBridge.Shared.MvpVm
             _onRejectRequested = onRejectRequested;
             ApproveCommand.NotifyCanExecuteChanged();
             RejectCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanSubmitProposal()
+        {
+            return !HasPendingApproval
+                && _onSubmitProposalRequested is not null
+                && !string.IsNullOrWhiteSpace(ProposalFilePath)
+                && (!string.IsNullOrEmpty(ProposalOriginalText) || !string.IsNullOrEmpty(ProposalProposedText));
         }
     }
 }

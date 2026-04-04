@@ -18,6 +18,8 @@ internal static class BridgeServiceCollectionExtensions
 
         services.AddSingleton<IBridgeLogger, ActivityLogBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
+        services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();
+        services.AddSingleton<IEditApplier, VsixEditApplier>();
         services.AddSingleton<IThreadHelper, ThreadHelperAdapter>();
         services.AddSingleton<IVsService, VsService>();
         services.AddSingleton<IPipeServer, PipeServer>();

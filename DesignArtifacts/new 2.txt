@@ -1,0 +1,136 @@
+We have completed the initial MVPVM refactor for the VSIX tool window and want to preserve that direction while tightening lifetime and composition boundaries before further feature work.
+
+Current architectural intent
+
+- LogToolWindow must remain a thin Visual Studio shell host.
+- LogToolWindowControl must remain a passive view.
+- LogToolWindowViewModel must remain a bindable state surface.
+- LogToolWindowPresenter must own processing/orchestration between services, view, and viewmodel.
+- Tool window composition should continue to happen in OnToolWindowCreated() because that is the correct point in the VS lifecycle to resolve package-backed services and attach runtime behavior.
+
+Please review and adjust the implementation to satisfy the following requirements.
+
+1. Tool window responsibilities
+
+Keep LogToolWindow limited to:
+- creating the control in the parameterless constructor
+- setting Content to that control
+- resolving required services in OnToolWindowCreated()
+- composing the control, viewmodel, and presenter
+- calling presenter initialization
+- disposing / detaching presenter-related runtime wiring when appropriate
+
+Do not move behavior, logging flow, command handling, or bridge logic into LogToolWindow code-behind.
+
+2. Presenter lifetime change
+
+The presenter should not be registered as a singleton if it holds live references to:
+- the concrete view
+- the concrete viewmodel
+- pending callbacks/actions
+- runtime event subscriptions
+
+Change the presenter lifetime to a per-tool-window composition lifetime. Use the simplest practical approach for this codebase.
+
+Acceptable direction:
+- presenter registered transient and resolved when the tool window is created
+or
+- presenter created manually in OnToolWindowCreated() using resolved dependencies
+
+Goal:
+- avoid stale UI references
+- avoid singleton presenter holding view instances for the lifetime of the package
+- make recreation of the tool window safe
+
+3. ViewModel lifetime decision
+
+Please explicitly choose and document one of these two options in code comments:
+
+Option A: singleton viewmodel
+Use this only if we intentionally want the tool window’s UI state to persist for the lifetime of the package/session.
+
+Option B: transient viewmodel
+Use this if we want each tool window composition to own its own state cleanly.
+
+Default preference for this stage:
+- transient viewmodel unless there is a concrete reason to preserve state across recreation
+
+Whichever option you choose, make sure the choice is consistent with presenter lifetime and does not create stale references.
+
+4. Composition boundary
+
+Keep the composition root for the tool window in OnToolWindowCreated().
+
+Target shape:
+
+- resolve logger/service dependencies from package/service provider
+- create or resolve viewmodel
+- create or resolve presenter
+- assign DataContext
+- attach presenter to view + viewmodel
+- initialize presenter
+
+Do not rely on constructor injection for ToolWindowPane itself.
+
+5. Cleanup / teardown
+
+Add an explicit cleanup path for presenter-owned runtime attachments.
+
+If presenter subscribes to:
+- logger events
+- bridge events
+- pipe events
+- process events
+- approval callbacks or delegates with retained references
+
+then it must provide a cleanup mechanism, such as IDisposable or a dedicated Detach()/Dispose() path.
+
+LogToolWindow should invoke that cleanup when the tool window is disposed or otherwise torn down.
+
+Goal:
+- no leaked event handlers
+- no stale references to controls/viewmodels
+- safe reopen/recreate behavior
+
+6. Passive view rule
+
+Keep LogToolWindowControl passive.
+
+Do not add behavior back into code-behind except minimal view-only mechanics that truly belong to the view layer.
+
+The presenter should interact with the view through a minimal interface. Keep that interface small. Prefer binding through the viewmodel rather than direct control manipulation.
+
+7. ViewModel rule
+
+Keep the viewmodel focused on bindable state and commands.
+
+Do not move orchestration logic, bridge coordination, or service interaction into the viewmodel.
+
+If commands exist, they may delegate into presenter-provided actions/callbacks, but the viewmodel should not become the application coordinator.
+
+8. UI-thread ownership
+
+Keep UI-thread marshaling centralized in the presenter or another orchestration layer, not in the view.
+
+Any updates flowing from background/runtime services into bindable UI state should be marshaled in one intentional place.
+
+Do not spread dispatcher logic across the control and the tool window unless required.
+
+9. Prepare for event flow
+
+Do not add new features yet. Instead, make the structure ready for the next step, where runtime events from logger/bridge services will flow into the presenter and then into the viewmodel.
+
+At the end of this pass, the code should be ready for:
+- logger -> presenter -> viewmodel -> UI
+without further architectural reshaping.
+
+10. Deliverable for this pass
+
+Please make only the structural/lifetime changes above and then provide a concise summary of:
+- what was changed
+- why presenter lifetime was chosen
+- why viewmodel lifetime was chosen
+- how cleanup works
+- what the next clean integration point is for runtime log/bridge events
+
+Do not expand scope beyond these architectural corrections.

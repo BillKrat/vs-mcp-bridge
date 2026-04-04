@@ -18,12 +18,24 @@ public sealed class VsService : IVsService
     private readonly IAsyncPackage _package;
     private readonly IBridgeLogger _logger;
     private readonly IThreadHelper _threadHelper;
+    private readonly IApprovalWorkflowService _approvalWorkflowService;
+    private readonly IEditApplier _editApplier;
+    private readonly ILogToolWindowPresenter _logToolWindowPresenter;
 
-    public VsService(IAsyncPackage package, IBridgeLogger logger, IThreadHelper threadHelper)
+    public VsService(
+        IAsyncPackage package,
+        IBridgeLogger logger,
+        IThreadHelper threadHelper,
+        IApprovalWorkflowService approvalWorkflowService,
+        IEditApplier editApplier,
+        ILogToolWindowPresenter logToolWindowPresenter)
     {
         _package = package;
         _logger = logger;
         _threadHelper = threadHelper;
+        _approvalWorkflowService = approvalWorkflowService;
+        _editApplier = editApplier;
+        _logToolWindowPresenter = logToolWindowPresenter;
         _logger.LogVerbose("Bridge service startup complete.");
     }
 
@@ -174,15 +186,32 @@ public sealed class VsService : IVsService
     }
 
     public Task<ProposeTextEditResponse> ProposeTextEditAsync(
+        string requestId,
         string filePath,
         string originalText,
         string proposedText)
     {
-        _logger.LogInformation($"Generating proposed diff for '{filePath}'.");
+        _logger.LogInformation($"Generating proposed diff for '{filePath}' [RequestId={requestId}].");
 
         var diff = GenerateUnifiedDiff(filePath, originalText, proposedText);
+        if (!string.IsNullOrEmpty(diff))
+        {
+            var proposal = _approvalWorkflowService.CreateProposal(requestId, filePath, diff);
+            _logger.LogInformation($"Created edit proposal [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            _logToolWindowPresenter.ShowApprovalPrompt(
+                BuildProposalDescription(proposal),
+                () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
+                () => RejectProposal(proposal.ProposalId));
+        }
+        else
+        {
+            _logger.LogInformation($"No edit proposal created because the proposed text matches the original text [RequestId={requestId}] for '{filePath}'.");
+        }
+
         return Task.FromResult(new ProposeTextEditResponse
         {
+            RequestId = requestId,
             Success = true,
             FilePath = filePath,
             Diff = diff
@@ -218,6 +247,35 @@ public sealed class VsService : IVsService
         vsBuildErrorLevel.vsBuildErrorLevelMedium => "Warning",
         _ => "Message"
     };
+
+    private static string BuildProposalDescription(EditProposal proposal)
+    {
+        return $"Pending proposal for '{proposal.FilePath}'{Environment.NewLine}{proposal.Diff}";
+    }
+
+    private async Task ApproveAndApplyAsync(string proposalId)
+    {
+        var proposal = _approvalWorkflowService.Approve(proposalId);
+        _logger.LogInformation($"Proposal approved [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+
+        try
+        {
+            await _editApplier.ApplyAsync(proposal);
+            _approvalWorkflowService.MarkApplied(proposalId);
+            _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+        }
+        catch (Exception ex)
+        {
+            _approvalWorkflowService.MarkFailed(proposalId);
+            _logger.LogError($"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.", ex);
+        }
+    }
+
+    private void RejectProposal(string proposalId)
+    {
+        var proposal = _approvalWorkflowService.Reject(proposalId);
+        _logger.LogInformation($"Proposal rejected [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+    }
 
     private static string GenerateUnifiedDiff(string filePath, string original, string proposed)
     {

@@ -36,6 +36,7 @@ internal sealed class StubVsService : IVsService
     public int ListSolutionProjectsCalls { get; private set; }
     public int GetErrorListCalls { get; private set; }
     public int ProposeTextEditCalls { get; private set; }
+    public string? LastProposeRequestId { get; private set; }
 
     public Task<GetActiveDocumentResponse> GetActiveDocumentAsync()
     {
@@ -86,11 +87,13 @@ internal sealed class StubVsService : IVsService
         });
     }
 
-    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText)
+    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string requestId, string filePath, string originalText, string proposedText)
     {
         ProposeTextEditCalls++;
+        LastProposeRequestId = requestId;
         return Task.FromResult(new ProposeTextEditResponse
         {
+            RequestId = requestId,
             Success = true,
             FilePath = filePath,
             Diff = $"--- a/{filePath}\n+++ b/{filePath}\n-{originalText}\n+{proposedText}\n"
@@ -104,7 +107,7 @@ internal sealed class ThrowingVsService : IVsService
     public Task<GetSelectedTextResponse> GetSelectedTextAsync() => throw new InvalidOperationException("Boom from GetSelectedTextAsync.");
     public Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync() => throw new InvalidOperationException("Boom from ListSolutionProjectsAsync.");
     public Task<GetErrorListResponse> GetErrorListAsync() => throw new InvalidOperationException("Boom from GetErrorListAsync.");
-    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText) => throw new InvalidOperationException("Boom from ProposeTextEditAsync.");
+    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string requestId, string filePath, string originalText, string proposedText) => throw new InvalidOperationException("Boom from ProposeTextEditAsync.");
 }
 
 internal sealed class TestThreadHelper : IThreadHelper

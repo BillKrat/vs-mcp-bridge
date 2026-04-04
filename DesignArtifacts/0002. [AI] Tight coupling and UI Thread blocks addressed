@@ -22,6 +22,10 @@ I would avoid trying to make the Visual Studio package itself deeply unit-testab
 On MEF: acceptable on the VSIX side if it fits naturally with Visual Studio composition, but I would not force MEF across the whole solution just for purity. For the out-of-process server and shared logic, plain constructor injection is usually simpler.
 
 
+
+
+
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Noted, I'm considering the experience I gained in working with EFCorePowerTools GitHub project.   I created a WPF wizard for it and the coding was harder than it needed to be, with no ability to write unit test because of hard dependencies.   The biggest issue I had to overcome was UI thread deadlocks, particularly with WPF Wizard (as the main UI thread) clashing with background processes switching to the UI thread - something I'm seeing in this code coming out of the gate. 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

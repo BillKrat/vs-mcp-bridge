@@ -3,25 +3,34 @@ using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Shared.MvpVm
 {
-    public class LogToolWindowPresenter(IBridgeLogger logger, IThreadHelper threadHelper) : ILogToolWindowPresenter
+    public class LogToolWindowPresenter : ILogToolWindowPresenter
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
+        private readonly IBridgeLogger _logger;
+        private readonly IThreadHelper _threadHelper;
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
 
+        public LogToolWindowPresenter(IBridgeLogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
+        {
+            _logger = logger;
+            _threadHelper = threadHelper;
+            LogToolWindowViewModel = logToolWindowViewModel;
+            LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
+        }
+
         public ILogToolWindowControl LogToolWindowControl { get; set; } = null!;
 
-        public ILogToolWindowViewModel LogToolWindowViewModel { get; set; } = null!;
+        public ILogToolWindowViewModel LogToolWindowViewModel { get; set; }
 
         public void Initialize()
         {
-            logger.LogInformation("Initializing VS MCP Bridge tool window...");
+            _logger.LogInformation("Initializing VS MCP Bridge tool window...");
 
             LogToolWindowControl.DataContext = LogToolWindowViewModel;
-            LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
 
-            logger.LogInformation("VS MCP Bridge tool window Initialized.");
+            _logger.LogInformation("VS MCP Bridge tool window Initialized.");
         }
 
         public void AppendLog(string message)
@@ -34,6 +43,11 @@ namespace VsMcpBridge.Shared.MvpVm
                         ? message
                         : $"{existingLog}{Environment.NewLine}{message}";
             });
+        }
+
+        public void SetProposalSubmissionHandler(Action<string, string, string> onSubmitProposal)
+        {
+            LogToolWindowViewModel.SetProposalSubmissionHandler(onSubmitProposal);
         }
 
         public void ShowApprovalPrompt(string description, Action onApprove, Action onReject)
@@ -83,15 +97,15 @@ namespace VsMcpBridge.Shared.MvpVm
 
         public void RunOnUiThread(Action action)
         {
-            if (threadHelper.CheckAccess())
+            if (_threadHelper.CheckAccess())
             {
                 action();
                 return;
             }
 
-            threadHelper.Run(async delegate
+            _threadHelper.Run(async delegate
             {
-                await threadHelper.SwitchToMainThreadAsync();
+                await _threadHelper.SwitchToMainThreadAsync();
                 action();
             });
         }

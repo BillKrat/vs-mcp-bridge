@@ -1,7 +1,9 @@
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Reflection;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -31,6 +33,7 @@ internal sealed class StubVsService : IVsService
     public int ListSolutionProjectsCalls { get; private set; }
     public int GetErrorListCalls { get; private set; }
     public int ProposeTextEditCalls { get; private set; }
+    public string? LastProposeRequestId { get; private set; }
 
     public Task<GetActiveDocumentResponse> GetActiveDocumentAsync()
     {
@@ -81,11 +84,13 @@ internal sealed class StubVsService : IVsService
         });
     }
 
-    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText)
+    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string requestId, string filePath, string originalText, string proposedText)
     {
         ProposeTextEditCalls++;
+        LastProposeRequestId = requestId;
         return Task.FromResult(new ProposeTextEditResponse
         {
+            RequestId = requestId,
             Success = true,
             FilePath = filePath,
             Diff = $"--- a/{filePath}\n+++ b/{filePath}\n-{originalText}\n+{proposedText}\n"
@@ -99,7 +104,7 @@ internal sealed class ThrowingVsService : IVsService
     public Task<GetSelectedTextResponse> GetSelectedTextAsync() => throw new InvalidOperationException("Boom from GetSelectedTextAsync.");
     public Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync() => throw new InvalidOperationException("Boom from ListSolutionProjectsAsync.");
     public Task<GetErrorListResponse> GetErrorListAsync() => throw new InvalidOperationException("Boom from GetErrorListAsync.");
-    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText) => throw new InvalidOperationException("Boom from ProposeTextEditAsync.");
+    public Task<ProposeTextEditResponse> ProposeTextEditAsync(string requestId, string filePath, string originalText, string proposedText) => throw new InvalidOperationException("Boom from ProposeTextEditAsync.");
 }
 
 internal sealed class RecordingUnhandledExceptionSink : IUnhandledExceptionSink
@@ -109,5 +114,37 @@ internal sealed class RecordingUnhandledExceptionSink : IUnhandledExceptionSink
     public void Save(string source, Exception exception)
     {
         Entries.Add((source, exception));
+    }
+}
+
+internal sealed class RecordingEditApplier : IEditApplier
+{
+    public List<EditProposal> AppliedProposals { get; } = new();
+
+    public Task ApplyAsync(EditProposal proposal)
+    {
+        AppliedProposals.Add(proposal);
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class ThrowingEditApplier : IEditApplier
+{
+    public int Calls { get; private set; }
+
+    public Task ApplyAsync(EditProposal proposal)
+    {
+        Calls++;
+        throw new InvalidOperationException("Boom from ApplyAsync.");
+    }
+}
+
+internal static class TestWorkflowHelpers
+{
+    internal static IReadOnlyList<string> GetProposalIds(IApprovalWorkflowService workflowService)
+    {
+        var field = workflowService.GetType().GetField("_proposals", BindingFlags.Instance | BindingFlags.NonPublic);
+        var proposals = (Dictionary<string, EditProposal>)field!.GetValue(workflowService)!;
+        return proposals.Keys.ToList();
     }
 }

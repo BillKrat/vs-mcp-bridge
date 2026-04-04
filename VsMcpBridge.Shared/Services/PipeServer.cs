@@ -103,8 +103,12 @@ public sealed class PipeServer : IPipeServer
             return null;
         }
 
-        _logger.LogInformation($"Dispatching pipe command '{envelope.Command}'.");
-        return await DispatchAsync(envelope);
+        envelope.RequestId = EnsureRequestId(envelope.RequestId);
+
+        _logger.LogInformation($"Dispatching pipe command '{envelope.Command}' [RequestId={envelope.RequestId}].");
+        var response = await DispatchAsync(envelope);
+        response.RequestId = envelope.RequestId;
+        return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
     }
 
     private void ListenLoop(CancellationToken ct)
@@ -183,31 +187,44 @@ public sealed class PipeServer : IPipeServer
         }
     }
 
-    private async Task<string> DispatchAsync(PipeMessage envelope)
+    private async Task<VsResponseBase> DispatchAsync(PipeMessage envelope)
     {
-        object response = envelope.Command switch
+        VsResponseBase response = envelope.Command switch
         {
             PipeCommands.GetActiveDocument => await _vsService.GetActiveDocumentAsync(),
             PipeCommands.GetSelectedText => await _vsService.GetSelectedTextAsync(),
             PipeCommands.ListSolutionProjects => await _vsService.ListSolutionProjectsAsync(),
             PipeCommands.GetErrorList => await _vsService.GetErrorListAsync(),
-            PipeCommands.ProposeTextEdit => await DispatchProposeEditAsync(envelope.Payload),
+            PipeCommands.ProposeTextEdit => await DispatchProposeEditAsync(envelope),
             _ => new VsResponseBaseUnknown { Success = false, ErrorMessage = $"Unknown command: {envelope.Command}" }
         };
 
-        return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
+        return response;
     }
 
-    private async Task<ProposeTextEditResponse> DispatchProposeEditAsync(string payload)
+    private async Task<ProposeTextEditResponse> DispatchProposeEditAsync(PipeMessage envelope)
     {
-        var request = JsonSerializer.Deserialize<ProposeTextEditRequest>(payload, JsonOptions);
+        var request = JsonSerializer.Deserialize<ProposeTextEditRequest>(envelope.Payload, JsonOptions);
         if (request == null)
         {
-            _logger.LogWarning("Received an invalid ProposeTextEdit request payload.");
-            return new ProposeTextEditResponse { Success = false, ErrorMessage = "Invalid request payload." };
+            _logger.LogWarning($"Received an invalid ProposeTextEdit request payload [RequestId={envelope.RequestId}].");
+            return new ProposeTextEditResponse { RequestId = envelope.RequestId, Success = false, ErrorMessage = "Invalid request payload." };
         }
 
-        return await _vsService.ProposeTextEditAsync(request.FilePath, request.OriginalText, request.ProposedText);
+        request.RequestId = EnsureRequestId(request.RequestId, envelope.RequestId);
+        envelope.RequestId = request.RequestId;
+        return await _vsService.ProposeTextEditAsync(request.RequestId, request.FilePath, request.OriginalText, request.ProposedText);
+    }
+
+    private static string EnsureRequestId(string? requestId, string? fallbackRequestId = null)
+    {
+        if (!string.IsNullOrWhiteSpace(requestId))
+            return requestId!;
+
+        if (!string.IsNullOrWhiteSpace(fallbackRequestId))
+            return fallbackRequestId!;
+
+        return Guid.NewGuid().ToString("N");
     }
 
     private sealed class VsResponseBaseUnknown : VsResponseBase { }

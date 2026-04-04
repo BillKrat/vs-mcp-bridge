@@ -28,12 +28,11 @@ public sealed class MvpVmTests
     {
         var logger = new RecordingBridgeLogger();
         var threadHelper = new TestThreadHelper();
-        var presenter = new LogToolWindowPresenter(logger, threadHelper);
-        var control = new FakeLogToolWindowControl();
         var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel);
+        var control = new FakeLogToolWindowControl();
 
         presenter.LogToolWindowControl = control;
-        presenter.LogToolWindowViewModel = viewModel;
 
         presenter.Initialize();
 
@@ -45,11 +44,10 @@ public sealed class MvpVmTests
     [Fact]
     public void AppendLog_replaces_initial_placeholder_and_appends_on_subsequent_calls()
     {
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper());
         var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
         presenter.LogToolWindowControl = new FakeLogToolWindowControl();
-        presenter.LogToolWindowViewModel = viewModel;
 
         presenter.AppendLog("first");
         presenter.AppendLog("second");
@@ -60,14 +58,13 @@ public sealed class MvpVmTests
     [Fact]
     public void ShowApprovalPrompt_updates_view_model_and_approve_command_invokes_callback()
     {
-        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper());
         var control = new FakeLogToolWindowControl();
         var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
         var approved = false;
         var rejected = false;
 
         presenter.LogToolWindowControl = control;
-        presenter.LogToolWindowViewModel = viewModel;
         presenter.Initialize();
 
         presenter.ShowApprovalPrompt("Apply change", () => approved = true, () => rejected = true);
@@ -89,10 +86,10 @@ public sealed class MvpVmTests
     {
         var logger = new RecordingBridgeLogger();
         var threadHelper = new TestThreadHelper { HasAccess = false };
-        var presenter = new LogToolWindowPresenter(logger, threadHelper)
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(logger, threadHelper, viewModel)
         {
-            LogToolWindowControl = new FakeLogToolWindowControl(),
-            LogToolWindowViewModel = new LogToolWindowViewModel()
+            LogToolWindowControl = new FakeLogToolWindowControl()
         };
 
         presenter.AppendLog("message");
@@ -100,5 +97,66 @@ public sealed class MvpVmTests
         Assert.Equal(1, threadHelper.RunCalls);
         Assert.Equal(1, threadHelper.SwitchCalls);
         Assert.Equal("message", presenter.LogToolWindowViewModel.LogText);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_before_initialize_updates_shared_view_model_state()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
+        Assert.True(viewModel.ApproveCommand.CanExecute(null));
+        Assert.True(viewModel.RejectCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_invokes_submission_handler_with_entered_values()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        string? submittedFilePath = null;
+        string? submittedOriginalText = null;
+        string? submittedProposedText = null;
+
+        presenter.SetProposalSubmissionHandler((filePath, originalText, proposedText) =>
+        {
+            submittedFilePath = filePath;
+            submittedOriginalText = originalText;
+            submittedProposedText = proposedText;
+        });
+
+        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
+        viewModel.ProposalOriginalText = "before";
+        viewModel.ProposalProposedText = "after";
+
+        Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(@"C:\repo\Sample.cs", submittedFilePath);
+        Assert.Equal("before", submittedOriginalText);
+        Assert.Equal("after", submittedProposedText);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_is_disabled_while_a_proposal_is_pending()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.SetProposalSubmissionHandler((_, _, _) => { });
+        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
+        viewModel.ProposalOriginalText = "before";
+        viewModel.ProposalProposedText = "after";
+
+        Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+
+        Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
     }
 }

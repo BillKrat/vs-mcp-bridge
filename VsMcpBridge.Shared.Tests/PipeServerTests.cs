@@ -19,17 +19,18 @@ public sealed class PipeServerTests
         var logger = new RecordingBridgeLogger();
         var service = new StubVsService();
         var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
-        var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.GetActiveDocument, Payload = string.Empty }, JsonOptions);
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { RequestId = "request-123", Command = PipeCommands.GetActiveDocument, Payload = string.Empty }, JsonOptions);
 
         var responseJson = await server.ProcessRequestAsync(requestJson);
         var response = JsonSerializer.Deserialize<GetActiveDocumentResponse>(responseJson!, JsonOptions);
 
         Assert.NotNull(response);
         Assert.True(response!.Success);
+        Assert.Equal("request-123", response.RequestId);
         Assert.Equal("active.cs", response.FilePath);
         Assert.Equal(1, service.GetActiveDocumentCalls);
         Assert.Contains("Handling first bridge request.", logger.VerboseMessages);
-        Assert.Contains(logger.InformationMessages, message => message.Contains("Dispatching pipe command 'vs_get_active_document'", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Dispatching pipe command 'vs_get_active_document' [RequestId=request-123]", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -81,6 +82,7 @@ public sealed class PipeServerTests
         var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
         var payload = JsonSerializer.Serialize(new ProposeTextEditRequest
         {
+            RequestId = "request-456",
             FilePath = "sample.cs",
             OriginalText = "before",
             ProposedText = "after"
@@ -92,8 +94,26 @@ public sealed class PipeServerTests
 
         Assert.NotNull(response);
         Assert.True(response!.Success);
+        Assert.Equal("request-456", response.RequestId);
         Assert.Equal(1, service.ProposeTextEditCalls);
+        Assert.Equal("request-456", service.LastProposeRequestId);
         Assert.Contains("sample.cs", response.Diff);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsync_generates_request_id_when_missing_and_returns_it()
+    {
+        var logger = new RecordingBridgeLogger();
+        var service = new StubVsService();
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.GetSelectedText, Payload = string.Empty }, JsonOptions);
+
+        var responseJson = await server.ProcessRequestAsync(requestJson);
+        var response = JsonSerializer.Deserialize<GetSelectedTextResponse>(responseJson!, JsonOptions);
+
+        Assert.NotNull(response);
+        Assert.False(string.IsNullOrWhiteSpace(response!.RequestId));
+        Assert.Contains(logger.InformationMessages, message => message.Contains($"[RequestId={response.RequestId}]"));
     }
 
     [Fact]

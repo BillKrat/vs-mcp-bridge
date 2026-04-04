@@ -9,5 +9,5 @@ public interface IVsService
     Task<GetSelectedTextResponse> GetSelectedTextAsync();
     Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync();
     Task<GetErrorListResponse> GetErrorListAsync();
-    Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText);
+    Task<ProposeTextEditResponse> ProposeTextEditAsync(string requestId, string filePath, string originalText, string proposedText);
 }

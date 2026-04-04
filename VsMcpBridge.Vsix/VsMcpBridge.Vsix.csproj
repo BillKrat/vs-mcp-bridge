@@ -55,6 +55,7 @@
     <Compile Include="Logging\ActivityLogBridgeLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ThreadHelperAdapter.cs" />
+    <Compile Include="Services\VsixEditApplier.cs" />
     <Compile Include="Services\VsService.cs" />
     <Compile Include="ToolWindows\LogToolWindow.cs" />
     <Compile Include="ToolWindows\LogToolWindowControl.xaml.cs">

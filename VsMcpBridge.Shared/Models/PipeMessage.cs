@@ -7,6 +7,7 @@ namespace VsMcpBridge.Shared.Models;
 /// </summary>
 public sealed class PipeMessage
 {
+    public string RequestId { get; set; } = string.Empty;
     public string Command { get; set; } = string.Empty;
     public string Payload { get; set; } = string.Empty;
 }
