@@ -1,5 +1,5 @@
 using System.Windows.Controls;
-using VsMcpBridge.Vsix.MvpVm;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.ToolWindows;
 

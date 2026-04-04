@@ -1,10 +1,9 @@
 using System;
-using Microsoft.VisualStudio.Shell;
-using VsMcpBridge.Vsix.Logging;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.MvpVm
 {
-    internal class LogToolWindowPresenter(IBridgeLogger logger) : ILogToolWindowPresenter
+    public class LogToolWindowPresenter(IBridgeLogger logger, IThreadHelper threadHelper) : ILogToolWindowPresenter
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
@@ -82,17 +81,17 @@ namespace VsMcpBridge.Vsix.MvpVm
             LogToolWindowViewModel.HasPendingApproval = false;
         }
 
-        private static void RunOnUiThread(Action action)
+        public void RunOnUiThread(Action action)
         {
-            if (ThreadHelper.CheckAccess())
+            if (threadHelper.CheckAccess())
             {
                 action();
                 return;
             }
 
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            threadHelper.Run(async delegate
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                await threadHelper.SwitchToMainThreadAsync();
                 action();
             });
         }

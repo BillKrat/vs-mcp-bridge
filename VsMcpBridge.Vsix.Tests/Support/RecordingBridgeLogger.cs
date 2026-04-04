@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using VsMcpBridge.Vsix.Logging;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.Tests.Support;
 

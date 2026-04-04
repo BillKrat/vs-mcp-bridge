@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.Composition;
 using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;

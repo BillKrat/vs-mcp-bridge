@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
 
-namespace VsMcpBridge.Vsix.Services;
+namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IVsService
 {

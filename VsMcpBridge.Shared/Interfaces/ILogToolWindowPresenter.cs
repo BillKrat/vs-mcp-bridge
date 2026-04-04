@@ -1,8 +1,8 @@
 using System;
 
-namespace VsMcpBridge.Vsix.MvpVm
+namespace VsMcpBridge.Shared.Interfaces
 {
-    internal interface ILogToolWindowPresenter
+    public interface ILogToolWindowPresenter
     {
         ILogToolWindowControl LogToolWindowControl { get; set; }
         ILogToolWindowViewModel LogToolWindowViewModel { get; set; }

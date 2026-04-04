@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using System;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.Logging;
 

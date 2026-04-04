@@ -4,8 +4,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.Composition;
-using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Pipe;
 using Task = System.Threading.Tasks.Task;
@@ -20,7 +20,7 @@ namespace VsMcpBridge.Vsix;
 [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [ProvideMenuResource("Menus.ctmenu", 1)]
 [ProvideToolWindow(typeof(ToolWindows.LogToolWindow))]
-public sealed class VsMcpBridgePackage : AsyncPackage
+public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
 {
     public const string PackageGuidString = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
@@ -107,5 +107,10 @@ public sealed class VsMcpBridgePackage : AsyncPackage
     {
         _logger?.LogError("TaskScheduler unobserved task exception observed.", args.Exception);
         _exceptionSink?.Save("TaskScheduler.UnobservedTaskException", args.Exception);
+    }
+
+    public System.Threading.Tasks.Task<T> GetServiceAsync<T>(Type type)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.Shell;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.Diagnostics;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Pipe;
@@ -9,9 +9,8 @@ namespace VsMcpBridge.Vsix.Composition;
 
 internal static class BridgeServiceCollectionExtensions
 {
-    internal static IServiceCollection AddVsMcpBridgeServices(this IServiceCollection services, AsyncPackage package)
+    internal static IServiceCollection AddVsMcpBridgeServices(this IServiceCollection services, IAsyncPackage package)
     {
-        services.AddSingleton<AsyncPackage>(package);
         services.AddSingleton(package);
         services.AddSingleton<IBridgeLogger, ActivityLogBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();

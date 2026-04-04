@@ -1,6 +1,6 @@
 using System;
 
-namespace VsMcpBridge.Vsix.Diagnostics;
+namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IUnhandledExceptionSink
 {

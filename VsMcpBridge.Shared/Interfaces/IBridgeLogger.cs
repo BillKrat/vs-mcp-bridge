@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VsMcpBridge.Vsix.Logging;
+namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IBridgeLogger
 {

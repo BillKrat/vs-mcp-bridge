@@ -1,10 +1,11 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.MvpVm
 {
-    internal class LogToolWindowViewModel : ObservableObject, ILogToolWindowViewModel
+    public class LogToolWindowViewModel : ObservableObject, ILogToolWindowViewModel
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 

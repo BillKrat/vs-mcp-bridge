@@ -1,9 +1,9 @@
-using System;
 using CommunityToolkit.Mvvm.Input;
+using System;
 
-namespace VsMcpBridge.Vsix.MvpVm
+namespace VsMcpBridge.Shared.Interfaces
 {
-    internal interface ILogToolWindowViewModel
+    public interface ILogToolWindowViewModel
     {
         string LogText { get; set; }
         string PendingApprovalDescription { get; set; }

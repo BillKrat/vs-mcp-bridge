@@ -5,10 +5,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
-using VsMcpBridge.Vsix.Diagnostics;
-using VsMcpBridge.Vsix.Logging;
-using VsMcpBridge.Vsix.Services;
 
 namespace VsMcpBridge.Vsix.Pipe;
 

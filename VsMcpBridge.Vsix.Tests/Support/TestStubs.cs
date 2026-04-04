@@ -3,19 +3,22 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
-using VsMcpBridge.Vsix.Diagnostics;
-using VsMcpBridge.Vsix.Services;
 
 namespace VsMcpBridge.Vsix.Tests.Support;
 
-internal sealed class FakeAsyncPackage : AsyncPackage
+internal sealed class FakeAsyncPackage : AsyncPackage, IAsyncPackage
 {
+    public Task<T> GetServiceAsync<T>(Type type)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal static class TestPackageFactory
 {
-    internal static FakeAsyncPackage CreatePackage()
+    internal static IAsyncPackage CreatePackage()
     {
         return (FakeAsyncPackage)FormatterServices.GetUninitializedObject(typeof(FakeAsyncPackage));
     }

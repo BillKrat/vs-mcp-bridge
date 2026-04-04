@@ -1,4 +1,5 @@
-﻿using VsMcpBridge.Vsix.Services;
+﻿using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Vsix.Services;
 using VsMcpBridge.Vsix.Tests.Support;
 using Xunit;
 
@@ -10,7 +11,8 @@ public sealed class VsServiceTests
     public void Constructor_logs_bridge_service_startup()
     {
         var logger = new RecordingBridgeLogger();
-        _ = new VsService(TestPackageFactory.CreatePackage(), logger);
+        IThreadHelper threadHelper = new TestThreadHelper();
+        _ = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper);
 
         Assert.Contains("Bridge service startup complete.", logger.VerboseMessages);
     }
@@ -19,7 +21,8 @@ public sealed class VsServiceTests
     public async System.Threading.Tasks.Task ProposeTextEditAsync_returns_empty_diff_when_text_is_unchanged()
     {
         var logger = new RecordingBridgeLogger();
-        var service = new VsService(TestPackageFactory.CreatePackage(), logger);
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper);
 
         var response = await service.ProposeTextEditAsync("sample.cs", "same", "same");
 
@@ -31,7 +34,9 @@ public sealed class VsServiceTests
     [Fact]
     public async System.Threading.Tasks.Task ProposeTextEditAsync_returns_unified_diff_when_text_changes()
     {
-        var service = new VsService(TestPackageFactory.CreatePackage(), new RecordingBridgeLogger());
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper);
 
         var response = await service.ProposeTextEditAsync("sample.cs", "before", "after");
 

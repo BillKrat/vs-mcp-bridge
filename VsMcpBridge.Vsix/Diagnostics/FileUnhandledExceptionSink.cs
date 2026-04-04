@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using VsMcpBridge.Vsix.Logging;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.Diagnostics;
 

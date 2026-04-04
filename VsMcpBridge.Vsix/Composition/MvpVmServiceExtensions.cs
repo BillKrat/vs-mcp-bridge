@@ -1,11 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Vsix.MvpVm;
 
 namespace VsMcpBridge.Vsix.Composition
 {
-    internal static class MvpVmServiceExtensions
+    public static class MvpVmServiceExtensions
     {
-        internal static IServiceCollection AddMvpVmServices(this IServiceCollection services)
+        public static IServiceCollection AddMvpVmServices(this IServiceCollection services)
         {
             services.AddSingleton<ILogToolWindowPresenter, LogToolWindowPresenter>();
             services.AddSingleton<ILogToolWindowViewModel, LogToolWindowViewModel>();

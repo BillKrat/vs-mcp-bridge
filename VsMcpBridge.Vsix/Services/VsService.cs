@@ -1,11 +1,10 @@
 ﻿using EnvDTE;
 using EnvDTE80;
-using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
-using VsMcpBridge.Vsix.Logging;
 using Task = System.Threading.Tasks.Task;
 
 namespace VsMcpBridge.Vsix.Services;
@@ -16,10 +15,11 @@ namespace VsMcpBridge.Vsix.Services;
 /// </summary>
 public sealed class VsService : IVsService
 {
-    private readonly AsyncPackage _package;
+    private readonly IAsyncPackage _package;
     private readonly IBridgeLogger _logger;
+    private readonly IThreadHelper _threadHelper;
 
-    public VsService(AsyncPackage package, IBridgeLogger logger)
+    public VsService(IAsyncPackage package, IBridgeLogger logger, IThreadHelper threadHelper)
     {
         _package = package;
         _logger = logger;
@@ -32,7 +32,7 @@ public sealed class VsService : IVsService
 
         try
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadHelper.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
             Document? doc = dte.ActiveDocument;
@@ -63,7 +63,7 @@ public sealed class VsService : IVsService
 
         try
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadHelper.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
             Document? doc = dte.ActiveDocument;
@@ -94,7 +94,7 @@ public sealed class VsService : IVsService
 
         try
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadHelper.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
             Solution? solution = dte.Solution;
@@ -130,7 +130,7 @@ public sealed class VsService : IVsService
 
         try
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _threadHelper.SwitchToMainThreadAsync();
 
             var dte = await GetDteAsync();
             var diagnostics = new List<DiagnosticItem>();
@@ -190,17 +190,17 @@ public sealed class VsService : IVsService
 
     private async Task<DTE2> GetDteAsync()
     {
-        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-        var dte = await _package.GetServiceAsync(typeof(DTE)) as DTE2;
+        await _threadHelper.SwitchToMainThreadAsync();
+        var dte = await _package.GetServiceAsync<DTE2>(typeof(DTE));
         if (dte == null)
             throw new InvalidOperationException("DTE service unavailable.");
 
         return dte;
     }
 
-    private static string GetTargetFramework(Project project)
+    private string GetTargetFramework(Project project)
     {
-        ThreadHelper.ThrowIfNotOnUIThread();
+        _threadHelper.ThrowIfNotOnUIThread();
         try
         {
             return project.Properties?.Item("TargetFrameworkMoniker")?.Value?.ToString() ?? string.Empty;
