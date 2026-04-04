@@ -6,9 +6,13 @@ Last updated: 2026-04-04
 
 This document is optimized for handing the repository to ChatGPT or another external reviewer so it can understand the current state quickly and recommend next steps without spending most of its time rebuilding context.
 
+It should be kept aligned with `README.md`, `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`, and `docs/MVPVM_OVERVIEW.md`.
+
 ## One-Paragraph Summary
 
 `vs-mcp-bridge` is a local bridge between an AI client and Visual Studio. A `net8.0` MCP server (`VsMcpBridge.McpServer`) speaks stdio to the AI client and forwards JSON commands over a named pipe to a Visual Studio extension (`VsMcpBridge.Vsix`, .NET Framework 4.7.2). The VSIX owns all Visual Studio SDK/DTE interaction. The shared layer (`VsMcpBridge.Shared`) contains protocol models plus shared abstractions, diagnostics plumbing, pipe dispatch, and presenter/viewmodel logic, while `VsMcpBridge.Shared.Wpf` contains the reusable tool-window views. The system currently supports read/query operations plus diff proposal, approval, rejection, and apply inside Visual Studio.
+
+The current architectural theme is: keep Visual Studio integration in the VSIX, keep shared coordination and contracts outside it, and keep the WPF tool window split along MVP/VM lines.
 
 ## Current Project Layout
 
@@ -69,6 +73,8 @@ What is solid:
 - DI seams are in place
 - unhandled exception persistence is abstracted
 - tool window view/presenter/viewmodel split exists
+- the WPF view now lives in `VsMcpBridge.Shared.Wpf` instead of the VSIX assembly
+- there is a repo-specific MVP/VM guide for future UI work
 - both shared and VSIX layers have automated tests
 
 What is still incomplete:
@@ -97,6 +103,7 @@ Follow-up work completed after that refactor:
 - added `VsixEditApplier` for Visual Studio-hosted application of approved proposals
 - moved the WPF control into the new `VsMcpBridge.Shared.Wpf` project
 - added `scripts/build-vsix.ps1` to standardize VSIX builds across Insiders and Community MSBuild installs
+- added `docs/MVPVM_OVERVIEW.md` to document how presenter/viewmodel/view responsibilities are expected to stay split in this repo
 
 ## Current Test Status
 
@@ -109,6 +116,10 @@ Passing now:
 Important caveat:
 
 - `dotnet test .\VsMcpBridge.slnx` is not the correct full-solution runner because the old-style VSIX build depends on Visual Studio MSBuild/VSSDK tasks rather than the SDK-hosted `dotnet` MSBuild path.
+
+Practical note:
+
+- recent manual testing has been reported as good, but this file should not imply there is full end-to-end automated coverage for Visual Studio-hosted edit application
 
 ## Risks / Weak Spots ChatGPT Should Evaluate
 
@@ -143,13 +154,17 @@ Use questions like these:
 ## Files ChatGPT Should Read First
 
 - `README.md`
+- `docs/MVPVM_OVERVIEW.md`
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
 - `VsMcpBridge.Shared/Interfaces/*`
 - `VsMcpBridge.Shared/Services/PipeServer.cs`
 - `VsMcpBridge.Shared/MvpVm/LogToolWindowPresenter.cs`
+- `VsMcpBridge.Shared/MvpVm/LogToolWindowViewModel.cs`
+- `VsMcpBridge.Shared.Wpf/Views/LogToolWindowControl.xaml`
 - `VsMcpBridge.Vsix/VsMcpBridgePackage.cs`
 - `VsMcpBridge.Vsix/Composition/BridgeServiceCollectionExtensions.cs`
 - `VsMcpBridge.Vsix/Services/VsService.cs`
+- `VsMcpBridge.Vsix/Services/VsixEditApplier.cs`
 - `VsMcpBridge.Shared.Tests/*`
 - `VsMcpBridge.Vsix.Tests/*`
 
@@ -157,4 +172,4 @@ Use questions like these:
 
 Use something close to this:
 
-> Review this repository as an architect and implementation planner. The shared layer was recently decoupled from the VSIX so other hosts can provide their own implementations. Based on the current architecture, identify the top risks, the most important missing abstractions, and the next 3-5 engineering steps that should be taken to complete the approval/apply workflow and harden the bridge for growth. Prefer concrete recommendations over generic advice.
+> Review this repository as an architect and implementation planner. The shared layer has been decoupled from the VSIX, the WPF tool window view now lives in `VsMcpBridge.Shared.Wpf`, and the tool window follows an MVP/VM split documented in `docs/MVPVM_OVERVIEW.md`. Based on the current architecture, identify the top risks, the most important missing abstractions, and the next 3-5 engineering steps that should be taken to harden the approval/apply workflow, improve observability, and keep `VsService` from growing into a catch-all service. Prefer concrete recommendations over generic advice.
