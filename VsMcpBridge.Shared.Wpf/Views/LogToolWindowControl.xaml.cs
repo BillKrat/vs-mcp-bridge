@@ -1,7 +1,7 @@
 using System.Windows.Controls;
 using VsMcpBridge.Shared.Interfaces;
 
-namespace VsMcpBridge.Vsix.ToolWindows;
+namespace VsMcpBridge.Shared.Wpf.Views;
 
 /// <summary>
 /// Passive view for <see cref="LogToolWindowControl"/>.

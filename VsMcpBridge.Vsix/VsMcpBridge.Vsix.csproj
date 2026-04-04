@@ -58,16 +58,7 @@
     <Compile Include="Services\VsixEditApplier.cs" />
     <Compile Include="Services\VsService.cs" />
     <Compile Include="ToolWindows\LogToolWindow.cs" />
-    <Compile Include="ToolWindows\LogToolWindowControl.xaml.cs">
-      <DependentUpon>LogToolWindowControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="VsMcpBridgePackage.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="ToolWindows\LogToolWindowControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Menus.vsct">
