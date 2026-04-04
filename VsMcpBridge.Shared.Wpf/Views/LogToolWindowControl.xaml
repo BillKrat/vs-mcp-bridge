@@ -8,8 +8,9 @@
              Background="{DynamicResource VsBrush.Window}">
   <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
+      <RowDefinition Height="*" MinHeight="220" />
+      <RowDefinition Height="5" />
+      <RowDefinition Height="*" MinHeight="40" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
@@ -18,51 +19,85 @@
             Padding="8"
             BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
             BorderThickness="1">
-      <StackPanel>
-        <TextBlock Text="Create Proposal"
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0"
+                   Text="Create Proposal"
                    FontWeight="SemiBold"
                    Margin="0,0,0,8"
                    Foreground="{DynamicResource VsBrush.WindowText}" />
-        <TextBlock Text="File Path"
+        <TextBlock Grid.Row="1"
+                   Text="File Path"
                    Margin="0,0,0,2"
                    Foreground="{DynamicResource VsBrush.WindowText}" />
-        <TextBox Margin="0,0,0,8"
+        <TextBox Grid.Row="2"
+                 Margin="0,0,0,8"
                  Text="{Binding ProposalFilePath, UpdateSourceTrigger=PropertyChanged}" />
-        <Grid Margin="0,0,0,8">
+        <Grid Grid.Row="3" Margin="0,0,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="8" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
-          <StackPanel Grid.Column="0">
-            <TextBlock Text="Original Text"
+          <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"
+                       Text="Original Text"
                        Margin="0,0,0,2"
                        Foreground="{DynamicResource VsBrush.WindowText}" />
-            <TextBox AcceptsReturn="True"
-                     MinHeight="100"
-                     VerticalScrollBarVisibility="Auto"
-                     TextWrapping="Wrap"
-                     Text="{Binding ProposalOriginalText, UpdateSourceTrigger=PropertyChanged}" />
-          </StackPanel>
-          <StackPanel Grid.Column="2">
-            <TextBlock Text="Proposed Text"
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+              <TextBox AcceptsReturn="True"
+                       MinHeight="100"
+                       TextWrapping="Wrap"
+                       Text="{Binding ProposalOriginalText, UpdateSourceTrigger=PropertyChanged}" />
+            </ScrollViewer>
+          </Grid>
+          <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"
+                       Text="Proposed Text"
                        Margin="0,0,0,2"
                        Foreground="{DynamicResource VsBrush.WindowText}" />
-            <TextBox AcceptsReturn="True"
-                     MinHeight="100"
-                     VerticalScrollBarVisibility="Auto"
-                     TextWrapping="Wrap"
-                     Text="{Binding ProposalProposedText, UpdateSourceTrigger=PropertyChanged}" />
-          </StackPanel>
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+              <TextBox AcceptsReturn="True"
+                       MinHeight="100"
+                       TextWrapping="Wrap"
+                       Text="{Binding ProposalProposedText, UpdateSourceTrigger=PropertyChanged}" />
+            </ScrollViewer>
+          </Grid>
         </Grid>
-        <Button HorizontalAlignment="Left"
+        <Button Grid.Row="4"
+                HorizontalAlignment="Left"
                 Content="Submit Proposal"
                 Command="{Binding SubmitProposalCommand}" />
-      </StackPanel>
+      </Grid>
     </Border>
 
+    <GridSplitter Grid.Row="1"
+                 Height="5"
+                 HorizontalAlignment="Stretch"
+                 Background="{DynamicResource VsBrush.CommandBarBorder}"
+                 ResizeDirection="Rows"
+                 ResizeBehavior="PreviousAndNext" />
+
     <!-- Log output -->
-    <TextBox Grid.Row="1"
+    <TextBox Grid.Row="2"
              IsReadOnly="True"
              TextWrapping="Wrap"
              VerticalAlignment="Stretch"
@@ -76,7 +111,7 @@
              Text="{Binding LogText, Mode=OneWay}" />
 
     <!-- Approval bar -->
-    <Grid Grid.Row="2" Margin="4">
+    <Grid Grid.Row="3" Margin="4">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
