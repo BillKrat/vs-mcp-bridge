@@ -1,5 +1,6 @@
 using System.IO.Pipes;
 using System.Text.Json;
+using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.McpServer.Pipe;

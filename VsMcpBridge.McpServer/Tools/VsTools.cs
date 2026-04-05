@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using VsMcpBridge.McpServer.Pipe;
+using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.McpServer.Tools;
 

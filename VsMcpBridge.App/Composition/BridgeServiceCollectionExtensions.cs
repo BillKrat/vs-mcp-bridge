@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using VsMcpBridge.App.Logging;
 using VsMcpBridge.App.Services;
 using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Services;
 
 namespace VsMcpBridge.App.Composition;

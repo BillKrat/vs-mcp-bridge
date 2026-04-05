@@ -1,11 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Shared.MvpVm;
 using VsMcpBridge.Shared.Services;
 using VsMcpBridge.Vsix.Services;
 using VsMcpBridge.Vsix.Tests.Support;
+using VsMcpBridge.Shared.Tests.Support;
 using Xunit;
 
 namespace VsMcpBridge.Vsix.Tests;
@@ -151,6 +153,6 @@ public sealed class VsServiceTests
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
-        Assert.Contains(logger.ErrorMessages, message => message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
+        Assert.Contains(logger.Errors, error => error.Message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
     }
 }

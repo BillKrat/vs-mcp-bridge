@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Shared.Services;
 using VsMcpBridge.Shared.Tests.Support;

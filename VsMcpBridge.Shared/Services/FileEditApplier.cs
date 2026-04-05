@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
-namespace VsMcpBridge.App.Services;
+namespace VsMcpBridge.Shared.Services;
 
-internal sealed class FileEditApplier : IEditApplier
+public sealed class FileEditApplier : IEditApplier
 {
     public Task ApplyAsync(EditProposal proposal)
     {

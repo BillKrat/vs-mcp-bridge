@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using VsMcpBridge.Shared.Diagnostics;
-using VsMcpBridge.Shared.Tests.Support;
+using VsMcpBridge.Shared.Loggers;
 using Xunit;
 
 namespace VsMcpBridge.Shared.Tests;

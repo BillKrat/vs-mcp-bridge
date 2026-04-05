@@ -1,7 +1,8 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.MvpVm;
 using VsMcpBridge.Shared.Tests.Support;
 using Xunit;

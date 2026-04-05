@@ -1,9 +1,9 @@
 using System;
 using VsMcpBridge.Shared.Interfaces;
 
-namespace VsMcpBridge.App.Logging;
+namespace VsMcpBridge.Shared.Loggers;
 
-internal sealed class ConsoleBridgeLogger : IBridgeLogger
+public sealed class ConsoleBridgeLogger : IBridgeLogger
 {
     public void LogVerbose(string message) => Log("VERBOSE", message);
     public void LogInformation(string message) => Log("INFO", message);
