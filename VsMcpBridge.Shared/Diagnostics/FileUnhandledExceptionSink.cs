@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.IO;
@@ -8,16 +9,16 @@ namespace VsMcpBridge.Shared.Diagnostics;
 
 public sealed class FileUnhandledExceptionSink : IUnhandledExceptionSink
 {
-    private readonly IBridgeLogger _logger;
+    private readonly ILogger _logger;
     private readonly Func<DateTimeOffset> _clock;
     private readonly string _logDirectory;
 
-    public FileUnhandledExceptionSink(IBridgeLogger logger)
+    public FileUnhandledExceptionSink(ILogger logger)
         : this(logger, () => DateTimeOffset.UtcNow, GetDefaultLogDirectory())
     {
     }
 
-    public FileUnhandledExceptionSink(IBridgeLogger logger, Func<DateTimeOffset> clock, string logDirectory)
+    public FileUnhandledExceptionSink(ILogger logger, Func<DateTimeOffset> clock, string logDirectory)
     {
         _logger = logger;
         _clock = clock;

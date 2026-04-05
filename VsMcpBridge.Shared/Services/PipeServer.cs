@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -20,14 +21,14 @@ public sealed class PipeServer : IPipeServer
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private readonly IVsService _vsService;
-    private readonly IBridgeLogger _logger;
+    private readonly ILogger _logger;
     private readonly IUnhandledExceptionSink _exceptionSink;
     private readonly object _sync = new();
     private CancellationTokenSource? _cts;
     private Thread? _listenThread;
     private int _hasHandledFirstRequest;
 
-    public PipeServer(IVsService vsService, IBridgeLogger logger, IUnhandledExceptionSink exceptionSink)
+    public PipeServer(IVsService vsService, ILogger logger, IUnhandledExceptionSink exceptionSink)
     {
         _vsService = vsService;
         _logger = logger;
@@ -44,7 +45,7 @@ public sealed class PipeServer : IPipeServer
                 return;
             }
 
-            _logger.LogVerbose("Starting pipe server listener thread.");
+            _logger.LogTrace("Starting pipe server listener thread.");
             _cts = new CancellationTokenSource();
             _listenThread = new Thread(() => ListenLoop(_cts.Token))
             {
@@ -94,7 +95,7 @@ public sealed class PipeServer : IPipeServer
         }
 
         if (Interlocked.CompareExchange(ref _hasHandledFirstRequest, 1, 0) == 0)
-            _logger.LogVerbose("Handling first bridge request.");
+            _logger.LogTrace("Handling first bridge request.");
 
         var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
         if (envelope == null)
@@ -141,7 +142,7 @@ public sealed class PipeServer : IPipeServer
                 if (ct.IsCancellationRequested)
                     break;
 
-                _logger.LogError("Pipe server listen loop failed.", ex);
+                _logger.LogError(ex, "Pipe server listen loop failed.");
                 _exceptionSink.Save("PipeServer.ListenLoop", ex);
             }
         }
@@ -167,7 +168,7 @@ public sealed class PipeServer : IPipeServer
         }
         catch (Exception ex)
         {
-            _logger.LogError("Pipe connection handling failed.", ex);
+            _logger.LogError(ex, "Pipe connection handling failed.");
             _exceptionSink.Save("PipeServer.HandleConnectionAsync", ex);
         }
         finally
@@ -179,7 +180,7 @@ public sealed class PipeServer : IPipeServer
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed to disconnect pipe cleanly.", ex);
+                _logger.LogError(ex, "Failed to disconnect pipe cleanly.");
                 _exceptionSink.Save("PipeServer.Disconnect", ex);
             }
 

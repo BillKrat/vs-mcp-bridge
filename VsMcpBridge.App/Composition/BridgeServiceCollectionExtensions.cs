@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using VsMcpBridge.App.Services;
 using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
@@ -13,7 +14,7 @@ internal static class BridgeServiceCollectionExtensions
     {
         services.AddSingleton<AppSessionState>();
         services.AddSingleton<IProposalDraftState>(serviceProvider => serviceProvider.GetRequiredService<AppSessionState>());
-        services.AddSingleton<IBridgeLogger, ConsoleBridgeLogger>();
+        services.AddSingleton<ILogger, ConsoleBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
         services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();
         services.AddSingleton<IEditApplier, FileEditApplier>();

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +19,7 @@ internal sealed class StandaloneVsService : IVsService
         @"^(?<file>.+?)\((?<line>\d+)(,(?<column>\d+))?\):\s(?<severity>error|warning)\s(?<code>[^:]+):\s(?<description>.+?)(\s\[(?<project>.+)\])?$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly IBridgeLogger _logger;
+    private readonly ILogger _logger;
     private readonly IThreadHelper _threadHelper;
     private readonly IApprovalWorkflowService _approvalWorkflowService;
     private readonly IEditApplier _editApplier;
@@ -26,7 +27,7 @@ internal sealed class StandaloneVsService : IVsService
     private readonly AppSessionState _sessionState;
 
     public StandaloneVsService(
-        IBridgeLogger logger,
+        ILogger logger,
         IThreadHelper threadHelper,
         IApprovalWorkflowService approvalWorkflowService,
         IEditApplier editApplier,
@@ -39,7 +40,7 @@ internal sealed class StandaloneVsService : IVsService
         _editApplier = editApplier;
         _logToolWindowPresenter = logToolWindowPresenter;
         _sessionState = sessionState;
-        _logger.LogVerbose("Bridge service startup complete.");
+        _logger.LogTrace("Bridge service startup complete.");
     }
 
     public Task<GetActiveDocumentResponse> GetActiveDocumentAsync()
@@ -66,7 +67,7 @@ internal sealed class StandaloneVsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("App service operation 'GetActiveDocument' failed.", ex);
+            _logger.LogError(ex, "App service operation 'GetActiveDocument' failed.");
             throw;
         }
     }
@@ -94,7 +95,7 @@ internal sealed class StandaloneVsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("App service operation 'GetSelectedText' failed.", ex);
+            _logger.LogError(ex, "App service operation 'GetSelectedText' failed.");
             throw;
         }
     }
@@ -129,7 +130,7 @@ internal sealed class StandaloneVsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("App service operation 'ListSolutionProjects' failed.", ex);
+            _logger.LogError(ex, "App service operation 'ListSolutionProjects' failed.");
             throw;
         }
     }
@@ -192,7 +193,7 @@ internal sealed class StandaloneVsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("App service operation 'GetErrorList' failed.", ex);
+            _logger.LogError(ex, "App service operation 'GetErrorList' failed.");
             throw;
         }
     }

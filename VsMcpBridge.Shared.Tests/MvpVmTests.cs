@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
@@ -22,7 +23,7 @@ public sealed class MvpVmTests
     public void AddMvpVmServices_registers_shared_presenter_and_view_model()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IBridgeLogger, RecordingBridgeLogger>();
+        services.AddSingleton<ILogger, RecordingBridgeLogger>();
         services.AddSingleton<IThreadHelper, TestThreadHelper>();
         services.AddSingleton<IVsService, StubVsService>();
 

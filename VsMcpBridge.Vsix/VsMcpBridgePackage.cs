@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -27,43 +28,43 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
     private Microsoft.Extensions.DependencyInjection.ServiceProvider? _serviceProvider;
     private IPipeServer? _pipeServer;
     private IUnhandledExceptionSink? _exceptionSink;
-    private IBridgeLogger? _logger;
+    private ILogger? _logger;
 
-    public IBridgeLogger Logger { get { return _logger!; } }
+    public ILogger Logger { get { return _logger!; } }
     public Microsoft.Extensions.DependencyInjection.ServiceProvider ServiceProvider { get { return _serviceProvider!; } }
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
         var bootstrapLogger = new ActivityLogBridgeLogger();
-        bootstrapLogger.LogVerbose("Package initialization starting.");
+        bootstrapLogger.LogTrace("Package initialization starting.");
 
         try
         {
             await Commands.ShowLogToolWindowCommand.InitializeAsync(this);
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            bootstrapLogger.LogVerbose("Building VS MCP Bridge service collection.");
+            bootstrapLogger.LogTrace("Building VS MCP Bridge service collection.");
             _serviceProvider = new ServiceCollection()
                 .AddVsMcpBridgeServices(this)
                 .AddMvpVmServices()
                 .BuildServiceProvider();
 
-            _logger = _serviceProvider.GetRequiredService<IBridgeLogger>();
+            _logger = _serviceProvider.GetRequiredService<ILogger>();
             _exceptionSink = _serviceProvider.GetRequiredService<IUnhandledExceptionSink>();
             RegisterUnhandledExceptionHandlers();
 
             _logger.LogInformation("Initializing VS MCP Bridge package.");
-            _logger.LogVerbose("Starting bridge services.");
+            _logger.LogTrace("Starting bridge services.");
 
             _pipeServer = _serviceProvider.GetRequiredService<IPipeServer>();
             _pipeServer.Start();
 
             _logger.LogInformation("VS MCP Bridge package initialized.");
-            _logger.LogVerbose("Package initialization completed.");
+            _logger.LogTrace("Package initialization completed.");
         }
         catch (Exception ex)
         {
-            bootstrapLogger.LogError("Package initialization failed.", ex);
+            bootstrapLogger.LogError(ex, "Package initialization failed.");
             _exceptionSink?.Save("VsMcpBridgePackage.InitializeAsync", ex);
             throw;
         }
@@ -85,7 +86,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
     {
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
         global::System.Threading.Tasks.TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        _logger?.LogVerbose("Registered global unhandled exception handlers.");
+        _logger?.LogTrace("Registered global unhandled exception handlers.");
     }
 
     private void UnregisterUnhandledExceptionHandlers()
@@ -99,13 +100,13 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
         if (args.ExceptionObject is not Exception exception)
             return;
 
-        _logger?.LogError("AppDomain unhandled exception observed.", exception);
+        _logger?.LogError(exception, "AppDomain unhandled exception observed.");
         _exceptionSink?.Save("AppDomain.CurrentDomain.UnhandledException", exception);
     }
 
     private void OnUnobservedTaskException(object? sender, global::System.Threading.Tasks.UnobservedTaskExceptionEventArgs args)
     {
-        _logger?.LogError("TaskScheduler unobserved task exception observed.", args.Exception);
+        _logger?.LogError(args.Exception, "TaskScheduler unobserved task exception observed.");
         _exceptionSink?.Save("TaskScheduler.UnobservedTaskException", args.Exception);
     }
 

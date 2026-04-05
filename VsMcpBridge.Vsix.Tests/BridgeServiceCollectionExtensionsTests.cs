@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Diagnostics;
@@ -26,7 +27,7 @@ public sealed class BridgeServiceCollectionExtensionsTests
 
         Assert.Same(package, provider.GetRequiredService<IAsyncPackage>());
         Assert.Same(package, provider.GetRequiredService<AsyncPackage>());
-        Assert.IsType<ActivityLogBridgeLogger>(provider.GetRequiredService<IBridgeLogger>());
+        Assert.IsType<ActivityLogBridgeLogger>(provider.GetRequiredService<ILogger>());
         Assert.IsType<FileUnhandledExceptionSink>(provider.GetRequiredService<IUnhandledExceptionSink>());
         Assert.IsType<InMemoryApprovalWorkflowService>(provider.GetRequiredService<IApprovalWorkflowService>());
         Assert.NotNull(provider.GetRequiredService<IEditApplier>());

@@ -1,5 +1,6 @@
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace VsMcpBridge.Vsix.Services;
 public sealed class VsService : IVsService
 {
     private readonly IAsyncPackage _package;
-    private readonly IBridgeLogger _logger;
+    private readonly ILogger _logger;
     private readonly IThreadHelper _threadHelper;
     private readonly IApprovalWorkflowService _approvalWorkflowService;
     private readonly IEditApplier _editApplier;
@@ -25,7 +26,7 @@ public sealed class VsService : IVsService
 
     public VsService(
         IAsyncPackage package,
-        IBridgeLogger logger,
+        ILogger logger,
         IThreadHelper threadHelper,
         IApprovalWorkflowService approvalWorkflowService,
         IEditApplier editApplier,
@@ -37,7 +38,7 @@ public sealed class VsService : IVsService
         _approvalWorkflowService = approvalWorkflowService;
         _editApplier = editApplier;
         _logToolWindowPresenter = logToolWindowPresenter;
-        _logger.LogVerbose("Bridge service startup complete.");
+        _logger.LogTrace("Bridge service startup complete.");
     }
 
     public async Task<GetActiveDocumentResponse> GetActiveDocumentAsync()
@@ -68,7 +69,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("VS service operation 'GetActiveDocument' failed.", ex);
+            _logger.LogError(ex, "VS service operation 'GetActiveDocument' failed.");
             throw;
         }
     }
@@ -99,7 +100,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("VS service operation 'GetSelectedText' failed.", ex);
+            _logger.LogError(ex, "VS service operation 'GetSelectedText' failed.");
             throw;
         }
     }
@@ -127,7 +128,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("VS service operation 'ListSolutionProjects' failed.", ex);
+            _logger.LogError(ex, "VS service operation 'ListSolutionProjects' failed.");
             throw;
         }
     }
@@ -167,7 +168,7 @@ public sealed class VsService : IVsService
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed to read the Visual Studio Error List.", ex);
+                _logger.LogError(ex, "Failed to read the Visual Studio Error List.");
                 return new GetErrorListResponse { Success = false, ErrorMessage = "Failed to read the Visual Studio Error List." };
             }
 
@@ -175,7 +176,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
-            _logger.LogError("VS service operation 'GetErrorList' failed.", ex);
+            _logger.LogError(ex, "VS service operation 'GetErrorList' failed.");
             throw;
         }
     }
@@ -311,7 +312,7 @@ public sealed class VsService : IVsService
         catch (Exception ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logger.LogError($"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.", ex);
+            _logger.LogError(ex, $"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
         }
     }
 

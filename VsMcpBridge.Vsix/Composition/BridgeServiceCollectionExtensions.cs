@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
@@ -16,7 +17,7 @@ internal static class BridgeServiceCollectionExtensions
         if (package is AsyncPackage asyncPackage)
             services.AddSingleton(asyncPackage);
 
-        services.AddSingleton<IBridgeLogger, ActivityLogBridgeLogger>();
+        services.AddSingleton<ILogger, ActivityLogBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
         services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();
         services.AddSingleton<IEditApplier, VsixEditApplier>();

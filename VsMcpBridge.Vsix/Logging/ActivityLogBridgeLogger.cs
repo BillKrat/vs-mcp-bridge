@@ -1,31 +1,35 @@
-﻿using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Shell;
 using System;
-using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Vsix.Logging;
 
-public sealed class ActivityLogBridgeLogger : IBridgeLogger
+public sealed class ActivityLogBridgeLogger : ILogger
 {
     private const string Source = nameof(VsMcpBridgePackage);
 
-    public void LogVerbose(string message)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        ActivityLog.TryLogInformation(Source, $"[Verbose] {message}");
+        var message = formatter(state, exception);
+        switch (logLevel)
+        {
+            case LogLevel.Trace:
+            case LogLevel.Debug:
+            case LogLevel.Information:
+                ActivityLog.TryLogInformation(Source, message);
+                break;
+            case LogLevel.Warning:
+                ActivityLog.TryLogWarning(Source, message);
+                break;
+            case LogLevel.Error:
+            case LogLevel.Critical:
+                var details = exception == null ? message : $"{message}{Environment.NewLine}{exception}";
+                ActivityLog.TryLogError(Source, details);
+                break;
+        }
     }
 
-    public void LogInformation(string message)
-    {
-        ActivityLog.TryLogInformation(Source, message);
-    }
+    public bool IsEnabled(LogLevel logLevel) => true;
 
-    public void LogWarning(string message)
-    {
-        ActivityLog.TryLogWarning(Source, message);
-    }
-
-    public void LogError(string message, Exception? exception = null)
-    {
-        var details = exception == null ? message : $"{message}{Environment.NewLine}{exception}";
-        ActivityLog.TryLogError(Source, details);
-    }
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 }

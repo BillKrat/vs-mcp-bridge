@@ -1,7 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Shared.MvpVm
@@ -11,13 +12,13 @@ namespace VsMcpBridge.Shared.MvpVm
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
         private readonly IServiceProvider _serviceProvider;
-        private readonly IBridgeLogger _logger;
+        private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
         private readonly IProposalDraftState? _proposalDraftState;
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
 
-        public LogToolWindowPresenter(IServiceProvider serviceProvider, IBridgeLogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
+        public LogToolWindowPresenter(IServiceProvider serviceProvider, ILogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
@@ -110,7 +111,7 @@ namespace VsMcpBridge.Shared.MvpVm
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Manual proposal submission failed for '{filePath}'.", ex);
+                _logger.LogError(ex, $"Manual proposal submission failed for '{filePath}'.");
             }
         }
 
