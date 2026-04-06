@@ -42,24 +42,16 @@ public partial class App : Application
     private void RegisterUnhandledExceptionHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
-        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
     }
 
     private void UnregisterUnhandledExceptionHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
-        TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
     }
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
     {
         if (args.ExceptionObject is Exception exception)
             _exceptionSink?.Save("App.UnhandledException", exception);
-    }
-
-    private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs args)
-    {
-        _exceptionSink?.Save("App.UnobservedTaskException", args.Exception);
-        args.SetObserved();
     }
 }

@@ -1,12 +1,27 @@
-# VS MCP Bridge ChatGPT Hand-Off
+# VS MCP Bridge — AI Handoff
 
-Last updated: 2026-04-04
+Last updated: 2026-04-06
 
 ## Purpose
 
-This document is optimized for handing the repository to ChatGPT or another external reviewer so it can understand the current state quickly and recommend next steps without spending most of its time rebuilding context.
+This document is the shared communication channel between the human developer (Bill), ChatGPT (architect), GitHub Copilot (pair-programmer), and Codex (implementer). It is optimized for handing context quickly without rebuilding it from scratch.
 
-It should be kept aligned with `README.md`, `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`, and `docs/MVPVM_OVERVIEW.md`.
+It should be kept aligned with `README.md`, `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`, `docs/MVPVM_OVERVIEW.md`, and `docs/CODING_STANDARDS.md`.
+
+---
+
+## Living Document Protocol
+
+This file has multiple AI contributors. To avoid stomping on each other:
+
+1. **Bill (human)** owns the top-level architecture sections (Summary, Project Layout, Architecture, Supported Operations, Current State, Next Steps).
+2. **Each AI** owns exactly one section at the bottom, named `## [AI Name] — Notes`. Only that AI appends to its own section.
+3. **Append-only within AI sections** — new entries go at the top, oldest at the bottom. Never edit a prior entry.
+4. **Disagreements** go in your own section as a note, not as an edit to another section.
+5. **Propose changes** to Bill's sections by adding a `### Proposed Update` block in your AI section — Bill decides whether to apply it.
+6. **`docs/CODING_STANDARDS.md`** is the canonical source for patterns and conventions. Propose additions there via a `### Proposed Standards Addition` block in your AI section.
+
+---
 
 ## One-Paragraph Summary
 
@@ -42,7 +57,7 @@ host implementation
 
 Important boundary:
 
-- `VsMcpBridge.Shared` contains host-agnostic interfaces such as `IAsyncPackage`, `IThreadHelper`, `IVsService`, `IBridgeLogger`, `IUnhandledExceptionSink`, `IPipeServer`, and presenter-facing coordination interfaces used by multiple hosts.
+- `VsMcpBridge.Shared` contains host-agnostic interfaces such as `IAsyncPackage`, `IThreadHelper`, `IVsService`, `ILogLevelSettings`, `IUnhandledExceptionSink`, `IPipeServer`, and presenter-facing coordination interfaces used by multiple hosts. Logging uses `Microsoft.Extensions.Logging.ILogger` — the custom `IBridgeLogger` has been removed.
 - `VsMcpBridge.Vsix` supplies Visual Studio-specific implementations.
 - `VsMcpBridge.App` supplies standalone workspace/file-system implementations and is the example host for non-VSIX consumers.
 - This split exists so other hosts can reuse bridge infrastructure by supplying their own implementations instead of referencing the VSIX directly.
@@ -163,9 +178,11 @@ Use questions like these:
 ## Files ChatGPT Should Read First
 
 - `README.md`
+- `docs/CODING_STANDARDS.md` ← **read this before generating any code**
 - `docs/MVPVM_OVERVIEW.md`
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
 - `VsMcpBridge.Shared/Interfaces/*`
+- `VsMcpBridge.Shared/Loggers/LoggerBase.cs`
 - `VsMcpBridge.Shared/Services/PipeServer.cs`
 - `VsMcpBridge.Shared/MvpVm/LogToolWindowPresenter.cs`
 - `VsMcpBridge.Shared/MvpVm/LogToolWindowViewModel.cs`
@@ -177,6 +194,7 @@ Use questions like these:
 - `VsMcpBridge.Vsix/Composition/BridgeServiceCollectionExtensions.cs`
 - `VsMcpBridge.Vsix/Services/VsService.cs`
 - `VsMcpBridge.Vsix/Services/VsixEditApplier.cs`
+- `VsMcpBridge.Vsix/Logging/ActivityLogBridgeLogger.cs`
 - `VsMcpBridge.Shared.Tests/*`
 - `VsMcpBridge.Vsix.Tests/*`
 
@@ -184,4 +202,47 @@ Use questions like these:
 
 Use something close to this:
 
-> Review this repository as an architect and implementation planner. The shared layer has been decoupled from the VSIX, the WPF tool window view now lives in `VsMcpBridge.Shared.Wpf`, the tool window follows an MVP/VM split documented in `docs/MVPVM_OVERVIEW.md`, and there is now both a VSIX host and a standalone app host that reuse the shared bridge. Based on the current architecture, identify the top risks, the most important missing abstractions, and the next 3-5 engineering steps that should be taken to harden the approval/apply workflow, improve observability, and keep the host-service layer from growing into a catch-all service. Prefer concrete recommendations over generic advice.
+> Review this repository as an architect and implementation planner. The shared layer has been decoupled from the VSIX, the WPF tool window view now lives in `VsMcpBridge.Shared.Wpf`, the tool window follows an MVP/VM split documented in `docs/MVPVM_OVERVIEW.md`, and there is now both a VSIX host and a standalone app host that reuse the shared bridge. Logging now uses `Microsoft.Extensions.Logging.ILogger` throughout with a `LoggerBase` template-method hierarchy and a runtime-switchable `ILogLevelSettings` singleton. Read `docs/CODING_STANDARDS.md` before proposing any code changes. Based on the current architecture, identify the top risks, the most important missing abstractions, and the next 3-5 engineering steps that should be taken to harden the approval/apply workflow, improve observability, and keep the host-service layer from growing into a catch-all service. Prefer concrete recommendations over generic advice.
+
+---
+
+## GitHub Copilot — Notes
+
+*I am GitHub Copilot. I work with Bill directly as a pair-programmer. New entries go at the top of this section.*
+
+---
+
+### Entry: 2026-04-06 — Logging Architecture, Async Safety, and Recent Branch Work
+
+**Branch**: `feature/approval-apply-ui-slice` (4 commits ahead of `main` / `7ee970f`)
+
+**What changed since the branch point** (`68f0552`, `516d5b3`, `0cba45b`, `372fad2`):
+
+| Area | Change |
+|---|---|
+| `IBridgeLogger` | **Removed.** All logging now uses `Microsoft.Extensions.Logging.ILogger`. |
+| `LoggerBase` | New template-method base class. Subclasses override `LogMessage`; base owns `IsEnabled` and dispatch. |
+| `DebugBridgeLogger` | New. Writes to `System.Diagnostics.Debug.WriteLine` → VS Output window. |
+| `ActivityLogBridgeLogger` | Refactored to extend `LoggerBase`. Chains `DebugBridgeLogger` as `AdditionalLogger`. |
+| `ConsoleBridgeLogger` | Moved from `VsMcpBridge.App/Logging/` to `VsMcpBridge.Shared/Loggers/`. Extends `LoggerBase`. |
+| `ILogLevelSettings` / `LogLevelSettings` | New. Runtime log-level switch shared by loggers and the tool-window dropdown. |
+| `LogToolWindowViewModel` | Added `SelectedLogLevel` + `AvailableLogLevels` bound to `ILogLevelSettings`. |
+| `ServiceProviderExtensions.Resolve<T>` | Now emits `LogTrace("[DI] Resolving {TypeName}")`. Composition roots converted to use it. |
+| Test doubles | Consolidated and moved to `VsMcpBridge.Shared/Tests/` for reuse across test projects. |
+| `TaskScheduler.UnobservedTaskException` | **Removed from VSIX.** It was catching all of VS's own internal task timeouts. `AppDomain.CurrentDomain.UnhandledException` is sufficient in the VSIX. It remains appropriate in `VsMcpBridge.App` (a controlled process). |
+| `CODING_STANDARDS.md` | **New file** at `docs/CODING_STANDARDS.md`. Canonical patterns reference. |
+
+**Key patterns to preserve going forward:**
+
+1. Every fire-and-forget (`_ = SomeAsync()`) must have an internal `try-catch`. There is no VSIX-level safety net. See `CODING_STANDARDS.md §1`.
+2. `LogError` is `(Exception, string, ...)` — exception first. This is the opposite of the old `IBridgeLogger` order.
+3. Composition roots use `Resolve<T>()` — never `GetRequiredService<T>()` at those sites.
+4. `ConsoleBridgeLogger` and `ActivityLogBridgeLogger` both require `ILogLevelSettings` injected by DI to participate in the runtime level switch. Their parameterless constructors exist only for bootstrap / test use.
+
+**What I'd flag for ChatGPT's next architecture review:**
+- `LogToolWindowPresenter.SubmitProposalAsync` calls `_serviceProvider.GetRequiredService<IVsService>()` directly — this should use `Resolve<T>()` for consistency and traceability.
+- The `LogLevel.None` entry in `AvailableLogLevels` effectively silences the logger. Intentional, but worth documenting in the UI as "Off" rather than "None" for end-user clarity.
+- `RecordingBridgeLogger` in `VsMcpBridge.Shared/Loggers/` now extends `LoggerBase` and stores `Errors` as `(string Message, Exception? Exception)` — tests asserting `logger.Errors` need to use the tuple pattern.
+
+---
+

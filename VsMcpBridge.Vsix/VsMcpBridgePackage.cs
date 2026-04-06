@@ -86,14 +86,12 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
     private void RegisterUnhandledExceptionHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
-        global::System.Threading.Tasks.TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         _logger?.LogTrace("Registered global unhandled exception handlers.");
     }
 
     private void UnregisterUnhandledExceptionHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
-        global::System.Threading.Tasks.TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
     }
 
     private void OnCurrentDomainUnhandledException(object? sender, UnhandledExceptionEventArgs args)
@@ -103,12 +101,6 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
 
         _logger?.LogError(exception, "AppDomain unhandled exception observed.");
         _exceptionSink?.Save("AppDomain.CurrentDomain.UnhandledException", exception);
-    }
-
-    private void OnUnobservedTaskException(object? sender, global::System.Threading.Tasks.UnobservedTaskExceptionEventArgs args)
-    {
-        _logger?.LogError(args.Exception, "TaskScheduler unobserved task exception observed.");
-        _exceptionSink?.Save("TaskScheduler.UnobservedTaskException", args.Exception);
     }
 
     public async System.Threading.Tasks.Task<T> GetServiceAsync<T>(Type type)
