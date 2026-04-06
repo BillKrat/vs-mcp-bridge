@@ -10,9 +10,13 @@ public class ActivityLogBridgeLogger : LoggerBase
 {
     protected override string Source { get; set; } = nameof(VsMcpBridgePackage);
 
-    public ActivityLogBridgeLogger(ILogLevelSettings settings) => Settings = settings;
+    public ActivityLogBridgeLogger(ILogLevelSettings settings)
+    {
+        Settings = settings;
+        AdditionalLogger = new DebugBridgeLogger(Settings);
+    }
 
-    public ActivityLogBridgeLogger() : this(new LogLevelSettings())
+    public ActivityLogBridgeLogger()
     {
         AdditionalLogger = new DebugBridgeLogger(Settings);
     }

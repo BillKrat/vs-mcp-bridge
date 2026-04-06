@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Vsix.Composition;
 using VsMcpBridge.Vsix.Logging;
 using Task = System.Threading.Tasks.Task;
@@ -35,7 +36,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
-        var bootstrapLogger = new ActivityLogBridgeLogger();
+        var bootstrapLogger = new ActivityLogBridgeLogger(new LogLevelSettings { MinimumLevel = LogLevel.Trace });
         bootstrapLogger.LogTrace("Package initialization starting.");
 
         try
