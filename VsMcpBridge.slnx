@@ -9,6 +9,10 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/SolutionFolder/Docs/">
+    <File Path="docs/AI_COLLABORATION.md" />
+    <File Path="docs/AI_HANDOFF.md" />
+    <File Path="docs/CODING_STANDARDS.md" />
+    <File Path="docs/MVPVM_OVERVIEW.md" />
     <File Path="docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md" />
   </Folder>
   <Folder Name="/Tests/">
