@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Services;
 using VsMcpBridge.Vsix.Logging;
 using VsMcpBridge.Vsix.Services;
@@ -17,6 +18,7 @@ internal static class BridgeServiceCollectionExtensions
         if (package is AsyncPackage asyncPackage)
             services.AddSingleton(asyncPackage);
 
+        services.AddSingleton<ILogLevelSettings, LogLevelSettings>();
         services.AddSingleton<ILogger, ActivityLogBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
         services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();

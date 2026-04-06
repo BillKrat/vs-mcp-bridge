@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 
 namespace VsMcpBridge.Shared.Interfaces
 {
@@ -14,6 +16,8 @@ namespace VsMcpBridge.Shared.Interfaces
         IRelayCommand SubmitProposalCommand { get; }
         IRelayCommand ApproveCommand { get; }
         IRelayCommand RejectCommand { get; }
+        LogLevel SelectedLogLevel { get; set; }
+        IReadOnlyList<LogLevel> AvailableLogLevels { get; }
         void SetProposalSubmissionHandler(Action<string, string, string>? onSubmitProposalRequested);
         void SetApprovalRequestHandlers(Action? onApproveRequested, Action? onRejectRequested);
     }

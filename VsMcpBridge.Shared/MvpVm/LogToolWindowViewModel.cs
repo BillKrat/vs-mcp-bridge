@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 
 namespace VsMcpBridge.Shared.MvpVm
 {
@@ -9,18 +12,31 @@ namespace VsMcpBridge.Shared.MvpVm
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
 
+        private static readonly IReadOnlyList<LogLevel> _availableLogLevels = new[]
+        {
+            LogLevel.Trace, LogLevel.Debug, LogLevel.Information,
+            LogLevel.Warning, LogLevel.Error, LogLevel.Critical, LogLevel.None
+        };
+
+        private readonly ILogLevelSettings _logLevelSettings;
         private string _logText = InitialLogMessage;
         private string _proposalFilePath = string.Empty;
         private string _proposalOriginalText = string.Empty;
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
         private bool _hasPendingApproval;
+        private LogLevel _selectedLogLevel;
         private Action<string, string, string>? _onSubmitProposalRequested;
         private Action? _onApproveRequested;
         private Action? _onRejectRequested;
 
-        public LogToolWindowViewModel()
+        public LogToolWindowViewModel() : this(new LogLevelSettings()) { }
+
+        public LogToolWindowViewModel(ILogLevelSettings logLevelSettings)
         {
+            _logLevelSettings = logLevelSettings;
+            _selectedLogLevel = logLevelSettings.MinimumLevel;
+
             SubmitProposalCommand = new RelayCommand(
                 execute: () => _onSubmitProposalRequested?.Invoke(ProposalFilePath, ProposalOriginalText, ProposalProposedText),
                 canExecute: CanSubmitProposal);
@@ -101,6 +117,18 @@ namespace VsMcpBridge.Shared.MvpVm
         public IRelayCommand ApproveCommand { get; }
 
         public IRelayCommand RejectCommand { get; }
+
+        public LogLevel SelectedLogLevel
+        {
+            get => _selectedLogLevel;
+            set
+            {
+                if (SetProperty(ref _selectedLogLevel, value))
+                    _logLevelSettings.MinimumLevel = value;
+            }
+        }
+
+        public IReadOnlyList<LogLevel> AvailableLogLevels => _availableLogLevels;
 
         public void SetProposalSubmissionHandler(Action<string, string, string>? onSubmitProposalRequested)
         {

@@ -14,7 +14,8 @@ internal static class BridgeServiceCollectionExtensions
     {
         services.AddSingleton<AppSessionState>();
         services.AddSingleton<IProposalDraftState>(serviceProvider => serviceProvider.GetRequiredService<AppSessionState>());
-        services.AddSingleton<ILogger, ConsoleBridgeLogger>();
+        services.AddSingleton<ILogLevelSettings, LogLevelSettings>();
+        services.AddSingleton<ILogger, DebugBridgeLogger>();
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
         services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();
         services.AddSingleton<IEditApplier, FileEditApplier>();

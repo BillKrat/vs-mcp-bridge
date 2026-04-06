@@ -1,17 +1,25 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
+using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 
 namespace VsMcpBridge.Vsix.Logging;
 
-public sealed class ActivityLogBridgeLogger : ILogger
+public class ActivityLogBridgeLogger : LoggerBase
 {
-    private const string Source = nameof(VsMcpBridgePackage);
+    protected override string Source { get; set; } = nameof(VsMcpBridgePackage);
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    public ActivityLogBridgeLogger(ILogLevelSettings settings) => Settings = settings;
+
+    public ActivityLogBridgeLogger() : this(new LogLevelSettings())
     {
-        var message = formatter(state, exception);
-        switch (logLevel)
+        AdditionalLogger = new DebugBridgeLogger(Settings);
+    }
+
+    protected override void LogMessage(LogLevel level, string source, string message, Exception? exception = null)
+    {
+        switch (level)
         {
             case LogLevel.Trace:
             case LogLevel.Debug:
@@ -28,8 +36,4 @@ public sealed class ActivityLogBridgeLogger : ILogger
                 break;
         }
     }
-
-    public bool IsEnabled(LogLevel logLevel) => true;
-
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 }

@@ -49,14 +49,14 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
                 .AddMvpVmServices()
                 .BuildServiceProvider();
 
-            _logger = _serviceProvider.GetRequiredService<ILogger>();
-            _exceptionSink = _serviceProvider.GetRequiredService<IUnhandledExceptionSink>();
+            _logger = _serviceProvider.Resolve<ILogger>();
+            _exceptionSink = _serviceProvider.Resolve<IUnhandledExceptionSink>();
             RegisterUnhandledExceptionHandlers();
 
             _logger.LogInformation("Initializing VS MCP Bridge package.");
             _logger.LogTrace("Starting bridge services.");
 
-            _pipeServer = _serviceProvider.GetRequiredService<IPipeServer>();
+            _pipeServer = _serviceProvider.Resolve<IPipeServer>();
             _pipeServer.Start();
 
             _logger.LogInformation("VS MCP Bridge package initialized.");
