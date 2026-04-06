@@ -246,3 +246,47 @@ Use something close to this:
 
 ---
 
+## Codex - Notes
+
+*I am Codex. I work in-repo as the implementation and documentation partner. New entries go at the top of this section.*
+
+---
+
+### Entry: 2026-04-05 - Commit Review, Collaboration Routing, and ChatGPT Ramp-Up
+
+Reviewed commits from April 5, 2026:
+
+- `68f055282cc9048b3544e8257a915f1f0e7599b8` - removed redundant classes and moved reusable pieces into `VsMcpBridge.Shared`
+- `516d5b3dad02f78ef20d47744c117399b9c5beeb` - removed `IBridgeLogger` and moved to standard MEL logging
+- `0cba45b99a720fd9d378718a36e6737a53a0090e` - plumbed loggers, runtime log level settings, and tool-window log-level binding
+- `372fad2c601fad1ef6bcdbaefe2f4ce7d566e3a7` - VSIX logger/package cleanup
+- `8b29e8a0da247210a597248661fe8a15816e20ec` - added `docs/CODING_STANDARDS.md` and expanded this handoff file
+
+What matters from those commits:
+
+- `IPipeClient` is no longer MCP-server-local; it now lives in `VsMcpBridge.Shared/Interfaces/IPipeClient.cs`, which is the right direction for host-agnostic contracts.
+- Logging now consistently uses `Microsoft.Extensions.Logging.ILogger` with shared logger infrastructure in `VsMcpBridge.Shared/Loggers/`.
+- `ILogLevelSettings` and `LogLevelSettings` make logging behavior runtime-switchable from the tool window rather than hard-coded.
+- Test support classes were consolidated under `VsMcpBridge.Shared/Tests/`, which reduces duplicated host-specific test scaffolding.
+- `docs/CODING_STANDARDS.md` is now the right place for implementation guardrails. `docs/AI_HANDOFF.md` should stay focused on state, risks, and cross-AI coordination.
+
+Documentation-relevant corrections and cautions:
+
+- Copilot's current note says `TaskScheduler.UnobservedTaskException` remains appropriate in `VsMcpBridge.App`, but the current code in `VsMcpBridge.App/App.xaml.cs` no longer subscribes to it there either. Treat the code as authoritative.
+- `docs/CODING_STANDARDS.md` says composition roots should use `Resolve<T>()`, but `VsMcpBridge.App/App.xaml.cs` still uses `GetRequiredService<T>()` for `_exceptionSink` and `_pipeServer`. Either the app startup should be updated to match the standard, or the standard should be narrowed to say it currently applies to intended composition-root usage rather than all existing composition roots.
+
+Collaboration routing I recommend:
+
+- Put durable working agreements in `docs/AI_COLLABORATION.md`.
+- Keep `docs/AI_HANDOFF.md` as the living state document plus append-only AI notes.
+- Keep `docs/CODING_STANDARDS.md` narrowly focused on code-generation and implementation rules.
+
+ChatGPT ramp-up guidance:
+
+- ChatGPT should read `docs/CODING_STANDARDS.md`, then `docs/AI_HANDOFF.md`, then `docs/AI_COLLABORATION.md`, then the architecture/code files listed in this handoff.
+- ChatGPT should respond with architecture and planning guidance, not broad repository restatement.
+- If ChatGPT wants top-level handoff changes, it should propose them explicitly instead of rewriting AI-owned sections.
+
+### Proposed Update
+
+Add `docs/AI_COLLABORATION.md` to the "Files ChatGPT Should Read First" list immediately after `docs/AI_HANDOFF.md` and before deeper architecture docs.
