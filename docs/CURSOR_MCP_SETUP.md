@@ -1,6 +1,6 @@
 # Cursor MCP Setup
 
-Last updated: 2026-04-10
+Last updated: 2026-04-11
 
 ## Purpose
 
@@ -124,6 +124,21 @@ From the Visual Studio side:
 - package load logs appear
 - the pipe server has started
 - when a tool runs, pipe-request logs should appear if connection tracing is enabled
+
+## Current Verified Runtime Slice
+
+The following tool paths have now been validated end to end in the current repository state:
+
+- `vs_get_active_document`
+- `vs_get_selected_text`
+- `vs_list_solution_projects`
+- `vs_get_error_list`
+- `vs_propose_text_edit` through proposal, approval, and apply
+
+Follow-up note:
+
+- after a successful `vs_propose_text_edit` apply, a subsequent `vs_get_active_document` call also succeeded, so the bridge remains usable after apply
+- `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` was observed during proposal/apply testing but did not block successful tool use
 
 ## Troubleshooting
 

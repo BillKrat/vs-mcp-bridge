@@ -165,7 +165,7 @@ Important build note:
 
 ## Current Status
 
-The repository is in a stabilization and MCP-connection phase.
+The repository is now past initial MCP bring-up and through end-to-end runtime validation for the current tool surface.
 
 What is verified:
 
@@ -174,30 +174,29 @@ What is verified:
 - the shared and VSIX layers are separated cleanly in the source tree
 - the VSIX source includes a command table, package bootstrap, and tool-window scaffold
 - the bridge uses DI and interface-based services across the shared and VSIX layers
+- the Visual Studio Experimental Instance loads the VSIX successfully
+- the named-pipe listener starts during package load
+- Cursor can connect to the project-local MCP server through `.cursor/mcp.json`
+- the current read-only MCP tools work end to end:
+  - `vs_get_active_document`
+  - `vs_get_selected_text`
+  - `vs_list_solution_projects`
+  - `vs_get_error_list`
+- `vs_propose_text_edit` works through proposal, approval, and apply
+- post-apply connectivity was verified with a successful follow-up `vs_get_active_document` call
 
-What is not yet fully verified from the current workspace:
+Observed runtime note:
 
-- Visual Studio Experimental Instance load
-- tool-window open behavior in real Visual Studio
-- named-pipe startup during package load
-- one full MCP-to-pipe-to-VSIX round-trip in a Windows Visual Studio environment
+- `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` was observed after apply, but it did not block the bridge or subsequent tool calls
 
 ## Next Steps
 
-The most important next work is runtime validation of the existing scaffold, in this order:
+The most important next work is no longer first-time runtime validation. The best next targets are:
 
-- verify VSIX Experimental Instance startup
-- verify package load
-- verify tool-window open
-- verify named-pipe listener startup
-- verify one read-only MCP round-trip end to end
-
-After that, the strongest candidates are:
-
-- better connection diagnostics
-- bridge health and capabilities reporting
-- request correlation and protocol versioning
-- hardening the edit-application model
+- add or expand targeted automated coverage around the MCP server and pipe boundary
+- harden the edit-application model so formatting and line endings are preserved more reliably
+- improve protocol/connection diagnostics without polluting stdio MCP transport
+- investigate non-blocking post-apply notification noise only if it becomes actionable
 
 ## Documentation Guidance
 

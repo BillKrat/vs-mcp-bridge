@@ -1,6 +1,6 @@
 # VS MCP Bridge Technical Analysis
 
-Last updated: 2026-04-10
+Last updated: 2026-04-11
 
 ## Purpose
 
@@ -21,14 +21,14 @@ Current host shape:
 - `VsMcpBridge.App` is a standalone WPF host for shared bridge behavior
 - `VsMcpBridge.Shared` and `VsMcpBridge.Shared.Wpf` hold the common contracts and UI pieces
 
-The repository is currently in a connection-first phase.
+The repository has now completed connection-first bring-up for the currently exposed tool slice.
 
-That means the highest-value work is:
+That means the highest-value work has shifted from first proof to selective hardening:
 
-1. verify the VSIX loads
-2. verify the named-pipe bridge starts and accepts requests
-3. verify the MCP server can talk to the host end to end
-4. only then harden or broaden behavior
+1. preserve and document the validated behavior
+2. add automated coverage for the stdio and named-pipe boundaries
+3. harden edit application and diagnostics
+4. broaden capabilities only after the validated baseline remains stable
 
 ## Solution Layout
 
@@ -119,47 +119,46 @@ Verified recently:
 - the VSIX project builds
 - the VSIX project has the minimum WPF and JSON support needed for the current scaffold
 - the package no longer references a missing menu resource
-
-Not yet fully verified in this environment:
-
 - real Experimental Instance load
-- real tool-window open behavior
-- real MCP-to-pipe-to-VSIX round trip
+- named-pipe listener startup during package load
+- real MCP-to-pipe-to-VSIX round trips for the current tool surface
+- successful proposal creation, approval, and apply through `vs_propose_text_edit`
+- post-apply connectivity via a follow-up successful read-only tool call
 
 ## Current Technical Priorities
 
-The next phase should optimize for runtime proof, not architecture expansion.
+The next phase should optimize for stability and coverage, not initial runtime proof.
 
 Priority order:
 
-1. verify package load in Experimental Instance
-2. verify tool-window creation
-3. verify named-pipe server startup
-4. verify one read-only tool call end to end
-5. add only the minimum diagnostics needed to debug connection failures
+1. add automated coverage for stdio MCP startup and named-pipe request flow
+2. harden proposal/apply behavior, especially document formatting and line-ending preservation
+3. keep diagnostics strong without reintroducing stdout pollution
+4. expand capability only after the current validated slice remains stable
 
 ## Known Risk Areas
 
-1. Build success currently exceeds runtime validation.
-2. Pipe startup and connection behavior are likely to be the first real runtime failure point.
-3. The current diagnostics and logging may be too thin for rapid connection debugging.
-4. The current Error List path is compile-safe but still needs runtime confirmation in real Visual Studio.
+1. The bridge now has a validated runtime path, but automated regression coverage for the MCP and pipe boundaries is still thin.
+2. Edit application still rebuilds the full document and may need hardening around formatting and line endings.
+3. Diagnostics must remain file/debug-based for MCP host work so stdio JSON transport stays clean.
+4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
 
 ## Guidance For Future Changes
 
-During the connection-first phase:
+During the current stabilization phase:
 
 - prefer small changes over refactors
-- fix runtime blockers before improving architecture elegance
+- preserve the validated runtime baseline before broadening behavior
+- fix concrete regressions before improving architecture elegance
 - do not add capabilities just because the bridge could support them later
 - keep docs aligned with verified reality
 
-After the bridge is proven end to end, the likely next technical topics are:
+After the validated baseline is better covered, the likely next technical topics are:
 
-- better connection diagnostics
+- stronger automated tests around MCP startup and pipe flow
 - clearer protocol/version metadata
 - stronger structured edit models beneath the diff preview
-- hardening the approval/apply workflow
+- continued hardening of the approval/apply workflow
 
 ## Related Documents
 
