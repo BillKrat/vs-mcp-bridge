@@ -146,13 +146,13 @@ public sealed class VsService : IVsService
 
             try
             {
-                dynamic? errorItems = dte.ToolWindows?.ErrorList?.ErrorItems;
+                var errorItems = dte.ToolWindows?.ErrorList?.ErrorItems as ErrorItems;
                 if (errorItems != null)
                 {
                     int count = errorItems.Count;
                     for (int index = 1; index <= count; index++)
                     {
-                        dynamic item = errorItems.Item(index);
+                        var item = errorItems.Item(index);
                         diagnostics.Add(new DiagnosticItem
                         {
                             Severity = ErrorLevelToSeverity(item.ErrorLevel),

@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.IO;
 using System.IO.Pipes;
+using System.Text;
 using System.Text.Json;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -14,6 +16,7 @@ public sealed class PipeClient : IPipeClient
 {
     private const string PipeName = "VsMcpBridge";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly object LogSync = new();
 
     private async Task<TResponse> SendAsync<TRequest, TResponse>(
         string command,
@@ -122,6 +125,24 @@ public sealed class PipeClient : IPipeClient
 
     private static void LogPipeTrace(string message)
     {
-        Debug.WriteLine($"[{DateTime.Now:HH:mm:ss}] [PipeClient] {message}");
+        var line = $"[{DateTime.Now:HH:mm:ss}] [PipeClient] {message}";
+        Debug.WriteLine(line);
+
+        try
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var logDirectory = Path.Combine(localAppData, "VsMcpBridge", "Logs", "McpServer");
+            var logPath = Path.Combine(logDirectory, "pipe-client.log");
+
+            lock (LogSync)
+            {
+                Directory.CreateDirectory(logDirectory);
+                File.AppendAllText(logPath, line + Environment.NewLine, Encoding.UTF8);
+            }
+        }
+        catch
+        {
+            // Never let diagnostics interfere with MCP stdio or request flow.
+        }
     }
 }

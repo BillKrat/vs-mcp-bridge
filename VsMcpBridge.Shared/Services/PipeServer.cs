@@ -19,6 +19,7 @@ public sealed class PipeServer : IPipeServer
 {
     private const string PipeName = "VsMcpBridge";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly object TraceSync = new();
 
     private readonly IVsService _vsService;
     private readonly ILogger _logger;
@@ -132,7 +133,8 @@ public sealed class PipeServer : IPipeServer
 
                 pipe.WaitForConnection();
                 _logger.LogInformation($"Pipe client connected on '{PipeName}'.");
-                _ = Task.Run(() => HandleConnectionAsync(pipe, ct), CancellationToken.None);
+                var acceptedPipe = pipe;
+                _ = Task.Run(() => HandleConnectionAsync(acceptedPipe, ct), CancellationToken.None);
                 pipe = null;
             }
             catch (OperationCanceledException)
@@ -154,12 +156,23 @@ public sealed class PipeServer : IPipeServer
 
     private async Task HandleConnectionAsync(NamedPipeServerStream pipe, CancellationToken ct)
     {
+        if (pipe == null)
+        {
+            var ex = new ArgumentNullException(nameof(pipe));
+            _logger.LogError(ex, "Pipe connection handling received a null pipe instance.");
+            _exceptionSink.Save("PipeServer.HandleConnectionAsync", ex);
+            return;
+        }
+
         try
         {
+            WritePipeTrace("HandleConnectionAsync: entered.");
             using var reader = new StreamReader(pipe, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
-            using var writer = new StreamWriter(pipe, Encoding.UTF8, bufferSize: 1024, leaveOpen: true) { AutoFlush = true };
+            WritePipeTrace("HandleConnectionAsync: StreamReader created.");
 
+            WritePipeTrace("HandleConnectionAsync: awaiting ReadLineAsync.");
             var requestJson = await reader.ReadLineAsync();
+            WritePipeTrace($"HandleConnectionAsync: ReadLineAsync completed [Length={requestJson?.Length ?? 0}].");
             _logger.LogTrace($"Received raw pipe request [Length={requestJson?.Length ?? 0}].");
 
             string requestId = "(unknown)";
@@ -190,6 +203,8 @@ public sealed class PipeServer : IPipeServer
                 return;
             }
 
+            using var writer = new StreamWriter(pipe, Encoding.UTF8, bufferSize: 1024, leaveOpen: true) { AutoFlush = true };
+            WritePipeTrace("HandleConnectionAsync: StreamWriter created.");
             await writer.WriteLineAsync(responseJson);
             _logger.LogTrace($"Wrote pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
         }
@@ -204,10 +219,14 @@ public sealed class PipeServer : IPipeServer
         }
         finally
         {
+            WritePipeTrace("HandleConnectionAsync: entering finally.");
             try
             {
                 if (pipe.IsConnected)
+                {
+                    WritePipeTrace("HandleConnectionAsync: disconnecting pipe.");
                     pipe.Disconnect();
+                }
             }
             catch (Exception ex)
             {
@@ -216,6 +235,7 @@ public sealed class PipeServer : IPipeServer
             }
 
             pipe.Dispose();
+            WritePipeTrace("HandleConnectionAsync: pipe disposed.");
         }
     }
 
@@ -257,6 +277,27 @@ public sealed class PipeServer : IPipeServer
             return fallbackRequestId!;
 
         return Guid.NewGuid().ToString("N");
+    }
+
+    private static void WritePipeTrace(string message)
+    {
+        try
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var logDirectory = Path.Combine(localAppData, "VsMcpBridge", "Logs", "Vsix");
+            var logPath = Path.Combine(logDirectory, "pipe-server-trace.log");
+            var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+
+            lock (TraceSync)
+            {
+                Directory.CreateDirectory(logDirectory);
+                File.AppendAllText(logPath, line + Environment.NewLine, Encoding.UTF8);
+            }
+        }
+        catch
+        {
+            // Never let diagnostics interfere with request handling.
+        }
     }
 
     private sealed class VsResponseBaseUnknown : VsResponseBase { }
