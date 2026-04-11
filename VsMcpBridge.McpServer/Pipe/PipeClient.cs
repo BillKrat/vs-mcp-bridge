@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
 using VsMcpBridge.Shared.Interfaces;
@@ -21,26 +22,44 @@ public sealed class PipeClient : IPipeClient
         where TRequest : VsRequestBase
         where TResponse : VsResponseBase, new()
     {
-        using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-        await pipe.ConnectAsync(timeout: 5000, cancellationToken);
+        var requestId = string.IsNullOrWhiteSpace(request.RequestId) ? "(none)" : request.RequestId;
+        LogPipeTrace($"Attempting pipe connection to '{PipeName}' [Command={command}] [RequestId={requestId}].");
 
-        var envelope = new PipeMessage
+        try
         {
-            Command = command,
-            Payload = JsonSerializer.Serialize(request, JsonOptions)
-        };
+            using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            await pipe.ConnectAsync(timeout: 5000, cancellationToken);
+            LogPipeTrace($"Pipe connection established to '{PipeName}' [Command={command}] [RequestId={requestId}].");
 
-        using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
-        using var reader = new StreamReader(pipe, leaveOpen: true);
+            var envelope = new PipeMessage
+            {
+                Command = command,
+                RequestId = requestId,
+                Payload = JsonSerializer.Serialize(request, JsonOptions)
+            };
 
-        await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
-        var responseJson = await reader.ReadLineAsync(cancellationToken);
+            using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
+            using var reader = new StreamReader(pipe, leaveOpen: true);
 
-        if (string.IsNullOrEmpty(responseJson))
-            return new TResponse { Success = false, ErrorMessage = "Empty response from VSIX." };
+            LogPipeTrace($"Sending pipe request [Command={command}] [RequestId={requestId}].");
+            await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
+            var responseJson = await reader.ReadLineAsync(cancellationToken);
 
-        return JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions)
-               ?? new TResponse { Success = false, ErrorMessage = "Failed to deserialize response." };
+            if (string.IsNullOrEmpty(responseJson))
+            {
+                LogPipeTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
+                return new TResponse { Success = false, ErrorMessage = "Empty response from VSIX." };
+            }
+
+            LogPipeTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
+            return JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions)
+                   ?? new TResponse { Success = false, ErrorMessage = "Failed to deserialize response." };
+        }
+        catch (Exception ex)
+        {
+            LogPipeTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
+            throw;
+        }
     }
 
     public Task<GetActiveDocumentResponse> GetActiveDocumentAsync(CancellationToken ct = default)
@@ -82,4 +101,9 @@ public sealed class PipeClient : IPipeClient
                 ProposedText = proposedText
             },
             ct);
+
+    private static void LogPipeTrace(string message)
+    {
+        Debug.WriteLine($"[{DateTime.Now:HH:mm:ss}] [PipeClient] {message}");
+    }
 }

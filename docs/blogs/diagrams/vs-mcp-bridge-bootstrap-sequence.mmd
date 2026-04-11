@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant VS as Visual Studio
+    participant PKG as VsMcpBridgePackage
+    participant SP as ServiceProvider
+    participant PS as PipeServer
+    participant AI as AI Client
+    participant MCP as VsMcpBridge.McpServer
+    participant PC as PipeClient
+    participant VSS as VsService
+
+    VS->>PKG: Load package
+    PKG->>PKG: InitializeAsync()
+    PKG->>PKG: Register tool window command
+    PKG->>SP: Build DI container
+    SP-->>PKG: Resolve services
+    PKG->>PS: Start()
+    PS->>PS: Start listener thread
+    PS->>PS: Wait for named pipe connection
+
+    AI->>MCP: MCP tool request over stdio
+    MCP->>PC: Invoke tool adapter
+    PC->>PS: Connect to named pipe
+    PS-->>PC: Connection accepted
+    PC->>PS: Send PipeMessage
+    PS->>VSS: Dispatch request
+    VSS-->>PS: Return VS response
+    PS-->>PC: Return pipe response
+    PC-->>MCP: Return tool result
+    MCP-->>AI: Return MCP response

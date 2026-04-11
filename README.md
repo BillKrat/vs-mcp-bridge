@@ -156,30 +156,39 @@ Important build note:
 
 ## Current Status
 
-The repository is now in a solid early-platform state:
+The repository is in a stabilization and MCP-connection phase.
 
-- VSIX build, packaging, and install have been verified
-- the extension loads in the Experimental instance
-- the standalone app is functionally aligned with the current VSIX feature set within its non-VSIX host model
+What is verified:
+
+- the solution builds
+- the VSIX project builds
+- the shared and VSIX layers are separated cleanly in the source tree
+- the VSIX source includes a command table, package bootstrap, and tool-window scaffold
 - the bridge uses DI and interface-based services across the shared and VSIX layers
-- shared infrastructure is no longer coupled to the VSIX project
-- the standalone app demonstrates how to host the bridge without polluting the VSIX project with non-VSIX runtime code
-- the tool window uses a passive shared-WPF view plus presenter/viewmodel split
-- proposal submission, approval, rejection, and apply are wired end-to-end through the tool window
-- verbose diagnostics are in place
-- unhandled exceptions are persisted through a swappable sink abstraction
-- unit tests cover both the shared layer and the VSIX-specific layer
+
+What is not yet fully verified from the current workspace:
+
+- Visual Studio Experimental Instance load
+- tool-window open behavior in real Visual Studio
+- named-pipe startup during package load
+- one full MCP-to-pipe-to-VSIX round-trip in a Windows Visual Studio environment
 
 ## Next Steps
 
-The most important next capability is hardening the edit-application model so approved edits preserve exact file content details instead of rebuilding the entire document from a display-oriented diff.
+The most important next work is runtime validation of the existing scaffold, in this order:
 
-Other strong candidates are:
+- verify VSIX Experimental Instance startup
+- verify package load
+- verify tool-window open
+- verify named-pipe listener startup
+- verify one read-only MCP round-trip end to end
 
+After that, the strongest candidates are:
+
+- better connection diagnostics
 - bridge health and capabilities reporting
 - request correlation and protocol versioning
-- richer Visual Studio query tools
-- durable persistence for exception and approval history
+- hardening the edit-application model
 
 ## Documentation Guidance
 

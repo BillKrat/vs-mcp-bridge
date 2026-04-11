@@ -13,3 +13,4 @@ builder.Services
     .WithTools<VsTools>();
 
 await builder.Build().RunAsync();
+// TEST

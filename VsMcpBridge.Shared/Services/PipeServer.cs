@@ -120,6 +120,7 @@ public sealed class PipeServer : IPipeServer
 
             try
             {
+                _logger.LogTrace($"Waiting for pipe client connection on '{PipeName}'.");
                 pipe = new NamedPipeServerStream(
                     PipeName,
                     PipeDirection.InOut,
@@ -128,6 +129,7 @@ public sealed class PipeServer : IPipeServer
                     PipeOptions.Asynchronous);
 
                 pipe.WaitForConnection();
+                _logger.LogInformation($"Pipe client connected on '{PipeName}'.");
                 _ = Task.Run(() => HandleConnectionAsync(pipe, ct), CancellationToken.None);
                 pipe = null;
             }
@@ -156,11 +158,16 @@ public sealed class PipeServer : IPipeServer
             using var writer = new StreamWriter(pipe, Encoding.UTF8, bufferSize: 1024, leaveOpen: true) { AutoFlush = true };
 
             var requestJson = await reader.ReadLineAsync();
+            _logger.LogTrace($"Received raw pipe request [Length={requestJson?.Length ?? 0}].");
             var responseJson = await ProcessRequestAsync(requestJson);
             if (responseJson == null)
+            {
+                _logger.LogWarning("No pipe response will be written because request processing returned null.");
                 return;
+            }
 
             await writer.WriteLineAsync(responseJson);
+            _logger.LogTrace($"Wrote pipe response [Length={responseJson.Length}].");
         }
         catch (OperationCanceledException)
         {

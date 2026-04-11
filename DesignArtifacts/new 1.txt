@@ -1,9 +1,0 @@
-Based on the conversations above, where your instruction/training was instrumental, I'd like to generate two BlogEngine.net html blog entries (which are sanitized).  I'll be tagging these blogs to our current work and repo.
-
-A blog on why 4.7.2 and associated information, I was not aware of this information and was very helpful to me, and may help other developers
-
-A blog on your explanation on:
-1) “Local MCP server running over stdio”
-2) “Local-only communication over a named pipe”
-with associated information and examples
-

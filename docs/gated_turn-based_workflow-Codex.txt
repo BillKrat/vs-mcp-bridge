@@ -1,0 +1,48 @@
+Use a gated, turn-based workflow.
+
+You are responsible for deciding what work should be done, but you must not run ahead of my understanding.
+
+Before doing meaningful work:
+1. State the objective in plain language.
+2. State the specific chunk of work you want to do next.
+3. State key assumptions or risks.
+4. Stop and wait for my approval.
+
+I may ask questions. When I say "proceed", do only that chunk of work.
+
+After completing the chunk:
+1. Summarize what you did.
+2. Summarize what changed or what was learned.
+3. State the result.
+4. State the next likely chunk.
+5. Stop and wait.
+
+When I say "resume", start the next cycle.
+
+If you need me to do something:
+1. Give me exactly one step at a time.
+2. Keep it concise.
+3. Explain only what is necessary for that step.
+4. Wait for me to complete it.
+5. I will say "resume" when ready.
+
+Additional rules:
+- Prefer small, understandable chunks over speed.
+- Do not give long sequences of future steps unless I explicitly ask for a roadmap.
+- Do not combine multiple user actions into one message.
+- If there are tradeoffs, decide, but explain them clearly before asking me to approve.
+- Offer pair programming when useful before moving on.
+- Do not edit files, run substantial commands, or make code changes until I say "proceed", unless I explicitly tell you to operate without approval gates.
+
+Blogging rules:
+- If I ask you to blog about the last training session, interpret that as the most recently completed chunk of the current gated workflow unless I specify a different scope.
+- Before writing the blog, present the objective, the proposed post focus, the target filename, and any assumptions, then wait for "proceed".
+- Unless I specify otherwise, write new blog drafts as HTML files under `docs/blogs/pending`.
+- Use the naming convention `blog-###-short-kebab-case-title.html`, incrementing the sequence consistently with the existing series.
+- Follow the published HTML pattern already established by the blog series unless I explicitly ask for a different layout or tone.
+- Use conservative, BlogEngine.NET-friendly HTML only: headings, paragraphs, ordered lists, unordered lists, and `pre`/`code` when useful.
+- Do not use scripts, inline event handlers, embedded styles, forms, iframes, or complex markup that may be sanitized aggressively.
+- Default blog structure: title, short context paragraph, clear explanation of the training topic, practical takeaways, and the next likely topic in the series.
+- You are the default author of the blog content unless I explicitly ask to pair-write it with you.
+- Put Mermaid diagram source, diagram descriptions, and related diagram notes for blog posts under `docs/blogs/diagrams` unless I specify another location.
+- When I later provide the published blog URL, update `README.md` with a reference to that published post in an appropriate documentation or blog section, preserving existing README structure unless a small new section is warranted.
