@@ -427,3 +427,8 @@ VsMcpBridge.Vsix/obj/
 
 
 
+
+# OS/editor local metadata
+.DS_Store
+**/.DS_Store
+.cursor/
