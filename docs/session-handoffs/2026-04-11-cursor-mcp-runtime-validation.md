@@ -42,18 +42,16 @@ Validated the Cursor -> MCP server -> named pipe -> VSIX path for the read-only 
 
 - Runtime validation of the currently exposed MCP tools is complete.
 - Proposal creation, approval, and apply have been validated successfully against a real file.
-- The latest observed follow-on noise after apply was `JsonRpc Warning ... connection was lost`, but the proposal and apply both succeeded before that warning.
+- Post-apply connectivity was verified by a successful `vs_get_active_document` call immediately after `vs_propose_text_edit` apply.
+- The remaining `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` messages appear to be non-blocking noise rather than a broken bridge session.
 
 ## Next Recommended Chunk
 
-Decide whether to:
-1. push the local commits, or
-2. investigate post-apply Cursor/JsonRpc disconnect behavior as a separate stability pass.
+Runtime validation is complete for the current MCP tool surface.
 
-Recommended next technical chunk if continuing runtime work:
-1. reproduce the post-apply disconnect once
-2. capture Cursor MCP output and VS logs around the disconnect
-3. determine whether the connection loss is expected session teardown or a bridge-side bug
+Recommended next chunk:
+1. stop runtime investigation unless a new concrete bridge failure appears
+2. move on to feature work, cleanup, or tests
 
 ## Useful Runtime Logs
 
