@@ -3,6 +3,7 @@
 Date: 2026-04-11
 Branch: `feature/approval-apply-ui-slice`
 Latest runtime fix commit: `55fd4b9` (`Fix Cursor MCP runtime stability issues`)
+Latest workflow/logging commit: `b931cbc` (`Persist MCP logging and session handoff workflow`)
 Previous preservation commit: `1acaa36`
 
 ## Objective Reached
@@ -15,6 +16,7 @@ Validated the Cursor -> MCP server -> named pipe -> VSIX path for the read-only 
 - `vs_list_solution_projects`
 - `vs_get_selected_text`
 - `vs_get_error_list`
+- `vs_propose_text_edit` (approval and apply path)
 
 ## Key Fixes Landed In `55fd4b9`
 
@@ -38,20 +40,20 @@ Validated the Cursor -> MCP server -> named pipe -> VSIX path for the read-only 
 
 ## Current State
 
-- Working tree should contain only documentation changes unless new work is started after this handoff.
-- Runtime validation is at a good breakpoint.
-- Proposal/edit flow has not yet been validated after the runtime stabilization work.
+- Runtime validation of the currently exposed MCP tools is complete.
+- Proposal creation, approval, and apply have been validated successfully against a real file.
+- The latest observed follow-on noise after apply was `JsonRpc Warning ... connection was lost`, but the proposal and apply both succeeded before that warning.
 
 ## Next Recommended Chunk
 
-Validate `vs_propose_text_edit` with one minimal, reversible proposal.
+Decide whether to:
+1. push the local commits, or
+2. investigate post-apply Cursor/JsonRpc disconnect behavior as a separate stability pass.
 
-Recommended shape of that next chunk:
-1. Start Experimental Instance.
-2. Enable `vs-mcp-bridge` in Cursor.
-3. Open a harmless test file in the Experimental Instance.
-4. Issue a very small `vs_propose_text_edit` request, such as adding or changing one obvious comment.
-5. Verify proposal creation, approval prompt behavior, and apply/reject handling.
+Recommended next technical chunk if continuing runtime work:
+1. reproduce the post-apply disconnect once
+2. capture Cursor MCP output and VS logs around the disconnect
+3. determine whether the connection loss is expected session teardown or a bridge-side bug
 
 ## Useful Runtime Logs
 
