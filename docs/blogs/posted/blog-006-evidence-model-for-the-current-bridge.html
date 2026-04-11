@@ -1,0 +1,178 @@
+<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained how the bridge starts, how prompts become tool workflows, how runtime validation should be approached, and how to turn validation into a practical playbook. This post focuses on the next question: <strong>what evidence does the current bridge need so it does not become a black box when something fails?</strong></p>
+
+<p>The short answer is that validation only works if the system produces enough signal to explain what happened, where it happened, and whether the failure is still active or already cleared.</p>
+
+<h3>Why Evidence Matters</h3>
+
+<p>A bridge can have a clean architecture and still be painful to operate if it behaves like a black box at runtime.</p>
+
+<p>Without enough evidence, every failure starts to look the same:</p>
+
+<ul>
+  <li>the tool did not work</li>
+  <li>the UI looks wrong</li>
+  <li>the host might be broken</li>
+  <li>the session might still be poisoned</li>
+</ul>
+
+<p>That kind of uncertainty makes triage expensive. It also makes the system feel less trustworthy than it really is.</p>
+
+<p>Evidence is what turns a vague failure into something localizable and explainable.</p>
+
+<h3>What Evidence Should Answer</h3>
+
+<p>For the current bridge, the evidence model does not need to become a full observability platform. It just needs to answer a few practical questions:</p>
+
+<ul>
+  <li>did startup complete correctly</li>
+  <li>did the request reach the bridge</li>
+  <li>which command or tool was running</li>
+  <li>did host execution begin</li>
+  <li>did UI state update</li>
+  <li>did the request succeed, fail, or stop at approval</li>
+  <li>is the failure still active, or has the system recovered</li>
+</ul>
+
+<p>If the current app can answer those questions, then the bridge is no longer a black box in practice.</p>
+
+<h3>The Four Evidence Sources</h3>
+
+<p>For the current bridge slice, the most useful evidence comes from four places:</p>
+
+<ul>
+  <li>startup logs</li>
+  <li>request lifecycle logs</li>
+  <li>UI signals</li>
+  <li>outcome signals</li>
+</ul>
+
+<p>That is enough for the current stage.</p>
+
+<h3>Startup Logs</h3>
+
+<p>Startup logs tell you whether the host came alive correctly.</p>
+
+<p>At minimum, they should make it possible to see:</p>
+
+<ul>
+  <li>package initialization started</li>
+  <li>dependency injection composition completed</li>
+  <li>pipe server started</li>
+  <li>package initialization completed</li>
+</ul>
+
+<p>Without these signals, host startup is mostly guesswork. That makes every later failure harder to interpret because you cannot be sure the bridge was really healthy to begin with.</p>
+
+<h3>Request Lifecycle Logs</h3>
+
+<p>Request lifecycle logs tell you whether a tool call actually moved through the bridge.</p>
+
+<p>At minimum, a meaningful request should leave evidence for:</p>
+
+<ul>
+  <li>request received</li>
+  <li>command or tool name</li>
+  <li>request identifier</li>
+  <li>dispatch started</li>
+  <li>dispatch completed or failed</li>
+</ul>
+
+<p>This is the signal set that helps you distinguish one layer from another.</p>
+
+<p>For example, it helps answer questions like:</p>
+
+<ul>
+  <li>did the MCP tool call happen at all</li>
+  <li>did the pipe connection succeed</li>
+  <li>did the host service actually run</li>
+  <li>did the failure happen before or after dispatch</li>
+</ul>
+
+<p>Without this layer of evidence, most failures collapse into one generic “the bridge is broken” story.</p>
+
+<h3>UI Signals</h3>
+
+<p>UI signals matter because the bridge does not end at transport. It also has a visible approval workflow.</p>
+
+<p>For the current app, useful UI evidence includes:</p>
+
+<ul>
+  <li>the tool window opened</li>
+  <li>log text updated</li>
+  <li>an approval prompt appeared</li>
+  <li>the prompt cleared after approve or reject</li>
+</ul>
+
+<p>These are not merely presentation details. They are part of the evidence model because they tell you whether the host-side workflow became visible correctly.</p>
+
+<h3>Outcome Signals</h3>
+
+<p>The final evidence source is what the system says happened as a result.</p>
+
+<p>For the current bridge, useful outcomes include:</p>
+
+<ul>
+  <li>read tool returned data</li>
+  <li>proposal created</li>
+  <li>proposal approved</li>
+  <li>proposal rejected</li>
+  <li>edit applied</li>
+  <li>edit failed</li>
+</ul>
+
+<p>This matters because the bridge has more than one kind of successful behavior. A request can succeed by returning data, or it can succeed by producing a proposal that still awaits approval. Those are different outcomes, and the evidence should make that distinction obvious.</p>
+
+<h3>Evidence Keeps State Understandable</h3>
+
+<p>One of the most important jobs of evidence is to make state visible enough that developers can tell the difference between:</p>
+
+<ul>
+  <li>a request that is active</li>
+  <li>a request that completed</li>
+  <li>a proposal that is waiting for approval</li>
+  <li>a failure that already stopped</li>
+  <li>stale state that should no longer matter</li>
+</ul>
+
+<p>This is how evidence helps prevent the “poisoned session” feeling that some AI tools can create. If you cannot tell whether the system is actively failing or just displaying stale state, the tool feels unreliable even when the underlying issue may be small.</p>
+
+<h3>How Evidence Supports The Validation Playbook</h3>
+
+<p>The validation playbook from the previous post only works if each step has observable signals behind it.</p>
+
+<p>That mapping looks like this:</p>
+
+<ul>
+  <li>host startup depends on startup logs</li>
+  <li>listener readiness depends on pipe startup and waiting logs</li>
+  <li>MCP tool validation depends on request lifecycle logs</li>
+  <li>proposal validation depends on visible approval prompts and proposal state signals</li>
+  <li>recovery validation depends on evidence that old state is cleared and new requests are independent</li>
+</ul>
+
+<p>So the validation playbook and the evidence model are tightly connected. One defines the steps, and the other makes the steps interpretable.</p>
+
+<h3>Why This Also Shapes Implementation</h3>
+
+<p>That is why evidence is not just a logging preference. It influences design.</p>
+
+<p>If the app needs to be testable and triageable, then it needs:</p>
+
+<ul>
+  <li>clear startup boundaries</li>
+  <li>clear request identifiers</li>
+  <li>clear proposal lifecycle transitions</li>
+  <li>clear separation between active and stale state</li>
+</ul>
+
+<p>That means the evidence model quietly tells the implementation what it must expose in order to be supportable.</p>
+
+<h3>Takeaway</h3>
+
+<p>For the current bridge, evidence is what prevents the system from becoming a black box.</p>
+
+<p>It is what makes failures localizable, recoveries understandable, and runtime behavior explainable. Without it, validation becomes guesswork. With it, the bridge becomes something developers can trust, diagnose, and improve step by step.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is likely the concrete signal map for the current implementation: what the existing logs, request identifiers, and UI state already provide today, and what is still missing if the bridge is going to be easy to validate in practice.</p>

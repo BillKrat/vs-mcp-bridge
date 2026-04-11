@@ -41,19 +41,37 @@ public sealed class PipeClient : IPipeClient
             using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
             using var reader = new StreamReader(pipe, leaveOpen: true);
 
-            LogPipeTrace($"Sending pipe request [Command={command}] [RequestId={requestId}].");
+            LogPipeTrace($"Sending pipe request [Command={command}] [RequestId={requestId}] [PayloadLength={envelope.Payload.Length}].");
             await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
             var responseJson = await reader.ReadLineAsync(cancellationToken);
 
             if (string.IsNullOrEmpty(responseJson))
             {
                 LogPipeTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
-                return new TResponse { Success = false, ErrorMessage = "Empty response from VSIX." };
+                return new TResponse
+                {
+                    RequestId = requestId,
+                    Success = false,
+                    ErrorMessage = $"Empty response from VSIX for '{command}' [RequestId={requestId}]."
+                };
             }
 
             LogPipeTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
-            return JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions)
-                   ?? new TResponse { Success = false, ErrorMessage = "Failed to deserialize response." };
+            var response = JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions);
+            if (response == null)
+            {
+                LogPipeTrace($"Failed to deserialize pipe response [Command={command}] [RequestId={requestId}].");
+                return new TResponse
+                {
+                    RequestId = requestId,
+                    Success = false,
+                    ErrorMessage = $"Failed to deserialize response for '{command}' [RequestId={requestId}]."
+                };
+            }
+
+            response.RequestId = string.IsNullOrWhiteSpace(response.RequestId) ? requestId : response.RequestId;
+            LogPipeTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
+            return response;
         }
         catch (Exception ex)
         {

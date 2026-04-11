@@ -189,4 +189,4 @@ Do not put service calls in the ViewModel. Do not put UI state in the Presenter.
 
 ---
 
-*This document is maintained by the human developer. AI contributors should propose additions via their section in `docs/AI_HANDOFF.md` rather than editing this file directly.*
+*This document is maintained by the human developer. Codex should treat it as binding guidance and propose any additions through the normal gated collaboration workflow rather than editing it casually.*

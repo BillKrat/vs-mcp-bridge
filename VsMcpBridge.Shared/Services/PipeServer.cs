@@ -106,9 +106,11 @@ public sealed class PipeServer : IPipeServer
 
         envelope.RequestId = EnsureRequestId(envelope.RequestId);
 
+        _logger.LogTrace($"Processing pipe request [Command={envelope.Command}] [RequestId={envelope.RequestId}] [PayloadLength={envelope.Payload?.Length ?? 0}].");
         _logger.LogInformation($"Dispatching pipe command '{envelope.Command}' [RequestId={envelope.RequestId}].");
         var response = await DispatchAsync(envelope);
         response.RequestId = envelope.RequestId;
+        _logger.LogInformation($"Pipe command '{envelope.Command}' completed [RequestId={envelope.RequestId}] [Success={response.Success}].");
         return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
     }
 
@@ -159,15 +161,37 @@ public sealed class PipeServer : IPipeServer
 
             var requestJson = await reader.ReadLineAsync();
             _logger.LogTrace($"Received raw pipe request [Length={requestJson?.Length ?? 0}].");
+
+            string requestId = "(unknown)";
+            string command = "(unknown)";
+
+            if (!string.IsNullOrWhiteSpace(requestJson))
+            {
+                try
+                {
+                    var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson, JsonOptions);
+                    if (envelope != null)
+                    {
+                        requestId = EnsureRequestId(envelope.RequestId);
+                        command = string.IsNullOrWhiteSpace(envelope.Command) ? "(unknown)" : envelope.Command;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to read request metadata before processing the pipe request.");
+                }
+            }
+
+            _logger.LogTrace($"Handling pipe connection [Command={command}] [RequestId={requestId}].");
             var responseJson = await ProcessRequestAsync(requestJson);
             if (responseJson == null)
             {
-                _logger.LogWarning("No pipe response will be written because request processing returned null.");
+                _logger.LogWarning($"No pipe response will be written because request processing returned null [Command={command}] [RequestId={requestId}].");
                 return;
             }
 
             await writer.WriteLineAsync(responseJson);
-            _logger.LogTrace($"Wrote pipe response [Length={responseJson.Length}].");
+            _logger.LogTrace($"Wrote pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
         }
         catch (OperationCanceledException)
         {

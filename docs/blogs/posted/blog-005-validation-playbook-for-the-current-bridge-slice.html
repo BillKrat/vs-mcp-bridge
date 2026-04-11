@@ -1,0 +1,227 @@
+<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained how the bridge starts, how prompts become tool workflows, where async and UI-thread correctness matter, and why runtime validation and clean recovery are important. This post turns that into a practical next step: <strong>a validation playbook for the current bridge slice.</strong></p>
+
+<p>The goal is not to create a large test framework. The goal is to provide a small, repeatable order of checks that proves the current bridge works end to end and provides enough evidence when it does not.</p>
+
+<h3>Why A Playbook Helps</h3>
+
+<p>A validation playbook is useful for more than manual testing. It also acts as design guidance for the implementation.</p>
+
+<p>If the playbook says a developer should be able to verify something, but the current app does not expose enough signal to verify it, that is a real implementation gap. In that way, the playbook becomes a design pressure on the bridge.</p>
+
+<p>It pushes the system toward:</p>
+
+<ul>
+  <li>observable startup</li>
+  <li>clear request and response tracing</li>
+  <li>predictable approval flow</li>
+  <li>clean restart and recovery behavior</li>
+</ul>
+
+<p>So this is not only a checklist. It is also a practical definition of what “operationally understandable” should mean for the current bridge.</p>
+
+<h3>Keep The Playbook In Order</h3>
+
+<p>The most important rule is to validate the bridge in the same order the runtime depends on it.</p>
+
+<p>That means:</p>
+
+<ol>
+  <li>validate the host first</li>
+  <li>validate the bridge listener</li>
+  <li>validate the MCP side</li>
+  <li>validate one simple read-only request</li>
+  <li>validate proposal flow</li>
+  <li>validate approval and recovery</li>
+</ol>
+
+<p>This keeps debugging focused. If an early step fails, later steps are not meaningful yet.</p>
+
+<h3>Step 1: Validate Host Startup</h3>
+
+<p>Start with the Visual Studio host.</p>
+
+<p>At this point, you want to confirm that:</p>
+
+<ul>
+  <li>the VSIX loads in the experimental instance</li>
+  <li>the package initializes</li>
+  <li>the tool window can open</li>
+  <li>startup logs show expected initialization flow</li>
+</ul>
+
+<p>This step matters because every other test depends on the host actually being alive.</p>
+
+<p>Healthy signals:</p>
+
+<ul>
+  <li>startup happens once</li>
+  <li>no repeated initialization loop appears</li>
+  <li>no obvious package-load failure is present in logs</li>
+</ul>
+
+<h3>Step 2: Validate Bridge Listener Readiness</h3>
+
+<p>Once the host is alive, confirm that the named-pipe listener is ready.</p>
+
+<p>You are looking for evidence that:</p>
+
+<ul>
+  <li>the pipe server started</li>
+  <li>the listener is waiting for connections</li>
+  <li>the host is not repeatedly restarting or faulting in the background</li>
+</ul>
+
+<p>This is still a host-side validation step. If the listener is not ready, MCP-side testing is premature.</p>
+
+<h3>Step 3: Validate MCP Server Startup</h3>
+
+<p>Now move to the AI-facing side.</p>
+
+<p>At this stage, confirm that:</p>
+
+<ul>
+  <li><code>VsMcpBridge.McpServer</code> launches</li>
+  <li>stdio transport is active</li>
+  <li>tools are registered and visible</li>
+  <li>the client can see the tool surface without immediate failure</li>
+</ul>
+
+<p>This proves that the outer boundary is alive before a real host request is attempted.</p>
+
+<h3>Step 4: Validate One Simple Read-Only Tool</h3>
+
+<p>The first full end-to-end proof should be the simplest possible tool.</p>
+
+<p>Good candidates are:</p>
+
+<ul>
+  <li><code>vs_get_active_document</code></li>
+  <li><code>vs_list_solution_projects</code></li>
+</ul>
+
+<p>At this point, you want to prove that:</p>
+
+<ul>
+  <li>the MCP call reaches <code>VsTools</code></li>
+  <li>the pipe client connects</li>
+  <li>the pipe server accepts the request</li>
+  <li>the host service executes the request</li>
+  <li>the response returns to the caller</li>
+</ul>
+
+<p>This is the first moment where the bridge has demonstrated a real round trip.</p>
+
+<h3>Step 5: Validate One Richer Read</h3>
+
+<p>After the simplest read succeeds, try a request that depends more on current host context.</p>
+
+<p>Good candidates are:</p>
+
+<ul>
+  <li><code>vs_get_selected_text</code></li>
+  <li><code>vs_get_error_list</code></li>
+</ul>
+
+<p>This helps catch cases where the bridge is alive, but the host state or context handling is not what you expected.</p>
+
+<h3>Step 6: Validate Proposal Creation</h3>
+
+<p>Only after read-only calls behave cleanly should you test edit proposal flow.</p>
+
+<p>At this stage, confirm that:</p>
+
+<ul>
+  <li><code>vs_propose_text_edit</code> creates a proposal</li>
+  <li>proposal state reaches the approval workflow</li>
+  <li>the tool window shows the correct approval prompt</li>
+  <li>the prompt corresponds to the request that was just made</li>
+</ul>
+
+<p>This is where transport validation becomes UI-workflow validation.</p>
+
+<h3>Step 7: Validate Approve And Reject</h3>
+
+<p>Both approval outcomes matter.</p>
+
+<p>Reject should prove that:</p>
+
+<ul>
+  <li>the prompt clears correctly</li>
+  <li>the rejected proposal does not remain active</li>
+  <li>the UI does not continue acting as if approval is pending</li>
+</ul>
+
+<p>Approve should prove that:</p>
+
+<ul>
+  <li>the correct proposal is applied</li>
+  <li>the edit path succeeds or fails clearly</li>
+  <li>the visible state matches the actual result</li>
+</ul>
+
+<p>This is the step that confirms the approval flow is operational, not just visible.</p>
+
+<h3>Step 8: Validate Failure And Recovery</h3>
+
+<p>This step is especially important because failure loops are often where trust is lost.</p>
+
+<p>You want to confirm that after a failure:</p>
+
+<ul>
+  <li>the failure is visible</li>
+  <li>the system stops cleanly</li>
+  <li>a new request can still be made</li>
+  <li>restart returns the system to a predictable state</li>
+</ul>
+
+<p>What you do <strong>not</strong> want is:</p>
+
+<ul>
+  <li>the same failing action replaying without user intent</li>
+  <li>stale approval UI returning unexpectedly</li>
+  <li>restarting the visible app while hidden state keeps the failure loop alive</li>
+</ul>
+
+<p>If the bridge fails once and then recovers cleanly, that is still a usable system. If it fails once and gets stuck repeating itself, that is a much more serious problem.</p>
+
+<h3>What To Watch While Testing</h3>
+
+<p>The playbook only works if the system exposes enough signal to interpret each step.</p>
+
+<p>Useful evidence includes:</p>
+
+<ul>
+  <li>startup logs</li>
+  <li>request and response logs</li>
+  <li>request identifiers</li>
+  <li>tool results in the client</li>
+  <li>tool window behavior</li>
+  <li>clear approval and rejection outcomes</li>
+</ul>
+
+<p>If the app does not expose enough information to distinguish where a failure happened, that is a gap worth addressing.</p>
+
+<h3>Why This Also Informs Design</h3>
+
+<p>That is why this playbook is more than documentation. It quietly defines expectations for the app itself.</p>
+
+<p>If developers should be able to validate each stage, then the app needs:</p>
+
+<ul>
+  <li>clear startup diagnostics</li>
+  <li>bounded request handling</li>
+  <li>predictable approval state transitions</li>
+  <li>restart behavior that clears transient failure state</li>
+</ul>
+
+<p>In that sense, validation is not just about checking the implementation. It is also shaping what a good implementation looks like.</p>
+
+<h3>Takeaway</h3>
+
+<p>For the current bridge, the validation playbook should stay small, ordered, and concrete.</p>
+
+<p>Start with the host. Confirm the listener. Start the MCP side. Prove one simple request. Then move to proposal flow, approval handling, and failure recovery. That sequence gives the current bridge a practical path to confidence without creating unnecessary process overhead.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is likely the evidence model itself: what the current logs, UI signals, and request identifiers need to look like so that each validation step is easy to interpret and debug.</p>

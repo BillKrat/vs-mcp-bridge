@@ -1,0 +1,129 @@
+<h1>VS MCP Bridge Blog Series: Part 3</h1>
+<h2>Async Work, Approval Flow, and UI Thread Safety</h2>
+
+<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained how the bridge starts and how prompts become MCP tool workflows. This one stays grounded in the current implementation and answers a practical question: <strong>where does async behavior matter right now, and what has to stay on the UI thread?</strong></p>
+
+<p>The short answer is that the bridge can do background transport work, but host access and UI state updates still need to be controlled carefully.</p>
+
+<h3>Keep The Scope Small</h3>
+
+<p>It is easy to turn asynchronous design into a huge theoretical topic. For the current bridge, that would be unnecessary.</p>
+
+<p>At the current stage, the important concerns are only these:</p>
+
+<ul>
+  <li>requests can arrive asynchronously</li>
+  <li>Visual Studio API access still has thread requirements</li>
+  <li>UI-facing state must be updated safely</li>
+  <li>approval flow must remain simple and predictable</li>
+</ul>
+
+<p>That is enough to reason about the current system without drifting into future complexity.</p>
+
+<h3>Background Transport Is Fine</h3>
+
+<p>The bridge transport does not need to run on the UI thread.</p>
+
+<p>In the current design, the pipe server listens in the background and handles incoming requests asynchronously. That is the correct shape. A request can arrive from the MCP server without blocking the host UI while the bridge waits for input.</p>
+
+<p>So the first rule is simple:</p>
+
+<pre><code>transport work can happen in the background</code></pre>
+
+<p>This is healthy and expected. The bridge would feel unnecessarily fragile if every incoming request had to begin on the UI thread.</p>
+
+<h3>Visual Studio API Access Is Different</h3>
+
+<p>Even though transport work can happen in the background, the moment the bridge needs to touch Visual Studio services, the threading rules change.</p>
+
+<p>That is why the current design is strongest when <code>VsService</code> acts as the strict host boundary. This is the layer that talks to DTE and other Visual Studio APIs, so it is the right place to be disciplined about thread access.</p>
+
+<p>For the current app, this is the key rule:</p>
+
+<pre><code>background request arrives
+  -> bridge dispatches request
+  -> host service switches to the proper UI thread if required
+  -> Visual Studio work happens there</code></pre>
+
+<p>This keeps the async transport side separate from the host-specific execution side.</p>
+
+<h3>UI State Must Be Updated Deliberately</h3>
+
+<p>The next place where thread correctness matters is the UI state itself.</p>
+
+<p>The bridge updates visible state when it:</p>
+
+<ul>
+  <li>writes log information to the tool window</li>
+  <li>shows approval prompts</li>
+  <li>updates viewmodel-bound properties</li>
+</ul>
+
+<p>Those updates should not happen directly from an arbitrary background callback. They need to be marshaled back to the UI thread of the current host.</p>
+
+<p>In the current design, that is exactly why the presenter and thread-helper abstractions matter. The presenter is not just a convenience layer. It is the place where the workflow can safely cross back into UI-facing state.</p>
+
+<p>The practical rule is:</p>
+
+<pre><code>background result is ready
+  -> presenter marshals to UI thread
+  -> viewmodel state is updated
+  -> UI reflects the change</code></pre>
+
+<p>This keeps the shared workflow logic compatible with both hosts while respecting the thread model of each one.</p>
+
+<h3>Approval Flow Should Stay Simple</h3>
+
+<p>The approval path is where asynchronous bridge activity meets user control.</p>
+
+<p>At the current stage, the goal is not to build a large workflow engine. The goal is simply to make sure that when a proposal is created:</p>
+
+<ul>
+  <li>the user sees a clear approval prompt</li>
+  <li>the prompt reflects the correct proposal</li>
+  <li>approval or rejection behaves predictably</li>
+</ul>
+
+<p>That means the bridge should keep the approval experience obvious and controlled. There is no need to over-design multi-proposal concurrency until runtime evidence says it is necessary.</p>
+
+<p>For the current bridge, the important outcome is not theoretical scalability. It is that the approval experience remains understandable.</p>
+
+<h3>Logs Still Matter</h3>
+
+<p>Even in the current slice, logs can become confusing if background work and UI actions interleave without enough clarity.</p>
+
+<p>This is not the biggest architectural risk in the system, but it does matter during runtime validation. If log messages from request handling, proposal creation, approval, and application appear in a confusing order, debugging becomes harder than it should be.</p>
+
+<p>So one practical takeaway is that async correctness is not just about avoiding crashes. It is also about making runtime behavior legible enough to diagnose.</p>
+
+<h3>The Current Mental Model</h3>
+
+<p>If we stay strictly within the current implementation, the model is fairly clean:</p>
+
+<pre><code>request arrives in the background
+  -> bridge handles transport work asynchronously
+  -> host service switches to the right UI thread when required
+  -> presenter switches UI-facing updates to the UI thread
+  -> approval state stays clear and predictable</code></pre>
+
+<p>That is enough for the current bridge stage.</p>
+
+<p>There may be deeper concurrency concerns later, but those belong to a later stage of the project. Right now, the immediate job is simply to keep host access, UI updates, approval flow, and logs correct in the slice that already exists.</p>
+
+<h3>One More Practical Point</h3>
+
+<p>The project now has both a <strong>VSIX host</strong> and a <strong>standalone WPF host</strong>. As the bridge evolves, that means thread-safe workflow changes should be made with both hosts in mind.</p>
+
+<p>In practice, that means if a shared workflow assumption changes in the VSIX path, the corresponding behavior in <code>VsMcpBridge.App</code> should also be reviewed so the two hosts do not silently drift apart.</p>
+
+<p>The details of their thread-dispatch mechanisms may differ, but the higher-level workflow should remain aligned where the feature is intended to be shared.</p>
+
+<h3>Takeaway</h3>
+
+<p>For the current bridge, async design does not need to be overcomplicated.</p>
+
+<p>The important rule is simply that transport can be asynchronous, but host access and UI state changes must still be deliberate and thread-correct. If the bridge does that well, the current implementation remains understandable, stable, and safe enough for the next stage of MCP work.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is likely runtime validation: how to verify that MCP tool calls, named-pipe dispatch, proposal creation, and approval flow all work end to end in the real host environment.</p>

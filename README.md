@@ -85,7 +85,16 @@ host implementation
 ```
 
 For the detailed living technical reference, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
-For a concise hand-off document intended for ChatGPT or another external reviewer, see [docs/CHATGPT_HANDOFF.md](docs/CHATGPT_HANDOFF.md).
+
+Blog series:
+
+- [VS MCP Bridge Blog Series: Part 1](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-1)
+- [VS MCP Bridge Blog Series: Part 2](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-2)
+- [VS MCP Bridge Blog Series: Part 3](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-3)
+- [VS MCP Bridge Blog Series: Part 4](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-4)
+- [VS MCP Bridge Blog Series: Part 5](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-5)
+- [VS MCP Bridge Blog Series: Part 6](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-6)
+- [VS MCP Bridge Blog Series: Part 7](http://adventuresontheedge.net/post/2026/04/11/vs-mcp-bridge-blog-series-part-7)
 
 ## Build
 
@@ -195,6 +204,6 @@ After that, the strongest candidates are:
 Use these docs together:
 
 - `README.md`: quick orientation and build/test entry point
+- `docs/gated_turn-based_workflow-Codex.txt`: Bill and Codex collaboration workflow for gated execution
 - `docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
-- `docs/CHATGPT_HANDOFF.md`: current-state hand-off for external analysis and next-step planning

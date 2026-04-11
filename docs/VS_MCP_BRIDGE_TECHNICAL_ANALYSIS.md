@@ -8,7 +8,7 @@ This document is the living technical reference for `vs-mcp-bridge`.
 
 Its job is to stay grounded in the repository as it exists now, not in an aspirational future architecture.
 
-For fast current-state onboarding, read `docs/AI_HANDOFF.md` first.
+For fast onboarding, start with `README.md` and `docs/gated_turn-based_workflow-Codex.txt`.
 
 ## Executive Summary
 
@@ -163,8 +163,7 @@ After the bridge is proven end to end, the likely next technical topics are:
 
 ## Related Documents
 
-- `docs/CODING_STANDARDS.md`
-- `docs/AI_COLLABORATION.md`
-- `docs/AI_HANDOFF.md`
-- `docs/MVPVM_OVERVIEW.md`
 - `README.md`
+- `docs/gated_turn-based_workflow-Codex.txt`
+- `docs/CODING_STANDARDS.md`
+- `docs/MVPVM_OVERVIEW.md`

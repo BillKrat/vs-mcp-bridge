@@ -124,5 +124,5 @@ We do not need to expand or perfect the MVP/VM design before the bridge works en
 
 - `README.md`
 - `docs/CODING_STANDARDS.md`
-- `docs/AI_HANDOFF.md`
+- `docs/gated_turn-based_workflow-Codex.txt`
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
