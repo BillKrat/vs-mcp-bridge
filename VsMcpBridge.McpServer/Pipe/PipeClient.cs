@@ -1,7 +1,5 @@
-using System.Diagnostics;
-using System.IO;
+using Microsoft.Extensions.Logging;
 using System.IO.Pipes;
-using System.Text;
 using System.Text.Json;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -12,11 +10,10 @@ namespace VsMcpBridge.McpServer.Pipe;
 /// Sends requests to the VSIX named pipe server and awaits the response.
 /// Each public method corresponds to one VS operation.
 /// </summary>
-public sealed class PipeClient : IPipeClient
+public sealed class PipeClient(ILogger logger) : IPipeClient
 {
     private const string PipeName = "VsMcpBridge";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-    private static readonly object LogSync = new();
 
     private async Task<TResponse> SendAsync<TRequest, TResponse>(
         string command,
@@ -26,13 +23,13 @@ public sealed class PipeClient : IPipeClient
         where TResponse : VsResponseBase, new()
     {
         var requestId = string.IsNullOrWhiteSpace(request.RequestId) ? "(none)" : request.RequestId;
-        LogPipeTrace($"Attempting pipe connection to '{PipeName}' [Command={command}] [RequestId={requestId}].");
+        logger.LogTrace($"Attempting pipe connection to '{PipeName}' [Command={command}] [RequestId={requestId}].");
 
         try
         {
             using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             await pipe.ConnectAsync(timeout: 5000, cancellationToken);
-            LogPipeTrace($"Pipe connection established to '{PipeName}' [Command={command}] [RequestId={requestId}].");
+            logger.LogTrace($"Pipe connection established to '{PipeName}' [Command={command}] [RequestId={requestId}].");
 
             var envelope = new PipeMessage
             {
@@ -44,13 +41,13 @@ public sealed class PipeClient : IPipeClient
             using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
             using var reader = new StreamReader(pipe, leaveOpen: true);
 
-            LogPipeTrace($"Sending pipe request [Command={command}] [RequestId={requestId}] [PayloadLength={envelope.Payload.Length}].");
+            logger.LogTrace($"Sending pipe request [Command={command}] [RequestId={requestId}] [PayloadLength={envelope.Payload.Length}].");
             await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
             var responseJson = await reader.ReadLineAsync(cancellationToken);
 
             if (string.IsNullOrEmpty(responseJson))
             {
-                LogPipeTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
+                logger.LogTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
                 return new TResponse
                 {
                     RequestId = requestId,
@@ -59,11 +56,11 @@ public sealed class PipeClient : IPipeClient
                 };
             }
 
-            LogPipeTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
+            logger.LogTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
             var response = JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions);
             if (response == null)
             {
-                LogPipeTrace($"Failed to deserialize pipe response [Command={command}] [RequestId={requestId}].");
+                logger.LogTrace($"Failed to deserialize pipe response [Command={command}] [RequestId={requestId}].");
                 return new TResponse
                 {
                     RequestId = requestId,
@@ -73,12 +70,12 @@ public sealed class PipeClient : IPipeClient
             }
 
             response.RequestId = string.IsNullOrWhiteSpace(response.RequestId) ? requestId : response.RequestId;
-            LogPipeTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
+            logger.LogTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
             return response;
         }
         catch (Exception ex)
         {
-            LogPipeTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
+            logger.LogTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
             throw;
         }
     }
@@ -122,27 +119,4 @@ public sealed class PipeClient : IPipeClient
                 ProposedText = proposedText
             },
             ct);
-
-    private static void LogPipeTrace(string message)
-    {
-        var line = $"[{DateTime.Now:HH:mm:ss}] [PipeClient] {message}";
-        Debug.WriteLine(line);
-
-        try
-        {
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var logDirectory = Path.Combine(localAppData, "VsMcpBridge", "Logs", "McpServer");
-            var logPath = Path.Combine(logDirectory, "pipe-client.log");
-
-            lock (LogSync)
-            {
-                Directory.CreateDirectory(logDirectory);
-                File.AppendAllText(logPath, line + Environment.NewLine, Encoding.UTF8);
-            }
-        }
-        catch
-        {
-            // Never let diagnostics interfere with MCP stdio or request flow.
-        }
-    }
 }

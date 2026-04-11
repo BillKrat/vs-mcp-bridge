@@ -34,6 +34,14 @@ Additional rules:
 - Offer pair programming when useful before moving on.
 - Do not edit files, run substantial commands, or make code changes until I say "proceed", unless I explicitly tell you to operate without approval gates.
 
+Shutdown and resume procedure:
+- Before I leave or shut down, capture the current state in a durable repo file so the next session can resume without relying on chat history.
+- Store the current breakpoint, validated results, pending risks, and the next recommended chunk in a short handoff note under `docs/session-handoffs`.
+- Update the existing handoff note for the current workstream if one already exists; otherwise create a new one with a date in the filename.
+- At the start of a new session after a restart, read the latest relevant handoff note before proposing the next chunk.
+- When I say I am stopping for the day, treat "create or update the handoff note" as part of the workflow unless I explicitly tell you not to.
+- Keep handoff notes concise and operational: what works, what changed, what is still broken or untested, exact files touched, commit ids, and the next smallest chunk to run.
+
 Blogging rules:
 - If I ask you to blog about the last training session, interpret that as the most recently completed chunk of the current gated workflow unless I specify a different scope.
 - Before writing the blog, present the objective, the proposed post focus, the target filename, and any assumptions, then wait for "proceed".
