@@ -1,6 +1,6 @@
 # MVP/VM In This Repository
 
-Last updated: 2026-04-10
+Last updated: 2026-04-12
 
 ## Purpose
 
@@ -8,7 +8,7 @@ This document explains the MVP/VM split used by the tool-window UI in `vs-mcp-br
 
 It is intentionally short.
 
-This is supporting guidance, not the main priority of the current phase. The current priority is getting the VSIX host, named-pipe bridge, and MCP server working end to end. While doing that, we still want to avoid collapsing UI responsibilities back together.
+This is supporting guidance, not the main priority of the current phase. End-to-end runtime validation for the current MCP tool slice is complete. The current priority is hardening, targeted automated coverage, and preserving the clean UI split while that work proceeds.
 
 ## Why This Pattern Exists Here
 
@@ -118,7 +118,7 @@ Avoid these failure modes:
 
 Right now, this pattern matters mainly as a guardrail.
 
-We do not need to expand or perfect the MVP/VM design before the bridge works end to end. We only need to preserve a clean enough split that runtime fixes do not turn the UI layer into a tangle.
+We do not need to expand or perfect the MVP/VM design before broader feature growth. We only need to preserve a clean enough split that hardening work and test-driven changes do not turn the UI layer into a tangle.
 
 ## Related Documents
 

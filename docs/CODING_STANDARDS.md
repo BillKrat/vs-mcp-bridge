@@ -1,13 +1,13 @@
-# VS MCP Bridge — Coding Standards & Patterns
+# VS MCP Bridge - Coding Standards & Patterns
 
-> **Purpose**: This document captures the patterns, conventions, and guard-rails that apply across the codebase. All contributors — human and AI — should read this before generating or modifying code. When a pattern here conflicts with a suggestion made elsewhere, this document wins.
+> **Purpose**: This document captures the patterns, conventions, and guard-rails that apply across the codebase. All contributors - human and AI - should read this before generating or modifying code. When a pattern here conflicts with a suggestion made elsewhere, this document wins.
 
 ---
 
 ## Table of Contents
 
 1. [Async / Fire-and-Forget](#1-async--fire-and-forget)
-2. [Dependency Injection — Resolve vs GetRequiredService](#2-dependency-injection--resolve-vs-getrequiredservice)
+2. [Dependency Injection - Resolve vs GetRequiredService](#2-dependency-injection---resolve-vs-getrequiredservice)
 3. [Logging](#3-logging)
 4. [VSIX-Specific Rules](#4-vsix-specific-rules)
 5. [MVP-VM Responsibilities](#5-mvp-vm-responsibilities)
@@ -20,10 +20,10 @@
 
 Every fire-and-forget task (`_ = SomeAsync()`) **must** catch all exceptions internally. There is no AppDomain-wide safety net in the VSIX host.
 
-### Safe Pattern ✅
+### Safe Pattern
 
 ```csharp
-// The caller discards the Task — the method owns its own error handling.
+// The caller discards the Task - the method owns its own error handling.
 _ = DoWorkAsync();
 
 private async Task DoWorkAsync()
@@ -39,7 +39,7 @@ private async Task DoWorkAsync()
 }
 ```
 
-### Dangerous Pattern ❌
+### Dangerous Pattern
 
 ```csharp
 // If DoWorkAsync throws, the exception is silently swallowed after GC.
@@ -47,7 +47,7 @@ _ = DoWorkAsync();
 
 private async Task DoWorkAsync()
 {
-    await SomethingThatMightThrow(); // no try-catch — exception disappears
+    await SomethingThatMightThrow(); // no try-catch - exception disappears
 }
 ```
 
@@ -59,27 +59,35 @@ private async Task DoWorkAsync()
 
 | Location | Method | Safe? |
 |---|---|---|
-| `PipeServer.ListenLoop` | `HandleConnectionAsync` | ✅ full try-catch |
-| `LogToolWindowPresenter.OnSubmitProposalRequested` | `SubmitProposalAsync` | ✅ full try-catch |
+| `PipeServer.ListenLoop` | `HandleConnectionAsync` | yes - full try-catch |
+| `LogToolWindowPresenter.OnSubmitProposalRequested` | `SubmitProposalAsync` | yes - full try-catch |
 
 When adding new fire-and-forget sites, add a row to this table.
 
 ---
 
-## 2. Dependency Injection — Resolve vs GetRequiredService
+## 2. Dependency Injection - Resolve vs GetRequiredService
 
 ### The Rule
 
-At **composition roots** (package `InitializeAsync`, `App.OnStartup`), use the project-local `Resolve<T>()` extension from `ServiceProviderExtensions`. Do **not** use `GetRequiredService<T>()` at composition roots.
+At composition roots, prefer the project-local `Resolve<T>()` extension from `ServiceProviderExtensions` when you have a concrete `ServiceProvider` and want DI trace breadcrumbs during startup.
 
 ```csharp
-// ✅ Use at composition root
-_logger    = _serviceProvider.Resolve<ILogger>();
+// Preferred when startup DI trace logging matters and ServiceProvider is available.
+_logger = _serviceProvider.Resolve<ILogger>();
 _pipeServer = _serviceProvider.Resolve<IPipeServer>();
 
-// ❌ Avoid at composition root
-_logger    = _serviceProvider.GetRequiredService<ILogger>();
+// Also valid at composition roots when trace logging is not being used there.
+_exceptionSink = _serviceProvider.GetRequiredService<IUnhandledExceptionSink>();
+_pipeServer = _serviceProvider.GetRequiredService<IPipeServer>();
 ```
+
+### Current Repository State
+
+- `VsMcpBridge.Vsix.VsMcpBridgePackage.InitializeAsync` uses `Resolve<T>()`.
+- `VsMcpBridge.App.App.OnStartup` currently uses `GetRequiredService<T>()`.
+
+If this is standardized later, update this document and the relevant composition roots together.
 
 ### Why
 
@@ -87,8 +95,8 @@ _logger    = _serviceProvider.GetRequiredService<ILogger>();
 
 ### Exceptions
 
-- Inside DI registration lambdas (`services.AddSingleton<T>(sp => sp.GetRequiredService<...>())`) — these receive `IServiceProvider`, not `ServiceProvider`, and `Resolve<T>` is not defined on the interface. Use `GetRequiredService` there.
-- In test files asserting DI composition — use `GetRequiredService` to keep test intent explicit.
+- Inside DI registration lambdas (`services.AddSingleton<T>(sp => sp.GetRequiredService<...>())`) - these receive `IServiceProvider`, not `ServiceProvider`, and `Resolve<T>` is not defined on the interface. Use `GetRequiredService` there.
+- In test files asserting DI composition - use `GetRequiredService` to keep test intent explicit.
 
 ---
 
@@ -99,22 +107,22 @@ _logger    = _serviceProvider.GetRequiredService<ILogger>();
 All injectable loggers implement `Microsoft.Extensions.Logging.ILogger`. The custom `IBridgeLogger` interface has been removed. Do not reintroduce it.
 
 ```csharp
-// ✅ Correct
+// Correct
 private readonly ILogger _logger;
 public MyService(ILogger logger) => _logger = logger;
 
-// ❌ Wrong — IBridgeLogger is gone
+// Wrong - IBridgeLogger is gone
 private readonly IBridgeLogger _logger;
 ```
 
 ### Logger Hierarchy
 
-```
+```text
 LoggerBase (ILogger, template-method base)
-├── ConsoleBridgeLogger   — Console.WriteLine (App host)
-├── DebugBridgeLogger     — Debug.WriteLine → VS Output pane
-└── ActivityLogBridgeLogger (VSIX)
-      └── AdditionalLogger: DebugBridgeLogger
+|- ConsoleBridgeLogger - Console.WriteLine (App host)
+|- DebugBridgeLogger - Debug.WriteLine -> VS Output pane
+'- ActivityLogBridgeLogger (VSIX)
+   '- AdditionalLogger: DebugBridgeLogger
 ```
 
 `ActivityLogBridgeLogger` writes to the VS ActivityLog XML file **and** forwards to `DebugBridgeLogger` so messages appear in the VS Output window during debugging. `LoggerBase` does the `IsEnabled` check; subclasses only override `LogMessage`.
@@ -142,13 +150,13 @@ Default level at startup: `LogLevel.Information`.
 
 ### LogError Parameter Order
 
-MEL's `LogError` extension takes `(Exception?, string, params object[])` — **exception first, message second**. This is the opposite of the old `IBridgeLogger.LogError(string, Exception?)` signature.
+MEL's `LogError` extension takes `(Exception?, string, params object[])` - **exception first, message second**. This is the opposite of the old `IBridgeLogger.LogError(string, Exception?)` signature.
 
 ```csharp
-// ✅ Correct MEL order
+// Correct MEL order
 _logger.LogError(ex, "Operation failed for '{FilePath}'.", filePath);
 
-// ❌ Old IBridgeLogger order — will not compile but watch for it in new code
+// Old IBridgeLogger order - will not compile but watch for it in new code
 _logger.LogError("Operation failed.", ex);
 ```
 
@@ -159,7 +167,7 @@ _logger.LogError("Operation failed.", ex);
 ### Do Not Subscribe to TaskScheduler.UnobservedTaskException
 
 ```csharp
-// ❌ Never do this in VsMcpBridgePackage or any VSIX code
+// Never do this in VsMcpBridgePackage or any VSIX code
 TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 ```
 
@@ -167,8 +175,8 @@ TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
 ### ActivityLog vs Output Window
 
-- `ActivityLog.TryLogInformation/Warning/Error` → writes to `%LocalAppData%\Microsoft\VisualStudio\<ver>\ActivityLog.xml`
-- `DebugBridgeLogger` (via `AdditionalLogger`) → writes to VS Output window (`System.Diagnostics.Debug.WriteLine`)
+- `ActivityLog.TryLogInformation/Warning/Error` -> writes to `%LocalAppData%\Microsoft\VisualStudio\<ver>\ActivityLog.xml`
+- `DebugBridgeLogger` (via `AdditionalLogger`) -> writes to VS Output window (`System.Diagnostics.Debug.WriteLine`)
 
 During development, watch the **Output** window. ActivityLog is for post-mortem diagnostics when the debugger is not attached.
 

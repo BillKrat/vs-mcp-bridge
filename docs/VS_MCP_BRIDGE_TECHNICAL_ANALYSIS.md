@@ -1,6 +1,6 @@
 # VS MCP Bridge Technical Analysis
 
-Last updated: 2026-04-11
+Last updated: 2026-04-12
 
 ## Purpose
 
@@ -61,7 +61,7 @@ Key files:
 - `Pipe/PipeServer.cs`
 - `Services/VsService.cs`
 - `ToolWindows/LogToolWindow.cs`
-- `ToolWindows/LogToolWindowControl.xaml`
+- `VsMcpBridge.Shared.Wpf/Views/LogToolWindowControl.xaml`
 
 ### `VsMcpBridge.App`
 
@@ -72,7 +72,7 @@ Purpose:
 
 Current phase note:
 
-- this project is useful, but it is not the primary focus until the VSIX plus MCP path is working reliably
+- this project remains useful as a reference host and separation check, but the main priority has shifted to hardening and automated coverage around the validated VSIX plus MCP path
 
 ### `VsMcpBridge.Shared`
 
@@ -105,8 +105,8 @@ host
 The following constraints are intentional and should be preserved unless Bill decides otherwise:
 
 - no shell execution from the MCP server
-- no direct file writes from the MCP server
-- no filesystem access outside the solution root
+- no direct workspace or solution file writes from the MCP server
+- no general filesystem access outside the solution root, except for bridge diagnostics written under `%LocalAppData%\VsMcpBridge\Logs`
 - no autonomous agent loop
 - edits remain proposal-based rather than silently applied
 - Visual Studio API access stays in the VSIX host
