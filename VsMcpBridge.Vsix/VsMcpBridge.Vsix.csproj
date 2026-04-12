@@ -54,6 +54,7 @@
     <Compile Include="Composition\BridgeServiceCollectionExtensions.cs" />
     <Compile Include="Logging\ActivityLogBridgeLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ProposalFilePicker.cs" />
     <Compile Include="Services\ThreadHelperAdapter.cs" />
     <Compile Include="Services\VsixEditApplier.cs" />
     <Compile Include="Services\VsService.cs" />

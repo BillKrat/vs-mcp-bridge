@@ -37,9 +37,18 @@
                    Text="File Path"
                    Margin="0,0,0,2"
                    Foreground="{DynamicResource VsBrush.WindowText}" />
-        <TextBox Grid.Row="2"
-                 Margin="0,0,0,8"
-                 Text="{Binding ProposalFilePath, UpdateSourceTrigger=PropertyChanged}" />
+        <Grid Grid.Row="2" Margin="0,0,0,8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBox Grid.Column="0"
+                   Margin="0,0,8,0"
+                   Text="{Binding ProposalFilePath, UpdateSourceTrigger=PropertyChanged}" />
+          <Button Grid.Column="1"
+                  Content="Browse"
+                  Command="{Binding BrowseProposalFileCommand}" />
+        </Grid>
         <Grid Grid.Row="3" Margin="0,0,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

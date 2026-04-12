@@ -20,6 +20,14 @@ public sealed class MvpVmTests
             .BuildServiceProvider();
     }
 
+    private static IServiceProvider CreateServiceProvider(IVsService vsService, IProposalFilePicker proposalFilePicker)
+    {
+        return new ServiceCollection()
+            .AddSingleton(vsService)
+            .AddSingleton<IProposalFilePicker>(proposalFilePicker)
+            .BuildServiceProvider();
+    }
+
     [Fact]
     public void AddMvpVmServices_registers_shared_presenter_and_view_model()
     {
@@ -163,6 +171,21 @@ public sealed class MvpVmTests
         Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
         Assert.True(viewModel.ApproveCommand.CanExecute(null));
         Assert.True(viewModel.RejectCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void BrowseProposalFileCommand_updates_proposal_file_path_from_picker_selection()
+    {
+        var picker = new StubProposalFilePicker { SelectedPath = @"C:\repo\Sample.cs" };
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        Assert.True(viewModel.BrowseProposalFileCommand.CanExecute(null));
+
+        viewModel.BrowseProposalFileCommand.Execute(null);
+
+        Assert.Equal(1, picker.Calls);
+        Assert.Equal(@"C:\repo\Sample.cs", viewModel.ProposalFilePath);
     }
 
     [Fact]
@@ -382,6 +405,35 @@ public sealed class MvpVmTests
         Assert.Equal(string.Empty, viewModel.ProposalProposedText);
         Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
         Assert.Equal($"Unable to load file '{path}'.", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public void BrowseProposalFileCommand_selection_uses_existing_load_flow_for_pane_population_and_submit_gating()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            Assert.Equal(path, viewModel.ProposalFilePath);
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Equal("before", viewModel.ProposalOriginalText);
+            Assert.Equal("before", viewModel.ProposalProposedText);
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.ProposalProposedText = "after";
+
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
 }

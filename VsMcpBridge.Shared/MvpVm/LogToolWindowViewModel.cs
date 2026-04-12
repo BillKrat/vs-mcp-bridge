@@ -26,8 +26,10 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _pendingApprovalDescription = string.Empty;
         private string _statusMessage = string.Empty;
         private bool _isProposalFileLoaded;
+        private bool _canBrowseProposalFile;
         private bool _hasPendingApproval;
         private LogLevel _selectedLogLevel;
+        private Action? _onBrowseProposalFileRequested;
         private Action<string, string, string>? _onSubmitProposalRequested;
         private Action? _onApproveRequested;
         private Action? _onRejectRequested;
@@ -38,6 +40,10 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             _logLevelSettings = logLevelSettings;
             _selectedLogLevel = logLevelSettings.MinimumLevel;
+
+            BrowseProposalFileCommand = new RelayCommand(
+                execute: () => _onBrowseProposalFileRequested?.Invoke(),
+                canExecute: () => CanBrowseProposalFile && !HasPendingApproval);
 
             SubmitProposalCommand = new RelayCommand(
                 execute: () => _onSubmitProposalRequested?.Invoke(ProposalFilePath, ProposalOriginalText, ProposalProposedText),
@@ -127,6 +133,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 {
                     OnPropertyChanged(nameof(IsProposalOriginalTextReadOnly));
                     OnPropertyChanged(nameof(IsProposalProposedTextReadOnly));
+                    BrowseProposalFileCommand.NotifyCanExecuteChanged();
                     SubmitProposalCommand.NotifyCanExecuteChanged();
                     ApproveCommand.NotifyCanExecuteChanged();
                     RejectCommand.NotifyCanExecuteChanged();
@@ -134,9 +141,21 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public bool CanBrowseProposalFile
+        {
+            get => _canBrowseProposalFile;
+            set
+            {
+                if (SetProperty(ref _canBrowseProposalFile, value))
+                    BrowseProposalFileCommand.NotifyCanExecuteChanged();
+            }
+        }
+
         public bool IsProposalOriginalTextReadOnly => true;
 
         public bool IsProposalProposedTextReadOnly => HasPendingApproval;
+
+        public IRelayCommand BrowseProposalFileCommand { get; }
 
         public IRelayCommand SubmitProposalCommand { get; }
 
@@ -155,6 +174,13 @@ namespace VsMcpBridge.Shared.MvpVm
         }
 
         public IReadOnlyList<LogLevel> AvailableLogLevels => _availableLogLevels;
+
+        public void SetProposalBrowseHandler(Action? onBrowseProposalFileRequested)
+        {
+            _onBrowseProposalFileRequested = onBrowseProposalFileRequested;
+            CanBrowseProposalFile = onBrowseProposalFileRequested is not null;
+            BrowseProposalFileCommand.NotifyCanExecuteChanged();
+        }
 
         public void SetProposalSubmissionHandler(Action<string, string, string>? onSubmitProposalRequested)
         {

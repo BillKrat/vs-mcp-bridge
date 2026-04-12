@@ -23,6 +23,7 @@ internal static class BridgeServiceCollectionExtensions
         services.AddSingleton<IUnhandledExceptionSink, FileUnhandledExceptionSink>();
         services.AddSingleton<IApprovalWorkflowService, InMemoryApprovalWorkflowService>();
         services.AddSingleton<IEditApplier, VsixEditApplier>();
+        services.AddSingleton<IProposalFilePicker, ProposalFilePicker>();
         services.AddSingleton<IThreadHelper, ThreadHelperAdapter>();
         services.AddSingleton<IVsService, VsService>();
         services.AddSingleton<IPipeServer, PipeServer>();

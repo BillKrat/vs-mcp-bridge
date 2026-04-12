@@ -16,6 +16,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
         private readonly IProposalDraftState? _proposalDraftState;
+        private readonly IProposalFilePicker? _proposalFilePicker;
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
 
@@ -25,7 +26,12 @@ namespace VsMcpBridge.Shared.MvpVm
             _logger = logger;
             _threadHelper = threadHelper;
             _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
+            _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
+            if (_proposalFilePicker != null)
+                LogToolWindowViewModel.SetProposalBrowseHandler(OnBrowseProposalFileRequested);
+            else
+                LogToolWindowViewModel.SetProposalBrowseHandler(null);
             LogToolWindowViewModel.SetProposalSubmissionHandler(OnSubmitProposalRequested);
             LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
 
@@ -128,6 +134,13 @@ namespace VsMcpBridge.Shared.MvpVm
         private void OnSubmitProposalRequested(string filePath, string originalText, string proposedText)
         {
             _ = SubmitProposalAsync(filePath, originalText, proposedText);
+        }
+
+        private void OnBrowseProposalFileRequested()
+        {
+            var selectedPath = _proposalFilePicker?.PickFilePath();
+            if (!string.IsNullOrWhiteSpace(selectedPath))
+                LogToolWindowViewModel.ProposalFilePath = selectedPath!;
         }
 
         private async Task SubmitProposalAsync(string filePath, string originalText, string proposedText)
