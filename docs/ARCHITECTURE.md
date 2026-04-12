@@ -114,12 +114,14 @@ Current approval flow:
 8. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
 9. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
 10. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
-11. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
-12. If the target already matches the approved updated content, apply becomes a no-op.
-13. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
-14. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
-15. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-16. The result is returned back through the bridge to the MCP client.
+11. New proposals may carry `RangeEdit` in addition to `Diff`, while the unified diff remains the operator-facing preview format.
+12. If approved, apply prefers the single-range replacement path when `RangeEdit` is present and falls back to full-document diff reconstruction when `RangeEdit` is absent.
+13. If the target already matches the approved updated content at the intended location, apply becomes a no-op.
+14. If the target no longer matches the approved original content, or if multiple candidate locations make the range match ambiguous, apply fails explicitly instead of guessing.
+15. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving surrounding document content, line endings, and final trailing newline state where applicable.
+16. Live manual validation should focus on uniquely targeted success and drift failure after submit and before approve; ambiguity failure is primarily an automated safety proof.
+17. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+18. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -133,7 +135,7 @@ Current verified state for this workflow:
 
 Current limitation:
 
-- edit application still works as full-document replacement reconstructed from the generated diff; this pass did not introduce range-based or multi-file editing
+- range-based apply is limited to one file and one contiguous replacement range; multi-range and multi-file editing are still out of scope
 - if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
 
 Low-priority UI backlog:

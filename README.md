@@ -63,7 +63,11 @@ Developer note:
 
 Current limitation:
 
-- edit application still works as full-document replacement reconstructed from the generated diff, although the current apply path now preserves line endings and final trailing newline state and fails explicitly on target-document drift
+- new proposals may carry `RangeEdit` in addition to `Diff`
+- the unified diff remains the preview format shown to the operator
+- apply prefers a single-range replacement when `RangeEdit` is present, and falls back to full-document apply when `RangeEdit` is absent
+- ambiguous range matches fail safely instead of guessing
+- live manual validation should focus on uniquely targeted success and drift failure after submit and before approve; ambiguity failure is primarily an automated safety proof
 
 ## Solution Structure
 
