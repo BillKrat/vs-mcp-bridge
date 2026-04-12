@@ -182,7 +182,7 @@ public sealed class PipeServer : IPipeServer
             {
                 try
                 {
-                    var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson, JsonOptions);
+                    var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
                     if (envelope != null)
                     {
                         requestId = EnsureRequestId(envelope.RequestId);
