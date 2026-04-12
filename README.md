@@ -84,7 +84,8 @@ host implementation
   -> workspace / file system / build (App host)
 ```
 
-For the detailed living technical reference, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
+For current system behavior and request flow, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+For the detailed living technical reference and roadmap, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
 
 Blog series:
 
@@ -203,6 +204,7 @@ The most important next work is no longer first-time runtime validation. The bes
 Use these docs together:
 
 - `README.md`: quick orientation and build/test entry point
+- `docs/ARCHITECTURE.md`: single source of truth for current system behavior
 - `docs/gated_turn-based_workflow-Codex.txt`: Bill and Codex collaboration workflow for gated execution
 - `docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document

@@ -1,6 +1,10 @@
 # VS MCP Bridge Diagram Notes
 
-This document captures the current diagram guidance for the bootstrap flow discussed in the first blog entry.
+Purpose: Supporting explanations for architecture diagrams
+
+This document captures diagram guidance for the current bridge without redefining the architecture itself.
+
+For full-system behavior, request flow, approval flow, and component relationships, use `docs/ARCHITECTURE.md` as the source of truth.
 
 ## Purpose
 
@@ -76,6 +80,8 @@ If you want an even simpler version, `ServiceProvider` can be omitted. It is inc
 18. `VsMcpBridge.McpServer --> AI Client`  
     `Return MCP response`
 
+This sequence is a diagram-oriented view of the runtime behavior already defined in `docs/ARCHITECTURE.md`.
+
 ### Optional Secondary Flow
 
 Add this as an `opt` or `alt` fragment if you want to capture the edit approval path.
@@ -111,12 +117,7 @@ Add a note near the overall diagram:
 
 ## Mermaid Overview
 
-Mermaid is a text-based diagram language. You write a small block of plain text describing a flow, sequence, graph, or state machine, and a renderer turns it into a diagram.
-
-A useful mental model is:
-
-- **Mermaid = fast drafting and documentation**
-- **Enterprise Architect = durable architecture record**
+Mermaid is a text-based diagram language. Use it here as a lightweight way to express the architecture already described in `docs/ARCHITECTURE.md`.
 
 ### Why Mermaid is useful
 
@@ -174,8 +175,3 @@ sequenceDiagram
 ```
 
 If your Markdown renderer does not support Mermaid blocks, use the separate Mermaid file in `docs` and keep this Markdown document as the explanatory guide.
-
-## Recommended Next Step
-
-Build the first canonical sequence diagram in Enterprise Architect using the spec above.
-After that, use the Mermaid file as a lightweight draft format for future diagrams.

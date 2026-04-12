@@ -8,7 +8,7 @@ This document is the living technical reference for `vs-mcp-bridge`.
 
 Its job is to stay grounded in the repository as it exists now, not in an aspirational future architecture.
 
-For fast onboarding, start with `README.md` and `docs/gated_turn-based_workflow-Codex.txt`.
+For fast onboarding, start with `README.md`, `docs/ARCHITECTURE.md`, and `docs/gated_turn-based_workflow-Codex.txt`.
 
 ## Executive Summary
 
@@ -163,6 +163,7 @@ After the validated baseline is better covered, the likely next technical topics
 ## Related Documents
 
 - `README.md`
+- `docs/ARCHITECTURE.md`
 - `docs/gated_turn-based_workflow-Codex.txt`
 - `docs/CODING_STANDARDS.md`
 - `docs/MVPVM_OVERVIEW.md`

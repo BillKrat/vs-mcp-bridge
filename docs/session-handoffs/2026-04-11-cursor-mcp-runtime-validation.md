@@ -1,5 +1,7 @@
 # Session Handoff: Cursor MCP Runtime Validation
 
+Status: CONSUMED
+
 Date: 2026-04-11
 Branch: `feature/approval-apply-ui-slice`
 Latest runtime fix commit: `55fd4b9` (`Fix Cursor MCP runtime stability issues`)

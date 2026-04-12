@@ -1,5 +1,7 @@
 # Session Handoff: ChatGPT Reset Context
 
+Status: ACTIVE
+
 Date: 2026-04-12
 Branch: `feature/approval-apply-ui-slice`
 Starting HEAD for this handoff session: `e984b28f57a2c39a29d78ca5e69442443fed1318`
