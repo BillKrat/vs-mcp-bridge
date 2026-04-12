@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Text;
-using Microsoft.Extensions.Logging;
-
 using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.Shared.Loggers
@@ -22,6 +21,9 @@ namespace VsMcpBridge.Shared.Loggers
         protected override void LogMessage(LogLevel level, string source, string message, Exception? exception = null)
         {
             var line = $"[{DateTime.Now:HH:mm:ss}] [{level}] [{source}] {message}";
+
+            // TODO: This following magic strings are tightly coupled to the VsMcpBridge.Server
+            // implementation and should be made more robust if we add more components that need logging.
 
             try
             {
