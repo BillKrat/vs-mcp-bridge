@@ -106,13 +106,17 @@ Current approval flow:
 
 1. `vs_propose_text_edit` submits the proposed edit through the MCP server.
 2. The request crosses the named-pipe boundary and reaches the VSIX host.
-3. A proposal is created and routed into the tool window for approval or rejection.
-4. The user explicitly approves or rejects the proposal in the tool window.
-5. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
-6. If the target already matches the approved updated content, apply becomes a no-op.
-7. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
-8. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
-9. The result is returned back through the bridge to the MCP client.
+3. In the tool window, entering a valid `ProposalFilePath` loads the file contents into both panes for the current full-document proposal workflow.
+4. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
+5. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
+6. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
+7. The user explicitly approves or rejects the proposal in the tool window.
+8. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
+9. If the target already matches the approved updated content, apply becomes a no-op.
+10. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
+11. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
+12. Apply failures are surfaced in the tool window with a concise status message in addition to the bridge logs.
+13. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -127,6 +131,11 @@ Current verified state for this workflow:
 Current limitation:
 
 - edit application still works as full-document replacement reconstructed from the generated diff; this pass did not introduce range-based or multi-file editing
+
+Low-priority UI backlog:
+
+- clean up the bottom control layout in the tool window without changing the workflow
+- investigate intermittent `GridSplitter` responsiveness in the tool window
 
 ## Current Verified Runtime Slice
 

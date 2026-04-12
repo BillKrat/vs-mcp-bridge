@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -171,17 +172,25 @@ public sealed class MvpVmTests
         var vsService = new StubVsService();
         _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
-        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
-        viewModel.ProposalOriginalText = "before";
-        viewModel.ProposalProposedText = "after";
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "before");
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "after";
 
-        Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
-        viewModel.SubmitProposalCommand.Execute(null);
+            viewModel.SubmitProposalCommand.Execute(null);
 
-        Assert.Equal(1, vsService.ProposeTextEditCalls);
-        Assert.Equal(@"C:\repo\Sample.cs", viewModel.ProposalFilePath);
-        Assert.NotNull(vsService.LastProposeRequestId);
+            Assert.Equal(1, vsService.ProposeTextEditCalls);
+            Assert.Equal(path, viewModel.ProposalFilePath);
+            Assert.NotNull(vsService.LastProposeRequestId);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -190,15 +199,23 @@ public sealed class MvpVmTests
         var viewModel = new LogToolWindowViewModel();
         var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
-        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
-        viewModel.ProposalOriginalText = "before";
-        viewModel.ProposalProposedText = "after";
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "before");
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "after";
 
-        Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
-        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+            presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
 
-        Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -208,15 +225,23 @@ public sealed class MvpVmTests
         var viewModel = new LogToolWindowViewModel();
         _ = new LogToolWindowPresenter(CreateServiceProvider(new ThrowingVsService()), logger, new TestThreadHelper(), viewModel);
 
-        viewModel.ProposalFilePath = @"C:\repo\Sample.cs";
-        viewModel.ProposalOriginalText = "before";
-        viewModel.ProposalProposedText = "after";
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "before");
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "after";
 
-        viewModel.SubmitProposalCommand.Execute(null);
+            viewModel.SubmitProposalCommand.Execute(null);
 
-        var error = Assert.Single(logger.Errors);
-        Assert.Contains("Manual proposal submission failed for 'C:\\repo\\Sample.cs'.", error.Message);
-        Assert.IsType<InvalidOperationException>(error.Exception);
+            var error = Assert.Single(logger.Errors);
+            Assert.Contains($"Manual proposal submission failed for '{path}'.", error.Message);
+            Assert.IsType<InvalidOperationException>(error.Exception);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -231,6 +256,74 @@ public sealed class MvpVmTests
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
         Assert.Equal("Apply failed for 'Sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public void ProposalFilePath_loads_file_contents_into_both_panes_and_disables_submit_until_text_changes()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before\r\nafter\r\n");
+
+            viewModel.ProposalFilePath = path;
+
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Equal("before\r\nafter\r\n", viewModel.ProposalOriginalText);
+            Assert.Equal("before\r\nafter\r\n", viewModel.ProposalProposedText);
+            Assert.True(viewModel.IsProposalOriginalTextReadOnly);
+            Assert.False(viewModel.IsProposalProposedTextReadOnly);
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_enablement_tracks_proposed_text_equality_against_loaded_original()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            viewModel.ProposalFilePath = path;
+
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.ProposalProposedText = "after";
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.ProposalProposedText = "before";
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ProposalFilePath_load_failure_clears_panes_disables_submit_and_surfaces_status()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.txt");
+
+        viewModel.ProposalFilePath = path;
+
+        Assert.False(viewModel.IsProposalFileLoaded);
+        Assert.Equal(string.Empty, viewModel.ProposalOriginalText);
+        Assert.Equal(string.Empty, viewModel.ProposalProposedText);
+        Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+        Assert.Equal($"Unable to load file '{path}'.", viewModel.StatusMessage);
     }
 
 }

@@ -13,6 +13,7 @@ namespace VsMcpBridge.Shared.Interfaces
         string ProposalProposedText { get; set; }
         string PendingApprovalDescription { get; set; }
         string StatusMessage { get; set; }
+        bool IsProposalFileLoaded { get; set; }
         bool HasPendingApproval { get; set; }
         bool IsProposalOriginalTextReadOnly { get; }
         bool IsProposalProposedTextReadOnly { get; }

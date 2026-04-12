@@ -48,6 +48,10 @@ The VSIX includes a WPF tool window for bridge status and approval UX:
 - tool window state is exposed through a viewmodel
 - UI orchestration lives in a presenter using an MVPVM-style split
 - bindings and commands use `CommunityToolkit.Mvvm`
+- entering a valid proposal file path loads that file into both panes for the current full-document proposal workflow
+- the original pane stays read-only, while the proposed pane is editable before submit and read-only while approval is pending
+- `Submit Proposal` stays disabled until the file loads successfully and the proposed text differs from the loaded original
+- apply failures are surfaced in the tool window as concise status text in addition to the bridge logs
 
 Developer note:
 

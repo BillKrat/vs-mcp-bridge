@@ -25,6 +25,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
         private string _statusMessage = string.Empty;
+        private bool _isProposalFileLoaded;
         private bool _hasPendingApproval;
         private LogLevel _selectedLogLevel;
         private Action<string, string, string>? _onSubmitProposalRequested;
@@ -105,6 +106,18 @@ namespace VsMcpBridge.Shared.MvpVm
             set => SetProperty(ref _statusMessage, value);
         }
 
+        public bool IsProposalFileLoaded
+        {
+            get => _isProposalFileLoaded;
+            set
+            {
+                if (SetProperty(ref _isProposalFileLoaded, value))
+                {
+                    SubmitProposalCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
         public bool HasPendingApproval
         {
             get => _hasPendingApproval;
@@ -160,9 +173,10 @@ namespace VsMcpBridge.Shared.MvpVm
         private bool CanSubmitProposal()
         {
             return !HasPendingApproval
+                && IsProposalFileLoaded
                 && _onSubmitProposalRequested is not null
                 && !string.IsNullOrWhiteSpace(ProposalFilePath)
-                && (!string.IsNullOrEmpty(ProposalOriginalText) || !string.IsNullOrEmpty(ProposalProposedText));
+                && !string.Equals(ProposalOriginalText, ProposalProposedText, StringComparison.Ordinal);
         }
     }
 }

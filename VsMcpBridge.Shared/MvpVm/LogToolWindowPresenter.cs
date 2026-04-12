@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 
@@ -135,6 +136,7 @@ namespace VsMcpBridge.Shared.MvpVm
             if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalFilePath))
             {
                 _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
+                TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
             }
             else if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalOriginalText))
             {
@@ -146,6 +148,40 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
             _proposalDraftState?.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
+            if (!string.IsNullOrWhiteSpace(LogToolWindowViewModel.ProposalFilePath))
+                TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
+        }
+
+        private void TryLoadProposalFile(string? filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                LogToolWindowViewModel.IsProposalFileLoaded = false;
+                LogToolWindowViewModel.ProposalOriginalText = string.Empty;
+                LogToolWindowViewModel.ProposalProposedText = string.Empty;
+                LogToolWindowViewModel.StatusMessage = string.Empty;
+                return;
+            }
+
+            try
+            {
+                var normalizedPath = filePath.Trim();
+                if (!File.Exists(normalizedPath))
+                    throw new FileNotFoundException("File was not found.", normalizedPath);
+
+                var content = File.ReadAllText(normalizedPath);
+                LogToolWindowViewModel.IsProposalFileLoaded = true;
+                LogToolWindowViewModel.ProposalOriginalText = content;
+                LogToolWindowViewModel.ProposalProposedText = content;
+                LogToolWindowViewModel.StatusMessage = string.Empty;
+            }
+            catch (Exception)
+            {
+                LogToolWindowViewModel.IsProposalFileLoaded = false;
+                LogToolWindowViewModel.ProposalOriginalText = string.Empty;
+                LogToolWindowViewModel.ProposalProposedText = string.Empty;
+                LogToolWindowViewModel.StatusMessage = $"Unable to load file '{filePath}'.";
+            }
         }
 
         public void RunOnUiThread(Action action)
