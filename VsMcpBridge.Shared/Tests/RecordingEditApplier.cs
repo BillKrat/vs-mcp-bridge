@@ -9,9 +9,9 @@ public sealed class RecordingEditApplier : IEditApplier
 {
     public List<EditProposal> AppliedProposals { get; } = new List<EditProposal>();
 
-    public Task ApplyAsync(EditProposal proposal)
+    public Task<EditApplyResult> ApplyAsync(EditProposal proposal)
     {
         AppliedProposals.Add(proposal);
-        return Task.CompletedTask;
+        return Task.FromResult(EditApplyResult.Applied);
     }
 }

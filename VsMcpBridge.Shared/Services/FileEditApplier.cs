@@ -8,7 +8,7 @@ namespace VsMcpBridge.Shared.Services;
 
 public sealed class FileEditApplier : IEditApplier
 {
-    public Task ApplyAsync(EditProposal proposal)
+    public Task<EditApplyResult> ApplyAsync(EditProposal proposal)
     {
         if (proposal == null)
             throw new ArgumentNullException(nameof(proposal));
@@ -20,12 +20,12 @@ public sealed class FileEditApplier : IEditApplier
         var currentText = File.ReadAllText(proposal.FilePath);
 
         if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
-            return Task.CompletedTask;
+            return Task.FromResult(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent);
 
         if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
-            throw new InvalidOperationException("Target document no longer matches the approved proposal.");
+            throw new TargetDocumentDriftException();
 
         File.WriteAllText(proposal.FilePath, updatedText);
-        return Task.CompletedTask;
+        return Task.FromResult(EditApplyResult.Applied);
     }
 }

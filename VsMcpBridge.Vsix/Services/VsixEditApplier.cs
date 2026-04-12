@@ -20,7 +20,7 @@ internal sealed class VsixEditApplier : IEditApplier
         _threadHelper = threadHelper;
     }
 
-    public async Task ApplyAsync(EditProposal proposal)
+    public async Task<EditApplyResult> ApplyAsync(EditProposal proposal)
     {
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -37,13 +37,14 @@ internal sealed class VsixEditApplier : IEditApplier
         var currentText = GetDocumentText(textDocument);
 
         if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
-            return;
+            return EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
 
         if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
-            throw new InvalidOperationException("Target document no longer matches the approved proposal.");
+            throw new TargetDocumentDriftException();
 
         ApplyUpdatedText(textDocument, updatedText);
         SaveDocument(document);
+        return EditApplyResult.Applied;
     }
 
     private static TextDocument? GetTextDocument(Document document)

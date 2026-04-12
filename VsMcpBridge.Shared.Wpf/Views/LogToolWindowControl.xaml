@@ -43,7 +43,7 @@
         <Grid Grid.Row="3" Margin="0,0,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="5" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
           <Grid Grid.Column="0">
@@ -55,15 +55,23 @@
                        Text="Original Text"
                        Margin="0,0,0,2"
                        Foreground="{DynamicResource VsBrush.WindowText}" />
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-              <TextBox AcceptsReturn="True"
-                       MinHeight="100"
-                       TextWrapping="Wrap"
-                       Text="{Binding ProposalOriginalText, UpdateSourceTrigger=PropertyChanged}" />
-            </ScrollViewer>
+            <TextBox Grid.Row="1"
+                     AcceptsReturn="True"
+                     MinHeight="100"
+                     IsReadOnly="{Binding IsProposalOriginalTextReadOnly}"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     TextWrapping="NoWrap"
+                     FontFamily="Consolas"
+                     Text="{Binding ProposalOriginalText, UpdateSourceTrigger=PropertyChanged}" />
           </Grid>
+          <GridSplitter Grid.Column="1"
+                        Width="5"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Background="{DynamicResource VsBrush.CommandBarBorder}"
+                        ResizeDirection="Columns"
+                        ResizeBehavior="PreviousAndNext" />
           <Grid Grid.Column="2">
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto" />
@@ -73,14 +81,15 @@
                        Text="Proposed Text"
                        Margin="0,0,0,2"
                        Foreground="{DynamicResource VsBrush.WindowText}" />
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-              <TextBox AcceptsReturn="True"
-                       MinHeight="100"
-                       TextWrapping="Wrap"
-                       Text="{Binding ProposalProposedText, UpdateSourceTrigger=PropertyChanged}" />
-            </ScrollViewer>
+            <TextBox Grid.Row="1"
+                     AcceptsReturn="True"
+                     MinHeight="100"
+                     IsReadOnly="{Binding IsProposalProposedTextReadOnly}"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     TextWrapping="NoWrap"
+                     FontFamily="Consolas"
+                     Text="{Binding ProposalProposedText, UpdateSourceTrigger=PropertyChanged}" />
           </Grid>
         </Grid>
         <Button Grid.Row="4"
@@ -124,26 +133,40 @@
 
     <!-- Approval bar -->
     <Grid Grid.Row="4" Margin="4">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <TextBlock Grid.Column="0"
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
                  VerticalAlignment="Center"
                  Margin="0,0,8,0"
                  Text="{Binding PendingApprovalDescription}"
                  TextWrapping="Wrap"
                  Foreground="{DynamicResource VsBrush.WindowText}" />
-      <Button Grid.Column="1"
+      <Button Grid.Row="0"
+              Grid.Column="1"
               Content="Approve"
               Margin="0,0,4,0"
               VerticalAlignment="Top"
               Command="{Binding ApproveCommand}" />
-      <Button Grid.Column="2"
+      <Button Grid.Row="0"
+              Grid.Column="2"
               Content="Reject"
               VerticalAlignment="Top"
               Command="{Binding RejectCommand}" />
+      <TextBlock Grid.Row="1"
+                 Grid.Column="0"
+                 Grid.ColumnSpan="3"
+                 Margin="0,6,0,0"
+                 Text="{Binding StatusMessage}"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource VsBrush.WindowText}" />
     </Grid>
   </Grid>
 </UserControl>

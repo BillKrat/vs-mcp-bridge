@@ -12,7 +12,10 @@ namespace VsMcpBridge.Shared.Interfaces
         string ProposalOriginalText { get; set; }
         string ProposalProposedText { get; set; }
         string PendingApprovalDescription { get; set; }
+        string StatusMessage { get; set; }
         bool HasPendingApproval { get; set; }
+        bool IsProposalOriginalTextReadOnly { get; }
+        bool IsProposalProposedTextReadOnly { get; }
         IRelayCommand SubmitProposalCommand { get; }
         IRelayCommand ApproveCommand { get; }
         IRelayCommand RejectCommand { get; }

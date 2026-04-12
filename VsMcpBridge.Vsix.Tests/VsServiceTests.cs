@@ -110,6 +110,27 @@ public sealed class VsServiceTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_logs_skip_when_target_already_matches_updated_content()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var editApplier = new SkippingEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
+
+        await service.ProposeTextEditAsync("request-123", "sample.cs", "before", "after");
+
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.Equal(1, editApplier.Calls);
+        Assert.Equal(ProposalStatus.Applied, workflow.Get(proposalId)!.Status);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Apply skipped because target already matches approved updated content") && message.Contains("RequestId=request-123") && message.Contains($"ProposalId={proposalId}"));
+    }
+
+    [Fact]
     public async System.Threading.Tasks.Task ProposeTextEditAsync_reject_command_does_not_apply_and_marks_proposal_rejected()
     {
         var logger = new RecordingBridgeLogger();
@@ -152,6 +173,7 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.Equal("Apply failed for 'sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
         Assert.Contains(logger.Errors, error => error.Message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
     }
@@ -174,8 +196,11 @@ public sealed class VsServiceTests
 
         Assert.Equal(1, editApplier.Calls);
         Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
-        Assert.Contains(logger.Errors, error =>
-            error.Message.Contains("Apply failed [RequestId=request-123]") &&
-            error.Exception?.Message == "Target document no longer matches the approved proposal.");
+        Assert.Equal("Apply failed for 'sample.cs': the document changed after proposal creation.", viewModel.StatusMessage);
+        Assert.Contains(logger.WarningMessages, message =>
+            message.Contains("Apply failed because target no longer matches approved original content") &&
+            message.Contains("RequestId=request-123") &&
+            message.Contains($"ProposalId={proposalId}"));
+        Assert.DoesNotContain(logger.Errors, error => error.Exception?.Message == "Target document no longer matches the approved proposal.");
     }
 }

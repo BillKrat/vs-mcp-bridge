@@ -82,12 +82,52 @@ public sealed class MvpVmTests
 
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
+        Assert.True(viewModel.IsProposalOriginalTextReadOnly);
+        Assert.True(viewModel.IsProposalProposedTextReadOnly);
         Assert.True(viewModel.ApproveCommand.CanExecute(null));
 
         viewModel.ApproveCommand.Execute(null);
 
         Assert.True(approved);
         Assert.False(rejected);
+        Assert.False(viewModel.HasPendingApproval);
+        Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+    }
+
+    [Fact]
+    public void ProposalPane_read_only_state_matches_pending_approval_state()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        Assert.True(viewModel.IsProposalOriginalTextReadOnly);
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
+
+        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+
+        Assert.True(viewModel.IsProposalOriginalTextReadOnly);
+        Assert.True(viewModel.IsProposalProposedTextReadOnly);
+    }
+
+    [Fact]
+    public void ApproveCommand_uses_pending_approval_callback_not_editable_proposal_fields()
+    {
+        var control = new FakeLogToolWindowControl();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var approved = false;
+
+        presenter.LogToolWindowControl = control;
+        presenter.Initialize();
+        presenter.ShowApprovalPrompt("Pending proposal", () => approved = true, () => { });
+
+        viewModel.ProposalFilePath = @"C:\repo\Different.cs";
+        viewModel.ProposalOriginalText = "edited in proposal pane";
+        viewModel.ProposalProposedText = "different proposed text";
+
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.True(approved);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
     }
@@ -178,4 +218,19 @@ public sealed class MvpVmTests
         Assert.Contains("Manual proposal submission failed for 'C:\\repo\\Sample.cs'.", error.Message);
         Assert.IsType<InvalidOperationException>(error.Exception);
     }
+
+    [Fact]
+    public void ShowStatusMessage_updates_status_text_without_changing_pending_approval_state()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+        presenter.ShowStatusMessage("Apply failed for 'Sample.cs'. Review the bridge log for details.");
+
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
+        Assert.Equal("Apply failed for 'Sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
+    }
+
 }

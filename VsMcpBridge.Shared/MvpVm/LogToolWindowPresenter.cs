@@ -64,9 +64,15 @@ namespace VsMcpBridge.Shared.MvpVm
             {
                 _pendingApproveAction = onApprove;
                 _pendingRejectAction = onReject;
+                LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
                 LogToolWindowViewModel.HasPendingApproval = true;
             });
+        }
+
+        public void ShowStatusMessage(string message)
+        {
+            RunOnUiThread(() => LogToolWindowViewModel.StatusMessage = message);
         }
 
         private void OnApproveRequested()
@@ -104,6 +110,7 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             try
             {
+                LogToolWindowViewModel.StatusMessage = string.Empty;
                 _proposalDraftState?.SetActiveFilePath(filePath);
                 _proposalDraftState?.SetSelectedText(originalText);
                 var vsService = _serviceProvider.GetRequiredService<IVsService>();
@@ -125,16 +132,13 @@ namespace VsMcpBridge.Shared.MvpVm
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (_proposalDraftState == null)
-                return;
-
             if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalFilePath))
             {
-                _proposalDraftState.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
+                _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
             }
             else if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalOriginalText))
             {
-                _proposalDraftState.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
+                _proposalDraftState?.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
             }
         }
 

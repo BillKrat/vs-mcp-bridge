@@ -24,6 +24,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _proposalOriginalText = string.Empty;
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
+        private string _statusMessage = string.Empty;
         private bool _hasPendingApproval;
         private LogLevel _selectedLogLevel;
         private Action<string, string, string>? _onSubmitProposalRequested;
@@ -98,6 +99,12 @@ namespace VsMcpBridge.Shared.MvpVm
             set => SetProperty(ref _pendingApprovalDescription, value);
         }
 
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set => SetProperty(ref _statusMessage, value);
+        }
+
         public bool HasPendingApproval
         {
             get => _hasPendingApproval;
@@ -105,12 +112,18 @@ namespace VsMcpBridge.Shared.MvpVm
             {
                 if (SetProperty(ref _hasPendingApproval, value))
                 {
+                    OnPropertyChanged(nameof(IsProposalOriginalTextReadOnly));
+                    OnPropertyChanged(nameof(IsProposalProposedTextReadOnly));
                     SubmitProposalCommand.NotifyCanExecuteChanged();
                     ApproveCommand.NotifyCanExecuteChanged();
                     RejectCommand.NotifyCanExecuteChanged();
                 }
             }
         }
+
+        public bool IsProposalOriginalTextReadOnly => true;
+
+        public bool IsProposalProposedTextReadOnly => HasPendingApproval;
 
         public IRelayCommand SubmitProposalCommand { get; }
 

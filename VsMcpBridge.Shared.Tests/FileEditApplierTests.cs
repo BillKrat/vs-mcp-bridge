@@ -19,13 +19,14 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, "before\r\nsecond\r\n");
             var applier = new FileEditApplier();
 
-            await applier.ApplyAsync(new EditProposal
+            var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "before\r\nsecond\r\n", "after\r\nsecond\r\n")
             });
 
             var updated = await File.ReadAllTextAsync(path);
+            Assert.Equal(EditApplyResult.Applied, result);
             Assert.Equal("after\r\nsecond\r\n", updated);
         }
         finally
@@ -43,13 +44,14 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, "before\nsecond");
             var applier = new FileEditApplier();
 
-            await applier.ApplyAsync(new EditProposal
+            var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "before\nsecond", "after\nsecond")
             });
 
             var updated = await File.ReadAllTextAsync(path);
+            Assert.Equal(EditApplyResult.Applied, result);
             Assert.Equal("after\nsecond", updated);
         }
         finally
@@ -69,7 +71,7 @@ public sealed class FileEditApplierTests
             var beforeWriteTime = File.GetLastWriteTimeUtc(path);
             await Task.Delay(1100);
 
-            await applier.ApplyAsync(new EditProposal
+            var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "before\nsecond\n", "after\nsecond\n")
@@ -77,6 +79,7 @@ public sealed class FileEditApplierTests
 
             var updated = await File.ReadAllTextAsync(path);
             var afterWriteTime = File.GetLastWriteTimeUtc(path);
+            Assert.Equal(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent, result);
             Assert.Equal("after\nsecond\n", updated);
             Assert.Equal(beforeWriteTime, afterWriteTime);
         }
@@ -95,13 +98,14 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, "alpha\nbeta\ngamma\n");
             var applier = new FileEditApplier();
 
-            await applier.ApplyAsync(new EditProposal
+            var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "alpha\nbeta\ngamma\n", "one\ntwo\nthree\n")
             });
 
             var updated = await File.ReadAllTextAsync(path);
+            Assert.Equal(EditApplyResult.Applied, result);
             Assert.Equal("one\ntwo\nthree\n", updated);
         }
         finally
@@ -119,7 +123,7 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, "drifted\ncontent\n");
             var applier = new FileEditApplier();
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => applier.ApplyAsync(new EditProposal
+            var exception = await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "before\ncontent\n", "after\ncontent\n")

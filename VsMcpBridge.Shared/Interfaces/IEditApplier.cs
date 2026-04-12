@@ -5,5 +5,5 @@ namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IEditApplier
 {
-    Task ApplyAsync(EditProposal proposal);
+    Task<EditApplyResult> ApplyAsync(EditProposal proposal);
 }

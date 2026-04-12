@@ -10,5 +10,6 @@ namespace VsMcpBridge.Shared.Interfaces
         void Initialize();
         void AppendLog(string message);
         void ShowApprovalPrompt(string description, Action onApprove, Action onReject);
+        void ShowStatusMessage(string message);
     }
 }

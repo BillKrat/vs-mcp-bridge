@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Shared.Services;
 using Task = System.Threading.Tasks.Task;
 
 namespace VsMcpBridge.Vsix.Services;
@@ -305,13 +306,27 @@ public sealed class VsService : IVsService
 
         try
         {
-            await _editApplier.ApplyAsync(proposal);
+            var applyResult = await _editApplier.ApplyAsync(proposal);
             _approvalWorkflowService.MarkApplied(proposalId);
-            _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            if (applyResult == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent)
+            {
+                _logger.LogInformation($"Apply skipped because target already matches approved updated content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            }
+            else
+            {
+                _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            }
+        }
+        catch (TargetDocumentDriftException ex)
+        {
+            _approvalWorkflowService.MarkFailed(proposalId);
+            _logToolWindowPresenter.ShowStatusMessage($"Apply failed for '{proposal.FilePath}': the document changed after proposal creation.");
+            _logger.LogWarning(ex, $"Apply failed because target no longer matches approved original content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
         }
         catch (Exception ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
+            _logToolWindowPresenter.ShowStatusMessage($"Apply failed for '{proposal.FilePath}'. Review the bridge log for details.");
             _logger.LogError(ex, $"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
         }
     }
