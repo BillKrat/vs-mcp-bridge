@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VsMcpBridge.McpServer\VsMcpBridge.McpServer.csproj" />
     <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj" />
   </ItemGroup>
 </Project>

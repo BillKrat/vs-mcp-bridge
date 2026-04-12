@@ -12,8 +12,16 @@ namespace VsMcpBridge.McpServer.Pipe;
 /// </summary>
 public sealed class PipeClient(ILogger logger) : IPipeClient
 {
-    private const string PipeName = "VsMcpBridge";
+    private const string DefaultPipeName = "VsMcpBridge";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private readonly ILogger _logger = logger;
+    private readonly string _pipeName = DefaultPipeName;
+
+    public PipeClient(ILogger logger, string pipeName)
+        : this(logger)
+    {
+        _pipeName = pipeName;
+    }
 
     private async Task<TResponse> SendAsync<TRequest, TResponse>(
         string command,
@@ -23,13 +31,13 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
         where TResponse : VsResponseBase, new()
     {
         var requestId = string.IsNullOrWhiteSpace(request.RequestId) ? "(none)" : request.RequestId;
-        logger.LogTrace($"Attempting pipe connection to '{PipeName}' [Command={command}] [RequestId={requestId}].");
+        _logger.LogTrace($"Attempting pipe connection to '{_pipeName}' [Command={command}] [RequestId={requestId}].");
 
         try
         {
-            using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             await pipe.ConnectAsync(timeout: 5000, cancellationToken);
-            logger.LogTrace($"Pipe connection established to '{PipeName}' [Command={command}] [RequestId={requestId}].");
+            _logger.LogTrace($"Pipe connection established to '{_pipeName}' [Command={command}] [RequestId={requestId}].");
 
             var envelope = new PipeMessage
             {
@@ -41,13 +49,13 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
             using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
             using var reader = new StreamReader(pipe, leaveOpen: true);
 
-            logger.LogTrace($"Sending pipe request [Command={command}] [RequestId={requestId}] [PayloadLength={envelope.Payload.Length}].");
+            _logger.LogTrace($"Sending pipe request [Command={command}] [RequestId={requestId}] [PayloadLength={envelope.Payload.Length}].");
             await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
             var responseJson = await reader.ReadLineAsync(cancellationToken);
 
             if (string.IsNullOrEmpty(responseJson))
             {
-                logger.LogTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
+                _logger.LogTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
                 return new TResponse
                 {
                     RequestId = requestId,
@@ -56,11 +64,11 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
                 };
             }
 
-            logger.LogTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
+            _logger.LogTrace($"Received pipe response [Command={command}] [RequestId={requestId}] [Length={responseJson.Length}].");
             var response = JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions);
             if (response == null)
             {
-                logger.LogTrace($"Failed to deserialize pipe response [Command={command}] [RequestId={requestId}].");
+                _logger.LogTrace($"Failed to deserialize pipe response [Command={command}] [RequestId={requestId}].");
                 return new TResponse
                 {
                     RequestId = requestId,
@@ -70,12 +78,12 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
             }
 
             response.RequestId = string.IsNullOrWhiteSpace(response.RequestId) ? requestId : response.RequestId;
-            logger.LogTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
+            _logger.LogTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
             return response;
         }
         catch (Exception ex)
         {
-            logger.LogTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
+            _logger.LogTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
             throw;
         }
     }
