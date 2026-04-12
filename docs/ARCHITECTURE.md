@@ -106,18 +106,20 @@ Current approval flow:
 
 1. `vs_propose_text_edit` submits the proposed edit through the MCP server.
 2. The request crosses the named-pipe boundary and reaches the VSIX host.
-3. In the tool window, entering a valid `ProposalFilePath` loads the file contents into both panes for the current full-document proposal workflow.
-4. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
-5. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
-6. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
-7. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
-8. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
-9. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
-10. If the target already matches the approved updated content, apply becomes a no-op.
-11. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
-12. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
-13. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-14. The result is returned back through the bridge to the MCP client.
+3. In the tool window, `ProposalFilePath` can be entered manually or selected through a host-specific picker seam.
+4. Picker selection flows through `ProposalFilePath`, and proposal-entry behavior still has a single authoritative load path.
+5. When `ProposalFilePath` is valid, that load path populates both panes for the current full-document proposal workflow.
+6. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
+7. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
+8. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
+9. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
+10. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
+11. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
+12. If the target already matches the approved updated content, apply becomes a no-op.
+13. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
+14. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
+15. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+16. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
