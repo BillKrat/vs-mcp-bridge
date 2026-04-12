@@ -212,7 +212,8 @@ internal sealed class StandaloneVsService : IVsService
         var diff = GenerateUnifiedDiff(filePath, originalText, proposedText);
         if (!string.IsNullOrEmpty(diff))
         {
-            var proposal = _approvalWorkflowService.CreateProposal(requestId, filePath, diff);
+            var rangeEdit = RangeEditBuilder.Build(originalText, proposedText);
+            var proposal = _approvalWorkflowService.CreateProposal(requestId, filePath, diff, rangeEdit);
             _logger.LogInformation($"Created edit proposal [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             _logToolWindowPresenter.ShowApprovalPrompt(

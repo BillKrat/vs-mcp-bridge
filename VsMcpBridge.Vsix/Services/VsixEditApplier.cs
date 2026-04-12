@@ -33,8 +33,17 @@ internal sealed class VsixEditApplier : IEditApplier
         if (textDocument == null)
             throw new InvalidOperationException($"Document '{proposal.FilePath}' does not support text edits.");
 
-        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
         var currentText = GetDocumentText(textDocument);
+
+        if (proposal.RangeEdit != null)
+        {
+            return RangeEditApplier.Apply(
+                proposal,
+                currentText,
+                updatedText => ApplyUpdatedText(textDocument, updatedText));
+        }
+
+        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
 
         if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
             return EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
@@ -65,6 +74,7 @@ internal sealed class VsixEditApplier : IEditApplier
         var editPoint = textDocument.StartPoint.CreateEditPoint();
         editPoint.Delete(textDocument.EndPoint);
         editPoint.Insert(updatedText);
+        SaveDocument(textDocument.Parent);
     }
 
     private static void SaveDocument(Document document)

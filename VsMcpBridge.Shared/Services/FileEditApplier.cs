@@ -16,8 +16,17 @@ public sealed class FileEditApplier : IEditApplier
         if (string.IsNullOrWhiteSpace(proposal.FilePath))
             throw new InvalidOperationException("Edit proposal does not specify a file path.");
 
-        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
         var currentText = File.ReadAllText(proposal.FilePath);
+
+        if (proposal.RangeEdit != null)
+        {
+            return Task.FromResult(RangeEditApplier.Apply(
+                proposal,
+                currentText,
+                updatedText => File.WriteAllText(proposal.FilePath, updatedText)));
+        }
+
+        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
 
         if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
             return Task.FromResult(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent);

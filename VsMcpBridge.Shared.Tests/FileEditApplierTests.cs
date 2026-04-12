@@ -22,7 +22,8 @@ public sealed class FileEditApplierTests
             var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
-                Diff = CreateDiff("sample.cs", "before\r\nsecond\r\n", "after\r\nsecond\r\n")
+                Diff = CreateDiff("sample.cs", "before\r\nsecond\r\n", "after\r\nsecond\r\n"),
+                RangeEdit = RangeEditBuilder.Build("before\r\nsecond\r\n", "after\r\nsecond\r\n")
             });
 
             var updated = await File.ReadAllTextAsync(path);
@@ -47,7 +48,8 @@ public sealed class FileEditApplierTests
             var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
-                Diff = CreateDiff("sample.cs", "before\nsecond", "after\nsecond")
+                Diff = CreateDiff("sample.cs", "before\nsecond", "after\nsecond"),
+                RangeEdit = RangeEditBuilder.Build("before\nsecond", "after\nsecond")
             });
 
             var updated = await File.ReadAllTextAsync(path);
@@ -74,7 +76,8 @@ public sealed class FileEditApplierTests
             var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
-                Diff = CreateDiff("sample.cs", "before\nsecond\n", "after\nsecond\n")
+                Diff = CreateDiff("sample.cs", "before\nsecond\n", "after\nsecond\n"),
+                RangeEdit = RangeEditBuilder.Build("before\nsecond\n", "after\nsecond\n")
             });
 
             var updated = await File.ReadAllTextAsync(path);
@@ -90,23 +93,26 @@ public sealed class FileEditApplierTests
     }
 
     [Fact]
-    public async Task ApplyAsync_applies_single_file_replacement_exactly_as_intended()
+    public async Task ApplyAsync_applies_single_range_replacement_and_preserves_surrounding_content()
     {
         var path = Path.GetTempFileName();
         try
         {
-            await File.WriteAllTextAsync(path, "alpha\nbeta\ngamma\n");
+            await File.WriteAllTextAsync(path, "alpha\nbeta\ngamma\ndelta\n");
             var applier = new FileEditApplier();
+            var original = "alpha\nbeta\ngamma\ndelta\n";
+            var updated = "alpha\none\ntwo\ndelta\n";
 
             var result = await applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
-                Diff = CreateDiff("sample.cs", "alpha\nbeta\ngamma\n", "one\ntwo\nthree\n")
+                Diff = CreateDiff("sample.cs", original, updated),
+                RangeEdit = RangeEditBuilder.Build(original, updated)
             });
 
-            var updated = await File.ReadAllTextAsync(path);
+            var appliedText = await File.ReadAllTextAsync(path);
             Assert.Equal(EditApplyResult.Applied, result);
-            Assert.Equal("one\ntwo\nthree\n", updated);
+            Assert.Equal("alpha\none\ntwo\ndelta\n", appliedText);
         }
         finally
         {
@@ -126,12 +132,205 @@ public sealed class FileEditApplierTests
             var exception = await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
-                Diff = CreateDiff("sample.cs", "before\ncontent\n", "after\ncontent\n")
+                Diff = CreateDiff("sample.cs", "before\ncontent\n", "after\ncontent\n"),
+                RangeEdit = RangeEditBuilder.Build("before\ncontent\n", "after\ncontent\n")
             }));
 
             var current = await File.ReadAllTextAsync(path);
             Assert.Equal("Target document no longer matches the approved proposal.", exception.Message);
             Assert.Equal("drifted\ncontent\n", current);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_throws_when_target_range_changed_even_if_surrounding_document_exists()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "header\nbefore\ncontent\nfooter\n";
+            var proposed = "header\nafter\ncontent\nfooter\n";
+            await File.WriteAllTextAsync(path, "header\ndrifted\ncontent\nfooter\n");
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            }));
+
+            Assert.Equal("header\ndrifted\ncontent\nfooter\n", await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_fails_when_range_match_is_ambiguous()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(path, "foo\nmiddle\nfoo\n");
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", "foo\nmiddle\nfoo\n", "bar\nmiddle\nfoo\n"),
+                RangeEdit = new RangeEdit
+                {
+                    StartIndex = 0,
+                    OriginalSegment = "foo",
+                    UpdatedSegment = "bar",
+                    PrefixContext = string.Empty,
+                    SuffixContext = "\n"
+                }
+            }));
+
+            Assert.Equal("foo\nmiddle\nfoo\n", await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_insertion_only_range()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\ngamma\n";
+            var proposed = "alpha\nbeta\ngamma\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_deletion_only_range()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\ngamma\n";
+            var proposed = "alpha\ngamma\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_start_of_file_replacement()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\n";
+            var proposed = "start\nbeta\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_end_of_file_replacement()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\n";
+            var proposed = "alpha\nfinish\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_skips_when_updated_segment_is_already_present_at_intended_location()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "header\nbefore\nfooter\n";
+            var proposed = "header\nafter\nfooter\n";
+            await File.WriteAllTextAsync(path, proposed);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdit = RangeEditBuilder.Build(original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
         }
         finally
         {
