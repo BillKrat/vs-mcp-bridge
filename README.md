@@ -51,7 +51,10 @@ The VSIX includes a WPF tool window for bridge status and approval UX:
 - entering a valid proposal file path loads that file into both panes for the current full-document proposal workflow
 - the original pane stays read-only, while the proposed pane is editable before submit and read-only while approval is pending
 - `Submit Proposal` stays disabled until the file loads successfully and the proposed text differs from the loaded original
+- approve or reject clicks do not immediately reset the proposal UI; terminal outcomes drive the reset instead
+- after a terminal outcome, pending approval state is cleared, completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`
 - apply failures are surfaced in the tool window as concise status text in addition to the bridge logs
+- the terminal status message remains visible in the tool window after the proposal cycle completes
 
 Developer note:
 

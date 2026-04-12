@@ -110,13 +110,14 @@ Current approval flow:
 4. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
 5. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
 6. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
-7. The user explicitly approves or rejects the proposal in the tool window.
-8. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
-9. If the target already matches the approved updated content, apply becomes a no-op.
-10. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
-11. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
-12. Apply failures are surfaced in the tool window with a concise status message in addition to the bridge logs.
-13. The result is returned back through the bridge to the MCP client.
+7. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
+8. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
+9. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
+10. If the target already matches the approved updated content, apply becomes a no-op.
+11. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
+12. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
+13. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+14. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -131,6 +132,7 @@ Current verified state for this workflow:
 Current limitation:
 
 - edit application still works as full-document replacement reconstructed from the generated diff; this pass did not introduce range-based or multi-file editing
+- if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
 
 Low-priority UI backlog:
 

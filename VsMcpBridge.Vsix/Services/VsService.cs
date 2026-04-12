@@ -310,23 +310,25 @@ public sealed class VsService : IVsService
             _approvalWorkflowService.MarkApplied(proposalId);
             if (applyResult == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent)
             {
+                _logToolWindowPresenter.CompleteProposalCycle($"Apply skipped for '{proposal.FilePath}' because the target already matches the approved content.");
                 _logger.LogInformation($"Apply skipped because target already matches approved updated content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             }
             else
             {
+                _logToolWindowPresenter.CompleteProposalCycle($"Apply succeeded for '{proposal.FilePath}'.");
                 _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             }
         }
         catch (TargetDocumentDriftException ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logToolWindowPresenter.ShowStatusMessage($"Apply failed for '{proposal.FilePath}': the document changed after proposal creation.");
+            _logToolWindowPresenter.CompleteProposalCycle($"Apply failed for '{proposal.FilePath}': the document changed after proposal creation.");
             _logger.LogWarning(ex, $"Apply failed because target no longer matches approved original content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
         }
         catch (Exception ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logToolWindowPresenter.ShowStatusMessage($"Apply failed for '{proposal.FilePath}'. Review the bridge log for details.");
+            _logToolWindowPresenter.CompleteProposalCycle($"Apply failed for '{proposal.FilePath}'. Review the bridge log for details.");
             _logger.LogError(ex, $"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
         }
     }
@@ -334,6 +336,7 @@ public sealed class VsService : IVsService
     private void RejectProposal(string proposalId)
     {
         var proposal = _approvalWorkflowService.Reject(proposalId);
+        _logToolWindowPresenter.CompleteProposalCycle($"Proposal rejected for '{proposal.FilePath}'.");
         _logger.LogInformation($"Proposal rejected [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
     }
 

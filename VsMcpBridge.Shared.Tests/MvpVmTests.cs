@@ -91,8 +91,8 @@ public sealed class MvpVmTests
 
         Assert.True(approved);
         Assert.False(rejected);
-        Assert.False(viewModel.HasPendingApproval);
-        Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
     }
 
     [Fact]
@@ -129,8 +129,8 @@ public sealed class MvpVmTests
         viewModel.ApproveCommand.Execute(null);
 
         Assert.True(approved);
-        Assert.False(viewModel.HasPendingApproval);
-        Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
     }
 
     [Fact]
@@ -256,6 +256,64 @@ public sealed class MvpVmTests
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
         Assert.Equal("Apply failed for 'Sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public void CompleteProposalCycle_clears_pending_state_reloads_file_and_preserves_status_message()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "after";
+            presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+
+            presenter.CompleteProposalCycle("Apply succeeded for 'sample.cs'.");
+
+            Assert.False(viewModel.HasPendingApproval);
+            Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Equal("before", viewModel.ProposalOriginalText);
+            Assert.Equal("before", viewModel.ProposalProposedText);
+            Assert.False(viewModel.IsProposalProposedTextReadOnly);
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+            Assert.Equal("Apply succeeded for 'sample.cs'.", viewModel.StatusMessage);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void CompletedProposal_callbacks_cannot_be_reused_accidentally()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var approveCalls = 0;
+        var rejectCalls = 0;
+
+        presenter.ShowApprovalPrompt("Pending proposal", () => approveCalls++, () => rejectCalls++);
+
+        viewModel.ApproveCommand.Execute(null);
+        viewModel.ApproveCommand.Execute(null);
+        viewModel.RejectCommand.Execute(null);
+
+        Assert.Equal(1, approveCalls);
+        Assert.Equal(0, rejectCalls);
+        Assert.True(viewModel.HasPendingApproval);
+
+        presenter.CompleteProposalCycle("Apply succeeded for 'sample.cs'.");
+
+        viewModel.ApproveCommand.Execute(null);
+        viewModel.RejectCommand.Execute(null);
+
+        Assert.Equal(1, approveCalls);
+        Assert.Equal(0, rejectCalls);
     }
 
     [Fact]

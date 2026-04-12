@@ -76,6 +76,27 @@ namespace VsMcpBridge.Shared.MvpVm
             RunOnUiThread(() => LogToolWindowViewModel.StatusMessage = message);
         }
 
+        public void CompleteProposalCycle(string statusMessage)
+        {
+            RunOnUiThread(() =>
+            {
+                ClearApproval();
+
+                if (!string.IsNullOrWhiteSpace(LogToolWindowViewModel.ProposalFilePath))
+                {
+                    TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath, clearStatusMessage: false);
+                }
+                else
+                {
+                    LogToolWindowViewModel.IsProposalFileLoaded = false;
+                    LogToolWindowViewModel.ProposalOriginalText = string.Empty;
+                    LogToolWindowViewModel.ProposalProposedText = string.Empty;
+                }
+
+                LogToolWindowViewModel.StatusMessage = statusMessage;
+            });
+        }
+
         private void OnApproveRequested()
         {
             Action? approvalAction = null;
@@ -83,7 +104,8 @@ namespace VsMcpBridge.Shared.MvpVm
             RunOnUiThread(() =>
             {
                 approvalAction = _pendingApproveAction;
-                ClearApproval();
+                _pendingApproveAction = null;
+                _pendingRejectAction = null;
             });
 
             approvalAction?.Invoke();
@@ -96,7 +118,8 @@ namespace VsMcpBridge.Shared.MvpVm
             RunOnUiThread(() =>
             {
                 rejectionAction = _pendingRejectAction;
-                ClearApproval();
+                _pendingApproveAction = null;
+                _pendingRejectAction = null;
             });
 
             rejectionAction?.Invoke();
@@ -152,20 +175,21 @@ namespace VsMcpBridge.Shared.MvpVm
                 TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
         }
 
-        private void TryLoadProposalFile(string? filePath)
+        private void TryLoadProposalFile(string? filePath, bool clearStatusMessage = true)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 LogToolWindowViewModel.IsProposalFileLoaded = false;
                 LogToolWindowViewModel.ProposalOriginalText = string.Empty;
                 LogToolWindowViewModel.ProposalProposedText = string.Empty;
-                LogToolWindowViewModel.StatusMessage = string.Empty;
+                if (clearStatusMessage)
+                    LogToolWindowViewModel.StatusMessage = string.Empty;
                 return;
             }
 
             try
             {
-                var normalizedPath = filePath.Trim();
+                var normalizedPath = filePath!;
                 if (!File.Exists(normalizedPath))
                     throw new FileNotFoundException("File was not found.", normalizedPath);
 
@@ -173,7 +197,8 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.IsProposalFileLoaded = true;
                 LogToolWindowViewModel.ProposalOriginalText = content;
                 LogToolWindowViewModel.ProposalProposedText = content;
-                LogToolWindowViewModel.StatusMessage = string.Empty;
+                if (clearStatusMessage)
+                    LogToolWindowViewModel.StatusMessage = string.Empty;
             }
             catch (Exception)
             {

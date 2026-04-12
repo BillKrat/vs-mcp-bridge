@@ -105,6 +105,10 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Applied, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.Equal("Apply succeeded for 'sample.cs'.", viewModel.StatusMessage);
+        Assert.False(viewModel.ApproveCommand.CanExecute(null));
+        Assert.False(viewModel.RejectCommand.CanExecute(null));
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Apply succeeded [RequestId=request-123] [ProposalId={proposalId}]"));
     }
@@ -127,6 +131,12 @@ public sealed class VsServiceTests
 
         Assert.Equal(1, editApplier.Calls);
         Assert.Equal(ProposalStatus.Applied, workflow.Get(proposalId)!.Status);
+        Assert.False(viewModel.HasPendingApproval);
+        Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.Equal("Apply skipped for 'sample.cs' because the target already matches the approved content.", viewModel.StatusMessage);
+        Assert.False(viewModel.ApproveCommand.CanExecute(null));
+        Assert.False(viewModel.RejectCommand.CanExecute(null));
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.InformationMessages, message => message.Contains("Apply skipped because target already matches approved updated content") && message.Contains("RequestId=request-123") && message.Contains($"ProposalId={proposalId}"));
     }
 
@@ -150,6 +160,10 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Rejected, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+        Assert.Equal("Proposal rejected for 'sample.cs'.", viewModel.StatusMessage);
+        Assert.False(viewModel.ApproveCommand.CanExecute(null));
+        Assert.False(viewModel.RejectCommand.CanExecute(null));
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal rejected [RequestId=request-123] [ProposalId={proposalId}]"));
     }
 
@@ -174,6 +188,9 @@ public sealed class VsServiceTests
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
         Assert.Equal("Apply failed for 'sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
+        Assert.False(viewModel.ApproveCommand.CanExecute(null));
+        Assert.False(viewModel.RejectCommand.CanExecute(null));
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
         Assert.Contains(logger.Errors, error => error.Message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
     }
@@ -196,7 +213,12 @@ public sealed class VsServiceTests
 
         Assert.Equal(1, editApplier.Calls);
         Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+        Assert.False(viewModel.HasPendingApproval);
+        Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
         Assert.Equal("Apply failed for 'sample.cs': the document changed after proposal creation.", viewModel.StatusMessage);
+        Assert.False(viewModel.ApproveCommand.CanExecute(null));
+        Assert.False(viewModel.RejectCommand.CanExecute(null));
+        Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.WarningMessages, message =>
             message.Contains("Apply failed because target no longer matches approved original content") &&
             message.Contains("RequestId=request-123") &&
