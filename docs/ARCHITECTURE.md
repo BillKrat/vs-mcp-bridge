@@ -108,8 +108,11 @@ Current approval flow:
 2. The request crosses the named-pipe boundary and reaches the VSIX host.
 3. A proposal is created and routed into the tool window for approval or rejection.
 4. The user explicitly approves or rejects the proposal in the tool window.
-5. If approved, the edit is applied inside Visual Studio through the VSIX host.
-6. The result is returned back through the bridge to the MCP client.
+5. If approved, the apply path reconstructs the approved original text and approved updated text from the stored diff.
+6. If the target already matches the approved updated content, apply becomes a no-op.
+7. If the target no longer matches the approved original content, apply fails explicitly instead of overwriting drifted content.
+8. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving line endings and final trailing newline state.
+9. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -123,7 +126,7 @@ Current verified state for this workflow:
 
 Current limitation:
 
-- edit application rebuilds the full document from the generated diff, so preserving exact formatting and line endings still needs hardening
+- edit application still works as full-document replacement reconstructed from the generated diff; this pass did not introduce range-based or multi-file editing
 
 ## Current Verified Runtime Slice
 

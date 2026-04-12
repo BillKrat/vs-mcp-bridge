@@ -155,4 +155,27 @@ public sealed class VsServiceTests
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
         Assert.Contains(logger.Errors, error => error.Message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
     }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_marks_proposal_failed_when_target_document_has_drifted()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var editApplier = new DriftingEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
+
+        await service.ProposeTextEditAsync("request-123", "sample.cs", "before", "after");
+
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.Equal(1, editApplier.Calls);
+        Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+        Assert.Contains(logger.Errors, error =>
+            error.Message.Contains("Apply failed [RequestId=request-123]") &&
+            error.Exception?.Message == "Target document no longer matches the approved proposal.");
+    }
 }

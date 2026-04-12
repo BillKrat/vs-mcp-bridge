@@ -2,10 +2,10 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Shared.Services;
 
 namespace VsMcpBridge.Vsix.Services;
 
@@ -33,7 +33,15 @@ internal sealed class VsixEditApplier : IEditApplier
         if (textDocument == null)
             throw new InvalidOperationException($"Document '{proposal.FilePath}' does not support text edits.");
 
-        var updatedText = BuildUpdatedText(proposal.Diff);
+        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
+        var currentText = GetDocumentText(textDocument);
+
+        if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
+            return;
+
+        if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
+            throw new InvalidOperationException("Target document no longer matches the approved proposal.");
+
         ApplyUpdatedText(textDocument, updatedText);
         SaveDocument(document);
     }
@@ -64,35 +72,9 @@ internal sealed class VsixEditApplier : IEditApplier
         document.Save();
     }
 
-    private static string BuildUpdatedText(string diff)
+    private static string GetDocumentText(TextDocument textDocument)
     {
-        var lines = diff.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-        var updatedLines = new List<string>();
-
-        foreach (var rawLine in lines)
-        {
-            if (string.IsNullOrEmpty(rawLine))
-                continue;
-
-            if (rawLine.StartsWith("--- ", StringComparison.Ordinal) || rawLine.StartsWith("+++ ", StringComparison.Ordinal))
-                continue;
-
-            var prefix = rawLine[0];
-            var content = rawLine.Length > 1 ? rawLine.Substring(1) : string.Empty;
-
-            switch (prefix)
-            {
-                case ' ':
-                case '+':
-                    updatedLines.Add(content);
-                    break;
-                case '-':
-                    break;
-                default:
-                    throw new InvalidOperationException("Unsupported diff format for edit proposal.");
-            }
-        }
-
-        return string.Join("\n", updatedLines);
+        ThreadHelper.ThrowIfNotOnUIThread();
+        return textDocument.StartPoint.CreateEditPoint().GetText(textDocument.EndPoint);
     }
 }

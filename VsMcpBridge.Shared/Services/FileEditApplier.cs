@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
@@ -17,40 +16,16 @@ public sealed class FileEditApplier : IEditApplier
         if (string.IsNullOrWhiteSpace(proposal.FilePath))
             throw new InvalidOperationException("Edit proposal does not specify a file path.");
 
-        var updatedText = BuildUpdatedText(proposal.Diff);
+        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
+        var currentText = File.ReadAllText(proposal.FilePath);
+
+        if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
+            return Task.CompletedTask;
+
+        if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
+            throw new InvalidOperationException("Target document no longer matches the approved proposal.");
+
         File.WriteAllText(proposal.FilePath, updatedText);
         return Task.CompletedTask;
-    }
-
-    private static string BuildUpdatedText(string diff)
-    {
-        var lines = diff.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-        var updatedLines = new List<string>();
-
-        foreach (var rawLine in lines)
-        {
-            if (string.IsNullOrEmpty(rawLine))
-                continue;
-
-            if (rawLine.StartsWith("--- ", StringComparison.Ordinal) || rawLine.StartsWith("+++ ", StringComparison.Ordinal))
-                continue;
-
-            var prefix = rawLine[0];
-            var content = rawLine.Length > 1 ? rawLine.Substring(1) : string.Empty;
-
-            switch (prefix)
-            {
-                case ' ':
-                case '+':
-                    updatedLines.Add(content);
-                    break;
-                case '-':
-                    break;
-                default:
-                    throw new InvalidOperationException("Unsupported diff format for edit proposal.");
-            }
-        }
-
-        return string.Join("\n", updatedLines);
     }
 }

@@ -55,7 +55,7 @@ Developer note:
 
 Current limitation:
 
-- edit application rebuilds the full document from the generated diff, so preserving exact formatting and line endings still needs hardening
+- edit application still works as full-document replacement reconstructed from the generated diff, although the current apply path now preserves line endings and final trailing newline state and fails explicitly on target-document drift
 
 ## Solution Structure
 
