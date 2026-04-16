@@ -18,7 +18,7 @@ public sealed class FileEditApplier : IEditApplier
 
         var currentText = File.ReadAllText(proposal.FilePath);
 
-        if (proposal.RangeEdit != null)
+        if (proposal.RangeEdit != null || (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0))
         {
             return Task.FromResult(RangeEditApplier.Apply(
                 proposal,

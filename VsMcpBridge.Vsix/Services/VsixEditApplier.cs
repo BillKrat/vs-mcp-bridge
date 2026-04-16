@@ -35,7 +35,7 @@ internal sealed class VsixEditApplier : IEditApplier
 
         var currentText = GetDocumentText(textDocument);
 
-        if (proposal.RangeEdit != null)
+        if (proposal.RangeEdit != null || (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0))
         {
             return RangeEditApplier.Apply(
                 proposal,

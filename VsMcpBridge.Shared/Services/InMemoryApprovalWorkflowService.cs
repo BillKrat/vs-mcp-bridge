@@ -10,7 +10,7 @@ public sealed class InMemoryApprovalWorkflowService : IApprovalWorkflowService
     private readonly Dictionary<string, EditProposal> _proposals = new(StringComparer.Ordinal);
     private readonly object _sync = new();
 
-    public EditProposal CreateProposal(string requestId, string filePath, string diff, RangeEdit? rangeEdit = null)
+    public EditProposal CreateProposal(string requestId, string filePath, string diff, RangeEdit? rangeEdit = null, IReadOnlyList<RangeEdit>? rangeEdits = null)
     {
         var proposal = new EditProposal
         {
@@ -19,6 +19,7 @@ public sealed class InMemoryApprovalWorkflowService : IApprovalWorkflowService
             FilePath = filePath,
             Diff = diff,
             RangeEdit = rangeEdit,
+            RangeEdits = rangeEdits == null ? null : new List<RangeEdit>(rangeEdits),
             Status = ProposalStatus.Pending
         };
 

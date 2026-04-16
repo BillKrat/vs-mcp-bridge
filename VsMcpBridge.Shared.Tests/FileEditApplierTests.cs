@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -331,6 +332,314 @@ public sealed class FileEditApplierTests
 
             Assert.Equal(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent, result);
             Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_multi_range_replacement_and_preserves_untouched_content()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\ngamma\ndelta\nepsilon\n";
+            var proposed = "alpha\nBETA\ngamma\nDELTA\nepsilon\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdits = new List<RangeEdit>(RangeEditBuilder.BuildAll(original, proposed))
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_throws_when_one_multi_range_segment_drifted_and_leaves_file_unchanged()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\ngamma\ndelta\nepsilon\n";
+            var proposed = "alpha\nBETA\ngamma\nDELTA\nepsilon\n";
+            var drifted = "alpha\nbeta\ngamma\nDRIFTED\nepsilon\n";
+            await File.WriteAllTextAsync(path, drifted);
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdits = new List<RangeEdit>(RangeEditBuilder.BuildAll(original, proposed))
+            }));
+
+            Assert.Equal(drifted, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_throws_when_one_multi_range_segment_is_ambiguous_and_leaves_file_unchanged()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var current = "prefix one\nmiddle\nprefix one\nsuffix\n";
+            await File.WriteAllTextAsync(path, current);
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", current, "ignored"),
+                RangeEdits = new List<RangeEdit>
+                {
+                    new()
+                    {
+                        StartIndex = 7,
+                        OriginalSegment = "one",
+                        UpdatedSegment = "ONE",
+                        PrefixContext = "prefix ",
+                        SuffixContext = "\n"
+                    },
+                    new()
+                    {
+                        StartIndex = current.IndexOf("suffix", StringComparison.Ordinal),
+                        OriginalSegment = "suffix",
+                        UpdatedSegment = "tail",
+                        PrefixContext = "\n",
+                        SuffixContext = "\n"
+                    }
+                }
+            }));
+
+            Assert.Equal(current, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_does_not_partially_apply_multi_range_when_later_range_fails()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var current = "one\nmiddle\nthree\n";
+            await File.WriteAllTextAsync(path, current);
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", current, "ONE\nmiddle\nTHREE\n"),
+                RangeEdits = new List<RangeEdit>
+                {
+                    new()
+                    {
+                        StartIndex = 0,
+                        OriginalSegment = "one",
+                        UpdatedSegment = "ONE",
+                        PrefixContext = string.Empty,
+                        SuffixContext = "\n"
+                    },
+                    new()
+                    {
+                        StartIndex = current.IndexOf("three", StringComparison.Ordinal),
+                        OriginalSegment = "missing",
+                        UpdatedSegment = "THREE",
+                        PrefixContext = "\n",
+                        SuffixContext = "\n"
+                    }
+                }
+            }));
+
+            Assert.Equal(current, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_adjacent_multi_range_replacements_safely()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "abXYcd\n";
+            var proposed = "ABxycd\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdits = new List<RangeEdit>
+                {
+                    new()
+                    {
+                        StartIndex = 0,
+                        OriginalSegment = "ab",
+                        UpdatedSegment = "AB",
+                        PrefixContext = string.Empty,
+                        SuffixContext = "XYcd\n"
+                    },
+                    new()
+                    {
+                        StartIndex = 2,
+                        OriginalSegment = "XY",
+                        UpdatedSegment = "xy",
+                        PrefixContext = "ab",
+                        SuffixContext = "cd\n"
+                    }
+                }
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_supports_single_range_proposal_provided_via_range_edits_collection()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\n";
+            var proposed = "alpha\nBETA\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed),
+                RangeEdits = new List<RangeEdit>(RangeEditBuilder.BuildAll(original, proposed))
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_preserves_full_document_fallback_when_no_range_metadata_is_present()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "alpha\nbeta\n";
+            var proposed = "alpha\nBETA\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, proposed)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_exactly_applies_multi_range_quoted_string_replacements_after_earlier_length_change()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = """
+namespace ManualMultiRangeEditFixtures;
+
+public static class MultiRangeSuccess
+{
+    public static string BuildSummary()
+    {
+        var header = "Report Start";
+        var firstStatus = "pending";
+        var middleNote = "keep-this-line";
+        var secondStatus = "pending";
+        var footer = "Report End";
+
+        return header
+            + " | first:" + firstStatus
+            + " | note:" + middleNote
+            + " | second:" + secondStatus
+            + " | footer:" + footer;
+    }
+}
+""";
+
+            var proposed = """
+namespace ManualMultiRangeEditFixtures;
+
+public static class MultiRangeSuccess
+{
+    public static string BuildSummary()
+    {
+        var header = "Report Start";
+        var firstStatus = "approved";
+        var middleNote = "keep-this-line";
+        var secondStatus = "archived";
+        var footer = "Report End";
+
+        return header
+            + " | first:" + firstStatus
+            + " | note:" + middleNote
+            + " | second:" + secondStatus
+            + " | footer:" + footer;
+    }
+}
+""";
+
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("MultiRangeSuccess.cs", original, proposed),
+                RangeEdits = new List<RangeEdit>(RangeEditBuilder.BuildAll(original, proposed))
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(proposed, await File.ReadAllTextAsync(path));
+            Assert.DoesNotContain("var secondStatus = \"\"archive\";", await File.ReadAllTextAsync(path));
         }
         finally
         {

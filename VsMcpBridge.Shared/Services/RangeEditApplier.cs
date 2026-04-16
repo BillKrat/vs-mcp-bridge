@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.Services;
@@ -7,42 +9,82 @@ public static class RangeEditApplier
 {
     public static EditApplyResult Apply(EditProposal proposal, string currentText, Action<string> writeUpdatedText)
     {
-        if (proposal.RangeEdit == null)
+        var rangeEdits = GetRangeEdits(proposal);
+        if (rangeEdits.Count == 0)
             throw new InvalidOperationException("Range edit metadata is required.");
 
-        var rangeEdit = proposal.RangeEdit;
-        var startIndex = rangeEdit.StartIndex;
-        var originalSegment = rangeEdit.OriginalSegment ?? string.Empty;
-        var updatedSegment = rangeEdit.UpdatedSegment ?? string.Empty;
-        var prefixContext = rangeEdit.PrefixContext ?? string.Empty;
-        var suffixContext = rangeEdit.SuffixContext ?? string.Empty;
+        ValidateRangeLayout(rangeEdits);
 
-        var expectedUpdatedText = currentText;
-        if (MatchesUpdatedRange(currentText, startIndex, updatedSegment, prefixContext, suffixContext))
+        if (rangeEdits.All(rangeEdit => MatchesUpdatedRange(currentText, rangeEdit)))
             return EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
 
-        if (CountRangeMatches(currentText, originalSegment, prefixContext, suffixContext) > 1)
-            throw new TargetDocumentDriftException();
+        foreach (var rangeEdit in rangeEdits)
+        {
+            if (CountRangeMatches(currentText, rangeEdit.OriginalSegment ?? string.Empty, rangeEdit.PrefixContext ?? string.Empty, rangeEdit.SuffixContext ?? string.Empty) > 1)
+                throw new TargetDocumentDriftException();
 
-        if (!MatchesOriginalRange(currentText, startIndex, originalSegment, prefixContext, suffixContext))
-            throw new TargetDocumentDriftException();
+            if (!MatchesOriginalRange(currentText, rangeEdit))
+                throw new TargetDocumentDriftException();
+        }
 
-        expectedUpdatedText = currentText.Substring(0, startIndex)
-            + updatedSegment
-            + currentText.Substring(startIndex + originalSegment.Length);
+        var updatedText = currentText;
+        foreach (var rangeEdit in rangeEdits.OrderByDescending(range => range.StartIndex))
+        {
+            updatedText = updatedText.Substring(0, rangeEdit.StartIndex)
+                + (rangeEdit.UpdatedSegment ?? string.Empty)
+                + updatedText.Substring(rangeEdit.StartIndex + (rangeEdit.OriginalSegment?.Length ?? 0));
+        }
 
-        writeUpdatedText(expectedUpdatedText);
+        writeUpdatedText(updatedText);
         return EditApplyResult.Applied;
     }
 
-    private static bool MatchesOriginalRange(string currentText, int startIndex, string originalSegment, string prefixContext, string suffixContext)
+    private static IReadOnlyList<RangeEdit> GetRangeEdits(EditProposal proposal)
     {
-        return MatchesRange(currentText, startIndex, originalSegment, prefixContext, suffixContext);
+        if (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0)
+            return proposal.RangeEdits;
+
+        if (proposal.RangeEdit != null)
+            return new[] { proposal.RangeEdit };
+
+        return Array.Empty<RangeEdit>();
     }
 
-    private static bool MatchesUpdatedRange(string currentText, int startIndex, string updatedSegment, string prefixContext, string suffixContext)
+    private static void ValidateRangeLayout(IReadOnlyList<RangeEdit> rangeEdits)
     {
-        return MatchesRange(currentText, startIndex, updatedSegment, prefixContext, suffixContext);
+        var ordered = rangeEdits.OrderBy(range => range.StartIndex).ToList();
+        var previousEnd = -1;
+
+        foreach (var rangeEdit in ordered)
+        {
+            if (rangeEdit.StartIndex < 0)
+                throw new InvalidOperationException("Range edit start index cannot be negative.");
+
+            if (rangeEdit.StartIndex < previousEnd)
+                throw new InvalidOperationException("Range edits cannot overlap.");
+
+            previousEnd = rangeEdit.StartIndex + (rangeEdit.OriginalSegment?.Length ?? 0);
+        }
+    }
+
+    private static bool MatchesOriginalRange(string currentText, RangeEdit rangeEdit)
+    {
+        return MatchesRange(
+            currentText,
+            rangeEdit.StartIndex,
+            rangeEdit.OriginalSegment ?? string.Empty,
+            rangeEdit.PrefixContext ?? string.Empty,
+            rangeEdit.SuffixContext ?? string.Empty);
+    }
+
+    private static bool MatchesUpdatedRange(string currentText, RangeEdit rangeEdit)
+    {
+        return MatchesRange(
+            currentText,
+            rangeEdit.StartIndex,
+            rangeEdit.UpdatedSegment ?? string.Empty,
+            rangeEdit.PrefixContext ?? string.Empty,
+            rangeEdit.SuffixContext ?? string.Empty);
     }
 
     private static int CountRangeMatches(string currentText, string segment, string prefixContext, string suffixContext)

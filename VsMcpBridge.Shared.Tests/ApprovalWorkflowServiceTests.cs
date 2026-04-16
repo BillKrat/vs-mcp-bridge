@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.Shared.Services;
 using Xunit;
@@ -84,5 +85,24 @@ public sealed class ApprovalWorkflowServiceTests
         var exception = Assert.Throws<InvalidOperationException>(() => service.Approve("missing"));
 
         Assert.Contains("Unknown proposal", exception.Message);
+    }
+
+    [Fact]
+    public void CreateProposal_preserves_multi_range_metadata()
+    {
+        var service = new InMemoryApprovalWorkflowService();
+        var rangeEdits = new List<RangeEdit>
+        {
+            new() { StartIndex = 1, OriginalSegment = "b", UpdatedSegment = "B" },
+            new() { StartIndex = 3, OriginalSegment = "d", UpdatedSegment = "D" }
+        };
+
+        var proposal = service.CreateProposal("request-123", "sample.cs", "diff", null, rangeEdits);
+
+        Assert.Null(proposal.RangeEdit);
+        Assert.NotNull(proposal.RangeEdits);
+        Assert.Equal(2, proposal.RangeEdits!.Count);
+        Assert.Equal(1, proposal.RangeEdits[0].StartIndex);
+        Assert.Equal(3, proposal.RangeEdits[1].StartIndex);
     }
 }
