@@ -24,6 +24,12 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _proposalOriginalText = string.Empty;
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
+        private string _pendingApprovalOriginalSegment = string.Empty;
+        private string _pendingApprovalUpdatedSegment = string.Empty;
+        private string _lastCompletedProposalOriginalText = string.Empty;
+        private string _lastCompletedProposalUpdatedText = string.Empty;
+        private string _lastCompletedProposalOriginalSegment = string.Empty;
+        private string _lastCompletedProposalUpdatedSegment = string.Empty;
         private string _statusMessage = string.Empty;
         private bool _isProposalFileLoaded;
         private bool _canBrowseProposalFile;
@@ -106,10 +112,76 @@ namespace VsMcpBridge.Shared.MvpVm
             set => SetProperty(ref _pendingApprovalDescription, value);
         }
 
+        public string PendingApprovalOriginalSegment
+        {
+            get => _pendingApprovalOriginalSegment;
+            set
+            {
+                if (SetProperty(ref _pendingApprovalOriginalSegment, value))
+                    OnPropertyChanged(nameof(HasPendingApprovalRangePreview));
+            }
+        }
+
+        public string PendingApprovalUpdatedSegment
+        {
+            get => _pendingApprovalUpdatedSegment;
+            set
+            {
+                if (SetProperty(ref _pendingApprovalUpdatedSegment, value))
+                    OnPropertyChanged(nameof(HasPendingApprovalRangePreview));
+            }
+        }
+
         public string StatusMessage
         {
             get => _statusMessage;
             set => SetProperty(ref _statusMessage, value);
+        }
+
+        public string LastCompletedProposalOriginalText
+        {
+            get => _lastCompletedProposalOriginalText;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalOriginalText, value))
+                {
+                    OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
+                    OnPropertyChanged(nameof(ShowProposalEditor));
+                }
+            }
+        }
+
+        public string LastCompletedProposalUpdatedText
+        {
+            get => _lastCompletedProposalUpdatedText;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalUpdatedText, value))
+                {
+                    OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
+                    OnPropertyChanged(nameof(ShowProposalEditor));
+                }
+            }
+        }
+
+        public string LastCompletedProposalOriginalSegment
+        {
+            get => _lastCompletedProposalOriginalSegment;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalOriginalSegment, value))
+                    OnPropertyChanged(nameof(HasLastCompletedProposalRangePreview));
+            }
+        }
+
+        public string LastCompletedProposalUpdatedSegment
+        {
+            get => _lastCompletedProposalUpdatedSegment;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalUpdatedSegment, value))
+                    OnPropertyChanged(nameof(HasLastCompletedProposalRangePreview));
+            }
         }
 
         public bool IsProposalFileLoaded
@@ -154,6 +226,20 @@ namespace VsMcpBridge.Shared.MvpVm
         public bool IsProposalOriginalTextReadOnly => true;
 
         public bool IsProposalProposedTextReadOnly => HasPendingApproval;
+
+        public bool HasPendingApprovalRangePreview =>
+            !string.IsNullOrEmpty(PendingApprovalOriginalSegment)
+            || !string.IsNullOrEmpty(PendingApprovalUpdatedSegment);
+
+        public bool HasLastCompletedProposalPreview =>
+            !string.IsNullOrEmpty(LastCompletedProposalOriginalText)
+            || !string.IsNullOrEmpty(LastCompletedProposalUpdatedText);
+
+        public bool HasLastCompletedProposalRangePreview =>
+            !string.IsNullOrEmpty(LastCompletedProposalOriginalSegment)
+            || !string.IsNullOrEmpty(LastCompletedProposalUpdatedSegment);
+
+        public bool ShowProposalEditor => !HasLastCompletedProposalPreview;
 
         public IRelayCommand BrowseProposalFileCommand { get; }
 

@@ -5,8 +5,7 @@ public static class DeletionOnlyRange
     public static string BuildSequence()
     {
         return "alpha\n" +
-               "beta\n" +
-               "gamma\n" +
+               "added line\n"+
                "delta\n";
     }
 }

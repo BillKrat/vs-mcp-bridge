@@ -143,6 +143,19 @@ Priority order:
 3. Diagnostics must remain file/debug-based for MCP host work so stdio JSON transport stays clean.
 4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
 
+## Operational Note: Tool Window Readiness
+
+During manual testing, the VS MCP Bridge tool window could appear visually ready before startup-related processing and log activity had fully settled.
+
+Observed guidance:
+
+- do not assume the tool window is fully ready the moment it becomes visible
+- when validating interactive behavior, wait until startup log activity has stopped before treating the UI as ready for clicks and text interaction
+
+This is currently preserved as an operational note rather than a confirmed defect.
+
+If a future developer or AI agent sees transient dead-click behavior early in startup, first verify whether the interaction happened before the tool window had actually finished settling before opening a broader thread-lock investigation.
+
 ## Guidance For Future Changes
 
 During the current stabilization phase:

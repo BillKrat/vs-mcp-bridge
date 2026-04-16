@@ -199,6 +199,8 @@ public sealed class VsService : IVsService
             _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             _logToolWindowPresenter.ShowApprovalPrompt(
                 BuildProposalDescription(proposal),
+                proposal.RangeEdit?.OriginalSegment,
+                proposal.RangeEdit?.UpdatedSegment,
                 () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
                 () => RejectProposal(proposal.ProposalId));
         }

@@ -9,3 +9,4 @@ public static class EndOfFileReplacement
                "OLD-FOOTER\n";
     }
 }
+// See you at the end

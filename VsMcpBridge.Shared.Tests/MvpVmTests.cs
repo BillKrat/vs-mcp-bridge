@@ -87,10 +87,13 @@ public sealed class MvpVmTests
         presenter.LogToolWindowControl = control;
         presenter.Initialize();
 
-        presenter.ShowApprovalPrompt("Apply change", () => approved = true, () => rejected = true);
+        presenter.ShowApprovalPrompt("Apply change", "before", "after", () => approved = true, () => rejected = true);
 
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
+        Assert.True(viewModel.HasPendingApprovalRangePreview);
+        Assert.Equal("before", viewModel.PendingApprovalOriginalSegment);
+        Assert.Equal("after", viewModel.PendingApprovalUpdatedSegment);
         Assert.True(viewModel.IsProposalOriginalTextReadOnly);
         Assert.True(viewModel.IsProposalProposedTextReadOnly);
         Assert.True(viewModel.ApproveCommand.CanExecute(null));
@@ -112,10 +115,11 @@ public sealed class MvpVmTests
         Assert.True(viewModel.IsProposalOriginalTextReadOnly);
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
 
-        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+        presenter.ShowApprovalPrompt("Pending proposal", null, null, () => { }, () => { });
 
         Assert.True(viewModel.IsProposalOriginalTextReadOnly);
         Assert.True(viewModel.IsProposalProposedTextReadOnly);
+        Assert.False(viewModel.HasPendingApprovalRangePreview);
     }
 
     [Fact]
@@ -128,7 +132,7 @@ public sealed class MvpVmTests
 
         presenter.LogToolWindowControl = control;
         presenter.Initialize();
-        presenter.ShowApprovalPrompt("Pending proposal", () => approved = true, () => { });
+        presenter.ShowApprovalPrompt("Pending proposal", "old segment", "new segment", () => approved = true, () => { });
 
         viewModel.ProposalFilePath = @"C:\repo\Different.cs";
         viewModel.ProposalOriginalText = "edited in proposal pane";
@@ -139,6 +143,8 @@ public sealed class MvpVmTests
         Assert.True(approved);
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
+        Assert.Equal("old segment", viewModel.PendingApprovalOriginalSegment);
+        Assert.Equal("new segment", viewModel.PendingApprovalUpdatedSegment);
     }
 
     [Fact]
@@ -165,7 +171,7 @@ public sealed class MvpVmTests
         var viewModel = new LogToolWindowViewModel();
         var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
-        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+        presenter.ShowApprovalPrompt("Pending proposal", null, null, () => { }, () => { });
 
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Pending proposal", viewModel.PendingApprovalDescription);
@@ -231,7 +237,7 @@ public sealed class MvpVmTests
 
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
-            presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+            presenter.ShowApprovalPrompt("Pending proposal", null, null, () => { }, () => { });
 
             Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
         }
@@ -273,7 +279,7 @@ public sealed class MvpVmTests
         var viewModel = new LogToolWindowViewModel();
         var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
 
-        presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+        presenter.ShowApprovalPrompt("Pending proposal", null, null, () => { }, () => { });
         presenter.ShowStatusMessage("Apply failed for 'Sample.cs'. Review the bridge log for details.");
 
         Assert.True(viewModel.HasPendingApproval);
@@ -293,18 +299,28 @@ public sealed class MvpVmTests
             File.WriteAllText(path, "before");
             viewModel.ProposalFilePath = path;
             viewModel.ProposalProposedText = "after";
-            presenter.ShowApprovalPrompt("Pending proposal", () => { }, () => { });
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", () => { }, () => { });
+            File.WriteAllText(path, "after");
 
             presenter.CompleteProposalCycle("Apply succeeded for 'sample.cs'.");
 
             Assert.False(viewModel.HasPendingApproval);
             Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
+            Assert.Equal(string.Empty, viewModel.PendingApprovalOriginalSegment);
+            Assert.Equal(string.Empty, viewModel.PendingApprovalUpdatedSegment);
+            Assert.False(viewModel.HasPendingApprovalRangePreview);
             Assert.True(viewModel.IsProposalFileLoaded);
-            Assert.Equal("before", viewModel.ProposalOriginalText);
-            Assert.Equal("before", viewModel.ProposalProposedText);
+            Assert.Equal("after", viewModel.ProposalOriginalText);
+            Assert.Equal("after", viewModel.ProposalProposedText);
             Assert.False(viewModel.IsProposalProposedTextReadOnly);
             Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
             Assert.Equal("Apply succeeded for 'sample.cs'.", viewModel.StatusMessage);
+            Assert.True(viewModel.HasLastCompletedProposalPreview);
+            Assert.True(viewModel.HasLastCompletedProposalRangePreview);
+            Assert.Equal("before", viewModel.LastCompletedProposalOriginalText);
+            Assert.Equal("after", viewModel.LastCompletedProposalUpdatedText);
+            Assert.Equal("before", viewModel.LastCompletedProposalOriginalSegment);
+            Assert.Equal("after", viewModel.LastCompletedProposalUpdatedSegment);
         }
         finally
         {
@@ -320,7 +336,7 @@ public sealed class MvpVmTests
         var approveCalls = 0;
         var rejectCalls = 0;
 
-        presenter.ShowApprovalPrompt("Pending proposal", () => approveCalls++, () => rejectCalls++);
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", () => approveCalls++, () => rejectCalls++);
 
         viewModel.ApproveCommand.Execute(null);
         viewModel.ApproveCommand.Execute(null);
@@ -337,6 +353,74 @@ public sealed class MvpVmTests
 
         Assert.Equal(1, approveCalls);
         Assert.Equal(0, rejectCalls);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_with_range_segments_populates_focused_change_preview()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "old line", "new line", () => { }, () => { });
+
+        Assert.True(viewModel.HasPendingApprovalRangePreview);
+        Assert.Equal("old line", viewModel.PendingApprovalOriginalSegment);
+        Assert.Equal("new line", viewModel.PendingApprovalUpdatedSegment);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_without_range_segments_keeps_focused_change_preview_hidden()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", string.Empty, string.Empty, () => { }, () => { });
+
+        Assert.False(viewModel.HasPendingApprovalRangePreview);
+        Assert.Equal(string.Empty, viewModel.PendingApprovalOriginalSegment);
+        Assert.Equal(string.Empty, viewModel.PendingApprovalUpdatedSegment);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_clears_last_completed_proposal_preview_when_new_review_starts()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.LastCompletedProposalOriginalText = "before";
+        viewModel.LastCompletedProposalUpdatedText = "after";
+        viewModel.LastCompletedProposalOriginalSegment = "old line";
+        viewModel.LastCompletedProposalUpdatedSegment = "new line";
+
+        presenter.ShowApprovalPrompt("Pending proposal", "segment before", "segment after", () => { }, () => { });
+
+        Assert.False(viewModel.HasLastCompletedProposalPreview);
+        Assert.False(viewModel.HasLastCompletedProposalRangePreview);
+        Assert.Equal(string.Empty, viewModel.LastCompletedProposalOriginalText);
+        Assert.Equal(string.Empty, viewModel.LastCompletedProposalUpdatedText);
+        Assert.Equal(string.Empty, viewModel.LastCompletedProposalOriginalSegment);
+        Assert.Equal(string.Empty, viewModel.LastCompletedProposalUpdatedSegment);
+        Assert.True(viewModel.ShowProposalEditor);
+    }
+
+    [Fact]
+    public void LastCompletedProposalPreview_hides_editor_until_a_new_proposal_is_started()
+    {
+        var viewModel = new LogToolWindowViewModel();
+
+        Assert.True(viewModel.ShowProposalEditor);
+
+        viewModel.LastCompletedProposalOriginalText = "before";
+        viewModel.LastCompletedProposalUpdatedText = "after";
+
+        Assert.True(viewModel.HasLastCompletedProposalPreview);
+        Assert.False(viewModel.ShowProposalEditor);
+
+        viewModel.LastCompletedProposalOriginalText = string.Empty;
+        viewModel.LastCompletedProposalUpdatedText = string.Empty;
+
+        Assert.False(viewModel.HasLastCompletedProposalPreview);
+        Assert.True(viewModel.ShowProposalEditor);
     }
 
     [Fact]
@@ -429,6 +513,35 @@ public sealed class MvpVmTests
             viewModel.ProposalProposedText = "after";
 
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Changing_proposal_file_path_clears_last_completed_preview_and_reloads_editor_state()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "before");
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.LastCompletedProposalOriginalText = "old before";
+            viewModel.LastCompletedProposalUpdatedText = "old after";
+            viewModel.LastCompletedProposalOriginalSegment = "old segment";
+            viewModel.LastCompletedProposalUpdatedSegment = "new segment";
+
+            viewModel.ProposalFilePath = path;
+
+            Assert.False(viewModel.HasLastCompletedProposalPreview);
+            Assert.False(viewModel.HasLastCompletedProposalRangePreview);
+            Assert.True(viewModel.ShowProposalEditor);
+            Assert.Equal("before", viewModel.ProposalOriginalText);
+            Assert.Equal("before", viewModel.ProposalProposedText);
         }
         finally
         {

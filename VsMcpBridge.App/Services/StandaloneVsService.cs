@@ -1,15 +1,12 @@
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Shared.Services;
 
 namespace VsMcpBridge.App.Services;
 
@@ -218,6 +215,8 @@ internal sealed class StandaloneVsService : IVsService
             _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
             _logToolWindowPresenter.ShowApprovalPrompt(
                 BuildProposalDescription(proposal),
+                proposal.RangeEdit?.OriginalSegment,
+                proposal.RangeEdit?.UpdatedSegment,
                 () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
                 () => RejectProposal(proposal.ProposalId));
         }

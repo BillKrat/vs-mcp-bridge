@@ -6,6 +6,9 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="400"
              Background="{DynamicResource VsBrush.Window}">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+  </UserControl.Resources>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="*" MinHeight="220" />
@@ -50,6 +53,9 @@
                   Command="{Binding BrowseProposalFileCommand}" />
         </Grid>
         <Grid Grid.Row="3" Margin="0,0,0,8">
+          <Grid.Visibility>
+            <Binding Path="ShowProposalEditor" Converter="{StaticResource BooleanToVisibilityConverter}" />
+          </Grid.Visibility>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="5" />
@@ -104,7 +110,8 @@
         <Button Grid.Row="4"
                 HorizontalAlignment="Left"
                 Content="Submit Proposal"
-                Command="{Binding SubmitProposalCommand}" />
+                Command="{Binding SubmitProposalCommand}"
+                Visibility="{Binding ShowProposalEditor, Converter={StaticResource BooleanToVisibilityConverter}}" />
       </Grid>
     </Border>
 
@@ -145,6 +152,8 @@
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
@@ -176,6 +185,160 @@
                  Text="{Binding StatusMessage}"
                  TextWrapping="Wrap"
                  Foreground="{DynamicResource VsBrush.WindowText}" />
+      <Border Grid.Row="2"
+              Grid.Column="0"
+              Grid.ColumnSpan="3"
+              Margin="0,6,0,0"
+              Padding="8"
+              BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+              BorderThickness="1"
+              Visibility="{Binding HasPendingApprovalRangePreview, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Row="0"
+                     Grid.Column="0"
+                     Text="Original Segment"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <TextBlock Grid.Row="0"
+                     Grid.Column="2"
+                     Text="Updated Segment"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <TextBox Grid.Row="1"
+                   Grid.Column="0"
+                   IsReadOnly="True"
+                   AcceptsReturn="True"
+                   MinHeight="60"
+                   VerticalScrollBarVisibility="Auto"
+                   HorizontalScrollBarVisibility="Auto"
+                   TextWrapping="NoWrap"
+                   FontFamily="Consolas"
+                   Text="{Binding PendingApprovalOriginalSegment, Mode=OneWay}" />
+          <TextBox Grid.Row="1"
+                   Grid.Column="2"
+                   IsReadOnly="True"
+                   AcceptsReturn="True"
+                   MinHeight="60"
+                   VerticalScrollBarVisibility="Auto"
+                   HorizontalScrollBarVisibility="Auto"
+                   TextWrapping="NoWrap"
+                   FontFamily="Consolas"
+                   Text="{Binding PendingApprovalUpdatedSegment, Mode=OneWay}" />
+        </Grid>
+      </Border>
+      <Border Grid.Row="3"
+              Grid.Column="0"
+              Grid.ColumnSpan="3"
+              Margin="0,6,0,0"
+              Padding="8"
+              BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+              BorderThickness="1"
+              Visibility="{Binding HasLastCompletedProposalPreview, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Grid.Row="0"
+                     Grid.Column="0"
+                     Grid.ColumnSpan="3"
+                     Text="Last Completed Proposal"
+                     Margin="0,0,0,6"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <Grid Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="0,0,0,8"
+                Visibility="{Binding HasLastCompletedProposalRangePreview, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0"
+                       Grid.Column="0"
+                       Text="Original Segment"
+                       Margin="0,0,0,4"
+                       Foreground="{DynamicResource VsBrush.WindowText}" />
+            <TextBlock Grid.Row="0"
+                       Grid.Column="2"
+                       Text="Updated Segment"
+                       Margin="0,0,0,4"
+                       Foreground="{DynamicResource VsBrush.WindowText}" />
+            <TextBox Grid.Row="1"
+                     Grid.Column="0"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     MinHeight="60"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     TextWrapping="NoWrap"
+                     FontFamily="Consolas"
+                     Text="{Binding LastCompletedProposalOriginalSegment, Mode=OneWay}" />
+            <TextBox Grid.Row="1"
+                     Grid.Column="2"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     MinHeight="60"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     TextWrapping="NoWrap"
+                     FontFamily="Consolas"
+                     Text="{Binding LastCompletedProposalUpdatedSegment, Mode=OneWay}" />
+          </Grid>
+          <TextBlock Grid.Row="2"
+                     Grid.Column="0"
+                     Text="Original Text"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <TextBlock Grid.Row="2"
+                     Grid.Column="2"
+                     Text="Updated Text"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <TextBox Grid.Row="3"
+                   Grid.Column="0"
+                   IsReadOnly="True"
+                   AcceptsReturn="True"
+                   MinHeight="80"
+                   VerticalScrollBarVisibility="Auto"
+                   HorizontalScrollBarVisibility="Auto"
+                   TextWrapping="NoWrap"
+                   FontFamily="Consolas"
+                   Text="{Binding LastCompletedProposalOriginalText, Mode=OneWay}" />
+          <TextBox Grid.Row="3"
+                   Grid.Column="2"
+                   IsReadOnly="True"
+                   AcceptsReturn="True"
+                   MinHeight="80"
+                   VerticalScrollBarVisibility="Auto"
+                   HorizontalScrollBarVisibility="Auto"
+                   TextWrapping="NoWrap"
+                   FontFamily="Consolas"
+                   Text="{Binding LastCompletedProposalUpdatedText, Mode=OneWay}" />
+        </Grid>
+      </Border>
     </Grid>
   </Grid>
 </UserControl>

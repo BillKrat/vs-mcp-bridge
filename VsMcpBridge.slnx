@@ -15,6 +15,37 @@
     <File Path="docs/MVPVM_OVERVIEW.md" />
     <File Path="docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md" />
   </Folder>
+  <Folder Name="/SolutionFolder/Docs/backlog/">
+    <File Path="docs/blogs/diagrams/vs-mcp-bridge-bootstrap-sequence.mmd" />
+  </Folder>
+  <Folder Name="/SolutionFolder/Docs/blogs/" />
+  <Folder Name="/SolutionFolder/Docs/blogs/diagrams/" />
+  <Folder Name="/SolutionFolder/Docs/blogs/pending/" />
+  <Folder Name="/SolutionFolder/Docs/blogs/posted/">
+    <File Path="docs/blogs/posted/blog-001-vsix-bootstrap-and-first-tool-call.html" />
+    <File Path="docs/blogs/posted/blog-002-how-prompts-become-mcp-tool-workflows.html" />
+    <File Path="docs/blogs/posted/blog-003-async-work-approval-flow-and-ui-thread-safety.html" />
+    <File Path="docs/blogs/posted/blog-004-runtime-validation-failure-loops-and-clean-recovery.html" />
+    <File Path="docs/blogs/posted/blog-005-validation-playbook-for-the-current-bridge-slice.html" />
+    <File Path="docs/blogs/posted/blog-006-evidence-model-for-the-current-bridge.html" />
+    <File Path="docs/blogs/posted/blog-007-signal-map-for-the-current-bridge.html" />
+    <File Path="docs/blogs/posted/blog-developer-info.html" />
+  </Folder>
+  <Folder Name="/SolutionFolder/Docs/manual-test-fixtures/" />
+  <Folder Name="/SolutionFolder/Docs/manual-test-fixtures/range-edit/">
+    <File Path="docs/manual-test-fixtures/range-edit/DeletionOnlyRange.cs" />
+    <File Path="docs/manual-test-fixtures/range-edit/EndOfFileReplacement.cs" />
+    <File Path="docs/manual-test-fixtures/range-edit/InsertionOnlyRange.cs" />
+    <File Path="docs/manual-test-fixtures/range-edit/README.md" />
+    <File Path="docs/manual-test-fixtures/range-edit/RepeatedSegmentAmbiguity.cs" />
+    <File Path="docs/manual-test-fixtures/range-edit/RepeatedSegmentDisambiguated.cs" />
+    <File Path="docs/manual-test-fixtures/range-edit/StartOfFileReplacement.cs" />
+  </Folder>
+  <Folder Name="/SolutionFolder/Docs/session-handoffs/">
+    <File Path="docs/session-handoffs/2026-04-11-cursor-mcp-runtime-validation.md" />
+    <File Path="docs/session-handoffs/2026-04-12-chatgpt-reset-handoff.md" />
+    <File Path="docs/session-handoffs/2026-04-14-preview-clarity-handoff.md" />
+  </Folder>
   <Folder Name="/Tests/">
     <Project Path="VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj" />
     <Project Path="VsMcpBridge.Vsix.Tests/VsMcpBridge.Vsix.Tests.csproj" />

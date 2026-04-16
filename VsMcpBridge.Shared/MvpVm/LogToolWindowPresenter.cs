@@ -65,14 +65,17 @@ namespace VsMcpBridge.Shared.MvpVm
             });
         }
 
-        public void ShowApprovalPrompt(string description, Action onApprove, Action onReject)
+        public void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, Action onApprove, Action onReject)
         {
             RunOnUiThread(() =>
             {
                 _pendingApproveAction = onApprove;
                 _pendingRejectAction = onReject;
+                ClearCompletedProposalPreview();
                 LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
+                LogToolWindowViewModel.PendingApprovalOriginalSegment = originalSegment ?? string.Empty;
+                LogToolWindowViewModel.PendingApprovalUpdatedSegment = updatedSegment ?? string.Empty;
                 LogToolWindowViewModel.HasPendingApproval = true;
             });
         }
@@ -86,6 +89,7 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             RunOnUiThread(() =>
             {
+                CaptureCompletedProposalPreview();
                 ClearApproval();
 
                 if (!string.IsNullOrWhiteSpace(LogToolWindowViewModel.ProposalFilePath))
@@ -101,6 +105,14 @@ namespace VsMcpBridge.Shared.MvpVm
 
                 LogToolWindowViewModel.StatusMessage = statusMessage;
             });
+        }
+
+        private void CaptureCompletedProposalPreview()
+        {
+            LogToolWindowViewModel.LastCompletedProposalOriginalText = LogToolWindowViewModel.ProposalOriginalText;
+            LogToolWindowViewModel.LastCompletedProposalUpdatedText = LogToolWindowViewModel.ProposalProposedText;
+            LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
+            LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
         }
 
         private void OnApproveRequested()
@@ -140,7 +152,10 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             var selectedPath = _proposalFilePicker?.PickFilePath();
             if (!string.IsNullOrWhiteSpace(selectedPath))
+            {
+                ClearCompletedProposalPreview();
                 LogToolWindowViewModel.ProposalFilePath = selectedPath!;
+            }
         }
 
         private async Task SubmitProposalAsync(string filePath, string originalText, string proposedText)
@@ -164,13 +179,24 @@ namespace VsMcpBridge.Shared.MvpVm
             _pendingApproveAction = null;
             _pendingRejectAction = null;
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
+            LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
+            LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.HasPendingApproval = false;
+        }
+
+        private void ClearCompletedProposalPreview()
+        {
+            LogToolWindowViewModel.LastCompletedProposalOriginalText = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalUpdatedText = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
         }
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalFilePath))
             {
+                ClearCompletedProposalPreview();
                 _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
                 TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
             }
