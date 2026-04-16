@@ -114,14 +114,15 @@ Current approval flow:
 8. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
 9. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
 10. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
-11. New proposals may carry `RangeEdit` in addition to `Diff`, while the unified diff remains the operator-facing preview format.
-12. If approved, apply prefers the single-range replacement path when `RangeEdit` is present and falls back to full-document diff reconstruction when `RangeEdit` is absent.
-13. If the target already matches the approved updated content at the intended location, apply becomes a no-op.
-14. If the target no longer matches the approved original content, or if multiple candidate locations make the range match ambiguous, apply fails explicitly instead of guessing.
-15. Otherwise, the approved single-file replacement is applied inside Visual Studio through the VSIX host while preserving surrounding document content, line endings, and final trailing newline state where applicable.
-16. Live manual validation should focus on uniquely targeted success and drift failure after submit and before approve; ambiguity failure is primarily an automated safety proof.
-17. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-18. The result is returned back through the bridge to the MCP client.
+11. New proposals may carry `RangeEdit` or `RangeEdits` in addition to `Diff`, while the unified diff remains the operator-facing preview format and there is not yet a multi-range-specific preview mode.
+12. If approved, apply prefers the single-file range-based replacement path when range metadata is present and falls back to full-document diff reconstruction when range metadata is absent.
+13. Single-file multi-range apply validates every intended range against the current document before mutating any content and remains all-or-nothing across the entire range set.
+14. If the target already matches the approved updated content at every intended location, apply becomes a no-op.
+15. If any intended range no longer matches the approved original content, or if multiple candidate locations make any range match ambiguous, apply fails explicitly instead of guessing or partially applying.
+16. Otherwise, the approved single-file replacement set is applied inside Visual Studio through the VSIX host while preserving untouched surrounding document content, line endings, and final trailing newline state where applicable.
+17. Live manual validation should focus on multi-range success, drift failure after submit and before approve, and adjacent or nearby multi-range behavior; ambiguity failure is primarily an automated safety proof.
+18. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+19. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -135,7 +136,8 @@ Current verified state for this workflow:
 
 Current limitation:
 
-- range-based apply is limited to one file and one contiguous replacement range; multi-range and multi-file editing are still out of scope
+- range-based apply is limited to one file; multi-file editing is still out of scope
+- preview remains unified-diff-based and does not yet have a multi-range-focused presentation
 - if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
 
 Low-priority UI backlog:

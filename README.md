@@ -63,11 +63,12 @@ Developer note:
 
 Current limitation:
 
-- new proposals may carry `RangeEdit` in addition to `Diff`
+- new proposals may carry one or more single-file `RangeEdit` entries in addition to `Diff`
 - the unified diff remains the preview format shown to the operator
-- apply prefers a single-range replacement when `RangeEdit` is present, and falls back to full-document apply when `RangeEdit` is absent
-- ambiguous range matches fail safely instead of guessing
-- live manual validation should focus on uniquely targeted success and drift failure after submit and before approve; ambiguity failure is primarily an automated safety proof
+- apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent
+- single-file multi-range apply is all-or-nothing across the full range set
+- ambiguity or drift in any intended range fails the entire apply explicitly instead of guessing or partially applying
+- live manual validation should focus on multi-range success, drift failure after submit and before approve, and adjacent/nearby range behavior; ambiguity failure is primarily an automated safety proof
 
 ## Solution Structure
 
