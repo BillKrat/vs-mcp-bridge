@@ -64,10 +64,13 @@ Developer note:
 Current limitation:
 
 - new proposals may carry one or more single-file `RangeEdit` entries in addition to `Diff`
-- the unified diff remains the preview format shown to the operator
+- multi-range proposals now show a simple reviewed change list with sequence number, original segment, and updated segment
+- the reviewed change list appears in both pending review and last completed proposal review
+- the unified diff remains the primary preview format shown to the operator
 - apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent
 - single-file multi-range apply is all-or-nothing across the full range set
 - ambiguity or drift in any intended range fails the entire apply explicitly instead of guessing or partially applying
+- the tool window review surface is now scrollable and resizable enough for practical inspection, but it still uses the compact review model rather than a dedicated review mode
 - live manual validation should focus on multi-range success, drift failure after submit and before approve, and adjacent/nearby range behavior; ambiguity failure is primarily an automated safety proof
 
 ## Solution Structure
