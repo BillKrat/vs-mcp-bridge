@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
+using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.MvpVm
 {
@@ -26,10 +27,12 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _pendingApprovalDescription = string.Empty;
         private string _pendingApprovalOriginalSegment = string.Empty;
         private string _pendingApprovalUpdatedSegment = string.Empty;
+        private IReadOnlyList<ProposalReviewedChange> _pendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
         private string _lastCompletedProposalOriginalText = string.Empty;
         private string _lastCompletedProposalUpdatedText = string.Empty;
         private string _lastCompletedProposalOriginalSegment = string.Empty;
         private string _lastCompletedProposalUpdatedSegment = string.Empty;
+        private IReadOnlyList<ProposalReviewedChange> _lastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
         private string _statusMessage = string.Empty;
         private bool _isProposalFileLoaded;
         private bool _canBrowseProposalFile;
@@ -132,6 +135,16 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public IReadOnlyList<ProposalReviewedChange> PendingApprovalReviewedChanges
+        {
+            get => _pendingApprovalReviewedChanges;
+            set
+            {
+                if (SetProperty(ref _pendingApprovalReviewedChanges, value))
+                    OnPropertyChanged(nameof(HasPendingApprovalReviewedChanges));
+            }
+        }
+
         public string StatusMessage
         {
             get => _statusMessage;
@@ -184,6 +197,16 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public IReadOnlyList<ProposalReviewedChange> LastCompletedProposalReviewedChanges
+        {
+            get => _lastCompletedProposalReviewedChanges;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalReviewedChanges, value))
+                    OnPropertyChanged(nameof(HasLastCompletedProposalReviewedChanges));
+            }
+        }
+
         public bool IsProposalFileLoaded
         {
             get => _isProposalFileLoaded;
@@ -231,6 +254,8 @@ namespace VsMcpBridge.Shared.MvpVm
             !string.IsNullOrEmpty(PendingApprovalOriginalSegment)
             || !string.IsNullOrEmpty(PendingApprovalUpdatedSegment);
 
+        public bool HasPendingApprovalReviewedChanges => PendingApprovalReviewedChanges.Count > 0;
+
         public bool HasLastCompletedProposalPreview =>
             !string.IsNullOrEmpty(LastCompletedProposalOriginalText)
             || !string.IsNullOrEmpty(LastCompletedProposalUpdatedText);
@@ -238,6 +263,8 @@ namespace VsMcpBridge.Shared.MvpVm
         public bool HasLastCompletedProposalRangePreview =>
             !string.IsNullOrEmpty(LastCompletedProposalOriginalSegment)
             || !string.IsNullOrEmpty(LastCompletedProposalUpdatedSegment);
+
+        public bool HasLastCompletedProposalReviewedChanges => LastCompletedProposalReviewedChanges.Count > 0;
 
         public bool ShowProposalEditor => !HasLastCompletedProposalPreview;
 

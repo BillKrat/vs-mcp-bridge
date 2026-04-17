@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.Interfaces
 {
@@ -9,7 +11,7 @@ namespace VsMcpBridge.Shared.Interfaces
 
         void Initialize();
         void AppendLog(string message);
-        void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, Action onApprove, Action onReject);
+        void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject);
         void ShowStatusMessage(string message);
         void CompleteProposalCycle(string statusMessage);
     }

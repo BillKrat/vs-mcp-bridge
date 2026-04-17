@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:VsMcpBridge.Shared.Models;assembly=VsMcpBridge.Shared"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="400"
              Background="{DynamicResource VsBrush.Window}">
@@ -11,11 +12,9 @@
   </UserControl.Resources>
   <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="*" MinHeight="220" />
+      <RowDefinition Height="*" MinHeight="280" />
       <RowDefinition Height="5" />
-      <RowDefinition Height="*" MinHeight="40" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" MinHeight="180" />
     </Grid.RowDefinitions>
 
     <Border Grid.Row="0"
@@ -52,7 +51,7 @@
                   Content="Browse"
                   Command="{Binding BrowseProposalFileCommand}" />
         </Grid>
-        <Grid Grid.Row="3" Margin="0,0,0,8">
+        <Grid Grid.Row="3" Margin="0,0,0,8" MinHeight="180">
           <Grid.Visibility>
             <Binding Path="ShowProposalEditor" Converter="{StaticResource BooleanToVisibilityConverter}" />
           </Grid.Visibility>
@@ -122,44 +121,57 @@
                  ResizeDirection="Rows"
                  ResizeBehavior="PreviousAndNext" />
 
-    <!-- Log output -->
-    <TextBox Grid.Row="2"
-             IsReadOnly="True"
-             TextWrapping="Wrap"
-             VerticalAlignment="Stretch"
-             VerticalScrollBarVisibility="Auto"
-             HorizontalScrollBarVisibility="Disabled"
-             FontFamily="Consolas"
-             FontSize="12"
-             Background="Transparent"
-             Foreground="{DynamicResource VsBrush.WindowText}"
-             BorderThickness="0"
-             Text="{Binding LogText, Mode=OneWay}" />
-
-    <!-- Log level picker -->
-    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="4,4,4,2">
-      <TextBlock Text="Log Level:"
-                 VerticalAlignment="Center"
-                 Margin="0,0,6,0"
-                 Foreground="{DynamicResource VsBrush.WindowText}" />
-      <ComboBox ItemsSource="{Binding AvailableLogLevels}"
-                SelectedItem="{Binding SelectedLogLevel}"
-                MinWidth="110" />
-    </StackPanel>
-
-    <!-- Approval bar -->
-    <Grid Grid.Row="4" Margin="4">
+    <Grid Grid.Row="2" Margin="4">
       <Grid.RowDefinitions>
+        <RowDefinition Height="*" MinHeight="40" />
         <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" MinHeight="120" />
       </Grid.RowDefinitions>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
+
+      <!-- Log output -->
+      <TextBox Grid.Row="0"
+               IsReadOnly="True"
+               TextWrapping="Wrap"
+               VerticalAlignment="Stretch"
+               VerticalScrollBarVisibility="Auto"
+               HorizontalScrollBarVisibility="Disabled"
+               FontFamily="Consolas"
+               FontSize="12"
+               Background="Transparent"
+               Foreground="{DynamicResource VsBrush.WindowText}"
+               BorderThickness="0"
+               Text="{Binding LogText, Mode=OneWay}" />
+
+      <!-- Log level picker -->
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,2">
+        <TextBlock Text="Log Level:"
+                   VerticalAlignment="Center"
+                   Margin="0,0,6,0"
+                   Foreground="{DynamicResource VsBrush.WindowText}" />
+        <ComboBox ItemsSource="{Binding AvailableLogLevels}"
+                  SelectedItem="{Binding SelectedLogLevel}"
+                  MinWidth="110" />
+      </StackPanel>
+
+      <!-- Approval bar -->
+      <ScrollViewer Grid.Row="2"
+                    MinHeight="120"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    CanContentScroll="True">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
       <TextBlock Grid.Row="0"
                  Grid.Column="0"
                  VerticalAlignment="Center"
@@ -242,9 +254,64 @@
               Padding="8"
               BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
               BorderThickness="1"
+              Visibility="{Binding HasPendingApprovalReviewedChanges, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <StackPanel>
+          <TextBlock Text="Reviewed Changes"
+                     Margin="0,0,0,6"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource VsBrush.WindowText}" />
+          <ItemsControl ItemsSource="{Binding PendingApprovalReviewedChanges}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type models:ProposalReviewedChange}">
+                <Border Margin="0,0,0,6"
+                        Padding="6"
+                        BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+                        BorderThickness="1">
+                  <StackPanel>
+                    <TextBlock Text="{Binding SequenceNumber, StringFormat=Change {0}}"
+                               Margin="0,0,0,4"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource VsBrush.WindowText}" />
+                    <TextBlock Text="Original Segment"
+                               Foreground="{DynamicResource VsBrush.WindowText}" />
+                    <TextBox Margin="0,2,0,6"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             MinHeight="40"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             TextWrapping="NoWrap"
+                             FontFamily="Consolas"
+                             Text="{Binding OriginalSegment, Mode=OneWay}" />
+                    <TextBlock Text="Updated Segment"
+                               Foreground="{DynamicResource VsBrush.WindowText}" />
+                    <TextBox Margin="0,2,0,0"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             MinHeight="40"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             TextWrapping="NoWrap"
+                             FontFamily="Consolas"
+                             Text="{Binding UpdatedSegment, Mode=OneWay}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="4"
+              Grid.Column="0"
+              Grid.ColumnSpan="3"
+              Margin="0,6,0,0"
+              Padding="8"
+              BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+              BorderThickness="1"
               Visibility="{Binding HasLastCompletedProposalPreview, Converter={StaticResource BooleanToVisibilityConverter}}">
         <Grid>
           <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -307,17 +374,66 @@
                      FontFamily="Consolas"
                      Text="{Binding LastCompletedProposalUpdatedSegment, Mode=OneWay}" />
           </Grid>
-          <TextBlock Grid.Row="2"
+          <StackPanel Grid.Row="2"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="3"
+                      Margin="0,0,0,8"
+                      Visibility="{Binding HasLastCompletedProposalReviewedChanges, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock Text="Reviewed Changes"
+                       Margin="0,0,0,6"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource VsBrush.WindowText}" />
+            <ItemsControl ItemsSource="{Binding LastCompletedProposalReviewedChanges}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:ProposalReviewedChange}">
+                  <Border Margin="0,0,0,6"
+                          Padding="6"
+                          BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+                          BorderThickness="1">
+                    <StackPanel>
+                      <TextBlock Text="{Binding SequenceNumber, StringFormat=Change {0}}"
+                                 Margin="0,0,0,4"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource VsBrush.WindowText}" />
+                      <TextBlock Text="Original Segment"
+                                 Foreground="{DynamicResource VsBrush.WindowText}" />
+                      <TextBox Margin="0,2,0,6"
+                               IsReadOnly="True"
+                               AcceptsReturn="True"
+                               MinHeight="40"
+                               VerticalScrollBarVisibility="Auto"
+                               HorizontalScrollBarVisibility="Auto"
+                               TextWrapping="NoWrap"
+                               FontFamily="Consolas"
+                               Text="{Binding OriginalSegment, Mode=OneWay}" />
+                      <TextBlock Text="Updated Segment"
+                                 Foreground="{DynamicResource VsBrush.WindowText}" />
+                      <TextBox Margin="0,2,0,0"
+                               IsReadOnly="True"
+                               AcceptsReturn="True"
+                               MinHeight="40"
+                               VerticalScrollBarVisibility="Auto"
+                               HorizontalScrollBarVisibility="Auto"
+                               TextWrapping="NoWrap"
+                               FontFamily="Consolas"
+                               Text="{Binding UpdatedSegment, Mode=OneWay}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+          <TextBlock Grid.Row="3"
                      Grid.Column="0"
                      Text="Original Text"
                      Margin="0,0,0,4"
                      Foreground="{DynamicResource VsBrush.WindowText}" />
-          <TextBlock Grid.Row="2"
+          <TextBlock Grid.Row="3"
                      Grid.Column="2"
                      Text="Updated Text"
                      Margin="0,0,0,4"
                      Foreground="{DynamicResource VsBrush.WindowText}" />
-          <TextBox Grid.Row="3"
+          <TextBox Grid.Row="4"
                    Grid.Column="0"
                    IsReadOnly="True"
                    AcceptsReturn="True"
@@ -327,7 +443,7 @@
                    TextWrapping="NoWrap"
                    FontFamily="Consolas"
                    Text="{Binding LastCompletedProposalOriginalText, Mode=OneWay}" />
-          <TextBox Grid.Row="3"
+          <TextBox Grid.Row="4"
                    Grid.Column="2"
                    IsReadOnly="True"
                    AcceptsReturn="True"
@@ -339,6 +455,8 @@
                    Text="{Binding LastCompletedProposalUpdatedText, Mode=OneWay}" />
         </Grid>
       </Border>
+        </Grid>
+      </ScrollViewer>
     </Grid>
   </Grid>
 </UserControl>

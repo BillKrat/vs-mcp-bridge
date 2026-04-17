@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.Interfaces
 {
@@ -14,16 +15,20 @@ namespace VsMcpBridge.Shared.Interfaces
         string PendingApprovalDescription { get; set; }
         string PendingApprovalOriginalSegment { get; set; }
         string PendingApprovalUpdatedSegment { get; set; }
+        IReadOnlyList<ProposalReviewedChange> PendingApprovalReviewedChanges { get; set; }
         string LastCompletedProposalOriginalText { get; set; }
         string LastCompletedProposalUpdatedText { get; set; }
         string LastCompletedProposalOriginalSegment { get; set; }
         string LastCompletedProposalUpdatedSegment { get; set; }
+        IReadOnlyList<ProposalReviewedChange> LastCompletedProposalReviewedChanges { get; set; }
         string StatusMessage { get; set; }
         bool IsProposalFileLoaded { get; set; }
         bool HasPendingApproval { get; set; }
         bool HasPendingApprovalRangePreview { get; }
+        bool HasPendingApprovalReviewedChanges { get; }
         bool HasLastCompletedProposalPreview { get; }
         bool HasLastCompletedProposalRangePreview { get; }
+        bool HasLastCompletedProposalReviewedChanges { get; }
         bool ShowProposalEditor { get; }
         bool IsProposalOriginalTextReadOnly { get; }
         bool IsProposalProposedTextReadOnly { get; }

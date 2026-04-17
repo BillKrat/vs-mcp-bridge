@@ -1,10 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.MvpVm
 {
@@ -65,7 +68,7 @@ namespace VsMcpBridge.Shared.MvpVm
             });
         }
 
-        public void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, Action onApprove, Action onReject)
+        public void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject)
         {
             RunOnUiThread(() =>
             {
@@ -76,6 +79,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.PendingApprovalDescription = description;
                 LogToolWindowViewModel.PendingApprovalOriginalSegment = originalSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalUpdatedSegment = updatedSegment ?? string.Empty;
+                LogToolWindowViewModel.PendingApprovalReviewedChanges = CloneReviewedChanges(reviewedChanges);
                 LogToolWindowViewModel.HasPendingApproval = true;
             });
         }
@@ -113,6 +117,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = LogToolWindowViewModel.ProposalProposedText;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
+            LogToolWindowViewModel.LastCompletedProposalReviewedChanges = CloneReviewedChanges(LogToolWindowViewModel.PendingApprovalReviewedChanges);
         }
 
         private void OnApproveRequested()
@@ -181,6 +186,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
             LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
+            LogToolWindowViewModel.PendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
             LogToolWindowViewModel.HasPendingApproval = false;
         }
 
@@ -190,6 +196,19 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
+        }
+
+        private static IReadOnlyList<ProposalReviewedChange> CloneReviewedChanges(IReadOnlyList<ProposalReviewedChange>? reviewedChanges)
+        {
+            return reviewedChanges == null || reviewedChanges.Count == 0
+                ? Array.Empty<ProposalReviewedChange>()
+                : reviewedChanges.Select(change => new ProposalReviewedChange
+                {
+                    SequenceNumber = change.SequenceNumber,
+                    OriginalSegment = change.OriginalSegment,
+                    UpdatedSegment = change.UpdatedSegment
+                }).ToArray();
         }
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

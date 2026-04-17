@@ -223,6 +223,7 @@ internal sealed class StandaloneVsService : IVsService
                 BuildProposalDescription(proposal),
                 proposal.RangeEdit?.OriginalSegment,
                 proposal.RangeEdit?.UpdatedSegment,
+                BuildReviewedChanges(proposal),
                 () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
                 () => RejectProposal(proposal.ProposalId));
         }
@@ -416,6 +417,26 @@ internal sealed class StandaloneVsService : IVsService
     private static string BuildProposalDescription(EditProposal proposal)
     {
         return $"Pending proposal for '{proposal.FilePath}'{Environment.NewLine}{proposal.Diff}";
+    }
+
+    private static IReadOnlyList<ProposalReviewedChange> BuildReviewedChanges(EditProposal proposal)
+    {
+        if (proposal.RangeEdits == null || proposal.RangeEdits.Count == 0)
+            return Array.Empty<ProposalReviewedChange>();
+
+        var changes = new List<ProposalReviewedChange>(proposal.RangeEdits.Count);
+        for (var index = 0; index < proposal.RangeEdits.Count; index++)
+        {
+            var rangeEdit = proposal.RangeEdits[index];
+            changes.Add(new ProposalReviewedChange
+            {
+                SequenceNumber = index + 1,
+                OriginalSegment = rangeEdit.OriginalSegment ?? string.Empty,
+                UpdatedSegment = rangeEdit.UpdatedSegment ?? string.Empty
+            });
+        }
+
+        return changes;
     }
 
     private async Task ApproveAndApplyAsync(string proposalId)
