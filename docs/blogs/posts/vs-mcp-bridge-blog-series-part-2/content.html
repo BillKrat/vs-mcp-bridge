@@ -1,0 +1,179 @@
+﻿<h1>VS MCP Bridge Blog Series: Part 2</h1>
+<h2>How Prompts Become MCP Tool Workflows</h2>
+
+<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The first post explained the bootstrap flow from VSIX startup to the first tool call. This one focuses on a different question: <strong>how does a natural-language prompt actually turn into bridge activity?</strong></p>
+
+<p>The short answer is that the bridge does not process prompts directly. It processes <strong>tool calls</strong> that an AI decides to make while answering a prompt.</p>
+
+<h3>The Core Distinction</h3>
+
+<p>A <strong>prompt</strong> is a user request in natural language.</p>
+
+<p>A <strong>tool call</strong> is a structured operation the AI chooses to invoke.</p>
+
+<p>A <strong>tool result</strong> is what the bridge returns from that operation.</p>
+
+<p>A <strong>completed action</strong> is the final outcome the user cares about, which may or may not happen immediately.</p>
+
+<p>That means these are not equivalent concepts:</p>
+
+<ul>
+  <li>prompt</li>
+  <li>tool call</li>
+  <li>tool result</li>
+  <li>completed action</li>
+</ul>
+
+<p>This distinction matters because the VS MCP Bridge sits behind the AI's decision layer. The user talks to the AI. The AI decides whether it needs bridge capabilities. Only then does the bridge get involved.</p>
+
+<h3>What The AI Actually Sees</h3>
+
+<p>The AI does not magically inspect Visual Studio just because the user asks a question. Instead, the MCP server advertises a set of tools, and the AI chooses from that set when it needs real IDE state.</p>
+
+<p>In the current repo, that tool surface includes operations such as:</p>
+
+<ul>
+  <li><code>vs_get_active_document</code></li>
+  <li><code>vs_get_selected_text</code></li>
+  <li><code>vs_list_solution_projects</code></li>
+  <li><code>vs_get_error_list</code></li>
+  <li><code>vs_propose_text_edit</code></li>
+</ul>
+
+<p>So the bridge is not acting as a prompt processor. It is acting as a <strong>capability surface</strong> that the AI may decide to use.</p>
+
+<h3>Prompt To Tool Call</h3>
+
+<p>Suppose the user asks:</p>
+
+<pre><code>What file am I editing?</code></pre>
+
+<p>The AI may decide it needs actual editor state. If so, it can call <code>vs_get_active_document</code>. The bridge returns the active file path, language, and content, and the AI uses that tool result to produce its answer.</p>
+
+<p>So the flow is:</p>
+
+<ol>
+  <li>User sends a prompt.</li>
+  <li>The AI reasons about what it needs.</li>
+  <li>The AI may choose a tool call.</li>
+  <li>The bridge returns a tool result.</li>
+  <li>The AI uses that result in its final response.</li>
+</ol>
+
+<p>The important takeaway is that the user's prompt is broad and human, while the tool call is narrow and structured.</p>
+
+<h3>Tool Result Is Not Always The Final Outcome</h3>
+
+<p>Read-only tools are straightforward. They return information directly. If the AI asks for the active document or the error list, the returned result is usually the useful outcome.</p>
+
+<p>Edit-oriented tools are different.</p>
+
+<p>In the current bridge design, <code>vs_propose_text_edit</code> does <strong>not</strong> immediately write a file. It returns a diff proposal and triggers approval flow inside the host.</p>
+
+<p>That means the AI can request an edit proposal, but the host still controls whether the change is applied.</p>
+
+<p>The cleanest summary of this behavior is:</p>
+
+<pre><code>MCP proposes.
+Visual Studio approves.
+VSIX applies.</code></pre>
+
+<p>This is a strong separation of concerns because it gives the AI a way to suggest changes without granting direct, silent mutation of the IDE state.</p>
+
+<h3>How The AI Knows Which Tools Exist</h3>
+
+<p>The AI knows which tools exist because the MCP server advertises them.</p>
+
+<p>That means tool discovery is explicit. The model is not guessing capabilities from the codebase alone. It is learning them from the MCP server's declared tool list, including:</p>
+
+<ul>
+  <li>tool names</li>
+  <li>tool descriptions</li>
+  <li>parameter names</li>
+  <li>parameter descriptions</li>
+</ul>
+
+<p>This has an important design consequence: <strong>tool metadata influences model behavior</strong>.</p>
+
+<p>If a tool name is vague, or its description fails to explain whether it is read-only, proposal-oriented, or approval-gated, the AI may use it badly or not use it at all.</p>
+
+<p>That means tool definitions are not just API declarations. They are also part of the model-facing interaction design.</p>
+
+<h3>Why Tool Descriptions Matter</h3>
+
+<p>The AI relies heavily on tool descriptions to decide:</p>
+
+<ul>
+  <li>whether a tool is relevant</li>
+  <li>when to call it</li>
+  <li>how to populate arguments</li>
+  <li>what kind of outcome to expect</li>
+</ul>
+
+<p>A bridge can be protocol-correct and still feel weak if its tool surface is unclear. A stronger bridge has:</p>
+
+<ul>
+  <li>clear tool names</li>
+  <li>strong descriptions</li>
+  <li>obvious safety boundaries</li>
+  <li>predictable results</li>
+</ul>
+
+<p>That is why MCP work is partly protocol engineering and partly capability design.</p>
+
+<h3>One Prompt Can Trigger Multiple Tool Calls</h3>
+
+<p>Another important point is that one prompt does not necessarily map to one tool call.</p>
+
+<p>In practice, one user request can turn into a short AI workflow with multiple tool calls in sequence.</p>
+
+<p>For example, if the user asks:</p>
+
+<pre><code>Please fix the selected code.</code></pre>
+
+<p>A reasonable tool sequence might be:</p>
+
+<ol>
+  <li>Call <code>vs_get_selected_text</code>.</li>
+  <li>Possibly call <code>vs_get_active_document</code> for file path or surrounding context.</li>
+  <li>Generate revised text.</li>
+  <li>Call <code>vs_propose_text_edit</code>.</li>
+  <li>Report that a proposal was created and approval is still required.</li>
+</ol>
+
+<p>This means the bridge is not only serving isolated commands. It is supporting small, model-driven workflows inside a single conversational turn.</p>
+
+<h3>Why This Matters To The Bridge Design</h3>
+
+<p>Once you see the bridge this way, several design choices become easier to understand.</p>
+
+<ul>
+  <li>Read-only tools matter because they often prepare the AI for a later action-oriented call.</li>
+  <li>Request IDs matter because a larger workflow may involve multiple related calls.</li>
+  <li>Approval-gated tools matter because they insert a deliberate safety checkpoint into the workflow.</li>
+  <li>Tool output quality matters because each result may shape the model's next step.</li>
+</ul>
+
+<p>So the bridge is really supporting a layered workflow:</p>
+
+<pre><code>single user prompt
+  -> AI reasoning
+  -> one or more tool calls
+  -> data returned or proposal created
+  -> optional approval step
+  -> final user-facing answer</code></pre>
+
+<p>That is a more accurate mental model than imagining a one-prompt-to-one-command system.</p>
+
+<h3>Takeaway</h3>
+
+<p>If the first blog post established how the bridge starts, this post explains how the bridge is actually used.</p>
+
+<p>The key idea is that the user talks in prompts, but the bridge works in tools. The AI sits in the middle and decides when those tools should be invoked, how they should be chained together, and how their results should be turned back into useful responses.</p>
+
+<p>In other words, the MCP bridge is not a prompt handler. It is an AI-facing capability layer that supports controlled access to IDE state and approval-gated actions.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is how the bridge keeps those model-driven workflows safe and host-correct, especially once multiple asynchronous operations, approval prompts, and UI-thread updates are happening over time.</p>
+

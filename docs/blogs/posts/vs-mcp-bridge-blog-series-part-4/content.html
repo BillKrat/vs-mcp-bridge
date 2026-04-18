@@ -1,0 +1,215 @@
+﻿<h1>VS MCP Bridge Blog Series: Part 4</h1>
+<h2>Runtime Validation, Failure Loops, and Clean Recovery</h2>
+
+<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained how the bridge starts, how prompts become tool workflows, and where async and UI-thread correctness matter in the current implementation. This post focuses on the next practical question: <strong>how do we validate that the bridge really works end to end, and how do we avoid getting stuck in failure loops?</strong></p>
+
+<p>The short answer is that runtime validation is not only about proving success. It is also about proving that failures stop cleanly and that the system can recover into a known-good state.</p>
+
+<h3>Why Runtime Validation Matters</h3>
+
+<p>A bridge like this can look correct in the codebase and still fail at runtime because it crosses multiple boundaries:</p>
+
+<ul>
+  <li>MCP client to MCP server</li>
+  <li>MCP server to named pipe</li>
+  <li>named pipe to host service</li>
+  <li>host service to approval UI</li>
+  <li>approval UI to edit application</li>
+</ul>
+
+<p>Unit tests can validate pieces of that path, but only runtime validation proves that the full chain works in the real host environment.</p>
+
+<p>For the current app, the important question is simple:</p>
+
+<pre><code>does one real request make it all the way through the system and back?</code></pre>
+
+<h3>Success Is Not Enough</h3>
+
+<p>There is another reason runtime validation matters: some AI-assisted tools fail badly when they do not recover cleanly. Instead of one request failing once, the system can get trapped in a loop of repeated failures, stale state, or repeated retries that survive longer than the user expects.</p>
+
+<p>That kind of experience is frustrating because restarting the visible app does not always clear the underlying problem. A request may still be queued, stale UI state may remain visible, or a background component may keep retrying something that should have stopped.</p>
+
+<p>So the current bridge should not only prove that success works. It should also prove that:</p>
+
+<ul>
+  <li>failure stops cleanly</li>
+  <li>old state does not keep reasserting itself</li>
+  <li>restart returns the system to a predictable state</li>
+</ul>
+
+<h3>The Small Validation Sequence</h3>
+
+<p>For the current bridge, runtime validation does not need to be complicated. The smallest meaningful proof sequence is:</p>
+
+<ol>
+  <li>VSIX loads and starts the bridge.</li>
+  <li>MCP server starts and advertises tools.</li>
+  <li>One read-only request completes end to end.</li>
+  <li>One edit proposal reaches the approval UI.</li>
+  <li>One approved edit applies correctly.</li>
+</ol>
+
+<p>If those five things work reliably, the bridge has a real end-to-end story in the current implementation.</p>
+
+<h3>Step 1: Validate VSIX Startup</h3>
+
+<p>The first proof is that the host side of the bridge actually comes alive.</p>
+
+<p>What needs to be true:</p>
+
+<ul>
+  <li>the VSIX loads in the experimental instance</li>
+  <li>the package initializes</li>
+  <li>dependency injection composition succeeds</li>
+  <li>the named-pipe listener starts</li>
+</ul>
+
+<p>If this step fails, the rest of the bridge is irrelevant because nothing on the host side is reachable.</p>
+
+<p>Healthy signals include:</p>
+
+<ul>
+  <li>startup happens once</li>
+  <li>logs show normal initialization flow</li>
+  <li>restarting Visual Studio does not create duplicate or conflicting runtime state</li>
+</ul>
+
+<h3>Step 2: Validate MCP Server Startup</h3>
+
+<p>The second proof is on the MCP-facing side.</p>
+
+<p>What needs to be true:</p>
+
+<ul>
+  <li><code>VsMcpBridge.McpServer</code> launches</li>
+  <li>stdio transport is active</li>
+  <li>tools are registered and visible</li>
+  <li>the MCP client can invoke them</li>
+</ul>
+
+<p>This proves that the external tool surface is alive before host integration is even tested.</p>
+
+<p>Healthy signals include:</p>
+
+<ul>
+  <li>tool registration happens once</li>
+  <li>tool calls either succeed or fail clearly</li>
+  <li>a failed call does not permanently poison the session</li>
+</ul>
+
+<h3>Step 3: Validate One Read-Only Tool End To End</h3>
+
+<p>This is the first full bridge proof.</p>
+
+<p>A good candidate is something simple and read-only, such as:</p>
+
+<ul>
+  <li><code>vs_get_active_document</code></li>
+  <li><code>vs_list_solution_projects</code></li>
+</ul>
+
+<p>What needs to be true:</p>
+
+<ul>
+  <li>the MCP tool call reaches <code>VsTools</code></li>
+  <li><code>PipeClient</code> connects successfully</li>
+  <li><code>PipeServer</code> accepts and dispatches the request</li>
+  <li><code>VsService</code> executes the host logic</li>
+  <li>the response returns to the MCP caller</li>
+</ul>
+
+<p>This is where the architecture stops being theoretical and starts being real.</p>
+
+<h3>Step 4: Validate Proposal Flow</h3>
+
+<p>After a read-only request succeeds, the next meaningful proof is the approval path.</p>
+
+<p>What needs to be true:</p>
+
+<ul>
+  <li><code>vs_propose_text_edit</code> creates a proposal</li>
+  <li>proposal state reaches the approval workflow</li>
+  <li>the tool window shows the correct approval prompt</li>
+  <li>UI state updates happen correctly</li>
+</ul>
+
+<p>This validates more than transport. It validates the handoff from bridge logic into the visible host workflow.</p>
+
+<h3>Step 5: Validate Edit Application</h3>
+
+<p>The final proof in the current slice is that an approved edit actually applies.</p>
+
+<p>What needs to be true:</p>
+
+<ul>
+  <li>the correct proposal is approved</li>
+  <li>the edit application path runs correctly</li>
+  <li>the document changes as expected</li>
+  <li>success or failure is visible in diagnostics</li>
+</ul>
+
+<p>That completes the current end-to-end scenario.</p>
+
+<h3>What Evidence To Look For</h3>
+
+<p>Runtime validation should not rely on guesswork. At each stage, the system should provide enough evidence to show what happened.</p>
+
+<p>Useful evidence includes:</p>
+
+<ul>
+  <li>startup logs</li>
+  <li>request and response logs</li>
+  <li>request identifiers</li>
+  <li>visible approval prompts</li>
+  <li>clear success or failure messages</li>
+</ul>
+
+<p>Logs are especially important when something goes wrong. If a request fails, you want to know whether the failure was in the MCP layer, the pipe layer, the host service layer, or the approval/application layer.</p>
+
+<h3>Failure Must Stop Cleanly</h3>
+
+<p>This is where runtime validation becomes more than a success checklist.</p>
+
+<p>A healthy bridge should not enter an endless retry pattern or resurrect stale work after a visible restart. If a request fails, the failure should be bounded and understandable.</p>
+
+<p>Healthy failure behavior looks like this:</p>
+
+<ul>
+  <li>one request fails once</li>
+  <li>the failure is visible</li>
+  <li>the system remains usable for the next request</li>
+  <li>restarting the host clears transient runtime state</li>
+</ul>
+
+<p>Unhealthy failure behavior looks like this:</p>
+
+<ul>
+  <li>the same request keeps retrying without user intent</li>
+  <li>stale proposal or approval state returns unexpectedly</li>
+  <li>restarting the visible app does not clear the failure loop</li>
+</ul>
+
+<p>That distinction is important because bad recovery behavior can make a tool feel far less trustworthy than a simple one-time failure.</p>
+
+<h3>The Practical Goal</h3>
+
+<p>For the current app, the runtime-validation goal can be stated very simply:</p>
+
+<pre><code>prove that the bridge can succeed cleanly,
+fail cleanly,
+and recover cleanly</code></pre>
+
+<p>That is enough for the current stage. It proves the bridge is not only wired up, but also usable and debuggable in the real host environment.</p>
+
+<h3>Takeaway</h3>
+
+<p>Runtime validation is where the bridge moves from code structure to operational confidence.</p>
+
+<p>At this stage, the goal is not to invent a massive validation framework. It is to prove the current chain works, to confirm that approvals and edits behave predictably, and to make sure failures do not trap the user in stale or looping state.</p>
+
+<p>That is the difference between a bridge that merely exists in source and a bridge that is safe to trust in practice.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is likely the validation playbook itself: what commands to run, what screens to open, what logs to watch, and what order to test the current bridge slice in a real environment.</p>
+

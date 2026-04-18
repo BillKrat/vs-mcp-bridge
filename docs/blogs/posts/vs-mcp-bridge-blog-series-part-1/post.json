@@ -1,0 +1,17 @@
+﻿{
+    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
+    "postId":  143,
+    "title":  "VS MCP Bridge Blog Series: Part 1",
+    "description":  "This post is the first in a short developer ramp-up series for the VS MCP Bridge project. Its purpose is to make the bootstrap flow easier to understand, especially in a codebase that is intentionally decoupled.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-1",
+    "isPublished":  true,
+    "allowComments":  true,
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ]
+}
+

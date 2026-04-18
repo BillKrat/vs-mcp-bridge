@@ -1,0 +1,137 @@
+﻿<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained why runtime validation matters, how to turn it into a playbook, and why the bridge needs enough evidence to avoid becoming a black box. This post makes that more concrete by mapping the current implementation to the signals developers can already observe today and the signals that still need improvement.</p>
+
+<p>The goal is simple: <strong>identify what the bridge already exposes, what is usable but still weak, and what is still missing if validation is going to stay practical.</strong></p>
+
+<h3>Why A Signal Map Matters</h3>
+
+<p>A validation playbook is only as useful as the signals behind it.</p>
+
+<p>If developers are told to validate host startup, request flow, proposal creation, approval handling, and recovery, the app needs to provide enough evidence for each of those steps to be interpreted. Otherwise the playbook becomes a checklist with no reliable feedback loop.</p>
+
+<p>That is why a signal map matters. It translates theory into current reality.</p>
+
+<h3>Bucket 1: Signals The Bridge Already Has</h3>
+
+<p>The current bridge already appears to expose a useful starting set of signals.</p>
+
+<p>From the current implementation and documentation, the bridge already has evidence in areas such as:</p>
+
+<ul>
+  <li>package and bootstrap logging</li>
+  <li>pipe server lifecycle logging</li>
+  <li>request identifiers in the pipe flow</li>
+  <li>proposal lifecycle state</li>
+  <li>visible approval UI</li>
+  <li>approve and reject actions</li>
+  <li>success and failure paths around edit application</li>
+</ul>
+
+<p>This matters because it means the app is not starting from a blank slate. The bridge already has the beginnings of a practical evidence model.</p>
+
+<h3>What These Existing Signals Help Prove</h3>
+
+<p>Those existing signals are already useful for a number of current questions:</p>
+
+<ul>
+  <li>did the package initialize</li>
+  <li>did the pipe server start</li>
+  <li>did a request receive an identifier</li>
+  <li>did a proposal get created</li>
+  <li>did the user see an approval prompt</li>
+  <li>did approve or reject happen</li>
+  <li>did edit application succeed or fail</li>
+</ul>
+
+<p>That means the bridge can already support more operational reasoning than a true black box would allow.</p>
+
+<h3>Bucket 2: Signals That Exist But May Need Tightening</h3>
+
+<p>This is probably the most important bucket for the current stage.</p>
+
+<p>In many systems, the real problem is not that signals are entirely absent. It is that the signals exist, but do not yet form a clear enough narrative to support easy diagnosis.</p>
+
+<p>In the current bridge, that likely applies to areas such as:</p>
+
+<ul>
+  <li>logs that exist but may not yet tell one clean end-to-end story</li>
+  <li>request identifiers that exist but may not appear at every important boundary</li>
+  <li>UI state that is visible but may not always make active versus stale state obvious</li>
+  <li>failure signals that exist but may not clearly indicate whether recovery has happened</li>
+</ul>
+
+<p>This is where a bridge often becomes either easy to validate or frustrating to debug.</p>
+
+<h3>Why Tightening Matters</h3>
+
+<p>Signals do not need to be perfect to be useful, but they do need to be coherent.</p>
+
+<p>If a request starts in one layer with an identifier but loses that identity later in the path, the signal weakens. If a proposal appears in the UI but the logs do not clearly show its lifecycle, the signal weakens. If failure is visible but recovery is not, the signal weakens.</p>
+
+<p>So the current bridge likely does not need a large new diagnostics subsystem. It more likely needs signal tightening at the boundaries that already exist.</p>
+
+<h3>Bucket 3: Signals That Are Still Missing</h3>
+
+<p>The final bucket is the one that will probably drive future implementation work.</p>
+
+<p>For the current bridge, the likely missing signals are not futuristic or academic. They are the ones that make day-to-day validation harder than it should be.</p>
+
+<p>Typical gaps in the current scope would be:</p>
+
+<ul>
+  <li>not enough distinction between full startup success and partial startup failure</li>
+  <li>not enough correlation between MCP tool call, pipe request, proposal, and final outcome</li>
+  <li>not enough evidence that stale proposal state has been cleared after reject or restart</li>
+  <li>not enough explicit separation between proposal creation and actual edit application</li>
+</ul>
+
+<p>These are the kinds of gaps that do not always prevent functionality, but do make triage slower and confidence lower.</p>
+
+<h3>How This Maps To The Validation Playbook</h3>
+
+<p>The value of the signal map becomes clearer when it is paired with the validation playbook.</p>
+
+<p>For example:</p>
+
+<ul>
+  <li>host startup validation depends on strong startup signals</li>
+  <li>listener readiness depends on pipe lifecycle signals</li>
+  <li>request validation depends on correlated request-flow signals</li>
+  <li>proposal validation depends on both logs and visible UI signals</li>
+  <li>recovery validation depends on explicit evidence that old state is no longer active</li>
+</ul>
+
+<p>So each validation step needs a signal counterpart. If that counterpart is weak or missing, the step becomes harder to trust.</p>
+
+<h3>Why This Is A Good Stopping Point Before More Coding</h3>
+
+<p>This topic is important because it creates a natural bridge back into implementation work.</p>
+
+<p>Once the team agrees on:</p>
+
+<ul>
+  <li>what evidence already exists</li>
+  <li>what evidence is too weak</li>
+  <li>what evidence is missing</li>
+</ul>
+
+<p>the next coding work becomes easier to prioritize. Instead of �improve diagnostics� in the abstract, the work can become focused changes such as:</p>
+
+<ul>
+  <li>carry request identifiers further through the flow</li>
+  <li>make proposal state transitions more explicit</li>
+  <li>improve startup success and failure markers</li>
+  <li>make restart and recovery signals easier to interpret</li>
+</ul>
+
+<p>That is a much better way to resume implementation.</p>
+
+<h3>Takeaway</h3>
+
+<p>The current bridge already has useful signals, but practical validation depends on more than signal existence. It depends on signal quality, continuity, and clarity.</p>
+
+<p>The current work is therefore not just about adding more logs. It is about strengthening the specific signals that make the current bridge understandable when it succeeds, when it fails, and when it recovers.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is likely the first evidence-hardening slice: choosing one concrete diagnostics gap in the current implementation and fixing it all the way through the flow.</p>
+

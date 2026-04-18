@@ -1,0 +1,17 @@
+﻿{
+    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
+    "postId":  145,
+    "title":  "VS MCP Bridge Blog Series: Part 3",
+    "description":  "Async Work, Approval Flow, and UI Thread Safety. This post continues the developer ramp-up series for VS MCP Bridge and explains where async behavior matters in the current implementation, what must stay on the UI thread, and how approval flow stays predictable.\nOne small correction: the current slug field you showed, vs-mcp-bridge-blog-series-part, is too generic. It will make all posts look the same and will not identify Part 3 cleanly. I recommend using the numbered slug above.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-3",
+    "isPublished":  true,
+    "allowComments":  true,
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ]
+}
+
