@@ -75,6 +75,8 @@ Current limitation:
 - multi-file proposals now show an Included Files list so proposal membership is explicit during review
 - the Included Files list appears in both pending review and last completed proposal review
 - preview remains diff-first, with unified diff still serving as the primary preview format shown to the operator
+- review mode now rebalances the tool window layout to prioritize inspection during pending review and last completed review
+- the Original Text and Proposed Text comparison area remains visible in compact form during review instead of being collapsed away
 - proposal outcomes now use standardized messaging across hosts
 - outcome messages include file count and explicitly state when no changes were applied on proposal-wide failures or rejection
 - apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent

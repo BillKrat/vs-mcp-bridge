@@ -140,10 +140,14 @@ Current approval flow:
    - generic failure
    - rejection
 27. Standardized messages include scope using file count, and proposal-wide failures explicitly state that no changes were applied.
-28. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
-29. Live manual validation should focus on multi-range success, drift failure after submit and before approve, adjacent or nearby range behavior, multi-file success, and drift-safe multi-file failure with no partial apply.
-30. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-31. The result is returned back through the bridge to the MCP client.
+28. The tool window enters a review-focused layout during both pending review and last completed review.
+29. In that layout, the Original Text and Proposed Text comparison surface remains visible in compact form rather than being collapsed away.
+30. The lower review surface receives more space than in authoring mode, while the log surface is deprioritized when empty so it does not visually dominate inspection.
+31. This is a layout-emphasis change only. It does not introduce a new review model, per-file preview mode, or preview-engine change.
+32. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
+33. Live manual validation should focus on multi-range success, drift failure after submit and before approve, adjacent or nearby range behavior, multi-file success, and drift-safe multi-file failure with no partial apply.
+34. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+35. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -159,6 +163,7 @@ Current limitation:
 
 - preview remains unified-diff-based and diff-first rather than a dedicated multi-file or multi-range review mode
 - Included Files clarifies membership, but review still does not separate changes into per-file diff surfaces
+- review layout now prioritizes inspection better, but it still shares space with logs when the log area is populated
 - outcome messages are clear in the existing status surface, but they are not yet visually emphasized beyond the compact review/status model
 - if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
 
