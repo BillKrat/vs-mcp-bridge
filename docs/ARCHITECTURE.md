@@ -72,6 +72,7 @@ This lifecycle is the same underlying bridge pattern for the currently exposed t
 - `vs_list_solution_projects`
 - `vs_get_error_list`
 - `vs_propose_text_edit`
+- `vs_propose_text_edits`
 
 ## PipeServer and VsService Interaction
 
@@ -104,29 +105,36 @@ The edit path is proposal-based rather than silently applied.
 
 Current approval flow:
 
-1. `vs_propose_text_edit` submits the proposed edit through the MCP server.
-2. The request crosses the named-pipe boundary and reaches the VSIX host.
-3. In the tool window, `ProposalFilePath` can be entered manually or selected through a host-specific picker seam.
-4. Picker selection flows through `ProposalFilePath`, and proposal-entry behavior still has a single authoritative load path.
-5. When `ProposalFilePath` is valid, that load path populates both panes for the current full-document proposal workflow.
-6. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
-7. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
-8. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
-9. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
-10. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
-11. New proposals may carry `RangeEdit` or `RangeEdits` in addition to `Diff`, while the unified diff remains the operator-facing preview format and there is not yet a dedicated multi-range preview mode.
-12. When `RangeEdits` are present, the tool window also shows a simple reviewed change list with sequence number, original segment, and updated segment for each reviewed range, and that list appears in both pending review and last completed proposal review.
-13. Multi-file proposals now also show an Included Files list in both pending review and last completed proposal review so the operator can see proposal membership explicitly without changing the underlying diff-first review model.
-14. Included Files is additive review metadata only. Its role is to make proposal membership explicit; it does not introduce per-file diff rendering, tabs, or a preview-engine change.
-15. If approved, apply prefers the single-file range-based replacement path when range metadata is present and falls back to full-document diff reconstruction when range metadata is absent.
-16. Single-file multi-range apply validates every intended range against the current document before mutating any content and remains all-or-nothing across the entire range set.
-17. If the target already matches the approved updated content at every intended location, apply becomes a no-op.
-18. If any intended range no longer matches the approved original content, or if multiple candidate locations make any range match ambiguous, apply fails explicitly instead of guessing or partially applying.
-19. Otherwise, the approved single-file replacement set is applied inside Visual Studio through the VSIX host while preserving untouched surrounding document content, line endings, and final trailing newline state where applicable.
-20. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
-21. Live manual validation should focus on multi-range success, drift failure after submit and before approve, and adjacent or nearby range behavior; ambiguity failure is primarily an automated safety proof.
-22. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-23. The result is returned back through the bridge to the MCP client.
+1. `vs_propose_text_edit` and `vs_propose_text_edits` submit proposed edits through the MCP server.
+2. The MCP request model is additive:
+   - legacy single-file callers may continue sending `filePath`, `originalText`, and `proposedText`
+   - multi-file callers may send `fileEdits`, where each entry contains `filePath`, `originalText`, and `proposedText`
+3. The request crosses the named-pipe boundary and reaches the VSIX host.
+4. In the tool window, `ProposalFilePath` can be entered manually or selected through a host-specific picker seam.
+5. Picker selection flows through `ProposalFilePath`, and proposal-entry behavior still has a single authoritative load path.
+6. When `ProposalFilePath` is valid, that load path populates both panes for the current full-document proposal workflow.
+7. The left/original pane remains read-only, while the right/proposed pane stays editable until the proposal is submitted.
+8. `Submit Proposal` is enabled only after the file loads successfully and the proposed text differs from the original text.
+9. After submission, the proposal is routed into the tool window for approval or rejection, and the right/proposed pane becomes read-only while approval is pending.
+10. The user explicitly approves or rejects the proposal in the tool window, but the click itself does not reset the proposal UI.
+11. Terminal proposal outcomes drive the reset: pending approval state is cleared, the completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`.
+12. New proposals may carry `RangeEdit` or `RangeEdits` in addition to `Diff`, while the unified diff remains the operator-facing preview format and there is not yet a dedicated multi-range preview mode.
+13. When `RangeEdits` are present, the tool window also shows a simple reviewed change list with sequence number, original segment, and updated segment for each reviewed range, and that list appears in both pending review and last completed proposal review.
+14. Multi-file proposals now also show an Included Files list in both pending review and last completed proposal review so the operator can see proposal membership explicitly without changing the underlying diff-first review model.
+15. Included Files is additive review metadata only. Its role is to make proposal membership explicit; it does not introduce per-file diff rendering, tabs, or a preview-engine change.
+16. The same approval/apply pipeline handles both single-file and multi-file proposals.
+17. If approved, apply validates every file edit before mutating any file.
+18. Within each file, apply prefers range-based replacement when range metadata is present and falls back to full-document diff reconstruction when range metadata is absent.
+19. Single-file multi-range apply remains all-or-nothing across the full range set for that file.
+20. Multi-file apply remains all-or-nothing across the full proposal set.
+21. If any intended range or file target no longer matches the approved original content, or if any file/range match becomes ambiguous, the entire proposal fails explicitly instead of guessing or partially applying.
+22. If a later file write fails after earlier files were written, rollback restores the already-mutated files to their original approved state.
+23. If the target already matches the approved updated content at an intended location or in an intended file, apply may skip that unit while preserving overall proposal success semantics when the rest still applies cleanly.
+24. Otherwise, the approved replacement set is applied inside Visual Studio through the VSIX host while preserving untouched surrounding document content, line endings, and final trailing newline state where applicable.
+25. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
+26. Live manual validation should focus on multi-range success, drift failure after submit and before approve, adjacent or nearby range behavior, multi-file success, and drift-safe multi-file failure with no partial apply.
+27. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+28. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -140,7 +148,6 @@ Current verified state for this workflow:
 
 Current limitation:
 
-- range-based apply is limited to one file; multi-file editing is still out of scope
 - preview remains unified-diff-based and diff-first rather than a dedicated multi-file or multi-range review mode
 - Included Files clarifies membership, but review still does not separate changes into per-file diff surfaces
 - if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
@@ -162,6 +169,7 @@ What is verified:
 - Cursor can connect to the project-local MCP server through `.cursor/mcp.json`
 - the current read-only MCP tools work end to end
 - `vs_propose_text_edit` works through proposal, approval, and apply
+- `vs_propose_text_edits` now works through proposal creation and the shared approval/apply pipeline
 - post-apply connectivity was verified with a successful follow-up `vs_get_active_document` call
 
 Observed runtime note:

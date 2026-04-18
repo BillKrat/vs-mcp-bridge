@@ -21,6 +21,7 @@ Current supported capabilities:
 - list solution projects
 - read the Visual Studio Error List
 - propose text edits as diffs
+- propose multi-file text edits through MCP as one approval-gated proposal
 - route proposed edits into the tool window for approval or rejection
 - apply approved edits inside Visual Studio through the VSIX host
 
@@ -63,6 +64,11 @@ Developer note:
 
 Current limitation:
 
+- MCP proposal creation now supports both request shapes:
+- legacy single-file: `filePath`, `originalText`, `proposedText`
+- multi-file: `fileEdits: [{ filePath, originalText, proposedText }]`
+- `vs_propose_text_edit` remains backward compatible for existing single-file callers
+- `vs_propose_text_edits` is now available for additive multi-file proposal creation
 - new proposals may carry one or more single-file `RangeEdit` entries in addition to `Diff`
 - multi-range proposals now show a simple reviewed change list with sequence number, original segment, and updated segment
 - the reviewed change list appears in both pending review and last completed proposal review
