@@ -66,7 +66,9 @@ Current limitation:
 - new proposals may carry one or more single-file `RangeEdit` entries in addition to `Diff`
 - multi-range proposals now show a simple reviewed change list with sequence number, original segment, and updated segment
 - the reviewed change list appears in both pending review and last completed proposal review
-- the unified diff remains the primary preview format shown to the operator
+- multi-file proposals now show an Included Files list so proposal membership is explicit during review
+- the Included Files list appears in both pending review and last completed proposal review
+- preview remains diff-first, with unified diff still serving as the primary preview format shown to the operator
 - apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent
 - single-file multi-range apply is all-or-nothing across the full range set
 - ambiguity or drift in any intended range fails the entire apply explicitly instead of guessing or partially applying
