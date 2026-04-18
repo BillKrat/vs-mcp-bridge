@@ -75,6 +75,8 @@ Current limitation:
 - multi-file proposals now show an Included Files list so proposal membership is explicit during review
 - the Included Files list appears in both pending review and last completed proposal review
 - preview remains diff-first, with unified diff still serving as the primary preview format shown to the operator
+- proposal outcomes now use standardized messaging across hosts
+- outcome messages include file count and explicitly state when no changes were applied on proposal-wide failures or rejection
 - apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent
 - single-file multi-range apply is all-or-nothing across the full range set
 - ambiguity or drift in any intended range fails the entire apply explicitly instead of guessing or partially applying

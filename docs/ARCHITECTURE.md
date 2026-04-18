@@ -131,10 +131,19 @@ Current approval flow:
 22. If a later file write fails after earlier files were written, rollback restores the already-mutated files to their original approved state.
 23. If the target already matches the approved updated content at an intended location or in an intended file, apply may skip that unit while preserving overall proposal success semantics when the rest still applies cleanly.
 24. Otherwise, the approved replacement set is applied inside Visual Studio through the VSIX host while preserving untouched surrounding document content, line endings, and final trailing newline state where applicable.
-25. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
-26. Live manual validation should focus on multi-range success, drift failure after submit and before approve, adjacent or nearby range behavior, multi-file success, and drift-safe multi-file failure with no partial apply.
-27. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
-28. The result is returned back through the bridge to the MCP client.
+25. `ProposalOutcomeMessageBuilder` is the centralized source for terminal outcome text and is shared across hosts so the VSIX and standalone app present the same outcome categories.
+26. Standardized outcome categories are:
+   - success
+   - skip
+   - drift failure
+   - ambiguity failure
+   - generic failure
+   - rejection
+27. Standardized messages include scope using file count, and proposal-wide failures explicitly state that no changes were applied.
+28. The tool window review surface remains compact, but it is now scrollable and splitter-resizable enough for practical inspection of pending and completed proposal content.
+29. Live manual validation should focus on multi-range success, drift failure after submit and before approve, adjacent or nearby range behavior, multi-file success, and drift-safe multi-file failure with no partial apply.
+30. Terminal status messages remain visible in the tool window after success, skip, reject, or failure, and apply failures are also written to the bridge logs.
+31. The result is returned back through the bridge to the MCP client.
 
 This can be summarized as:
 
@@ -150,6 +159,7 @@ Current limitation:
 
 - preview remains unified-diff-based and diff-first rather than a dedicated multi-file or multi-range review mode
 - Included Files clarifies membership, but review still does not separate changes into per-file diff surfaces
+- outcome messages are clear in the existing status surface, but they are not yet visually emphasized beyond the compact review/status model
 - if `ProposalFilePath` reload fails at terminal completion, the proposal panes clear while the terminal status message remains visible
 
 Low-priority UI backlog:
