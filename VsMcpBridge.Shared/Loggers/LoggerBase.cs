@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using VsMcpBridge.Shared.Interfaces;
 
+// TODO: bridge round-trip validation
 namespace VsMcpBridge.Shared.Loggers
 {
     public class LoggerBase : ILogger
