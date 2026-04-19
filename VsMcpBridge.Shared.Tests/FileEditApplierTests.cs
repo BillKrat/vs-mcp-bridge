@@ -182,7 +182,7 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, "foo\nmiddle\nfoo\n");
             var applier = new FileEditApplier();
 
-            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            var exception = await Assert.ThrowsAsync<AmbiguousEditTargetException>(() => applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", "foo\nmiddle\nfoo\n", "bar\nmiddle\nfoo\n"),
@@ -196,6 +196,7 @@ public sealed class FileEditApplierTests
                 }
             }));
 
+            Assert.Equal("Target document contains multiple matches for the approved proposal.", exception.Message);
             Assert.Equal("foo\nmiddle\nfoo\n", await File.ReadAllTextAsync(path));
         }
         finally
@@ -403,7 +404,7 @@ public sealed class FileEditApplierTests
             await File.WriteAllTextAsync(path, current);
             var applier = new FileEditApplier();
 
-            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            var exception = await Assert.ThrowsAsync<AmbiguousEditTargetException>(() => applier.ApplyAsync(new EditProposal
             {
                 FilePath = path,
                 Diff = CreateDiff("sample.cs", current, "ignored"),
@@ -428,6 +429,7 @@ public sealed class FileEditApplierTests
                 }
             }));
 
+            Assert.Equal("Target document contains multiple matches for the approved proposal.", exception.Message);
             Assert.Equal(current, await File.ReadAllTextAsync(path));
         }
         finally
@@ -640,6 +642,364 @@ public static class MultiRangeSuccess
             Assert.Equal(EditApplyResult.Applied, result);
             Assert.Equal(proposed, await File.ReadAllTextAsync(path));
             Assert.DoesNotContain("var secondStatus = \"\"archive\";", await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_applies_multiple_files_all_or_nothing_with_mixed_file_metadata()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+        var thirdPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondOriginal = "one\ntwo\nthree\nfour\n";
+            var secondUpdated = "ONE\ntwo\nTHREE\nfour\n";
+            var thirdOriginal = "header\nvalue\n";
+            var thirdUpdated = "header\nVALUE\n";
+
+            await File.WriteAllTextAsync(firstPath, firstOriginal);
+            await File.WriteAllTextAsync(secondPath, secondOriginal);
+            await File.WriteAllTextAsync(thirdPath, thirdOriginal);
+
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondOriginal, secondUpdated),
+                        RangeEdits = new List<RangeEdit>(RangeEditBuilder.BuildAll(secondOriginal, secondUpdated))
+                    },
+                    new()
+                    {
+                        FilePath = thirdPath,
+                        Diff = CreateDiff("third.cs", thirdOriginal, thirdUpdated)
+                    }
+                }
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(firstUpdated, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondUpdated, await File.ReadAllTextAsync(secondPath));
+            Assert.Equal(thirdUpdated, await File.ReadAllTextAsync(thirdPath));
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+            File.Delete(thirdPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_does_not_change_any_file_when_one_multi_file_edit_drifted()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondOriginal = "one\ntwo\n";
+            var secondUpdated = "ONE\ntwo\n";
+            var secondDrifted = "drift\ntwo\n";
+
+            await File.WriteAllTextAsync(firstPath, firstOriginal);
+            await File.WriteAllTextAsync(secondPath, secondDrifted);
+
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<TargetDocumentDriftException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondOriginal, secondUpdated),
+                        RangeEdit = RangeEditBuilder.Build(secondOriginal, secondUpdated)
+                    }
+                }
+            }));
+
+            Assert.Equal(firstOriginal, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondDrifted, await File.ReadAllTextAsync(secondPath));
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_does_not_change_any_file_when_one_multi_file_edit_is_ambiguous()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondCurrent = "foo\nmiddle\nfoo\n";
+
+            await File.WriteAllTextAsync(firstPath, firstOriginal);
+            await File.WriteAllTextAsync(secondPath, secondCurrent);
+
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAsync<AmbiguousEditTargetException>(() => applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondCurrent, "bar\nmiddle\nfoo\n"),
+                        RangeEdit = new RangeEdit
+                        {
+                            StartIndex = 0,
+                            OriginalSegment = "foo",
+                            UpdatedSegment = "bar",
+                            PrefixContext = string.Empty,
+                            SuffixContext = "\n"
+                        }
+                    }
+                }
+            }));
+
+            Assert.Equal(firstOriginal, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondCurrent, await File.ReadAllTextAsync(secondPath));
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_rolls_back_earlier_files_when_a_later_file_write_fails()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondOriginal = "one\ntwo\n";
+            var secondUpdated = "ONE\ntwo\n";
+
+            await File.WriteAllTextAsync(firstPath, firstOriginal);
+            await File.WriteAllTextAsync(secondPath, secondOriginal);
+            File.SetAttributes(secondPath, File.GetAttributes(secondPath) | FileAttributes.ReadOnly);
+
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAnyAsync<Exception>(() => applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondOriginal, secondUpdated),
+                        RangeEdit = RangeEditBuilder.Build(secondOriginal, secondUpdated)
+                    }
+                }
+            }));
+
+            Assert.Equal(firstOriginal, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondOriginal, await File.ReadAllTextAsync(secondPath));
+        }
+        finally
+        {
+            if (File.Exists(secondPath))
+                File.SetAttributes(secondPath, FileAttributes.Normal);
+
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_rollback_touches_only_files_that_were_mutated()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+        var thirdPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondOriginal = "skip\nvalue\n";
+            var secondUpdated = "skip\nVALUE\n";
+            var thirdOriginal = "third\nvalue\n";
+            var thirdUpdated = "third\nVALUE\n";
+
+            await File.WriteAllTextAsync(firstPath, firstOriginal);
+            await File.WriteAllTextAsync(secondPath, secondUpdated);
+            await File.WriteAllTextAsync(thirdPath, thirdOriginal);
+
+            var skippedBeforeWriteTime = File.GetLastWriteTimeUtc(secondPath);
+            await Task.Delay(1100);
+
+            File.SetAttributes(thirdPath, File.GetAttributes(thirdPath) | FileAttributes.ReadOnly);
+
+            var applier = new FileEditApplier();
+
+            await Assert.ThrowsAnyAsync<Exception>(() => applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondOriginal, secondUpdated),
+                        RangeEdit = RangeEditBuilder.Build(secondOriginal, secondUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = thirdPath,
+                        Diff = CreateDiff("third.cs", thirdOriginal, thirdUpdated)
+                    }
+                }
+            }));
+
+            var skippedAfterWriteTime = File.GetLastWriteTimeUtc(secondPath);
+            Assert.Equal(firstOriginal, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondUpdated, await File.ReadAllTextAsync(secondPath));
+            Assert.Equal(thirdOriginal, await File.ReadAllTextAsync(thirdPath));
+            Assert.Equal(skippedBeforeWriteTime, skippedAfterWriteTime);
+        }
+        finally
+        {
+            if (File.Exists(thirdPath))
+                File.SetAttributes(thirdPath, FileAttributes.Normal);
+
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+            File.Delete(thirdPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_succeeds_when_one_file_is_already_updated_and_another_requires_apply()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            var firstOriginal = "alpha\nbeta\n";
+            var firstUpdated = "alpha\nBETA\n";
+            var secondOriginal = "one\ntwo\n";
+            var secondUpdated = "ONE\ntwo\n";
+
+            await File.WriteAllTextAsync(firstPath, firstUpdated);
+            await File.WriteAllTextAsync(secondPath, secondOriginal);
+
+            var firstBeforeWriteTime = File.GetLastWriteTimeUtc(firstPath);
+            await Task.Delay(1100);
+
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FileEdits = new List<ProposedFileEdit>
+                {
+                    new()
+                    {
+                        FilePath = firstPath,
+                        Diff = CreateDiff("first.cs", firstOriginal, firstUpdated),
+                        RangeEdit = RangeEditBuilder.Build(firstOriginal, firstUpdated)
+                    },
+                    new()
+                    {
+                        FilePath = secondPath,
+                        Diff = CreateDiff("second.cs", secondOriginal, secondUpdated)
+                    }
+                }
+            });
+
+            var firstAfterWriteTime = File.GetLastWriteTimeUtc(firstPath);
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(firstUpdated, await File.ReadAllTextAsync(firstPath));
+            Assert.Equal(secondUpdated, await File.ReadAllTextAsync(secondPath));
+            Assert.Equal(firstBeforeWriteTime, firstAfterWriteTime);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyAsync_preserves_single_file_compatibility_when_file_edits_collection_is_absent()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var original = "before\nsecond\n";
+            var updated = "after\nsecond\n";
+            await File.WriteAllTextAsync(path, original);
+            var applier = new FileEditApplier();
+
+            var result = await applier.ApplyAsync(new EditProposal
+            {
+                FilePath = path,
+                Diff = CreateDiff("sample.cs", original, updated),
+                RangeEdit = RangeEditBuilder.Build(original, updated)
+            });
+
+            Assert.Equal(EditApplyResult.Applied, result);
+            Assert.Equal(updated, await File.ReadAllTextAsync(path));
         }
         finally
         {

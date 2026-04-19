@@ -9,19 +9,51 @@ public static class RangeEditApplier
 {
     public static EditApplyResult Apply(EditProposal proposal, string currentText, Action<string> writeUpdatedText)
     {
-        var rangeEdits = GetRangeEdits(proposal);
+        var rangeEdits = GetRangeEdits(proposal.RangeEdit, proposal.RangeEdits);
         if (rangeEdits.Count == 0)
             throw new InvalidOperationException("Range edit metadata is required.");
 
+        var updatedText = BuildUpdatedText(rangeEdits, currentText, out var result);
+        if (result == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent)
+            return result;
+
+        writeUpdatedText(updatedText);
+        return EditApplyResult.Applied;
+    }
+
+    public static string BuildUpdatedText(RangeEdit? rangeEdit, IReadOnlyList<RangeEdit>? rangeEdits, string currentText)
+    {
+        var resolvedRangeEdits = GetRangeEdits(rangeEdit, rangeEdits);
+        if (resolvedRangeEdits.Count == 0)
+            throw new InvalidOperationException("Range edit metadata is required.");
+
+        return BuildUpdatedText(resolvedRangeEdits, currentText, out _);
+    }
+
+    public static (string UpdatedText, EditApplyResult Result) BuildUpdatedTextWithResult(RangeEdit? rangeEdit, IReadOnlyList<RangeEdit>? rangeEdits, string currentText)
+    {
+        var resolvedRangeEdits = GetRangeEdits(rangeEdit, rangeEdits);
+        if (resolvedRangeEdits.Count == 0)
+            throw new InvalidOperationException("Range edit metadata is required.");
+
+        var updatedText = BuildUpdatedText(resolvedRangeEdits, currentText, out var result);
+        return (updatedText, result);
+    }
+
+    private static string BuildUpdatedText(IReadOnlyList<RangeEdit> rangeEdits, string currentText, out EditApplyResult result)
+    {
         ValidateRangeLayout(rangeEdits);
 
         if (rangeEdits.All(rangeEdit => MatchesUpdatedRange(currentText, rangeEdit)))
-            return EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
+        {
+            result = EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
+            return currentText;
+        }
 
         foreach (var rangeEdit in rangeEdits)
         {
             if (CountRangeMatches(currentText, rangeEdit.OriginalSegment ?? string.Empty, rangeEdit.PrefixContext ?? string.Empty, rangeEdit.SuffixContext ?? string.Empty) > 1)
-                throw new TargetDocumentDriftException();
+                throw new AmbiguousEditTargetException();
 
             if (!MatchesOriginalRange(currentText, rangeEdit))
                 throw new TargetDocumentDriftException();
@@ -35,17 +67,17 @@ public static class RangeEditApplier
                 + updatedText.Substring(rangeEdit.StartIndex + (rangeEdit.OriginalSegment?.Length ?? 0));
         }
 
-        writeUpdatedText(updatedText);
-        return EditApplyResult.Applied;
+        result = EditApplyResult.Applied;
+        return updatedText;
     }
 
-    private static IReadOnlyList<RangeEdit> GetRangeEdits(EditProposal proposal)
+    private static IReadOnlyList<RangeEdit> GetRangeEdits(RangeEdit? rangeEdit, IReadOnlyList<RangeEdit>? rangeEdits)
     {
-        if (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0)
-            return proposal.RangeEdits;
+        if (rangeEdits != null && rangeEdits.Count > 0)
+            return rangeEdits;
 
-        if (proposal.RangeEdit != null)
-            return new[] { proposal.RangeEdit };
+        if (rangeEdit != null)
+            return new[] { rangeEdit };
 
         return Array.Empty<RangeEdit>();
     }

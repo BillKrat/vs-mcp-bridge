@@ -105,4 +105,34 @@ public sealed class ApprovalWorkflowServiceTests
         Assert.Equal(1, proposal.RangeEdits[0].StartIndex);
         Assert.Equal(3, proposal.RangeEdits[1].StartIndex);
     }
+
+    [Fact]
+    public void CreateProposal_preserves_multi_file_metadata()
+    {
+        var service = new InMemoryApprovalWorkflowService();
+        var fileEdits = new List<ProposedFileEdit>
+        {
+            new()
+            {
+                FilePath = "a.cs",
+                Diff = "diff-a",
+                RangeEdit = new RangeEdit { StartIndex = 0, OriginalSegment = "a", UpdatedSegment = "A" }
+            },
+            new()
+            {
+                FilePath = "b.cs",
+                Diff = "diff-b"
+            }
+        };
+
+        var proposal = service.CreateProposal("request-123", fileEdits);
+
+        Assert.Equal("a.cs", proposal.FilePath);
+        Assert.Equal("diff-a", proposal.Diff);
+        Assert.NotNull(proposal.FileEdits);
+        Assert.Equal(2, proposal.FileEdits!.Count);
+        Assert.Equal("a.cs", proposal.FileEdits[0].FilePath);
+        Assert.Equal("b.cs", proposal.FileEdits[1].FilePath);
+        Assert.Equal("A", proposal.FileEdits[0].RangeEdit!.UpdatedSegment);
+    }
 }

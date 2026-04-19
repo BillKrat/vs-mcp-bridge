@@ -2,6 +2,8 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -28,31 +30,38 @@ internal sealed class VsixEditApplier : IEditApplier
         if (dte == null)
             throw new InvalidOperationException("DTE service unavailable.");
 
-        var document = OpenDocument(dte, proposal.FilePath);
-        var textDocument = GetTextDocument(document);
-        if (textDocument == null)
-            throw new InvalidOperationException($"Document '{proposal.FilePath}' does not support text edits.");
+        var fileEdits = EditProposalPlanner.GetFileEdits(proposal);
+        var plannedEdits = new List<PlannedTextDocumentEdit>(fileEdits.Count);
 
-        var currentText = GetDocumentText(textDocument);
-
-        if (proposal.RangeEdit != null || (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0))
+        foreach (var fileEdit in fileEdits)
         {
-            return RangeEditApplier.Apply(
-                proposal,
-                currentText,
-                updatedText => ApplyUpdatedText(textDocument, updatedText));
+            var document = OpenDocument(dte, fileEdit.FilePath);
+            var textDocument = GetTextDocument(document);
+            if (textDocument == null)
+                throw new InvalidOperationException($"Document '{fileEdit.FilePath}' does not support text edits.");
+
+            var currentText = GetDocumentText(textDocument);
+            plannedEdits.Add(new PlannedTextDocumentEdit(textDocument, EditProposalPlanner.Plan(fileEdit, currentText)));
         }
 
-        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
-
-        if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
+        if (plannedEdits.All(edit => edit.Plan.Result == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent))
             return EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent;
 
-        if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
-            throw new TargetDocumentDriftException();
+        var appliedEdits = new List<PlannedTextDocumentEdit>();
+        try
+        {
+            foreach (var plannedEdit in plannedEdits.Where(edit => edit.Plan.Result == EditApplyResult.Applied))
+            {
+                ApplyUpdatedText(plannedEdit.TextDocument, plannedEdit.Plan.UpdatedText);
+                appliedEdits.Add(plannedEdit);
+            }
+        }
+        catch
+        {
+            RestoreAppliedEdits(appliedEdits);
+            throw;
+        }
 
-        ApplyUpdatedText(textDocument, updatedText);
-        SaveDocument(document);
         return EditApplyResult.Applied;
     }
 
@@ -87,5 +96,26 @@ internal sealed class VsixEditApplier : IEditApplier
     {
         ThreadHelper.ThrowIfNotOnUIThread();
         return textDocument.StartPoint.CreateEditPoint().GetText(textDocument.EndPoint);
+    }
+
+    private static void RestoreAppliedEdits(IEnumerable<PlannedTextDocumentEdit> appliedEdits)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        foreach (var appliedEdit in appliedEdits.Reverse())
+        {
+            ApplyUpdatedText(appliedEdit.TextDocument, appliedEdit.Plan.OriginalText);
+        }
+    }
+
+    private sealed class PlannedTextDocumentEdit
+    {
+        public PlannedTextDocumentEdit(TextDocument textDocument, PlannedFileEdit plan)
+        {
+            TextDocument = textDocument;
+            Plan = plan;
+        }
+
+        public TextDocument TextDocument { get; }
+        public PlannedFileEdit Plan { get; }
     }
 }

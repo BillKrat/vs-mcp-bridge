@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -13,28 +15,41 @@ public sealed class FileEditApplier : IEditApplier
         if (proposal == null)
             throw new ArgumentNullException(nameof(proposal));
 
-        if (string.IsNullOrWhiteSpace(proposal.FilePath))
-            throw new InvalidOperationException("Edit proposal does not specify a file path.");
+        var fileEdits = EditProposalPlanner.GetFileEdits(proposal);
+        var plannedEdits = new List<PlannedFileEdit>(fileEdits.Count);
 
-        var currentText = File.ReadAllText(proposal.FilePath);
-
-        if (proposal.RangeEdit != null || (proposal.RangeEdits != null && proposal.RangeEdits.Count > 0))
+        foreach (var fileEdit in fileEdits)
         {
-            return Task.FromResult(RangeEditApplier.Apply(
-                proposal,
-                currentText,
-                updatedText => File.WriteAllText(proposal.FilePath, updatedText)));
+            var currentText = File.ReadAllText(fileEdit.FilePath);
+            plannedEdits.Add(EditProposalPlanner.Plan(fileEdit, currentText));
         }
 
-        var (originalText, updatedText) = EditProposalTextRebuilder.Rebuild(proposal.Diff);
-
-        if (string.Equals(currentText, updatedText, StringComparison.Ordinal))
+        if (plannedEdits.All(edit => edit.Result == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent))
             return Task.FromResult(EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent);
 
-        if (!string.Equals(currentText, originalText, StringComparison.Ordinal))
-            throw new TargetDocumentDriftException();
+        var appliedEdits = new List<PlannedFileEdit>();
+        try
+        {
+            foreach (var plannedEdit in plannedEdits.Where(edit => edit.Result == EditApplyResult.Applied))
+            {
+                File.WriteAllText(plannedEdit.FilePath, plannedEdit.UpdatedText);
+                appliedEdits.Add(plannedEdit);
+            }
+        }
+        catch
+        {
+            RestoreAppliedEdits(appliedEdits);
+            throw;
+        }
 
-        File.WriteAllText(proposal.FilePath, updatedText);
         return Task.FromResult(EditApplyResult.Applied);
+    }
+
+    private static void RestoreAppliedEdits(IEnumerable<PlannedFileEdit> appliedEdits)
+    {
+        foreach (var appliedEdit in appliedEdits.Reverse())
+        {
+            File.WriteAllText(appliedEdit.FilePath, appliedEdit.OriginalText);
+        }
     }
 }
