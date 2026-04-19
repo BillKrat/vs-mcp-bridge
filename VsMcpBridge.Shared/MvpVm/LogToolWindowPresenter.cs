@@ -622,10 +622,10 @@ namespace VsMcpBridge.Shared.MvpVm
                 return;
             }
 
-            _threadHelper.Run(async delegate
+            _threadHelper.Run(() =>
             {
-                await _threadHelper.SwitchToMainThreadAsync();
                 action();
+                return Task.CompletedTask;
             });
         }
     }

@@ -84,6 +84,24 @@ public sealed class VsServiceTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_marshals_presenter_updates_without_switch_to_main_thread_task_hop()
+    {
+        var logger = new RecordingBridgeLogger();
+        var threadHelper = new TestThreadHelper { HasAccess = false };
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new RecordingEditApplier(), presenter);
+
+        var response = await service.ProposeTextEditAsync("request-off-thread", "sample.cs", "before", "after");
+
+        Assert.True(response.Success);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal(1, threadHelper.RunCalls);
+        Assert.Equal(0, threadHelper.SwitchCalls);
+    }
+
+    [Fact]
     public async System.Threading.Tasks.Task ProposeTextEditsAsync_routes_created_multi_file_proposal_into_presenter_view_model()
     {
         var logger = new RecordingBridgeLogger();

@@ -9,7 +9,14 @@ internal sealed class ThreadHelperAdapter : IThreadHelper
 {
     public bool CheckAccess() => ThreadHelper.CheckAccess();
 
-    public void Run(Func<Task> value) => ThreadHelper.JoinableTaskFactory.Run(value);
+    public void Run(Func<Task> value)
+    {
+        ThreadHelper.JoinableTaskFactory.Run(async delegate
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await value();
+        });
+    }
 
     public async Task SwitchToMainThreadAsync() => await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
