@@ -84,6 +84,37 @@ public sealed class VsServiceTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditsAsync_routes_created_multi_file_proposal_into_presenter_view_model()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new RecordingEditApplier(), presenter);
+        var fileEdits = new[]
+        {
+            new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
+            new ProposalFileEditRequest { FilePath = "second.cs", OriginalText = "before-2", ProposedText = "after-2" }
+        };
+
+        var response = await service.ProposeTextEditsAsync("request-multi", fileEdits);
+
+        Assert.True(response.Success);
+        Assert.Equal("request-multi", response.RequestId);
+        Assert.Contains("--- a/first.cs", response.Diff);
+        Assert.Contains("--- a/second.cs", response.Diff);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Contains("Pending proposal for 2 files", viewModel.PendingApprovalDescription);
+        Assert.Equal(2, viewModel.PendingApprovalIncludedFiles.Count);
+        Assert.Equal("first.cs", viewModel.PendingApprovalIncludedFiles[0]);
+        Assert.Equal("second.cs", viewModel.PendingApprovalIncludedFiles[1]);
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        Assert.Contains(logger.InformationMessages, message => message.Contains($"Created edit proposal [RequestId=request-multi] [ProposalId={proposalId}] for 2 files.", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal pending approval [RequestId=request-multi] [ProposalId={proposalId}] for 2 files.", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_applies_edit_marks_proposal_applied_and_clears_pending_state()
     {
         var logger = new RecordingBridgeLogger();
@@ -105,7 +136,7 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Applied, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
-        Assert.Equal("Apply succeeded for 'sample.cs'.", viewModel.StatusMessage);
+        Assert.Equal("Apply succeeded for 1 file. All approved changes were applied.", viewModel.StatusMessage);
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
@@ -133,11 +164,11 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Applied, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
-        Assert.Equal("Apply skipped for 'sample.cs' because the target already matches the approved content.", viewModel.StatusMessage);
+        Assert.Equal("Apply skipped for 1 file because all targets already match the approved content.", viewModel.StatusMessage);
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
-        Assert.Contains(logger.InformationMessages, message => message.Contains("Apply skipped because target already matches approved updated content") && message.Contains("RequestId=request-123") && message.Contains($"ProposalId={proposalId}"));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Apply skipped for 1 file because all targets already match the approved content.", StringComparison.Ordinal) && message.Contains("RequestId=request-123") && message.Contains($"ProposalId={proposalId}"));
     }
 
     [Fact]
@@ -160,7 +191,7 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Rejected, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
-        Assert.Equal("Proposal rejected for 'sample.cs'.", viewModel.StatusMessage);
+        Assert.Equal("Proposal rejected for 1 file. No changes were applied.", viewModel.StatusMessage);
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
@@ -187,7 +218,7 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
-        Assert.Equal("Apply failed for 'sample.cs'. Review the bridge log for details.", viewModel.StatusMessage);
+        Assert.Equal("Apply failed for 1 file. No changes were applied. Review the bridge log for details.", viewModel.StatusMessage);
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
@@ -215,14 +246,95 @@ public sealed class VsServiceTests
         Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
         Assert.False(viewModel.HasPendingApproval);
         Assert.Equal(string.Empty, viewModel.PendingApprovalDescription);
-        Assert.Equal("Apply failed for 'sample.cs': the document changed after proposal creation.", viewModel.StatusMessage);
+        Assert.Equal("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.", viewModel.StatusMessage);
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.WarningMessages, message =>
-            message.Contains("Apply failed because target no longer matches approved original content") &&
+            message.Contains("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.", StringComparison.Ordinal) &&
             message.Contains("RequestId=request-123") &&
             message.Contains($"ProposalId={proposalId}"));
         Assert.DoesNotContain(logger.Errors, error => error.Exception?.Message == "Target document no longer matches the approved proposal.");
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_marks_proposal_failed_when_target_is_ambiguous()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var editApplier = new AmbiguousEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
+
+        await service.ProposeTextEditAsync("request-123", "sample.cs", "before", "after");
+
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.Equal(1, editApplier.Calls);
+        Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+        Assert.Equal("Apply failed for 1 file because at least one target location is ambiguous. No changes were applied.", viewModel.StatusMessage);
+        Assert.Contains(logger.WarningMessages, message =>
+            message.Contains("Apply failed for 1 file because at least one target location is ambiguous. No changes were applied.", StringComparison.Ordinal) &&
+            message.Contains("RequestId=request-123") &&
+            message.Contains($"ProposalId={proposalId}"));
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditsAsync_approve_command_reports_multi_file_success_with_file_count()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var editApplier = new RecordingEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
+        var fileEdits = new[]
+        {
+            new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
+            new ProposalFileEditRequest { FilePath = "second.cs", OriginalText = "before-2", ProposedText = "after-2" }
+        };
+
+        await service.ProposeTextEditsAsync("request-multi", fileEdits);
+
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.Equal("Apply succeeded for 2 files. All approved changes were applied.", viewModel.StatusMessage);
+        Assert.Contains(logger.InformationMessages, message =>
+            message.Contains("Apply succeeded for 2 files. All approved changes were applied.", StringComparison.Ordinal) &&
+            message.Contains("RequestId=request-multi") &&
+            message.Contains($"ProposalId={proposalId}"));
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditsAsync_approve_command_reports_proposal_wide_multi_file_failure()
+    {
+        var logger = new RecordingBridgeLogger();
+        IThreadHelper threadHelper = new TestThreadHelper();
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+        var workflow = new InMemoryApprovalWorkflowService();
+        var editApplier = new DriftingEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
+        var fileEdits = new[]
+        {
+            new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
+            new ProposalFileEditRequest { FilePath = "second.cs", OriginalText = "before-2", ProposedText = "after-2" }
+        };
+
+        await service.ProposeTextEditsAsync("request-multi", fileEdits);
+
+        var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+        viewModel.ApproveCommand.Execute(null);
+
+        Assert.Equal("Apply failed for 2 files because at least one target no longer matches the approved content. No changes were applied.", viewModel.StatusMessage);
+        Assert.Contains(logger.WarningMessages, message =>
+            message.Contains("Apply failed for 2 files because at least one target no longer matches the approved content. No changes were applied.", StringComparison.Ordinal) &&
+            message.Contains("RequestId=request-multi") &&
+            message.Contains($"ProposalId={proposalId}"));
     }
 }
