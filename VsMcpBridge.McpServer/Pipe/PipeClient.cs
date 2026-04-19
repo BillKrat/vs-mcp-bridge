@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text.Json;
 using VsMcpBridge.Shared.Interfaces;
@@ -125,6 +126,18 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
                 FilePath = filePath,
                 OriginalText = originalText,
                 ProposedText = proposedText
+            },
+            ct);
+
+    public Task<ProposeTextEditResponse> ProposeTextEditsAsync(
+        IReadOnlyList<ProposalFileEditRequest> fileEdits,
+        CancellationToken ct = default)
+        => SendAsync<ProposeTextEditRequest, ProposeTextEditResponse>(
+            PipeCommands.ProposeTextEdit,
+            new ProposeTextEditRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                FileEdits = fileEdits == null ? null : new List<ProposalFileEditRequest>(fileEdits)
             },
             ct);
 }

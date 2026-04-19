@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Models;
@@ -11,4 +12,5 @@ public interface IPipeClient
     Task<GetSelectedTextResponse> GetSelectedTextAsync(CancellationToken ct = default);
     Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync(CancellationToken ct = default);
     Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText, CancellationToken ct = default);
+    Task<ProposeTextEditResponse> ProposeTextEditsAsync(IReadOnlyList<ProposalFileEditRequest> fileEdits, CancellationToken ct = default);
 }

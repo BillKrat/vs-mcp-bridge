@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using VsMcpBridge.Shared.Models;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Interfaces;
 
@@ -92,5 +93,26 @@ public sealed class VsTools
         return string.IsNullOrEmpty(response.Diff)
             ? "(no changes)"
             : $"Proposed diff for {response.FilePath}:\n\n{response.Diff}";
+    }
+
+    [McpServerTool(Name = "vs_propose_text_edits")]
+    [Description("Produces a unified diff showing proposed changes across multiple files. Does NOT write to disk; the user must approve changes via the VSIX UI.")]
+    public async Task<string> ProposeTextEditsAsync(
+        [Description("The file edits to include in a single proposal.")] IReadOnlyList<ProposalFileEditRequest> fileEdits,
+        CancellationToken ct)
+    {
+        if (fileEdits == null || fileEdits.Count == 0)
+            return "Error: fileEdits must contain at least one file edit.";
+
+        if (fileEdits.Any(fileEdit => fileEdit == null || string.IsNullOrWhiteSpace(fileEdit.FilePath)))
+            return "Error: each file edit must include a non-empty filePath.";
+
+        var response = await _pipe.ProposeTextEditsAsync(fileEdits, ct);
+        if (!response.Success)
+            return $"Error: {response.ErrorMessage}";
+
+        return string.IsNullOrEmpty(response.Diff)
+            ? "(no changes)"
+            : $"Proposed diff for {fileEdits.Count} files:\n\n{response.Diff}";
     }
 }

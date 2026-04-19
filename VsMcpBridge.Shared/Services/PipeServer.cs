@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -265,6 +266,24 @@ public sealed class PipeServer : IPipeServer
 
         request.RequestId = EnsureRequestId(request.RequestId, envelope.RequestId);
         envelope.RequestId = request.RequestId;
+
+        if (request.FileEdits != null && request.FileEdits.Count > 0)
+        {
+            if (request.FileEdits.Any(fileEdit => fileEdit == null || string.IsNullOrWhiteSpace(fileEdit.FilePath)))
+            {
+                _logger.LogWarning($"Received an invalid multi-file ProposeTextEdit request payload [RequestId={envelope.RequestId}].");
+                return new ProposeTextEditResponse { RequestId = envelope.RequestId, Success = false, ErrorMessage = "Invalid request payload." };
+            }
+
+            return await _vsService.ProposeTextEditsAsync(request.RequestId, request.FileEdits);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FilePath))
+        {
+            _logger.LogWarning($"Received an invalid ProposeTextEdit request payload [RequestId={envelope.RequestId}].");
+            return new ProposeTextEditResponse { RequestId = envelope.RequestId, Success = false, ErrorMessage = "Invalid request payload." };
+        }
+
         return await _vsService.ProposeTextEditAsync(request.RequestId, request.FilePath, request.OriginalText, request.ProposedText);
     }
 

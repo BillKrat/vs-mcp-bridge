@@ -102,6 +102,65 @@ public sealed class PipeServerTests
     }
 
     [Fact]
+    public async Task ProcessRequestAsync_dispatches_multi_file_propose_text_edit_requests()
+    {
+        var logger = new RecordingBridgeLogger();
+        var service = new StubVsService();
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
+        var payload = JsonSerializer.Serialize(new ProposeTextEditRequest
+        {
+            RequestId = "request-789",
+            FileEdits =
+            [
+                new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
+                new ProposalFileEditRequest { FilePath = "second.cs", OriginalText = "before-2", ProposedText = "after-2" }
+            ]
+        }, JsonOptions);
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.ProposeTextEdit, Payload = payload }, JsonOptions);
+
+        var responseJson = await server.ProcessRequestAsync(requestJson);
+        var response = JsonSerializer.Deserialize<ProposeTextEditResponse>(responseJson!, JsonOptions);
+
+        Assert.NotNull(response);
+        Assert.True(response!.Success);
+        Assert.Equal("request-789", response.RequestId);
+        Assert.Equal(0, service.ProposeTextEditCalls);
+        Assert.Equal(1, service.ProposeTextEditsCalls);
+        Assert.Equal("request-789", service.LastProposeRequestId);
+        Assert.Equal(2, service.LastMultiFileEdits.Count);
+        Assert.Equal("first.cs", service.LastMultiFileEdits[0].FilePath);
+        Assert.Contains("second.cs", response.Diff);
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsync_returns_error_for_invalid_multi_file_propose_text_edit_request()
+    {
+        var logger = new RecordingBridgeLogger();
+        var service = new StubVsService();
+        var server = new PipeServer(service, logger, new RecordingUnhandledExceptionSink());
+        var payload = JsonSerializer.Serialize(new ProposeTextEditRequest
+        {
+            RequestId = "request-invalid",
+            FileEdits =
+            [
+                new ProposalFileEditRequest { FilePath = string.Empty, OriginalText = "before", ProposedText = "after" }
+            ]
+        }, JsonOptions);
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { Command = PipeCommands.ProposeTextEdit, Payload = payload }, JsonOptions);
+
+        var responseJson = await server.ProcessRequestAsync(requestJson);
+        var response = JsonSerializer.Deserialize<ProposeTextEditResponse>(responseJson!, JsonOptions);
+
+        Assert.NotNull(response);
+        Assert.False(response!.Success);
+        Assert.Equal("request-invalid", response.RequestId);
+        Assert.Equal("Invalid request payload.", response.ErrorMessage);
+        Assert.Equal(0, service.ProposeTextEditCalls);
+        Assert.Equal(0, service.ProposeTextEditsCalls);
+        Assert.Contains(logger.WarningMessages, message => message.Contains("invalid multi-file ProposeTextEdit request payload", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task ProcessRequestAsync_generates_request_id_when_missing_and_returns_it()
     {
         var logger = new RecordingBridgeLogger();
