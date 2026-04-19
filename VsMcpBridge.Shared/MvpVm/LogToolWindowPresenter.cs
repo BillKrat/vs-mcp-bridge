@@ -59,6 +59,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _logger.LogInformation("Initializing VS MCP Bridge tool window...");
 
             LogToolWindowControl.DataContext = LogToolWindowViewModel;
+            LogToolWindowViewModel.LogText = string.Empty;
             SyncProposalDraftState();
 
             _logger.LogInformation("VS MCP Bridge tool window Initialized.");
@@ -207,12 +208,22 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             try
             {
+                var submittedRequestText = BuildSubmittedRequestText();
                 var requestId = Guid.NewGuid().ToString("N");
                 _activeManualRequestId = requestId;
                 _suppressedRequestIds.Remove(requestId);
-                LogToolWindowViewModel.LastSubmittedRequestText = BuildSubmittedRequestText();
+                LogToolWindowViewModel.LastSubmittedRequestText = submittedRequestText;
                 LogToolWindowViewModel.IsRequestInProgress = true;
                 LogToolWindowViewModel.StatusMessage = string.Empty;
+                AppendActivityEntry($"> {submittedRequestText}");
+
+                var toolDispatchHandled = await TryDispatchPromptRequestAsync(submittedRequestText);
+                if (toolDispatchHandled)
+                {
+                    _activeManualRequestId = null;
+                    return;
+                }
+
                 var fileEdits = _proposalFileDrafts
                     .Select(draft => new ProposalFileEditRequest
                     {
@@ -278,6 +289,101 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.StatusMessage = "Unable to open Git Changes from the bridge surface. Review the bridge log for details.";
                 _logger.LogError(ex, "Open Git Changes failed.");
             }
+        }
+
+        private async Task<bool> TryDispatchPromptRequestAsync(string submittedRequestText)
+        {
+            var normalizedPrompt = submittedRequestText.Trim().ToLowerInvariant();
+            var vsService = _serviceProvider.GetRequiredService<IVsService>();
+
+            switch (normalizedPrompt)
+            {
+                case "what is the active file":
+                    {
+                        var response = await vsService.GetActiveDocumentAsync();
+                        CompletePromptRequest(BuildActiveFileSummary(response));
+                        return true;
+                    }
+                case "list solution projects":
+                    {
+                        var response = await vsService.ListSolutionProjectsAsync();
+                        CompletePromptRequest(BuildProjectListSummary(response));
+                        return true;
+                    }
+                case "show error list":
+                    {
+                        var response = await vsService.GetErrorListAsync();
+                        CompletePromptRequest(BuildErrorListSummary(response));
+                        return true;
+                    }
+                default:
+                    if (_proposalFileDrafts.Count == 0)
+                    {
+                        CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.");
+                        return true;
+                    }
+
+                    return false;
+            }
+        }
+
+        private void CompletePromptRequest(string responseText)
+        {
+            LogToolWindowViewModel.IsRequestInProgress = false;
+            LogToolWindowViewModel.StatusMessage = responseText;
+            AppendActivityEntry(responseText);
+        }
+
+        private void AppendActivityEntry(string message)
+        {
+            RunOnUiThread(() =>
+            {
+                var existingLog = LogToolWindowViewModel.LogText;
+                LogToolWindowViewModel.LogText =
+                    string.IsNullOrWhiteSpace(existingLog)
+                        ? message
+                        : $"{existingLog}{Environment.NewLine}{Environment.NewLine}{message}";
+            });
+        }
+
+        private static string BuildActiveFileSummary(GetActiveDocumentResponse response)
+        {
+            if (!response.Success)
+                return string.IsNullOrWhiteSpace(response.ErrorMessage) ? "Unable to determine the active file." : response.ErrorMessage;
+
+            return string.IsNullOrWhiteSpace(response.FilePath)
+                ? "No active file."
+                : $"Active file: {response.FilePath}";
+        }
+
+        private static string BuildProjectListSummary(ListSolutionProjectsResponse response)
+        {
+            if (!response.Success)
+                return string.IsNullOrWhiteSpace(response.ErrorMessage) ? "Unable to list solution projects." : response.ErrorMessage;
+
+            if (response.Projects == null || response.Projects.Count == 0)
+                return "No solution projects found.";
+
+            return "Solution projects:" + Environment.NewLine + string.Join(
+                Environment.NewLine,
+                response.Projects.Select(project => $"- {project.Name}"));
+        }
+
+        private static string BuildErrorListSummary(GetErrorListResponse response)
+        {
+            if (!response.Success)
+                return string.IsNullOrWhiteSpace(response.ErrorMessage) ? "Unable to read the error list." : response.ErrorMessage;
+
+            if (response.Diagnostics == null || response.Diagnostics.Count == 0)
+                return "Error list is empty.";
+
+            return "Error list:" + Environment.NewLine + string.Join(
+                Environment.NewLine,
+                response.Diagnostics.Select(diagnostic =>
+                {
+                    var filePrefix = string.IsNullOrWhiteSpace(diagnostic.File) ? string.Empty : $"{diagnostic.File}: ";
+                    return $"- {diagnostic.Severity}: {filePrefix}{diagnostic.Description}";
+                }));
         }
 
         private void ClearApproval()

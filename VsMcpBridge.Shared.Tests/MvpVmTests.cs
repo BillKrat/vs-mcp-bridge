@@ -518,26 +518,26 @@ public sealed class MvpVmTests
     }
 
     [Fact]
-    public void SubmitProposalCommand_with_request_text_only_clears_working_and_surfaces_no_file_status()
+    public void SubmitProposalCommand_with_active_file_prompt_dispatches_to_vs_service_and_appends_response()
     {
         var viewModel = new LogToolWindowViewModel();
         var vsService = new StubVsService();
         var logger = new RecordingBridgeLogger();
         _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), logger, new TestThreadHelper(), viewModel);
 
-        viewModel.RequestInputText = "ping";
+        viewModel.RequestInputText = "what is the active file";
 
         Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
         viewModel.SubmitProposalCommand.Execute(null);
 
+        Assert.Equal(1, vsService.GetActiveDocumentCalls);
         Assert.Equal(0, vsService.ProposeTextEditCalls);
-        Assert.Equal(1, vsService.ProposeTextEditsCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
-        Assert.Equal("No proposal was created because no files were selected.", viewModel.StatusMessage);
-        Assert.Contains(
-            logger.WarningMessages,
-            message => message.Contains("Manual proposal submission completed without a reviewable proposal", StringComparison.Ordinal));
+        Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
+        Assert.Contains("> what is the active file", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -678,6 +678,65 @@ public sealed class MvpVmTests
         {
             File.Delete(path);
         }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_project_list_prompt_dispatches_to_vs_service_and_appends_response()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "list solution projects";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(1, vsService.ListSolutionProjectsCalls);
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Contains("Solution projects:", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains("- VsMcpBridge", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains("> list solution projects", viewModel.LogText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_error_list_prompt_dispatches_to_vs_service_and_appends_response()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "show error list";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(1, vsService.GetErrorListCalls);
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Contains("Error list:", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains("Warning: Something happened.", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains("> show error list", viewModel.LogText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_unsupported_prompt_and_no_files_returns_unsupported_request_message()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "ping";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", viewModel.StatusMessage);
+        Assert.Contains("> ping", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Unsupported request.", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]
