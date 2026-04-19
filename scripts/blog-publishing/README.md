@@ -42,8 +42,9 @@ You can also publish by explicit folder path:
 ## Behavior
 
 - validates that `post.json` and `content.html` exist
-- validates required metadata fields
+- validates and trims required metadata fields
 - validates that `categories` and `tags` are present as arrays
+- normalizes `categories` and `tags` to trimmed string arrays, dropping blank entries and deduplicating case-insensitively while preserving first-seen casing
 - reads the canonical repo post
 - resolves the BlogEngine `PostID` by `BlogID + Slug`, or creates a new GUID when the post does not exist yet
 - executes `dbo.UpsertBlogPostFromRepo`

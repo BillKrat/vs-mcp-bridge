@@ -73,6 +73,22 @@ function Assert-RequiredProperty {
     return $value
 }
 
+function ConvertTo-NormalizedRequiredString {
+    param(
+        [object]$Object,
+        [string]$PropertyName
+    )
+
+    $value = [string](Assert-RequiredProperty -Object $Object -PropertyName $PropertyName)
+    $normalizedValue = $value.Trim()
+
+    if ([string]::IsNullOrWhiteSpace($normalizedValue)) {
+        throw "Required metadata field '$PropertyName' cannot be empty after trimming."
+    }
+
+    return $normalizedValue
+}
+
 function Assert-ArrayProperty {
     param(
         [object]$Object,
@@ -107,7 +123,38 @@ function New-StringListDataTable {
         [void]$table.Rows.Add($row)
     }
 
-    return $table
+    return ,$table
+}
+
+function ConvertTo-NormalizedStringArray {
+    param(
+        [object]$PropertyValue,
+        [string]$FieldName
+    )
+
+    if ($null -eq $PropertyValue) {
+        throw "$FieldName is null in post.json."
+    }
+
+    $normalizedValues = New-Object System.Collections.Generic.List[string]
+    $seenValues = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($item in @($PropertyValue)) {
+        if ($null -eq $item) {
+            throw "$FieldName contains a null element in post.json."
+        }
+
+        $value = ([string]$item).Trim()
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            continue
+        }
+
+        if ($seenValues.Add($value)) {
+            $normalizedValues.Add($value)
+        }
+    }
+
+    return @($normalizedValues.ToArray())
 }
 
 function New-SqlParameter {
@@ -175,19 +222,19 @@ if ([string]::IsNullOrWhiteSpace($content)) {
     throw "content.html cannot be empty."
 }
 
-$blogId = [Guid](Assert-RequiredProperty -Object $post -PropertyName 'blogId')
+$blogId = [Guid](ConvertTo-NormalizedRequiredString -Object $post -PropertyName 'blogId')
 $repoPostId = Assert-RequiredProperty -Object $post -PropertyName 'postId'
-$title = [string](Assert-RequiredProperty -Object $post -PropertyName 'title')
-$description = [string](Assert-RequiredProperty -Object $post -PropertyName 'description')
-$author = [string](Assert-RequiredProperty -Object $post -PropertyName 'author')
-$slugValue = [string](Assert-RequiredProperty -Object $post -PropertyName 'slug')
+$title = ConvertTo-NormalizedRequiredString -Object $post -PropertyName 'title'
+$description = ConvertTo-NormalizedRequiredString -Object $post -PropertyName 'description'
+$author = ConvertTo-NormalizedRequiredString -Object $post -PropertyName 'author'
+$slugValue = ConvertTo-NormalizedRequiredString -Object $post -PropertyName 'slug'
 $allowComments = [bool](Assert-RequiredProperty -Object $post -PropertyName 'allowComments')
 
 Assert-ArrayProperty -Object $post -PropertyName 'categories'
 Assert-ArrayProperty -Object $post -PropertyName 'tags'
 
-$categories = @($post.categories)
-$tags = @($post.tags)
+$categories = ConvertTo-NormalizedStringArray -PropertyValue $post.categories -FieldName 'categories'
+$tags = ConvertTo-NormalizedStringArray -PropertyValue $post.tags -FieldName 'tags'
 
 $categoryTable = New-StringListDataTable -Values $categories
 $tagTable = New-StringListDataTable -Values $tags
