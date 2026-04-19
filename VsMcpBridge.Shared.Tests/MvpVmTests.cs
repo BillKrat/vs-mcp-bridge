@@ -2,7 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -116,12 +118,18 @@ public sealed class MvpVmTests
 
         Assert.True(viewModel.IsProposalOriginalTextReadOnly);
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
+        Assert.False(viewModel.IsReviewFocusedLayoutActive);
+        Assert.True(viewModel.ShowProposalEditor);
+        Assert.True(viewModel.ShowSubmitProposalButton);
 
         presenter.ShowApprovalPrompt("Pending proposal", null, null, null, () => { }, () => { });
 
         Assert.True(viewModel.IsProposalOriginalTextReadOnly);
         Assert.True(viewModel.IsProposalProposedTextReadOnly);
         Assert.False(viewModel.HasPendingApprovalRangePreview);
+        Assert.True(viewModel.IsReviewFocusedLayoutActive);
+        Assert.True(viewModel.ShowProposalEditor);
+        Assert.False(viewModel.ShowSubmitProposalButton);
     }
 
     [Fact]
@@ -194,6 +202,289 @@ public sealed class MvpVmTests
 
         Assert.Equal(1, picker.Calls);
         Assert.Equal(@"C:\repo\Sample.cs", viewModel.ProposalFilePath);
+        Assert.Single(viewModel.ProposalSelectedFiles);
+    }
+
+    [Fact]
+    public void Add_and_remove_proposal_files_updates_selected_file_set_and_active_editor()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "first-after";
+            viewModel.RequestInputText = "Update the selected files.";
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            Assert.Equal(2, viewModel.ProposalSelectedFiles.Count);
+            Assert.Equal(secondPath, viewModel.ProposalFilePath);
+            Assert.Equal("second-before", viewModel.ProposalOriginalText);
+            Assert.Equal("second-before", viewModel.ProposalProposedText);
+
+            viewModel.ProposalFilePath = firstPath;
+
+            Assert.Equal("first-before", viewModel.ProposalOriginalText);
+            Assert.Equal("first-after", viewModel.ProposalProposedText);
+
+            viewModel.RemoveProposalFileCommand.Execute(null);
+
+            Assert.Single(viewModel.ProposalSelectedFiles);
+            Assert.Equal(secondPath, viewModel.ProposalFilePath);
+            Assert.Equal("second-before", viewModel.ProposalOriginalText);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void ResetProposalCommand_keeps_selected_files_and_per_file_drafts_while_clearing_request_state()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "first-after";
+            viewModel.RequestInputText = "Update the selected files.";
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "second-after";
+            viewModel.LastSubmittedRequestText = "Update the selected files.";
+            viewModel.IsRequestInProgress = true;
+
+            Assert.Equal(2, viewModel.ProposalSelectedFiles.Count);
+            Assert.True(viewModel.NewChatCommand.CanExecute(null));
+
+            viewModel.ResetProposalCommand.Execute(null);
+
+            Assert.Equal(2, viewModel.ProposalSelectedFiles.Count);
+            Assert.Equal(secondPath, viewModel.ProposalFilePath);
+            Assert.Equal("second-before", viewModel.ProposalOriginalText);
+            Assert.Equal("second-after", viewModel.ProposalProposedText);
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Equal(string.Empty, viewModel.RequestInputText);
+            Assert.Equal(string.Empty, viewModel.LastSubmittedRequestText);
+            Assert.False(viewModel.IsRequestInProgress);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void NewChatCommand_clears_selected_files_and_per_file_drafts()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "first-after";
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            var exception = Record.Exception(() => viewModel.NewChatCommand.Execute(null));
+
+            Assert.Null(exception);
+            Assert.Empty(viewModel.ProposalSelectedFiles);
+            Assert.False(viewModel.HasProposalDrafts);
+            Assert.False(viewModel.HasLastCompletedProposalPreview);
+            Assert.Equal(string.Empty, viewModel.ProposalFilePath);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void ProposalSelectedFiles_setter_does_not_reenter_for_equivalent_values()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var proposalSelectedFilesChangedCount = 0;
+
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalSelectedFiles))
+                proposalSelectedFilesChangedCount++;
+        };
+
+        viewModel.ProposalSelectedFiles = Array.Empty<string>();
+        viewModel.ProposalSelectedFiles = Array.Empty<string>();
+        viewModel.ProposalSelectedFiles = new[] { "first.cs", "second.cs" };
+        viewModel.ProposalSelectedFiles = new[] { "first.cs", "second.cs" };
+        viewModel.ProposalSelectedFiles = Array.Empty<string>();
+
+        Assert.Equal(2, proposalSelectedFilesChangedCount);
+        Assert.Empty(viewModel.ProposalSelectedFiles);
+    }
+
+    [Fact]
+    public void ResetProposalCommand_is_disabled_when_only_selected_files_exist()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            Assert.False(viewModel.ResetProposalCommand.CanExecute(null));
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            Assert.Single(viewModel.ProposalSelectedFiles);
+            Assert.False(viewModel.ResetProposalCommand.CanExecute(null));
+            Assert.True(viewModel.NewChatCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void NewChatCommand_is_enabled_when_drafts_exist()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "after";
+
+            Assert.True(viewModel.HasProposalDrafts);
+            Assert.False(viewModel.HasResettableProposalState);
+            Assert.False(viewModel.ResetProposalCommand.CanExecute(null));
+            Assert.True(viewModel.NewChatCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ResetProposalCommand_restores_clean_proposal_entry_state()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "after";
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+            presenter.CompleteProposalCycle("Apply succeeded for 'sample.cs'.");
+
+            Assert.True(viewModel.HasLastCompletedProposalPreview);
+
+            viewModel.ResetProposalCommand.Execute(null);
+
+            Assert.False(viewModel.IsReviewFocusedLayoutActive);
+            Assert.True(viewModel.ShowProposalEditor);
+            Assert.True(viewModel.ShowSubmitProposalButton);
+            Assert.False(viewModel.HasLastCompletedProposalPreview);
+            Assert.False(viewModel.HasLastCompletedProposalRangePreview);
+            Assert.Equal(string.Empty, viewModel.StatusMessage);
+            Assert.Single(viewModel.ProposalSelectedFiles);
+            Assert.Equal(path, viewModel.ProposalFilePath);
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.False(viewModel.ResetProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ResetProposalCommand_is_enabled_when_completed_proposal_preview_is_visible()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "after";
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+            presenter.CompleteProposalCycle("Apply succeeded for 'sample.cs'.");
+
+            Assert.True(viewModel.HasLastCompletedProposalPreview);
+            Assert.True(viewModel.HasResettableProposalState);
+            Assert.True(viewModel.ResetProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ResetProposalCommand_is_disabled_only_in_true_clean_state()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        Assert.Empty(viewModel.ProposalSelectedFiles);
+        Assert.False(viewModel.HasProposalDrafts);
+        Assert.False(viewModel.HasPendingApproval);
+        Assert.False(viewModel.HasLastCompletedProposalPreview);
+        Assert.False(viewModel.HasResettableProposalState);
+        Assert.False(viewModel.HasSessionState);
+        Assert.False(viewModel.ResetProposalCommand.CanExecute(null));
+        Assert.False(viewModel.NewChatCommand.CanExecute(null));
     }
 
     [Fact]
@@ -209,18 +500,233 @@ public sealed class MvpVmTests
             File.WriteAllText(path, "before");
             viewModel.ProposalFilePath = path;
             viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Update the file.";
 
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
             viewModel.SubmitProposalCommand.Execute(null);
 
             Assert.Equal(1, vsService.ProposeTextEditCalls);
+            Assert.Equal(0, vsService.ProposeTextEditsCalls);
             Assert.Equal(path, viewModel.ProposalFilePath);
             Assert.NotNull(vsService.LastProposeRequestId);
         }
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_submits_multiple_selected_files_through_vs_service()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            var vsService = new StubVsService();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(vsService, picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "first-after";
+            viewModel.RequestInputText = "Update the selected files.";
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "second-after";
+
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.SubmitProposalCommand.Execute(null);
+
+            Assert.Equal(0, vsService.ProposeTextEditCalls);
+            Assert.Equal(1, vsService.ProposeTextEditsCalls);
+            Assert.Equal(2, vsService.LastMultiFileEdits.Count);
+            Assert.Equal(firstPath, vsService.LastMultiFileEdits[0].FilePath);
+            Assert.Equal("first-after", vsService.LastMultiFileEdits[0].ProposedText);
+            Assert.Equal(secondPath, vsService.LastMultiFileEdits[1].FilePath);
+            Assert.Equal("second-after", vsService.LastMultiFileEdits[1].ProposedText);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_populates_pending_included_files_for_multi_file_proposal()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            presenter.ShowApprovalPrompt("Pending proposal", string.Empty, string.Empty, null, () => { }, () => { });
+
+            Assert.True(viewModel.HasPendingApprovalIncludedFiles);
+            Assert.Equal("Included Files (2)", viewModel.PendingApprovalIncludedFilesHeader);
+            Assert.Equal(2, viewModel.PendingApprovalIncludedFiles.Count);
+            Assert.Equal(firstPath, viewModel.PendingApprovalIncludedFiles[0]);
+            Assert.Equal(secondPath, viewModel.PendingApprovalIncludedFiles[1]);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void CompleteProposalCycle_preserves_included_files_for_last_completed_proposal()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "first-before");
+            File.WriteAllText(secondPath, "second-before");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            presenter.ShowApprovalPrompt("Pending proposal", string.Empty, string.Empty, null, () => { }, () => { });
+            presenter.CompleteProposalCycle("Apply succeeded.");
+
+            Assert.False(viewModel.HasPendingApprovalIncludedFiles);
+            Assert.True(viewModel.HasLastCompletedProposalIncludedFiles);
+            Assert.Equal("Included Files (2)", viewModel.LastCompletedProposalIncludedFilesHeader);
+            Assert.Equal(2, viewModel.LastCompletedProposalIncludedFiles.Count);
+            Assert.Equal(firstPath, viewModel.LastCompletedProposalIncludedFiles[0]);
+            Assert.Equal(secondPath, viewModel.LastCompletedProposalIncludedFiles[1]);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_keeps_single_file_included_files_behavior_coherent()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+
+            Assert.True(viewModel.HasPendingApprovalIncludedFiles);
+            Assert.Equal("Included Files (1)", viewModel.PendingApprovalIncludedFilesHeader);
+            Assert.Single(viewModel.PendingApprovalIncludedFiles);
+            Assert.Equal(path, viewModel.PendingApprovalIncludedFiles[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_is_enabled_when_one_selected_file_changes_and_another_remains_already_updated()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "needs-apply");
+            File.WriteAllText(secondPath, "already-updated");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            var vsService = new StubVsService();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(vsService, picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "applied";
+            viewModel.RequestInputText = "Apply the selected update.";
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Equal("already-updated", viewModel.ProposalOriginalText);
+            Assert.Equal("already-updated", viewModel.ProposalProposedText);
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.SubmitProposalCommand.Execute(null);
+
+            Assert.Equal(1, vsService.ProposeTextEditsCalls);
+            Assert.Equal(2, vsService.LastMultiFileEdits.Count);
+            Assert.Equal("applied", vsService.LastMultiFileEdits[0].ProposedText);
+            Assert.Equal("already-updated", vsService.LastMultiFileEdits[1].OriginalText);
+            Assert.Equal("already-updated", vsService.LastMultiFileEdits[1].ProposedText);
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_remains_disabled_for_true_no_op_multi_file_selection()
+    {
+        var firstPath = Path.GetTempFileName();
+        var secondPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(firstPath, "same-one");
+            File.WriteAllText(secondPath, "same-two");
+
+            var picker = new StubProposalFilePicker { SelectedPath = firstPath };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            picker.SelectedPath = secondPath;
+            viewModel.BrowseProposalFileCommand.Execute(null);
+
+            Assert.Equal(2, viewModel.ProposalSelectedFiles.Count);
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(firstPath);
+            File.Delete(secondPath);
         }
     }
 
@@ -236,6 +742,7 @@ public sealed class MvpVmTests
             File.WriteAllText(path, "before");
             viewModel.ProposalFilePath = path;
             viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Update the file.";
 
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
@@ -266,7 +773,8 @@ public sealed class MvpVmTests
             viewModel.SubmitProposalCommand.Execute(null);
 
             var error = Assert.Single(logger.Errors);
-            Assert.Contains($"Manual proposal submission failed for '{path}'.", error.Message);
+            Assert.Contains("Manual proposal submission failed for", error.Message);
+            Assert.Contains(path, error.Message);
             Assert.IsType<InvalidOperationException>(error.Exception);
         }
         finally
@@ -417,6 +925,30 @@ public sealed class MvpVmTests
     }
 
     [Fact]
+    public void ShowApprovalPrompt_uses_explicit_included_files_instead_of_editor_selection()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            ProposalSelectedFiles = new[] { "stale.cs" }
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt(
+            "Pending proposal",
+            null,
+            null,
+            null,
+            () => { },
+            () => { },
+            new[] { "first.cs", "second.cs" });
+
+        Assert.True(viewModel.HasPendingApprovalIncludedFiles);
+        Assert.Equal(2, viewModel.PendingApprovalIncludedFiles.Count);
+        Assert.Equal("first.cs", viewModel.PendingApprovalIncludedFiles[0]);
+        Assert.Equal("second.cs", viewModel.PendingApprovalIncludedFiles[1]);
+    }
+
+    [Fact]
     public void CompleteProposalCycle_preserves_multi_range_reviewed_changes_for_last_completed_proposal()
     {
         var viewModel = new LogToolWindowViewModel();
@@ -471,27 +1003,302 @@ public sealed class MvpVmTests
         Assert.Equal(string.Empty, viewModel.LastCompletedProposalUpdatedText);
         Assert.Equal(string.Empty, viewModel.LastCompletedProposalOriginalSegment);
         Assert.Equal(string.Empty, viewModel.LastCompletedProposalUpdatedSegment);
+        Assert.True(viewModel.IsReviewFocusedLayoutActive);
         Assert.True(viewModel.ShowProposalEditor);
+        Assert.False(viewModel.ShowSubmitProposalButton);
     }
 
     [Fact]
-    public void LastCompletedProposalPreview_hides_editor_until_a_new_proposal_is_started()
+    public void LastCompletedProposalPreview_keeps_editor_visible_but_hides_submit_until_a_new_proposal_is_started()
     {
         var viewModel = new LogToolWindowViewModel();
 
+        Assert.False(viewModel.IsReviewFocusedLayoutActive);
         Assert.True(viewModel.ShowProposalEditor);
+        Assert.True(viewModel.ShowSubmitProposalButton);
 
         viewModel.LastCompletedProposalOriginalText = "before";
         viewModel.LastCompletedProposalUpdatedText = "after";
 
+        Assert.True(viewModel.IsReviewFocusedLayoutActive);
         Assert.True(viewModel.HasLastCompletedProposalPreview);
-        Assert.False(viewModel.ShowProposalEditor);
+        Assert.True(viewModel.ShowProposalEditor);
+        Assert.False(viewModel.ShowSubmitProposalButton);
 
         viewModel.LastCompletedProposalOriginalText = string.Empty;
         viewModel.LastCompletedProposalUpdatedText = string.Empty;
 
+        Assert.False(viewModel.IsReviewFocusedLayoutActive);
         Assert.False(viewModel.HasLastCompletedProposalPreview);
         Assert.True(viewModel.ShowProposalEditor);
+        Assert.True(viewModel.ShowSubmitProposalButton);
+    }
+
+    [Fact]
+    public void PendingReview_activates_review_focused_layout_and_hides_submit_action()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.True(viewModel.IsReviewFocusedLayoutActive);
+        Assert.True(viewModel.ShowProposalEditor);
+        Assert.False(viewModel.ShowSubmitProposalButton);
+    }
+
+    [Fact]
+    public void RequestSummaries_reflect_selected_file_count_and_active_file()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            ProposalSelectedFiles = new[] { @"C:\repo\First.cs", @"C:\repo\Second.cs" },
+            ProposalFilePath = @"C:\repo\Second.cs"
+        };
+
+        Assert.Equal("2 files selected for this request.", viewModel.ProposalSelectionSummary);
+        Assert.Equal(@"Current file: C:\repo\Second.cs", viewModel.ProposalActiveFileSummary);
+    }
+
+    [Fact]
+    public void RequestPhaseSummary_defaults_to_request_entry_guidance()
+    {
+        var viewModel = new LogToolWindowViewModel();
+
+        Assert.True(viewModel.HasRequestPhaseSummary);
+        Assert.Equal(
+            "Select one or more files, prepare the proposed content, and submit when the request is ready for review.",
+            viewModel.RequestPhaseSummary);
+    }
+
+    [Fact]
+    public void RequestPhaseSummary_tracks_review_and_completed_states()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.ProposalSelectedFiles = new[] { "sample.cs" };
+        Assert.Equal(
+            "Adjust the proposed content if needed, then submit when at least one selected file has a meaningful change.",
+            viewModel.RequestPhaseSummary);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+        Assert.Equal(
+            "Approval review is ready. Inspect the concise review below, then choose Keep or Reject.",
+            viewModel.RequestPhaseSummary);
+
+        viewModel.HasPendingApproval = false;
+        viewModel.LastCompletedProposalOriginalText = "before";
+        viewModel.LastCompletedProposalUpdatedText = "after";
+        Assert.Equal(
+            "Last proposal result is available below. Review the summary or reset to start the next request.",
+            viewModel.RequestPhaseSummary);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_captures_request_echo_and_marks_activity_in_progress()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var vsService = new StubVsService();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(vsService, picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Update the selected file to the approved version.";
+
+            viewModel.SubmitProposalCommand.Execute(null);
+
+            Assert.Equal("Update the selected file to the approved version.", viewModel.LastSubmittedRequestText);
+            Assert.True(viewModel.HasLastSubmittedRequest);
+            Assert.True(viewModel.IsRequestInProgress);
+            Assert.Equal("Working", viewModel.ActivityTitle);
+            Assert.Equal(1, vsService.ProposeTextEditCalls);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_requires_meaningful_request_text()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "after";
+
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.RequestInputText = "   ";
+            Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.RequestInputText = "Update the file.";
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_clears_in_progress_state_and_switches_to_review_activity()
+    {
+        var viewModel = new LogToolWindowViewModel { IsRequestInProgress = true };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { "sample.cs" });
+
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Review Ready", viewModel.ActivityTitle);
+        Assert.Equal("1 file affected", viewModel.ActivityMetricsSummary);
+    }
+
+    [Fact]
+    public void ResetProposalCommand_clears_request_input_and_request_echo()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Prepare the draft update.";
+            viewModel.LastSubmittedRequestText = "Prepare the draft update.";
+            viewModel.IsRequestInProgress = true;
+
+            viewModel.ResetProposalCommand.Execute(null);
+
+            Assert.Equal(string.Empty, viewModel.RequestInputText);
+            Assert.Equal(string.Empty, viewModel.LastSubmittedRequestText);
+            Assert.False(viewModel.HasLastSubmittedRequest);
+            Assert.False(viewModel.IsRequestInProgress);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ResetProposalCommand_is_enabled_while_request_is_working()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            IsRequestInProgress = true
+        };
+        _ = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        Assert.True(viewModel.HasResettableProposalState);
+        Assert.True(viewModel.ResetProposalCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_ignores_suppressed_request_after_reset_during_working()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            IsRequestInProgress = true,
+            RequestInputText = "Update the file.",
+            LastSubmittedRequestText = "Update the file."
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var presenterType = typeof(LogToolWindowPresenter);
+
+        presenterType.GetField("_activeManualRequestId", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(presenter, "request-1");
+
+        viewModel.ResetProposalCommand.Execute(null);
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { "sample.cs" }, "request-1");
+
+        Assert.False(viewModel.HasPendingApproval);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal(string.Empty, viewModel.LastSubmittedRequestText);
+        Assert.Equal(string.Empty, viewModel.RequestInputText);
+    }
+
+    [Fact]
+    public void OpenGitChangesCommand_is_enabled_for_completed_result_and_invokes_vs_service()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "after");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var vsService = new StubVsService();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(vsService, picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            viewModel.ProposalOriginalText = "before";
+            viewModel.ProposalProposedText = "after";
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { path });
+            presenter.CompleteProposalCycle("Apply succeeded for 1 file. All approved changes were applied.");
+
+            Assert.True(viewModel.CanOpenGitChanges);
+            Assert.True(viewModel.OpenGitChangesCommand.CanExecute(null));
+
+            viewModel.OpenGitChangesCommand.Execute(null);
+
+            Assert.Equal(1, vsService.OpenGitChangesCalls);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Reset_after_pending_review_restores_authoring_layout()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var picker = new StubProposalFilePicker { SelectedPath = path };
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService(), picker), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+            viewModel.BrowseProposalFileCommand.Execute(null);
+            presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { });
+
+            Assert.True(viewModel.IsReviewFocusedLayoutActive);
+            Assert.True(viewModel.ShowProposalEditor);
+            Assert.False(viewModel.ShowSubmitProposalButton);
+
+            viewModel.ResetProposalCommand.Execute(null);
+
+            Assert.False(viewModel.HasPendingApproval);
+            Assert.False(viewModel.IsReviewFocusedLayoutActive);
+            Assert.True(viewModel.ShowProposalEditor);
+            Assert.True(viewModel.ShowSubmitProposalButton);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -508,6 +1315,7 @@ public sealed class MvpVmTests
             viewModel.ProposalFilePath = path;
 
             Assert.True(viewModel.IsProposalFileLoaded);
+            Assert.Single(viewModel.ProposalSelectedFiles);
             Assert.Equal("before\r\nafter\r\n", viewModel.ProposalOriginalText);
             Assert.Equal("before\r\nafter\r\n", viewModel.ProposalProposedText);
             Assert.True(viewModel.IsProposalOriginalTextReadOnly);
@@ -535,9 +1343,13 @@ public sealed class MvpVmTests
             Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
 
             viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Update the file.";
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
 
             viewModel.ProposalProposedText = "before";
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.RequestInputText = string.Empty;
             Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
         }
         finally
@@ -582,6 +1394,7 @@ public sealed class MvpVmTests
             Assert.False(viewModel.SubmitProposalCommand.CanExecute(null));
 
             viewModel.ProposalProposedText = "after";
+            viewModel.RequestInputText = "Update the file.";
 
             Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
         }

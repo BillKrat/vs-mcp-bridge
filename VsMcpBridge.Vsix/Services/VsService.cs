@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -182,6 +184,36 @@ public sealed class VsService : IVsService
         }
     }
 
+    public async Task OpenGitChangesAsync()
+    {
+        _logger.LogInformation("Running VS service operation 'OpenGitChanges'.");
+
+        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+        var dte = await GetDteAsync();
+        var commands = new[]
+        {
+            "View.GitChanges",
+            "Git.ViewGitChanges",
+            "GitHub.OpenGitChanges"
+        };
+
+        foreach (var command in commands)
+        {
+            try
+            {
+                dte.ExecuteCommand(command);
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, $"Failed to execute Visual Studio command '{command}' while opening Git Changes.");
+            }
+        }
+
+        throw new InvalidOperationException("Unable to open the Git Changes window in Visual Studio.");
+    }
+
     public Task<ProposeTextEditResponse> ProposeTextEditAsync(
         string requestId,
         string filePath,
@@ -209,7 +241,9 @@ public sealed class VsService : IVsService
                 proposal.RangeEdit?.UpdatedSegment,
                 BuildReviewedChanges(proposal),
                 () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
-                () => RejectProposal(proposal.ProposalId));
+                () => RejectProposal(proposal.ProposalId),
+                BuildIncludedFiles(proposal),
+                proposal.RequestId);
         }
         else
         {
@@ -222,6 +256,71 @@ public sealed class VsService : IVsService
             Success = true,
             FilePath = filePath,
             Diff = diff
+        });
+    }
+
+    public Task<ProposeTextEditResponse> ProposeTextEditsAsync(string requestId, IReadOnlyList<ProposalFileEditRequest> fileEdits)
+    {
+        if (fileEdits == null)
+            throw new ArgumentNullException(nameof(fileEdits));
+
+        if (fileEdits.Count == 1)
+            return ProposeTextEditAsync(requestId, fileEdits[0].FilePath, fileEdits[0].OriginalText, fileEdits[0].ProposedText);
+
+        _logger.LogInformation($"Generating proposed diff for {fileEdits.Count} files [RequestId={requestId}].");
+
+        var combinedDiff = new StringBuilder();
+        var proposalFileEdits = new List<ProposedFileEdit>(fileEdits.Count);
+        var hasMeaningfulChange = false;
+
+        foreach (var fileEdit in fileEdits)
+        {
+            var hasFileChange = !string.Equals(fileEdit.OriginalText, fileEdit.ProposedText, StringComparison.Ordinal);
+            var diff = BuildProposalDiff(fileEdit.FilePath, fileEdit.OriginalText, fileEdit.ProposedText, includeNoOp: true);
+            hasMeaningfulChange |= hasFileChange;
+
+            if (combinedDiff.Length > 0)
+                combinedDiff.AppendLine();
+
+            combinedDiff.Append(diff);
+
+            var rangeEdits = RangeEditBuilder.BuildAll(fileEdit.OriginalText, fileEdit.ProposedText);
+            proposalFileEdits.Add(new ProposedFileEdit
+            {
+                FilePath = fileEdit.FilePath,
+                Diff = diff,
+                RangeEdit = rangeEdits.Count == 1 ? rangeEdits[0] : null,
+                RangeEdits = rangeEdits.Count > 1 ? rangeEdits.ToList() : null
+            });
+        }
+
+        if (proposalFileEdits.Count > 0 && hasMeaningfulChange)
+        {
+            var proposal = _approvalWorkflowService.CreateProposal(requestId, proposalFileEdits);
+            var proposalTarget = DescribeProposalTarget(proposal);
+            _logger.LogInformation($"Created edit proposal [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
+            _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
+            _logToolWindowPresenter.ShowApprovalPrompt(
+                BuildProposalDescription(proposal),
+                null,
+                null,
+                Array.Empty<ProposalReviewedChange>(),
+                () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
+                () => RejectProposal(proposal.ProposalId),
+                BuildIncludedFiles(proposal),
+                proposal.RequestId);
+        }
+        else
+        {
+            _logger.LogInformation($"No multi-file edit proposal created because every selected file already matches the proposed text [RequestId={requestId}].");
+        }
+
+        return Task.FromResult(new ProposeTextEditResponse
+        {
+            RequestId = requestId,
+            Success = true,
+            FilePath = proposalFileEdits.FirstOrDefault()?.FilePath ?? string.Empty,
+            Diff = combinedDiff.ToString()
         });
     }
 
@@ -306,6 +405,19 @@ public sealed class VsService : IVsService
 
     private static string BuildProposalDescription(EditProposal proposal)
     {
+        if (proposal.FileEdits != null && proposal.FileEdits.Count > 1)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"Pending proposal for {proposal.FileEdits.Count} files");
+            foreach (var fileEdit in proposal.FileEdits)
+            {
+                builder.AppendLine($"File: '{fileEdit.FilePath}'");
+                builder.AppendLine(fileEdit.Diff);
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+
         return $"Pending proposal for '{proposal.FilePath}'{Environment.NewLine}{proposal.Diff}";
     }
 
@@ -329,10 +441,21 @@ public sealed class VsService : IVsService
         return changes;
     }
 
+    private static IReadOnlyList<string> BuildIncludedFiles(EditProposal proposal)
+    {
+        if (proposal.FileEdits != null && proposal.FileEdits.Count > 0)
+            return proposal.FileEdits.Select(fileEdit => fileEdit.FilePath).ToArray();
+
+        return string.IsNullOrWhiteSpace(proposal.FilePath)
+            ? Array.Empty<string>()
+            : new[] { proposal.FilePath };
+    }
+
     private async Task ApproveAndApplyAsync(string proposalId)
     {
         var proposal = _approvalWorkflowService.Approve(proposalId);
-        _logger.LogInformation($"Proposal approved [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+        var proposalTarget = DescribeProposalTarget(proposal);
+        _logger.LogInformation($"Proposal approved [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
 
         try
         {
@@ -340,43 +463,78 @@ public sealed class VsService : IVsService
             _approvalWorkflowService.MarkApplied(proposalId);
             if (applyResult == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent)
             {
-                _logToolWindowPresenter.CompleteProposalCycle($"Apply skipped for '{proposal.FilePath}' because the target already matches the approved content.");
-                _logger.LogInformation($"Apply skipped because target already matches approved updated content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+                var message = ProposalOutcomeMessageBuilder.BuildSkipMessage(proposal);
+                _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+                _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
             }
             else
             {
-                _logToolWindowPresenter.CompleteProposalCycle($"Apply succeeded for '{proposal.FilePath}'.");
-                _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+                var message = ProposalOutcomeMessageBuilder.BuildSuccessMessage(proposal);
+                _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+                _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
             }
         }
         catch (TargetDocumentDriftException ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logToolWindowPresenter.CompleteProposalCycle($"Apply failed for '{proposal.FilePath}': the document changed after proposal creation.");
-            _logger.LogWarning(ex, $"Apply failed because target no longer matches approved original content [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            var message = ProposalOutcomeMessageBuilder.BuildDriftFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+            _logger.LogWarning(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+        }
+        catch (AmbiguousEditTargetException ex)
+        {
+            _approvalWorkflowService.MarkFailed(proposalId);
+            var message = ProposalOutcomeMessageBuilder.BuildAmbiguityFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+            _logger.LogWarning(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
         }
         catch (Exception ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logToolWindowPresenter.CompleteProposalCycle($"Apply failed for '{proposal.FilePath}'. Review the bridge log for details.");
-            _logger.LogError(ex, $"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            var message = ProposalOutcomeMessageBuilder.BuildGenericFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message);
+            _logger.LogError(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
         }
     }
 
     private void RejectProposal(string proposalId)
     {
         var proposal = _approvalWorkflowService.Reject(proposalId);
-        _logToolWindowPresenter.CompleteProposalCycle($"Proposal rejected for '{proposal.FilePath}'.");
-        _logger.LogInformation($"Proposal rejected [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+        var message = ProposalOutcomeMessageBuilder.BuildRejectedMessage(proposal);
+        _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+        _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+    }
+
+    private static string DescribeProposalTarget(EditProposal proposal)
+    {
+        return proposal.FileEdits != null && proposal.FileEdits.Count > 1
+            ? $"{proposal.FileEdits.Count} files"
+            : $"'{proposal.FilePath}'";
     }
 
     private static string GenerateUnifiedDiff(string filePath, string original, string proposed)
+    {
+        return BuildProposalDiff(filePath, original, proposed, includeNoOp: false);
+    }
+
+    private static string BuildProposalDiff(string filePath, string original, string proposed, bool includeNoOp)
     {
         var originalLines = original.Split('\n');
         var proposedLines = proposed.Split('\n');
 
         if (original == proposed)
-            return string.Empty;
+        {
+            if (!includeNoOp)
+                return string.Empty;
+
+            var noOpBuilder = new StringBuilder();
+            noOpBuilder.AppendLine($"--- a/{filePath}");
+            noOpBuilder.AppendLine($"+++ b/{filePath}");
+            foreach (var originalLine in originalLines)
+                noOpBuilder.AppendLine($" {originalLine}");
+
+            return noOpBuilder.ToString();
+        }
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"--- a/{filePath}");

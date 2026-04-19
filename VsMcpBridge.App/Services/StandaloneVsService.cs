@@ -195,6 +195,26 @@ internal sealed class StandaloneVsService : IVsService
         }
     }
 
+    public Task OpenGitChangesAsync()
+    {
+        _logger.LogInformation("Running app service operation 'OpenGitChanges'.");
+
+        var workspaceRoot = ResolveWorkspaceRoot();
+        if (string.IsNullOrWhiteSpace(workspaceRoot))
+            throw new InvalidOperationException("Unable to resolve a workspace root for Git inspection.");
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = $"/k cd /d \"{workspaceRoot}\" && git status",
+            WorkingDirectory = workspaceRoot,
+            UseShellExecute = true
+        };
+
+        Process.Start(startInfo);
+        return Task.CompletedTask;
+    }
+
     public Task<ProposeTextEditResponse> ProposeTextEditAsync(
         string requestId,
         string filePath,
@@ -225,7 +245,9 @@ internal sealed class StandaloneVsService : IVsService
                 proposal.RangeEdit?.UpdatedSegment,
                 BuildReviewedChanges(proposal),
                 () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
-                () => RejectProposal(proposal.ProposalId));
+                () => RejectProposal(proposal.ProposalId),
+                BuildIncludedFiles(proposal),
+                proposal.RequestId);
         }
         else
         {
@@ -238,6 +260,74 @@ internal sealed class StandaloneVsService : IVsService
             Success = true,
             FilePath = filePath,
             Diff = diff
+        });
+    }
+
+    public Task<ProposeTextEditResponse> ProposeTextEditsAsync(string requestId, IReadOnlyList<ProposalFileEditRequest> fileEdits)
+    {
+        if (fileEdits == null)
+            throw new ArgumentNullException(nameof(fileEdits));
+
+        if (fileEdits.Count == 1)
+            return ProposeTextEditAsync(requestId, fileEdits[0].FilePath, fileEdits[0].OriginalText, fileEdits[0].ProposedText);
+
+        _logger.LogInformation($"Generating proposed diff for {fileEdits.Count} files [RequestId={requestId}].");
+
+        var combinedDiff = new StringBuilder();
+        var proposalFileEdits = new List<ProposedFileEdit>(fileEdits.Count);
+        var hasMeaningfulChange = false;
+
+        foreach (var fileEdit in fileEdits)
+        {
+            var hasFileChange = !string.Equals(fileEdit.OriginalText, fileEdit.ProposedText, StringComparison.Ordinal);
+            var diff = BuildProposalDiff(fileEdit.FilePath, fileEdit.OriginalText, fileEdit.ProposedText, includeNoOp: true);
+            hasMeaningfulChange |= hasFileChange;
+
+            if (combinedDiff.Length > 0)
+                combinedDiff.AppendLine();
+
+            combinedDiff.Append(diff);
+
+            var rangeEdits = RangeEditBuilder.BuildAll(fileEdit.OriginalText, fileEdit.ProposedText);
+            proposalFileEdits.Add(new ProposedFileEdit
+            {
+                FilePath = fileEdit.FilePath,
+                Diff = diff,
+                RangeEdit = rangeEdits.Count == 1 ? rangeEdits[0] : null,
+                RangeEdits = rangeEdits.Count > 1 ? rangeEdits.ToList() : null
+            });
+        }
+
+        if (proposalFileEdits.Count > 0 && hasMeaningfulChange)
+        {
+            _sessionState.SetActiveFilePath(proposalFileEdits[0].FilePath);
+            _sessionState.SetSelectedText(fileEdits[0].OriginalText);
+
+            var proposal = _approvalWorkflowService.CreateProposal(requestId, proposalFileEdits);
+            var proposalTarget = DescribeProposalTarget(proposal);
+            _logger.LogInformation($"Created edit proposal [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
+            _logger.LogInformation($"Proposal pending approval [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
+            _logToolWindowPresenter.ShowApprovalPrompt(
+                BuildProposalDescription(proposal),
+                null,
+                null,
+                Array.Empty<ProposalReviewedChange>(),
+                () => _threadHelper.Run(() => ApproveAndApplyAsync(proposal.ProposalId)),
+                () => RejectProposal(proposal.ProposalId),
+                BuildIncludedFiles(proposal),
+                proposal.RequestId);
+        }
+        else
+        {
+            _logger.LogInformation($"No multi-file edit proposal created because every selected file already matches the proposed text [RequestId={requestId}].");
+        }
+
+        return Task.FromResult(new ProposeTextEditResponse
+        {
+            RequestId = requestId,
+            Success = true,
+            FilePath = proposalFileEdits.FirstOrDefault()?.FilePath ?? string.Empty,
+            Diff = combinedDiff.ToString()
         });
     }
 
@@ -416,6 +506,19 @@ internal sealed class StandaloneVsService : IVsService
 
     private static string BuildProposalDescription(EditProposal proposal)
     {
+        if (proposal.FileEdits != null && proposal.FileEdits.Count > 1)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"Pending proposal for {proposal.FileEdits.Count} files");
+            foreach (var fileEdit in proposal.FileEdits)
+            {
+                builder.AppendLine($"File: '{fileEdit.FilePath}'");
+                builder.AppendLine(fileEdit.Diff);
+            }
+
+            return builder.ToString().TrimEnd();
+        }
+
         return $"Pending proposal for '{proposal.FilePath}'{Environment.NewLine}{proposal.Diff}";
     }
 
@@ -439,37 +542,100 @@ internal sealed class StandaloneVsService : IVsService
         return changes;
     }
 
+    private static IReadOnlyList<string> BuildIncludedFiles(EditProposal proposal)
+    {
+        if (proposal.FileEdits != null && proposal.FileEdits.Count > 0)
+            return proposal.FileEdits.Select(fileEdit => fileEdit.FilePath).ToArray();
+
+        return string.IsNullOrWhiteSpace(proposal.FilePath)
+            ? Array.Empty<string>()
+            : new[] { proposal.FilePath };
+    }
+
     private async Task ApproveAndApplyAsync(string proposalId)
     {
         var proposal = _approvalWorkflowService.Approve(proposalId);
-        _logger.LogInformation($"Proposal approved [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+        var proposalTarget = DescribeProposalTarget(proposal);
+        _logger.LogInformation($"Proposal approved [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for {proposalTarget}.");
 
         try
         {
-            await _editApplier.ApplyAsync(proposal);
+            var applyResult = await _editApplier.ApplyAsync(proposal);
             _approvalWorkflowService.MarkApplied(proposalId);
-            _logger.LogInformation($"Apply succeeded [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+            if (applyResult == EditApplyResult.SkippedAlreadyMatchesApprovedUpdatedContent)
+            {
+                var message = ProposalOutcomeMessageBuilder.BuildSkipMessage(proposal);
+                _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+                _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+            }
+            else
+            {
+                var message = ProposalOutcomeMessageBuilder.BuildSuccessMessage(proposal);
+                _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+                _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+            }
+        }
+        catch (TargetDocumentDriftException ex)
+        {
+            _approvalWorkflowService.MarkFailed(proposalId);
+            var message = ProposalOutcomeMessageBuilder.BuildDriftFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+            _logger.LogWarning(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+        }
+        catch (AmbiguousEditTargetException ex)
+        {
+            _approvalWorkflowService.MarkFailed(proposalId);
+            var message = ProposalOutcomeMessageBuilder.BuildAmbiguityFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+            _logger.LogWarning(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
         }
         catch (Exception ex)
         {
             _approvalWorkflowService.MarkFailed(proposalId);
-            _logger.LogError($"Apply failed [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.", ex);
+            var message = ProposalOutcomeMessageBuilder.BuildGenericFailureMessage(proposal);
+            _logToolWindowPresenter.CompleteProposalCycle(message);
+            _logger.LogError(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
         }
     }
 
     private void RejectProposal(string proposalId)
     {
         var proposal = _approvalWorkflowService.Reject(proposalId);
-        _logger.LogInformation($"Proposal rejected [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}] for '{proposal.FilePath}'.");
+        var message = ProposalOutcomeMessageBuilder.BuildRejectedMessage(proposal);
+        _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
+        _logger.LogInformation($"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
+    }
+
+    private static string DescribeProposalTarget(EditProposal proposal)
+    {
+        return proposal.FileEdits != null && proposal.FileEdits.Count > 1
+            ? $"{proposal.FileEdits.Count} files"
+            : $"'{proposal.FilePath}'";
     }
 
     private static string GenerateUnifiedDiff(string filePath, string original, string proposed)
+    {
+        return BuildProposalDiff(filePath, original, proposed, includeNoOp: false);
+    }
+
+    private static string BuildProposalDiff(string filePath, string original, string proposed, bool includeNoOp)
     {
         var originalLines = original.Split('\n');
         var proposedLines = proposed.Split('\n');
 
         if (original == proposed)
-            return string.Empty;
+        {
+            if (!includeNoOp)
+                return string.Empty;
+
+            var noOpBuilder = new StringBuilder();
+            noOpBuilder.AppendLine($"--- a/{filePath}");
+            noOpBuilder.AppendLine($"+++ b/{filePath}");
+            foreach (var originalLine in originalLines)
+                noOpBuilder.AppendLine($" {originalLine}");
+
+            return noOpBuilder.ToString();
+        }
 
         var sb = new StringBuilder();
         sb.AppendLine($"--- a/{filePath}");

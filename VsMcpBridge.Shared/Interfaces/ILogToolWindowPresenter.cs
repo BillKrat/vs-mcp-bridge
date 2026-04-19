@@ -11,8 +11,8 @@ namespace VsMcpBridge.Shared.Interfaces
 
         void Initialize();
         void AppendLog(string message);
-        void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject);
+        void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject, IReadOnlyList<string>? includedFiles = null, string? requestId = null);
         void ShowStatusMessage(string message);
-        void CompleteProposalCycle(string statusMessage);
+        void CompleteProposalCycle(string statusMessage, string? requestId = null);
     }
 }

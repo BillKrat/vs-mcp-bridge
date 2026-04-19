@@ -20,8 +20,12 @@ namespace VsMcpBridge.Shared.MvpVm
         private readonly IThreadHelper _threadHelper;
         private readonly IProposalDraftState? _proposalDraftState;
         private readonly IProposalFilePicker? _proposalFilePicker;
+        private readonly List<ProposalEditorFileDraft> _proposalFileDrafts = new();
+        private readonly HashSet<string> _suppressedRequestIds = new(StringComparer.Ordinal);
         private Action? _pendingApproveAction;
         private Action? _pendingRejectAction;
+        private bool _isUpdatingProposalEditor;
+        private string? _activeManualRequestId;
 
         public LogToolWindowPresenter(IServiceProvider serviceProvider, ILogger logger, IThreadHelper threadHelper, ILogToolWindowViewModel logToolWindowViewModel)
         {
@@ -32,10 +36,14 @@ namespace VsMcpBridge.Shared.MvpVm
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
             if (_proposalFilePicker != null)
-                LogToolWindowViewModel.SetProposalBrowseHandler(OnBrowseProposalFileRequested);
+            LogToolWindowViewModel.SetProposalBrowseHandler(OnBrowseProposalFileRequested);
             else
                 LogToolWindowViewModel.SetProposalBrowseHandler(null);
+            LogToolWindowViewModel.SetProposalRemoveHandler(OnRemoveProposalFileRequested);
+            LogToolWindowViewModel.SetProposalResetHandler(OnResetProposalRequested);
+            LogToolWindowViewModel.SetNewChatHandler(OnNewChatRequested);
             LogToolWindowViewModel.SetProposalSubmissionHandler(OnSubmitProposalRequested);
+            LogToolWindowViewModel.SetOpenGitChangesHandler(OnOpenGitChangesRequested);
             LogToolWindowViewModel.SetApprovalRequestHandlers(OnApproveRequested, OnRejectRequested);
 
             if (LogToolWindowViewModel is INotifyPropertyChanged notifyPropertyChanged)
@@ -68,19 +76,25 @@ namespace VsMcpBridge.Shared.MvpVm
             });
         }
 
-        public void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject)
+        public void ShowApprovalPrompt(string description, string? originalSegment, string? updatedSegment, IReadOnlyList<ProposalReviewedChange>? reviewedChanges, Action onApprove, Action onReject, IReadOnlyList<string>? includedFiles = null, string? requestId = null)
         {
             RunOnUiThread(() =>
             {
+                if (ShouldIgnoreRequestUpdate(requestId))
+                    return;
+
                 _pendingApproveAction = onApprove;
                 _pendingRejectAction = onReject;
                 ClearCompletedProposalPreview();
+                LogToolWindowViewModel.IsRequestInProgress = false;
                 LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
                 LogToolWindowViewModel.PendingApprovalOriginalSegment = originalSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalUpdatedSegment = updatedSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalReviewedChanges = CloneReviewedChanges(reviewedChanges);
+                LogToolWindowViewModel.PendingApprovalIncludedFiles = CloneIncludedFiles(includedFiles ?? LogToolWindowViewModel.ProposalSelectedFiles);
                 LogToolWindowViewModel.HasPendingApproval = true;
+                CompleteActiveManualRequest(requestId);
             });
         }
 
@@ -89,16 +103,20 @@ namespace VsMcpBridge.Shared.MvpVm
             RunOnUiThread(() => LogToolWindowViewModel.StatusMessage = message);
         }
 
-        public void CompleteProposalCycle(string statusMessage)
+        public void CompleteProposalCycle(string statusMessage, string? requestId = null)
         {
             RunOnUiThread(() =>
             {
+                if (ShouldIgnoreRequestUpdate(requestId))
+                    return;
+
                 CaptureCompletedProposalPreview();
                 ClearApproval();
+                LogToolWindowViewModel.IsRequestInProgress = false;
 
                 if (!string.IsNullOrWhiteSpace(LogToolWindowViewModel.ProposalFilePath))
                 {
-                    TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath, clearStatusMessage: false);
+                    ReloadActiveProposalFile(clearStatusMessage: false);
                 }
                 else
                 {
@@ -108,6 +126,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 }
 
                 LogToolWindowViewModel.StatusMessage = statusMessage;
+                CompleteActiveManualRequest(requestId);
             });
         }
 
@@ -118,6 +137,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = CloneReviewedChanges(LogToolWindowViewModel.PendingApprovalReviewedChanges);
+            LogToolWindowViewModel.LastCompletedProposalIncludedFiles = CloneIncludedFiles(LogToolWindowViewModel.PendingApprovalIncludedFiles);
         }
 
         private void OnApproveRequested()
@@ -148,9 +168,9 @@ namespace VsMcpBridge.Shared.MvpVm
             rejectionAction?.Invoke();
         }
 
-        private void OnSubmitProposalRequested(string filePath, string originalText, string proposedText)
+        private void OnSubmitProposalRequested()
         {
-            _ = SubmitProposalAsync(filePath, originalText, proposedText);
+            _ = SubmitProposalAsync();
         }
 
         private void OnBrowseProposalFileRequested()
@@ -159,23 +179,82 @@ namespace VsMcpBridge.Shared.MvpVm
             if (!string.IsNullOrWhiteSpace(selectedPath))
             {
                 ClearCompletedProposalPreview();
-                LogToolWindowViewModel.ProposalFilePath = selectedPath!;
+                AddOrSelectProposalFile(selectedPath!);
             }
         }
 
-        private async Task SubmitProposalAsync(string filePath, string originalText, string proposedText)
+        private void OnRemoveProposalFileRequested()
+        {
+            RemoveSelectedProposalFile();
+        }
+
+        private void OnResetProposalRequested()
+        {
+            ResetCurrentRequestState();
+        }
+
+        private void OnNewChatRequested()
+        {
+            StartNewChat();
+        }
+
+        private void OnOpenGitChangesRequested()
+        {
+            _ = OpenGitChangesAsync();
+        }
+
+        private async Task SubmitProposalAsync()
         {
             try
             {
+                var requestId = Guid.NewGuid().ToString("N");
+                _activeManualRequestId = requestId;
+                _suppressedRequestIds.Remove(requestId);
+                LogToolWindowViewModel.LastSubmittedRequestText = BuildSubmittedRequestText();
+                LogToolWindowViewModel.IsRequestInProgress = true;
                 LogToolWindowViewModel.StatusMessage = string.Empty;
-                _proposalDraftState?.SetActiveFilePath(filePath);
-                _proposalDraftState?.SetSelectedText(originalText);
+                var fileEdits = _proposalFileDrafts
+                    .Select(draft => new ProposalFileEditRequest
+                    {
+                        FilePath = draft.FilePath,
+                        OriginalText = draft.OriginalText,
+                        ProposedText = draft.ProposedText
+                    })
+                    .ToArray();
+
+                var activeDraft = GetActiveProposalDraft();
+                if (activeDraft != null)
+                {
+                    _proposalDraftState?.SetActiveFilePath(activeDraft.FilePath);
+                    _proposalDraftState?.SetSelectedText(activeDraft.OriginalText);
+                }
+
                 var vsService = _serviceProvider.GetRequiredService<IVsService>();
-                await vsService.ProposeTextEditAsync(Guid.NewGuid().ToString("N"), filePath, originalText, proposedText);
+                if (fileEdits.Length == 1)
+                    await vsService.ProposeTextEditAsync(requestId, fileEdits[0].FilePath, fileEdits[0].OriginalText, fileEdits[0].ProposedText);
+                else
+                    await vsService.ProposeTextEditsAsync(requestId, fileEdits);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Manual proposal submission failed for '{filePath}'.");
+                LogToolWindowViewModel.IsRequestInProgress = false;
+                LogToolWindowViewModel.StatusMessage = $"Request submission failed for {BuildActiveProposalTarget()}. Review the bridge log for details.";
+                _activeManualRequestId = null;
+                _logger.LogError(ex, $"Manual proposal submission failed for '{BuildActiveProposalTarget()}'.");
+            }
+        }
+
+        private async Task OpenGitChangesAsync()
+        {
+            try
+            {
+                var vsService = _serviceProvider.GetRequiredService<IVsService>();
+                await vsService.OpenGitChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                LogToolWindowViewModel.StatusMessage = "Unable to open Git Changes from the bridge surface. Review the bridge log for details.";
+                _logger.LogError(ex, "Open Git Changes failed.");
             }
         }
 
@@ -187,6 +266,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
+            LogToolWindowViewModel.PendingApprovalIncludedFiles = Array.Empty<string>();
             LogToolWindowViewModel.HasPendingApproval = false;
         }
 
@@ -197,6 +277,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
+            LogToolWindowViewModel.LastCompletedProposalIncludedFiles = Array.Empty<string>();
         }
 
         private static IReadOnlyList<ProposalReviewedChange> CloneReviewedChanges(IReadOnlyList<ProposalReviewedChange>? reviewedChanges)
@@ -211,17 +292,49 @@ namespace VsMcpBridge.Shared.MvpVm
                 }).ToArray();
         }
 
+        private static IReadOnlyList<string> CloneIncludedFiles(IReadOnlyList<string>? includedFiles)
+        {
+            return includedFiles == null || includedFiles.Count == 0
+                ? Array.Empty<string>()
+                : includedFiles.ToArray();
+        }
+
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalFilePath))
             {
+                if (_isUpdatingProposalEditor)
+                    return;
+
                 ClearCompletedProposalPreview();
                 _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
-                TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
+                ActivateProposalFile(LogToolWindowViewModel.ProposalFilePath);
             }
             else if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalOriginalText))
             {
+                if (_isUpdatingProposalEditor)
+                    return;
+
+                var activeDraft = GetActiveProposalDraft();
+                if (activeDraft != null)
+                {
+                    activeDraft.OriginalText = LogToolWindowViewModel.ProposalOriginalText;
+                    UpdateProposalSubmissionState();
+                }
+
                 _proposalDraftState?.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
+            }
+            else if (e.PropertyName == nameof(ILogToolWindowViewModel.ProposalProposedText))
+            {
+                if (_isUpdatingProposalEditor)
+                    return;
+
+                var activeDraft = GetActiveProposalDraft();
+                if (activeDraft != null)
+                {
+                    activeDraft.ProposedText = LogToolWindowViewModel.ProposalProposedText;
+                    UpdateProposalSubmissionState();
+                }
             }
         }
 
@@ -230,41 +343,275 @@ namespace VsMcpBridge.Shared.MvpVm
             _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
             _proposalDraftState?.SetSelectedText(LogToolWindowViewModel.ProposalOriginalText);
             if (!string.IsNullOrWhiteSpace(LogToolWindowViewModel.ProposalFilePath))
-                TryLoadProposalFile(LogToolWindowViewModel.ProposalFilePath);
+                ActivateProposalFile(LogToolWindowViewModel.ProposalFilePath);
+            else
+                UpdateProposalSubmissionState();
         }
 
-        private void TryLoadProposalFile(string? filePath, bool clearStatusMessage = true)
+        private void ActivateProposalFile(string? filePath, bool clearStatusMessage = true)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                LogToolWindowViewModel.IsProposalFileLoaded = false;
-                LogToolWindowViewModel.ProposalOriginalText = string.Empty;
-                LogToolWindowViewModel.ProposalProposedText = string.Empty;
+                if (_proposalFileDrafts.Count == 0)
+                    SetProposalEditorState(string.Empty, string.Empty, string.Empty, isLoaded: false, clearStatusMessage: clearStatusMessage);
+
                 if (clearStatusMessage)
                     LogToolWindowViewModel.StatusMessage = string.Empty;
                 return;
             }
 
+            var existingDraft = FindProposalDraft(filePath!);
+            if (existingDraft != null)
+            {
+                ShowProposalDraft(existingDraft, clearStatusMessage);
+                return;
+            }
+
+            if (_proposalFileDrafts.Count == 1)
+            {
+                ReplaceSingleProposalFile(filePath!, clearStatusMessage);
+                return;
+            }
+
+            AddOrSelectProposalFile(filePath!, clearStatusMessage);
+        }
+
+        private void AddOrSelectProposalFile(string filePath, bool clearStatusMessage = true)
+        {
+            var existingDraft = FindProposalDraft(filePath);
+            if (existingDraft != null)
+            {
+                ShowProposalDraft(existingDraft, clearStatusMessage);
+                return;
+            }
+
+            var draft = new ProposalEditorFileDraft { FilePath = filePath };
+            _proposalFileDrafts.Add(draft);
+            LoadProposalDraft(draft, clearStatusMessage);
+            ShowProposalDraft(draft, clearStatusMessage: false);
+        }
+
+        private void ReplaceSingleProposalFile(string filePath, bool clearStatusMessage)
+        {
+            ProposalEditorFileDraft draft;
+            if (_proposalFileDrafts.Count == 0)
+            {
+                draft = new ProposalEditorFileDraft();
+                _proposalFileDrafts.Add(draft);
+            }
+            else
+            {
+                draft = _proposalFileDrafts[0];
+            }
+
+            draft.FilePath = filePath;
+            draft.IsLoaded = false;
+            draft.OriginalText = string.Empty;
+            draft.ProposedText = string.Empty;
+
+            LoadProposalDraft(draft, clearStatusMessage);
+            ShowProposalDraft(draft, clearStatusMessage: false);
+        }
+
+        private void RemoveSelectedProposalFile()
+        {
+            var filePath = LogToolWindowViewModel.ProposalFilePath;
+            if (string.IsNullOrWhiteSpace(filePath))
+                return;
+
+            var existingDraft = FindProposalDraft(filePath);
+            if (existingDraft == null)
+                return;
+
+            _proposalFileDrafts.Remove(existingDraft);
+
+            if (_proposalFileDrafts.Count == 0)
+            {
+                SetProposalEditorState(string.Empty, string.Empty, string.Empty, isLoaded: false, clearStatusMessage: true);
+                UpdateProposalSubmissionState();
+                return;
+            }
+
+            ShowProposalDraft(_proposalFileDrafts[0], clearStatusMessage: true);
+        }
+
+        private ProposalEditorFileDraft? FindProposalDraft(string filePath)
+        {
+            return _proposalFileDrafts.FirstOrDefault(
+                draft => string.Equals(draft.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private ProposalEditorFileDraft? GetActiveProposalDraft()
+        {
+            return FindProposalDraft(LogToolWindowViewModel.ProposalFilePath);
+        }
+
+        private void LoadProposalDraft(ProposalEditorFileDraft draft, bool clearStatusMessage)
+        {
             try
             {
-                var normalizedPath = filePath!;
-                if (!File.Exists(normalizedPath))
-                    throw new FileNotFoundException("File was not found.", normalizedPath);
+                if (!File.Exists(draft.FilePath))
+                    throw new FileNotFoundException("File was not found.", draft.FilePath);
 
-                var content = File.ReadAllText(normalizedPath);
-                LogToolWindowViewModel.IsProposalFileLoaded = true;
-                LogToolWindowViewModel.ProposalOriginalText = content;
-                LogToolWindowViewModel.ProposalProposedText = content;
+                var content = File.ReadAllText(draft.FilePath);
+                draft.IsLoaded = true;
+                draft.OriginalText = content;
+                draft.ProposedText = content;
                 if (clearStatusMessage)
                     LogToolWindowViewModel.StatusMessage = string.Empty;
             }
             catch (Exception)
             {
-                LogToolWindowViewModel.IsProposalFileLoaded = false;
-                LogToolWindowViewModel.ProposalOriginalText = string.Empty;
-                LogToolWindowViewModel.ProposalProposedText = string.Empty;
-                LogToolWindowViewModel.StatusMessage = $"Unable to load file '{filePath}'.";
+                draft.IsLoaded = false;
+                draft.OriginalText = string.Empty;
+                draft.ProposedText = string.Empty;
+                LogToolWindowViewModel.StatusMessage = $"Unable to load file '{draft.FilePath}'.";
             }
+        }
+
+        private void ShowProposalDraft(ProposalEditorFileDraft draft, bool clearStatusMessage)
+        {
+            SetProposalEditorState(
+                draft.FilePath,
+                draft.OriginalText,
+                draft.ProposedText,
+                draft.IsLoaded,
+                clearStatusMessage);
+        }
+
+        private void ReloadActiveProposalFile(bool clearStatusMessage)
+        {
+            var activeDraft = GetActiveProposalDraft();
+            if (activeDraft == null)
+                return;
+
+            LoadProposalDraft(activeDraft, clearStatusMessage);
+            ShowProposalDraft(activeDraft, clearStatusMessage: false);
+        }
+
+        private void SetProposalEditorState(string filePath, string originalText, string proposedText, bool isLoaded, bool clearStatusMessage)
+        {
+            _isUpdatingProposalEditor = true;
+            try
+            {
+                LogToolWindowViewModel.ProposalFilePath = filePath;
+                LogToolWindowViewModel.ProposalOriginalText = originalText;
+                LogToolWindowViewModel.ProposalProposedText = proposedText;
+                LogToolWindowViewModel.IsProposalFileLoaded = isLoaded;
+                if (clearStatusMessage)
+                    LogToolWindowViewModel.StatusMessage = string.Empty;
+            }
+            finally
+            {
+                _isUpdatingProposalEditor = false;
+            }
+
+            UpdateProposalSubmissionState();
+        }
+
+        private void ResetCurrentRequestState()
+        {
+            SuppressActiveManualRequestIfNeeded();
+
+            _activeManualRequestId = null;
+            ClearApproval();
+            ClearCompletedProposalPreview();
+            LogToolWindowViewModel.RequestInputText = string.Empty;
+            LogToolWindowViewModel.LastSubmittedRequestText = string.Empty;
+            LogToolWindowViewModel.IsRequestInProgress = false;
+            LogToolWindowViewModel.StatusMessage = string.Empty;
+
+            var activeDraft = GetActiveProposalDraft();
+            _proposalDraftState?.SetActiveFilePath(LogToolWindowViewModel.ProposalFilePath);
+            _proposalDraftState?.SetSelectedText(activeDraft?.OriginalText ?? LogToolWindowViewModel.ProposalOriginalText);
+        }
+
+        private void StartNewChat()
+        {
+            SuppressActiveManualRequestIfNeeded();
+
+            _activeManualRequestId = null;
+            ClearApproval();
+            _proposalFileDrafts.Clear();
+            ClearCompletedProposalPreview();
+            SetProposalEditorState(string.Empty, string.Empty, string.Empty, isLoaded: false, clearStatusMessage: true);
+            LogToolWindowViewModel.RequestInputText = string.Empty;
+            LogToolWindowViewModel.LastSubmittedRequestText = string.Empty;
+            LogToolWindowViewModel.IsRequestInProgress = false;
+            LogToolWindowViewModel.StatusMessage = string.Empty;
+            _proposalDraftState?.SetActiveFilePath(string.Empty);
+            _proposalDraftState?.SetSelectedText(string.Empty);
+        }
+
+        private void SuppressActiveManualRequestIfNeeded()
+        {
+            if (LogToolWindowViewModel.IsRequestInProgress && !string.IsNullOrWhiteSpace(_activeManualRequestId))
+            {
+                _suppressedRequestIds.Add(_activeManualRequestId!);
+            }
+        }
+
+        private bool ShouldIgnoreRequestUpdate(string? requestId)
+        {
+            if (string.IsNullOrWhiteSpace(requestId))
+                return false;
+
+            var normalizedRequestId = requestId!;
+
+            if (_suppressedRequestIds.Contains(normalizedRequestId))
+            {
+                _suppressedRequestIds.Remove(normalizedRequestId);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void CompleteActiveManualRequest(string? requestId)
+        {
+            if (!string.IsNullOrWhiteSpace(requestId)
+                && string.Equals(_activeManualRequestId, requestId, StringComparison.Ordinal))
+            {
+                _activeManualRequestId = null;
+            }
+        }
+
+        private void UpdateProposalSubmissionState()
+        {
+            LogToolWindowViewModel.HasProposalDrafts = _proposalFileDrafts.Count > 0;
+            LogToolWindowViewModel.ProposalSelectedFiles = _proposalFileDrafts
+                .Select(draft => draft.FilePath)
+                .ToArray();
+
+            LogToolWindowViewModel.HasSubmittableProposal =
+                _proposalFileDrafts.Count > 0
+                && _proposalFileDrafts.All(draft => draft.IsLoaded)
+                && _proposalFileDrafts.Any(draft => !string.Equals(draft.OriginalText, draft.ProposedText, StringComparison.Ordinal));
+        }
+
+        private string BuildActiveProposalTarget()
+        {
+            return _proposalFileDrafts.Count switch
+            {
+                0 => "the selected proposal files",
+                1 => _proposalFileDrafts[0].FilePath,
+                _ => $"{_proposalFileDrafts.Count} files"
+            };
+        }
+
+        private string BuildSubmittedRequestText()
+        {
+            return string.IsNullOrWhiteSpace(LogToolWindowViewModel.RequestInputText)
+                ? "Manual proposal request"
+                : LogToolWindowViewModel.RequestInputText.Trim();
+        }
+
+        private sealed class ProposalEditorFileDraft
+        {
+            public string FilePath { get; set; } = string.Empty;
+            public string OriginalText { get; set; } = string.Empty;
+            public string ProposedText { get; set; } = string.Empty;
+            public bool IsLoaded { get; set; }
         }
 
         public void RunOnUiThread(Action action)
