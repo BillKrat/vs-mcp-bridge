@@ -518,6 +518,29 @@ public sealed class MvpVmTests
     }
 
     [Fact]
+    public void SubmitProposalCommand_with_request_text_only_clears_working_and_surfaces_no_file_status()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        var logger = new RecordingBridgeLogger();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), logger, new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "ping";
+
+        Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(1, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal("No proposal was created because no files were selected.", viewModel.StatusMessage);
+        Assert.Contains(
+            logger.WarningMessages,
+            message => message.Contains("Manual proposal submission completed without a reviewable proposal", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void SubmitProposalCommand_submits_multiple_selected_files_through_vs_service()
     {
         var firstPath = Path.GetTempFileName();
@@ -650,6 +673,42 @@ public sealed class MvpVmTests
             Assert.Equal("Included Files (1)", viewModel.PendingApprovalIncludedFilesHeader);
             Assert.Single(viewModel.PendingApprovalIncludedFiles);
             Assert.Equal(path, viewModel.PendingApprovalIncludedFiles[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_when_selected_file_has_no_change_clears_working_and_surfaces_no_op_status()
+    {
+        var path = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(path, "before");
+            var viewModel = new LogToolWindowViewModel();
+            var vsService = new StubVsService();
+            var logger = new RecordingBridgeLogger();
+            _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), logger, new TestThreadHelper(), viewModel);
+
+            viewModel.ProposalFilePath = path;
+            viewModel.ProposalProposedText = "before";
+            viewModel.RequestInputText = "Update the file.";
+
+            Assert.True(viewModel.SubmitProposalCommand.CanExecute(null));
+
+            viewModel.SubmitProposalCommand.Execute(null);
+
+            Assert.Equal(1, vsService.ProposeTextEditCalls);
+            Assert.False(viewModel.IsRequestInProgress);
+            Assert.Equal(
+                $"No proposal was created because the proposed text already matches the original content for {path}.",
+                viewModel.StatusMessage);
+            Assert.Contains(
+                logger.WarningMessages,
+                message => message.Contains("Manual proposal submission completed without a reviewable proposal", StringComparison.Ordinal));
         }
         finally
         {

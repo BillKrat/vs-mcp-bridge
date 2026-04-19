@@ -221,6 +221,12 @@ namespace VsMcpBridge.Shared.MvpVm
                         ProposedText = draft.ProposedText
                     })
                     .ToArray();
+                var hasMeaningfulChange = fileEdits.Any(
+                    fileEdit => !string.Equals(fileEdit.OriginalText, fileEdit.ProposedText, StringComparison.Ordinal));
+                var proposalTarget = BuildActiveProposalTarget();
+
+                _logger.LogInformation(
+                    $"Manual proposal submission started [RequestId={requestId}] [Target={proposalTarget}] [FileCount={fileEdits.Length}] [HasMeaningfulChange={hasMeaningfulChange}].");
 
                 var activeDraft = GetActiveProposalDraft();
                 if (activeDraft != null)
@@ -234,6 +240,22 @@ namespace VsMcpBridge.Shared.MvpVm
                     await vsService.ProposeTextEditAsync(requestId, fileEdits[0].FilePath, fileEdits[0].OriginalText, fileEdits[0].ProposedText);
                 else
                     await vsService.ProposeTextEditsAsync(requestId, fileEdits);
+
+                if (!hasMeaningfulChange
+                    && string.Equals(_activeManualRequestId, requestId, StringComparison.Ordinal)
+                    && LogToolWindowViewModel.IsRequestInProgress
+                    && !LogToolWindowViewModel.HasPendingApproval
+                    && string.IsNullOrWhiteSpace(LogToolWindowViewModel.StatusMessage))
+                {
+                    LogToolWindowViewModel.IsRequestInProgress = false;
+                    LogToolWindowViewModel.StatusMessage = fileEdits.Length == 0
+                        ? "No proposal was created because no files were selected."
+                        : $"No proposal was created because the proposed text already matches the original content for {proposalTarget}.";
+                    _activeManualRequestId = null;
+
+                    _logger.LogWarning(
+                        $"Manual proposal submission completed without a reviewable proposal [RequestId={requestId}] [Target={proposalTarget}] [FileCount={fileEdits.Length}] [HasMeaningfulChange={hasMeaningfulChange}].");
+                }
             }
             catch (Exception ex)
             {
