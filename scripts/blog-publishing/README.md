@@ -58,3 +58,35 @@ You can also publish by explicit folder path:
 - the BlogAI application must be running and reachable at `-ReloadBaseUrl`
 - connection details, endpoint values, and reload secrets are provided as parameters or local environment variables; no secrets are stored in source control
 - this script is draft-only for this slice and forces `IsPublished = false`
+
+## BlogEngine Integration (Repo-Driven Publishing)
+
+Repo content is the source of truth. BlogEngine is the runtime and rendering target.
+
+Required components:
+
+- `vs-mcp-bridge` repo for canonical posts, the publish script, and SQL upsert scripts
+- BlogAI repo for reload endpoint support
+
+Canonical workflow:
+
+1. Update the canonical post under `docs/blogs/posts/<slug>/`.
+2. Run `Publish-BlogPostDraft.ps1` for that post.
+3. The script upserts the post and triggers the reload endpoint.
+4. Verify the draft in BlogEngine or through the post API.
+
+Required local setup:
+
+- SQL connection string
+- BlogEngine running locally
+- reload endpoint key
+
+Known behavior:
+
+- avoid browser refresh in the BlogEngine admin edit view immediately after publish
+
+Boundaries:
+
+- the script forces draft state
+- repo content overwrites manual UI edits
+- BlogEngine is not the source of truth

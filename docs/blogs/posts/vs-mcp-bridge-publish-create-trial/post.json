@@ -1,0 +1,20 @@
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "24F84A43-12C4-4E62-8A2C-C7CA8D7C9D57",
+  "title": "VS MCP Bridge Publish Create Trial",
+  "description": "Trial post used to validate first-time post creation from the repo-driven publishing pipeline.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-publish-create-trial",
+  "isPublished": false,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Publishing",
+    "Blog AI"
+  ]
+}
