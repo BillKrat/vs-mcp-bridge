@@ -4,5 +4,8 @@ public enum ChatEventType
 {
     RequestStarted,
     Cancelled,
+    RetryScheduled,
+    RetryAttempt,
+    RetryExhausted,
     ResponseCompleted,
 }

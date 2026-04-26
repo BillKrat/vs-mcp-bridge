@@ -8,6 +8,8 @@ namespace Adventures.ChatEngine.Services;
 
 public sealed class ChatEngine
 {
+    private const int MaxProviderAttempts = 3;
+
     private readonly ILogger<ChatEngine> logger;
     private readonly IAiChatProvider provider;
 
@@ -63,24 +65,56 @@ public sealed class ChatEngine
         this.logger.LogInformation("Calling AI chat provider for message {Message}.", request.Message);
 
         ChatResponse? response = null;
-        bool wasCancelledDuringProviderCall = false;
+        Exception? lastException = null;
 
-        try
+        for (int attempt = 1; attempt <= MaxProviderAttempts; attempt++)
         {
-            response = await this.provider
-                .SendAsync(request, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            wasCancelledDuringProviderCall = true;
-        }
+            bool wasCancelledDuringProviderCall = false;
 
-        if (wasCancelledDuringProviderCall)
-        {
-            this.logger.LogInformation("Request processing was cancelled during provider call.");
-            yield return new ChatEvent(ChatEventType.Cancelled);
-            yield break;
+            try
+            {
+                response = await this.provider
+                    .SendAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+
+                lastException = null;
+                break;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                wasCancelledDuringProviderCall = true;
+            }
+            catch (Exception exception)
+            {
+                lastException = exception;
+            }
+
+            if (wasCancelledDuringProviderCall)
+            {
+                this.logger.LogInformation("Request processing was cancelled during provider call.");
+                yield return new ChatEvent(ChatEventType.Cancelled);
+                yield break;
+            }
+
+            if (attempt == MaxProviderAttempts)
+            {
+                this.logger.LogInformation("Provider retries were exhausted after {AttemptCount} attempts.", MaxProviderAttempts);
+                yield return new ChatEvent(ChatEventType.RetryExhausted);
+                throw lastException!;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                this.logger.LogInformation("Request processing was cancelled before retry attempt.");
+                yield return new ChatEvent(ChatEventType.Cancelled);
+                yield break;
+            }
+
+            this.logger.LogInformation("Scheduling retry attempt {AttemptNumber} for message {Message}.", attempt + 1, request.Message);
+            yield return new ChatEvent(ChatEventType.RetryScheduled);
+
+            this.logger.LogInformation("Starting retry attempt {AttemptNumber} for message {Message}.", attempt + 1, request.Message);
+            yield return new ChatEvent(ChatEventType.RetryAttempt);
         }
 
         captureResponse?.Invoke(response!);

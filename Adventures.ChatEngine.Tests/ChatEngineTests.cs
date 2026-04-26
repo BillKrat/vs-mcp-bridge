@@ -75,4 +75,64 @@ public sealed class ChatEngineTests
         Assert.DoesNotContain(events, chatEvent => chatEvent.Type == ChatEventType.ResponseCompleted);
         Assert.False(provider.WasCalled);
     }
+
+    [Fact]
+    public async Task StreamAsync_WhenProviderFailsThenSucceeds_YieldsRetryEventsAndCompletes()
+    {
+        var provider = new FakePingPongProvider();
+        provider.FailNext(new InvalidOperationException("transient"));
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+
+        var events = new List<ChatEvent>();
+
+        await foreach (ChatEvent chatEvent in engine.StreamAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None))
+        {
+            events.Add(chatEvent);
+        }
+
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second => Assert.Equal(ChatEventType.RetryScheduled, second.Type),
+            third => Assert.Equal(ChatEventType.RetryAttempt, third.Type),
+            fourth => Assert.Equal(ChatEventType.ResponseCompleted, fourth.Type));
+
+        Assert.Equal(2, provider.CallCount);
+    }
+
+    [Fact]
+    public async Task StreamAsync_WhenProviderAlwaysFails_YieldsRetryExhausted()
+    {
+        var provider = new FakePingPongProvider();
+        provider.FailNext(new InvalidOperationException("failure-1"));
+        provider.FailNext(new InvalidOperationException("failure-2"));
+        provider.FailNext(new InvalidOperationException("failure-3"));
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+
+        var events = new List<ChatEvent>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (ChatEvent chatEvent in engine.StreamAsync(
+                new ChatRequest("ping"),
+                CancellationToken.None))
+            {
+                events.Add(chatEvent);
+            }
+        });
+
+        Assert.Equal("failure-3", exception.Message);
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second => Assert.Equal(ChatEventType.RetryScheduled, second.Type),
+            third => Assert.Equal(ChatEventType.RetryAttempt, third.Type),
+            fourth => Assert.Equal(ChatEventType.RetryScheduled, fourth.Type),
+            fifth => Assert.Equal(ChatEventType.RetryAttempt, fifth.Type),
+            sixth => Assert.Equal(ChatEventType.RetryExhausted, sixth.Type));
+
+        Assert.Equal(3, provider.CallCount);
+    }
 }
