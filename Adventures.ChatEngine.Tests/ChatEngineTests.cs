@@ -49,4 +49,30 @@ public sealed class ChatEngineTests
             first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
             second => Assert.Equal(ChatEventType.ResponseCompleted, second.Type));
     }
+
+    [Fact]
+    public async Task StreamAsync_WhenAlreadyCancelled_YieldsRequestStartedThenCancelled()
+    {
+        var provider = new FakePingPongProvider();
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        var events = new List<ChatEvent>();
+
+        await foreach (ChatEvent chatEvent in engine.StreamAsync(
+            new ChatRequest("ping"),
+            cancellationTokenSource.Token))
+        {
+            events.Add(chatEvent);
+        }
+
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second => Assert.Equal(ChatEventType.Cancelled, second.Type));
+
+        Assert.DoesNotContain(events, chatEvent => chatEvent.Type == ChatEventType.ResponseCompleted);
+        Assert.False(provider.WasCalled);
+    }
 }

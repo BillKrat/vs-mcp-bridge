@@ -53,15 +53,47 @@ public sealed class ChatEngine
         this.logger.LogInformation("Starting request processing for message {Message}.", request.Message);
         yield return new ChatEvent(ChatEventType.RequestStarted);
 
+        if (cancellationToken.IsCancellationRequested)
+        {
+            this.logger.LogInformation("Request processing was cancelled before provider call.");
+            yield return new ChatEvent(ChatEventType.Cancelled);
+            yield break;
+        }
+
         this.logger.LogInformation("Calling AI chat provider for message {Message}.", request.Message);
 
-        ChatResponse response = await this.provider
-            .SendAsync(request, cancellationToken)
-            .ConfigureAwait(false);
+        ChatResponse? response = null;
+        bool wasCancelledDuringProviderCall = false;
 
-        captureResponse?.Invoke(response);
+        try
+        {
+            response = await this.provider
+                .SendAsync(request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            wasCancelledDuringProviderCall = true;
+        }
 
-        this.logger.LogInformation("AI chat provider returned message {Message}.", response.Message);
+        if (wasCancelledDuringProviderCall)
+        {
+            this.logger.LogInformation("Request processing was cancelled during provider call.");
+            yield return new ChatEvent(ChatEventType.Cancelled);
+            yield break;
+        }
+
+        captureResponse?.Invoke(response!);
+
+        this.logger.LogInformation("AI chat provider returned message {Message}.", response!.Message);
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            this.logger.LogInformation("Request processing was cancelled after provider call.");
+            yield return new ChatEvent(ChatEventType.Cancelled);
+            yield break;
+        }
+
         this.logger.LogInformation("Emitting response completed event.");
 
         yield return new ChatEvent(ChatEventType.ResponseCompleted);
