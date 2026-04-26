@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Adventures.ChatEngine.Services;
 
-public sealed class ChatEngine
+public sealed class ChatEngine : IChatEngine
 {
     private const int MaxProviderAttempts = 3;
 
@@ -32,7 +32,7 @@ public sealed class ChatEngine
     public async Task<ChatResponse> SendAsync(
         ChatRequest request,
         CancellationToken cancellationToken,
-        Action<ChatEvent>? emitEvent)
+        Action<ChatEvent>? onEvent = null)
     {
         ChatResponse? response = null;
 
@@ -41,7 +41,7 @@ public sealed class ChatEngine
             cancellationToken,
             capturedResponse => response = capturedResponse).ConfigureAwait(false))
         {
-            emitEvent?.Invoke(chatEvent);
+            onEvent?.Invoke(chatEvent);
         }
 
         return response!;

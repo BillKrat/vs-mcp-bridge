@@ -1,7 +1,11 @@
+using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
+using Adventures.ChatEngine.Extensions;
 using Adventures.ChatEngine.Models;
 using Adventures.ChatEngine.Tests.Fakes;
 using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Adventures.ChatEngine.Tests;
@@ -134,5 +138,26 @@ public sealed class ChatEngineTests
             sixth => Assert.Equal(ChatEventType.RetryExhausted, sixth.Type));
 
         Assert.Equal(3, provider.CallCount);
+    }
+
+    [Fact]
+    public async Task AddChatEngine_RegistersChatEngine()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IAiChatProvider, FakePingPongProvider>();
+        services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
+        services.AddChatEngine();
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        Assert.NotNull(engine);
+
+        ChatResponse response = await engine!.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("pong", response.Message);
     }
 }
