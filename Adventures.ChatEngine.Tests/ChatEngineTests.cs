@@ -28,4 +28,25 @@ public sealed class ChatEngineTests
             first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
             second => Assert.Equal(ChatEventType.ResponseCompleted, second.Type));
     }
+
+    [Fact]
+    public async Task StreamAsync_WhenPing_YieldsEventsInOrder()
+    {
+        var provider = new FakePingPongProvider();
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+
+        var events = new List<ChatEvent>();
+
+        await foreach (ChatEvent chatEvent in engine.StreamAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None))
+        {
+            events.Add(chatEvent);
+        }
+
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second => Assert.Equal(ChatEventType.ResponseCompleted, second.Type));
+    }
 }
