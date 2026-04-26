@@ -2,6 +2,7 @@ using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Models;
 using Adventures.ChatEngine.Tests.Fakes;
 using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Adventures.ChatEngine.Tests;
 
@@ -11,7 +12,7 @@ public sealed class ChatEngineTests
     public async Task SendAsync_WhenPing_ReturnsPong_And_EmitsEvents()
     {
         var provider = new FakePingPongProvider();
-        var engine = new ChatEngineService(provider);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
 
         var events = new List<ChatEvent>();
 
