@@ -4,6 +4,7 @@ using Adventures.ChatEngine.Extensions;
 using Adventures.ChatEngine.Models;
 using Adventures.ChatEngine.Tests.Fakes;
 using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,7 +17,7 @@ public sealed class ChatEngineTests
     public async Task SendAsync_WhenPing_ReturnsPong_And_EmitsEvents()
     {
         var provider = new FakePingPongProvider();
-        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
 
         var events = new List<ChatEvent>();
 
@@ -37,7 +38,7 @@ public sealed class ChatEngineTests
     public async Task StreamAsync_WhenPing_YieldsEventsInOrder()
     {
         var provider = new FakePingPongProvider();
-        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
 
         var events = new List<ChatEvent>();
 
@@ -58,7 +59,7 @@ public sealed class ChatEngineTests
     public async Task StreamAsync_WhenAlreadyCancelled_YieldsRequestStartedThenCancelled()
     {
         var provider = new FakePingPongProvider();
-        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
         using var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.Cancel();
 
@@ -85,7 +86,7 @@ public sealed class ChatEngineTests
     {
         var provider = new FakePingPongProvider();
         provider.FailNext(new InvalidOperationException("transient"));
-        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
 
         var events = new List<ChatEvent>();
 
@@ -113,7 +114,7 @@ public sealed class ChatEngineTests
         provider.FailNext(new InvalidOperationException("failure-1"));
         provider.FailNext(new InvalidOperationException("failure-2"));
         provider.FailNext(new InvalidOperationException("failure-3"));
-        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance);
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
 
         var events = new List<ChatEvent>();
 
@@ -146,6 +147,7 @@ public sealed class ChatEngineTests
         var services = new ServiceCollection();
         services.AddSingleton<IAiChatProvider, FakePingPongProvider>();
         services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
+        services.AddSingleton<IConfiguration>(CreateConfiguration());
         services.AddChatEngine();
 
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -159,5 +161,42 @@ public sealed class ChatEngineTests
             CancellationToken.None);
 
         Assert.Equal("pong", response.Message);
+    }
+
+    [Fact]
+    public async Task StreamAsync_WhenRetryMaxAttemptsConfigured_UsesConfiguredValue()
+    {
+        var provider = new FakePingPongProvider();
+        provider.FailNext(new InvalidOperationException("failure-1"));
+        provider.FailNext(new InvalidOperationException("failure-2"));
+        provider.FailNext(new InvalidOperationException("failure-3"));
+        var configuration = CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:Retry:MaxAttempts"] = "2",
+        });
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, configuration);
+
+        var events = new List<ChatEvent>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (ChatEvent chatEvent in engine.StreamAsync(
+                new ChatRequest("ping"),
+                CancellationToken.None))
+            {
+                events.Add(chatEvent);
+            }
+        });
+
+        Assert.Equal("failure-2", exception.Message);
+        Assert.Equal(2, provider.CallCount);
+        Assert.Contains(events, chatEvent => chatEvent.Type == ChatEventType.RetryExhausted);
+    }
+
+    private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)
+    {
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(values)
+            .Build();
     }
 }

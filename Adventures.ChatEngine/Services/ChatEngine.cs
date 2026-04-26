@@ -1,6 +1,7 @@
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
@@ -8,15 +9,21 @@ namespace Adventures.ChatEngine.Services;
 
 public sealed class ChatEngine : IChatEngine
 {
+    private const string RetryMaxAttemptsConfigurationKey = "Adventures:ChatEngine:Retry:MaxAttempts";
     private const int MaxProviderAttempts = 3;
 
+    private readonly IConfiguration configuration;
     private readonly ILogger<ChatEngine> logger;
     private readonly IAiChatProvider provider;
 
-    public ChatEngine(IAiChatProvider provider, ILogger<ChatEngine> logger)
+    public ChatEngine(
+        IAiChatProvider provider,
+        ILogger<ChatEngine> logger,
+        IConfiguration configuration)
     {
         this.provider = provider;
         this.logger = logger;
+        this.configuration = configuration;
     }
 
     public async IAsyncEnumerable<ChatEvent> StreamAsync(
@@ -66,8 +73,9 @@ public sealed class ChatEngine : IChatEngine
 
         ChatResponse? response = null;
         Exception? lastException = null;
+        int maxProviderAttempts = this.GetMaxProviderAttempts();
 
-        for (int attempt = 1; attempt <= MaxProviderAttempts; attempt++)
+        for (int attempt = 1; attempt <= maxProviderAttempts; attempt++)
         {
             bool wasCancelledDuringProviderCall = false;
 
@@ -96,9 +104,9 @@ public sealed class ChatEngine : IChatEngine
                 yield break;
             }
 
-            if (attempt == MaxProviderAttempts)
+            if (attempt == maxProviderAttempts)
             {
-                this.logger.LogInformation("Provider retries were exhausted after {AttemptCount} attempts.", MaxProviderAttempts);
+                this.logger.LogInformation("Provider retries were exhausted after {AttemptCount} attempts.", maxProviderAttempts);
                 yield return new ChatEvent(ChatEventType.RetryExhausted);
                 throw lastException!;
             }
@@ -131,5 +139,14 @@ public sealed class ChatEngine : IChatEngine
         this.logger.LogInformation("Emitting response completed event.");
 
         yield return new ChatEvent(ChatEventType.ResponseCompleted);
+    }
+
+    private int GetMaxProviderAttempts()
+    {
+        string? configuredValue = this.configuration[RetryMaxAttemptsConfigurationKey];
+
+        return int.TryParse(configuredValue, out int maxProviderAttempts) && maxProviderAttempts > 0
+            ? maxProviderAttempts
+            : MaxProviderAttempts;
     }
 }
