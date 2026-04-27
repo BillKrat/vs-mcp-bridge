@@ -249,6 +249,24 @@ public sealed class ChatEngineTests
         Assert.DoesNotContain("stub-key", exception.Message);
     }
 
+    [Fact]
+    public async Task OpenAiProvider_WhenUseRealApiTrue_ThrowsNotImplemented()
+    {
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+            ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+            ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+        });
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        var exception = await Assert.ThrowsAsync<NotImplementedException>(() =>
+            engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
+
+        Assert.Equal("Real OpenAI HTTP integration has not been implemented yet.", exception.Message);
+    }
+
     private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)
     {
         return new ConfigurationBuilder()

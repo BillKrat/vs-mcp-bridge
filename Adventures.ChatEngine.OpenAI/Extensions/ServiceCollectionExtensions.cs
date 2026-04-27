@@ -8,7 +8,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddOpenAiProvider(this IServiceCollection services)
     {
-        services.AddSingleton<IAiChatProvider, OpenAiChatProvider>();
+        services.AddHttpClient<OpenAiChatProvider>();
+        services.AddTransient<IAiChatProvider>(serviceProvider => serviceProvider.GetRequiredService<OpenAiChatProvider>());
         return services;
     }
 }
