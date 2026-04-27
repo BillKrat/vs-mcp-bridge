@@ -23,6 +23,8 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
     public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
+        this.ValidateConfiguration();
+
         this.logger.LogInformation(
             "Handling stub OpenAI chat request. ApiKeyConfigured: {ApiKeyConfigured}, ModelConfigured: {ModelConfigured}, Model: {Model}",
             !string.IsNullOrWhiteSpace(this.apiKey),
@@ -31,5 +33,18 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
         string message = request.Message == "ping" ? "pong-from-openai" : "openai-stub-response";
         return Task.FromResult(new ChatResponse(message));
+    }
+
+    private void ValidateConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(this.apiKey))
+        {
+            throw new InvalidOperationException($"Missing required configuration value: {ApiKeyConfigurationKey}");
+        }
+
+        if (string.IsNullOrWhiteSpace(this.model))
+        {
+            throw new InvalidOperationException($"Missing required configuration value: {ModelConfigurationKey}");
+        }
     }
 }

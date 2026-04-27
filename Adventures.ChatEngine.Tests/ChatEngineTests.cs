@@ -198,18 +198,11 @@ public sealed class ChatEngineTests
     [Fact]
     public async Task OpenAiProvider_WhenRegistered_EngineUsesProvider()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IConfiguration>(CreateConfiguration(new Dictionary<string, string?>
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
         {
             ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
             ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
-        }));
-        services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
-        services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
-        services.AddChatEngine();
-        services.AddOpenAiProvider();
-
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        });
 
         IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
 
@@ -222,10 +215,55 @@ public sealed class ChatEngineTests
         Assert.Equal("pong-from-openai", response.Message);
     }
 
+    [Fact]
+    public async Task OpenAiProvider_WhenApiKeyMissing_ThrowsClearConfigurationError()
+    {
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+        });
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
+
+        Assert.Contains("Adventures:ChatEngine:OpenAI:ApiKey", exception.Message);
+        Assert.DoesNotContain("stub-key", exception.Message);
+    }
+
+    [Fact]
+    public async Task OpenAiProvider_WhenModelMissing_ThrowsClearConfigurationError()
+    {
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+        });
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
+
+        Assert.Contains("Adventures:ChatEngine:OpenAI:Model", exception.Message);
+        Assert.DoesNotContain("stub-key", exception.Message);
+    }
+
     private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)
     {
         return new ConfigurationBuilder()
             .AddInMemoryCollection(values)
             .Build();
+    }
+
+    private static ServiceProvider CreateOpenAiServiceProvider(IDictionary<string, string?> values)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(CreateConfiguration(values));
+        services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
+        services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
+        services.AddChatEngine();
+        services.AddOpenAiProvider();
+        return services.BuildServiceProvider();
     }
 }
