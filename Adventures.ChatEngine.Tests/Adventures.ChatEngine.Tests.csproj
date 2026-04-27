@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adventures.ChatEngine\Adventures.ChatEngine.csproj" />
+    <ProjectReference Include="..\Adventures.ChatEngine.OpenAI\Adventures.ChatEngine.OpenAI.csproj" />
   </ItemGroup>
 
 </Project>

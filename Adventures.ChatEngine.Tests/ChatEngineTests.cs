@@ -2,6 +2,8 @@ using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Extensions;
 using Adventures.ChatEngine.Models;
+using Adventures.ChatEngine.OpenAI.Extensions;
+using Adventures.ChatEngine.OpenAI.Services;
 using Adventures.ChatEngine.Tests.Fakes;
 using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
 using Microsoft.Extensions.Configuration;
@@ -191,6 +193,33 @@ public sealed class ChatEngineTests
         Assert.Equal("failure-2", exception.Message);
         Assert.Equal(2, provider.CallCount);
         Assert.Contains(events, chatEvent => chatEvent.Type == ChatEventType.RetryExhausted);
+    }
+
+    [Fact]
+    public async Task OpenAiProvider_WhenRegistered_EngineUsesProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+            ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+        }));
+        services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
+        services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
+        services.AddChatEngine();
+        services.AddOpenAiProvider();
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        Assert.NotNull(engine);
+
+        ChatResponse response = await engine!.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("pong-from-openai", response.Message);
     }
 
     private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)
