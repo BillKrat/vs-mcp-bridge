@@ -38,7 +38,12 @@ public sealed class ChatEngineTests
         Assert.Collection(
             events,
             first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
-            second => Assert.Equal(ChatEventType.ResponseCompleted, second.Type));
+            second =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, second.Type);
+                Assert.Equal("pong", second.Content);
+            },
+            third => Assert.Equal(ChatEventType.ResponseCompleted, third.Type));
     }
 
     [Fact]
@@ -59,7 +64,12 @@ public sealed class ChatEngineTests
         Assert.Collection(
             events,
             first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
-            second => Assert.Equal(ChatEventType.ResponseCompleted, second.Type));
+            second =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, second.Type);
+                Assert.Equal("pong", second.Content);
+            },
+            third => Assert.Equal(ChatEventType.ResponseCompleted, third.Type));
     }
 
     [Fact]
@@ -109,7 +119,12 @@ public sealed class ChatEngineTests
             first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
             second => Assert.Equal(ChatEventType.RetryScheduled, second.Type),
             third => Assert.Equal(ChatEventType.RetryAttempt, third.Type),
-            fourth => Assert.Equal(ChatEventType.ResponseCompleted, fourth.Type));
+            fourth =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, fourth.Type);
+                Assert.Equal("pong", fourth.Content);
+            },
+            fifth => Assert.Equal(ChatEventType.ResponseCompleted, fifth.Type));
 
         Assert.Equal(2, provider.CallCount);
     }
@@ -198,6 +213,52 @@ public sealed class ChatEngineTests
         Assert.Equal("failure-2", exception.Message);
         Assert.Equal(2, provider.CallCount);
         Assert.Contains(events, chatEvent => chatEvent.Type == ChatEventType.RetryExhausted);
+    }
+
+    [Fact]
+    public async Task StreamAsync_WhenProviderStreamsChunks_YieldsTokenGeneratedEventsAndResponseCompleted()
+    {
+        var provider = new FakePingPongProvider();
+        provider.SetStreamChunks("po", "ng");
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
+
+        var events = new List<ChatEvent>();
+
+        await foreach (ChatEvent chatEvent in engine.StreamAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None))
+        {
+            events.Add(chatEvent);
+        }
+
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, second.Type);
+                Assert.Equal("po", second.Content);
+            },
+            third =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, third.Type);
+                Assert.Equal("ng", third.Content);
+            },
+            fourth => Assert.Equal(ChatEventType.ResponseCompleted, fourth.Type));
+    }
+
+    [Fact]
+    public async Task SendAsync_WhenProviderStreamsChunks_ReturnsAggregatedResponse()
+    {
+        var provider = new FakePingPongProvider();
+        provider.SetStreamChunks("po", "ng");
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
+
+        ChatResponse response = await engine.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("pong", response.Message);
     }
 
     [Fact]

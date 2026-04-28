@@ -3,6 +3,7 @@ using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Runtime.CompilerServices;
 
 namespace Adventures.ChatEngine.Services;
@@ -71,30 +72,50 @@ public sealed class ChatEngine : IChatEngine
 
         this.logger.LogInformation("Calling AI chat provider for message {Message}.", request.Message);
 
-        ChatResponse? response = null;
+        StringBuilder? responseBuilder = null;
         Exception? lastException = null;
         int maxProviderAttempts = this.GetMaxProviderAttempts();
 
         for (int attempt = 1; attempt <= maxProviderAttempts; attempt++)
         {
             bool wasCancelledDuringProviderCall = false;
+            bool completedSuccessfully = false;
 
-            try
-            {
-                response = await this.provider
-                    .SendAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
+            responseBuilder = new StringBuilder();
 
-                lastException = null;
-                break;
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            await using IAsyncEnumerator<ChatResponse> enumerator = this.provider
+                .StreamAsync(request, cancellationToken)
+                .GetAsyncEnumerator(cancellationToken);
+
+            while (true)
             {
-                wasCancelledDuringProviderCall = true;
-            }
-            catch (Exception exception)
-            {
-                lastException = exception;
+                bool hasChunk;
+
+                try
+                {
+                    hasChunk = await enumerator.MoveNextAsync().ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    wasCancelledDuringProviderCall = true;
+                    break;
+                }
+                catch (Exception exception)
+                {
+                    lastException = exception;
+                    break;
+                }
+
+                if (!hasChunk)
+                {
+                    lastException = null;
+                    completedSuccessfully = true;
+                    break;
+                }
+
+                ChatResponse chunk = enumerator.Current;
+                responseBuilder.Append(chunk.Message);
+                yield return new ChatEvent(ChatEventType.TokenGenerated, chunk.Message);
             }
 
             if (wasCancelledDuringProviderCall)
@@ -102,6 +123,11 @@ public sealed class ChatEngine : IChatEngine
                 this.logger.LogInformation("Request processing was cancelled during provider call.");
                 yield return new ChatEvent(ChatEventType.Cancelled);
                 yield break;
+            }
+
+            if (completedSuccessfully)
+            {
+                break;
             }
 
             if (attempt == maxProviderAttempts)
@@ -125,9 +151,11 @@ public sealed class ChatEngine : IChatEngine
             yield return new ChatEvent(ChatEventType.RetryAttempt);
         }
 
-        captureResponse?.Invoke(response!);
+        ChatResponse response = new(responseBuilder?.ToString() ?? string.Empty);
 
-        this.logger.LogInformation("AI chat provider returned message {Message}.", response!.Message);
+        captureResponse?.Invoke(response);
+
+        this.logger.LogInformation("AI chat provider returned message {Message}.", response.Message);
 
         if (cancellationToken.IsCancellationRequested)
         {

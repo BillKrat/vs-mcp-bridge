@@ -52,6 +52,13 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         return new ChatResponse(message);
     }
 
+    public async IAsyncEnumerable<ChatResponse> StreamAsync(
+        ChatRequest request,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        yield return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     private void ValidateConfiguration()
     {
         if (string.IsNullOrWhiteSpace(this.options.ApiKey))
