@@ -2,6 +2,7 @@ using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Extensions;
 using Adventures.ChatEngine.Models;
+using Adventures.ChatEngine.OpenAI.Configuration;
 using Adventures.ChatEngine.OpenAI.Extensions;
 using Adventures.ChatEngine.OpenAI.Services;
 using Adventures.ChatEngine.Tests.Fakes;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -363,7 +365,7 @@ public sealed class ChatEngineTests
         services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
         services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
         services.AddChatEngine();
-        services.AddOpenAiProvider();
+        services.AddOpenAiProvider(CreateConfiguration(values));
 
         if (handler is not null)
         {
@@ -373,6 +375,31 @@ public sealed class ChatEngineTests
         }
 
         return services.BuildServiceProvider();
+    }
+
+    [Fact]
+    public void OpenAiProviderOptions_AreBoundFromConfiguration()
+    {
+        IConfiguration configuration = CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+            ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+            ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+        });
+
+        var services = new ServiceCollection();
+        services.AddSingleton(configuration);
+        services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
+        services.AddOpenAiProvider(configuration);
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IOptions<OpenAiChatProviderOptions>? options = serviceProvider.GetService<IOptions<OpenAiChatProviderOptions>>();
+
+        Assert.NotNull(options);
+        Assert.Equal("stub-key", options!.Value.ApiKey);
+        Assert.Equal("stub-model", options.Value.Model);
+        Assert.True(options.Value.UseRealApi);
     }
 
     private sealed class TestHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)

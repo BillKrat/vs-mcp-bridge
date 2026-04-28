@@ -1,7 +1,8 @@
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
-using Microsoft.Extensions.Configuration;
+using Adventures.ChatEngine.OpenAI.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -16,38 +17,34 @@ public sealed class OpenAiChatProvider : IAiChatProvider
     private const string UseRealApiConfigurationKey = "Adventures:ChatEngine:OpenAI:UseRealApi";
     private const string ChatCompletionsEndpoint = "https://api.openai.com/v1/chat/completions";
 
-    private readonly string? apiKey;
     private readonly HttpClient httpClient;
     private readonly ILogger<OpenAiChatProvider> logger;
-    private readonly string? model;
-    private readonly bool useRealApi;
+    private readonly OpenAiChatProviderOptions options;
 
     public OpenAiChatProvider(
         HttpClient httpClient,
         ILogger<OpenAiChatProvider> logger,
-        IConfiguration configuration)
+        IOptions<OpenAiChatProviderOptions> options)
     {
         this.httpClient = httpClient;
         this.logger = logger;
-        this.apiKey = configuration[ApiKeyConfigurationKey];
-        this.model = configuration[ModelConfigurationKey];
-        this.useRealApi = bool.TryParse(configuration[UseRealApiConfigurationKey], out bool configuredValue) && configuredValue;
+        this.options = options.Value;
     }
 
     public async Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
         this.ValidateConfiguration();
 
-        if (this.useRealApi)
+        if (this.options.UseRealApi)
         {
             return await this.SendRealRequestAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         this.logger.LogInformation(
             "Handling stub OpenAI chat request. ApiKeyConfigured: {ApiKeyConfigured}, ModelConfigured: {ModelConfigured}, Model: {Model}",
-            !string.IsNullOrWhiteSpace(this.apiKey),
-            !string.IsNullOrWhiteSpace(this.model),
-            this.model);
+            !string.IsNullOrWhiteSpace(this.options.ApiKey),
+            !string.IsNullOrWhiteSpace(this.options.Model),
+            this.options.Model);
 
         _ = this.httpClient;
 
@@ -57,12 +54,12 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
     private void ValidateConfiguration()
     {
-        if (string.IsNullOrWhiteSpace(this.apiKey))
+        if (string.IsNullOrWhiteSpace(this.options.ApiKey))
         {
             throw new InvalidOperationException($"Missing required configuration value: {ApiKeyConfigurationKey}");
         }
 
-        if (string.IsNullOrWhiteSpace(this.model))
+        if (string.IsNullOrWhiteSpace(this.options.Model))
         {
             throw new InvalidOperationException($"Missing required configuration value: {ModelConfigurationKey}");
         }
@@ -74,7 +71,7 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         {
             Content = JsonContent.Create(new
             {
-                model = this.model,
+                model = this.options.Model,
                 messages = new[]
                 {
                     new
@@ -86,7 +83,7 @@ public sealed class OpenAiChatProvider : IAiChatProvider
             }),
         };
 
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.apiKey);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.options.ApiKey);
 
         using HttpResponseMessage response = await this.httpClient
             .SendAsync(httpRequest, cancellationToken)
