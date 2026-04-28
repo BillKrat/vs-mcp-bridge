@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 
 namespace Adventures.ChatEngine.Tests;
 
@@ -250,21 +253,98 @@ public sealed class ChatEngineTests
     }
 
     [Fact]
-    public async Task OpenAiProvider_WhenUseRealApiTrue_ThrowsNotImplemented()
+    public async Task OpenAiProvider_WhenUseRealApiTrue_ReturnsHttpResponseContent()
     {
-        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
-            ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
-            ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
-            ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+            Content = new StringContent(
+                """
+                {
+                  "choices": [
+                    {
+                      "message": {
+                        "content": "hello from fake openai"
+                      }
+                    }
+                  ]
+                }
+                """,
+                Encoding.UTF8,
+                "application/json"),
         });
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
+            new Dictionary<string, string?>
+            {
+                ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+                ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+                ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+            },
+            handler);
 
         IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
 
-        var exception = await Assert.ThrowsAsync<NotImplementedException>(() =>
+        ChatResponse response = await engine!.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("hello from fake openai", response.Message);
+    }
+
+    [Fact]
+    public async Task OpenAiProvider_WhenUseRealApiTrue_AndHttpFails_ThrowsSafeError()
+    {
+        const string apiKey = "stub-key";
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized)
+        {
+            Content = new StringContent("unauthorized", Encoding.UTF8, "text/plain"),
+        });
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
+            new Dictionary<string, string?>
+            {
+                ["Adventures:ChatEngine:OpenAI:ApiKey"] = apiKey,
+                ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+                ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+            },
+            handler);
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
 
-        Assert.Equal("Real OpenAI HTTP integration has not been implemented yet.", exception.Message);
+        Assert.Contains("401", exception.Message);
+        Assert.DoesNotContain(apiKey, exception.Message);
+    }
+
+    [Fact]
+    public async Task OpenAiProvider_WhenUseRealApiTrue_AndContentMissing_ThrowsClearError()
+    {
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                {
+                  "choices": []
+                }
+                """,
+                Encoding.UTF8,
+                "application/json"),
+        });
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
+            new Dictionary<string, string?>
+            {
+                ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+                ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+                ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+            },
+            handler);
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
+
+        Assert.Equal("OpenAI response did not contain choices[0].message.content.", exception.Message);
     }
 
     private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)
@@ -274,7 +354,9 @@ public sealed class ChatEngineTests
             .Build();
     }
 
-    private static ServiceProvider CreateOpenAiServiceProvider(IDictionary<string, string?> values)
+    private static ServiceProvider CreateOpenAiServiceProvider(
+        IDictionary<string, string?> values,
+        HttpMessageHandler? handler = null)
     {
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(CreateConfiguration(values));
@@ -282,6 +364,23 @@ public sealed class ChatEngineTests
         services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
         services.AddChatEngine();
         services.AddOpenAiProvider();
+
+        if (handler is not null)
+        {
+            services
+                .AddHttpClient<OpenAiChatProvider>()
+                .ConfigurePrimaryHttpMessageHandler(() => handler);
+        }
+
         return services.BuildServiceProvider();
+    }
+
+    private sealed class TestHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
+        : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(handler(request));
+        }
     }
 }
