@@ -1,0 +1,43 @@
+<p>[Page:NamedPipeListener]</p>
+<p><strong>Source of Truth:</strong> Derived / Educational</p>
+<h1>Understanding a Named Pipe Listener</h1>
+<p>In the <strong>VS MCP Bridge</strong> architecture, the Visual Studio side of the system does not sit and wait for a prompt from an AI tool. It waits for a structured bridge request.</p>
+<p>That waiting point is implemented as a <strong>named pipe listener</strong>.</p>
+<p>A named pipe is an inter-process communication channel provided by the operating system. It allows two local processes to exchange messages without exposing a network port. One side creates the pipe and waits for a client connection. The other side connects and sends a request.</p>
+<p>In this project, the <strong>VSIX</strong> creates that listener inside Visual Studio. Once the package finishes startup and composes its services, it starts the pipe server and begins waiting for work. That means the Visual Studio host is ready even before any MCP tool call arrives.</p>
+<h2>What &ldquo;listener&rdquo; means here</h2>
+<p>A listener is simply the side that opens the pipe and blocks until a client connects. In this design, the listener lives in the VSIX because the VSIX owns access to the Visual Studio automation and editor APIs.</p>
+<p>The important detail is that the listener is <strong>not</strong> waiting for natural-language text. It is waiting for a well-formed request envelope that has already passed through the MCP server process.</p>
+<h2>Why use a named pipe here</h2>
+<p>The named pipe exists to connect two local processes:</p>
+<ul>
+<li>the <strong>MCP server process</strong></li>
+<li>the <strong>Visual Studio VSIX host</strong></li>
+</ul>
+<p>This is a good fit because both processes run on the same machine and the communication needs to stay local to the host. The MCP server does not need direct access to Visual Studio internals. Instead, it forwards requests to the VSIX, which performs the host-side work and returns a response.</p>
+<p>That separation is one of the architectural boundaries that keeps the design easier to reason about. The MCP-facing process stays outside Visual Studio, while the Visual Studio-specific work stays inside it.</p>
+<h2>What happens when the VSIX starts listening</h2>
+<p>Once the listener is running, the Visual Studio side is alive but idle. That idle state means:</p>
+<ul>
+<li>the package is loaded</li>
+<li>the services are composed</li>
+<li>the pipe server is available</li>
+<li>no bridge request has arrived yet</li>
+</ul>
+<p>This is an important mental model for the project. The tool window may or may not be open, but the bridge transport can already be active. The listener starts during package initialization, not when the user opens the UI.</p>
+<h2>How a request reaches the listener</h2>
+<p>A typical flow looks like this:</p>
+<ol>
+<li>An AI client sends an MCP tool request to the MCP server process.</li>
+<li>The MCP server receives that request over stdio.</li>
+<li>The MCP server connects to the named pipe exposed by the VSIX.</li>
+<li>The VSIX listener accepts the connection and reads the request.</li>
+<li>The Visual Studio-side service layer executes the requested operation.</li>
+<li>The VSIX sends the response back through the pipe.</li>
+<li>The MCP server returns the result to the AI client.</li>
+</ol>
+<p>In other words, the named pipe listener is the handoff point where the external MCP-facing process crosses into the Visual Studio host boundary.</p>
+<h2>Why this matters</h2>
+<p>If you are debugging startup, it helps to remember that the named pipe listener is one of the two waiting points in the system. The MCP server waits on stdio. The VSIX waits on the named pipe. The actual bridge only becomes active when those two waiting points are connected by a tool call.</p>
+<h2>Takeaway</h2>
+<p>A named pipe listener is simply the Visual Studio-side endpoint that waits for local inter-process requests. In <strong>VS MCP Bridge</strong>, it exists so the VSIX can safely own Visual Studio operations while a separate MCP server process handles the AI-facing protocol.</p>

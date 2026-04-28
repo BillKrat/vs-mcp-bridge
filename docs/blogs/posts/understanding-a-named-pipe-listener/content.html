@@ -5,9 +5,31 @@
 <p>That waiting point is implemented as a <strong>named pipe listener</strong>.</p>
 <p>A named pipe is an inter-process communication channel provided by the operating system. It allows two local processes to exchange messages without exposing a network port. One side creates the pipe and waits for a client connection. The other side connects and sends a request.</p>
 <p>In this project, the <strong>VSIX</strong> creates that listener inside Visual Studio. Once the package finishes startup and composes its services, it starts the pipe server and begins waiting for work. That means the Visual Studio host is ready even before any MCP tool call arrives.</p>
+<h2>Where the listener starts in this repository</h2>
+<p>In <strong>VS MCP Bridge</strong>, the listener is started from the VSIX package during package initialization.</p>
+<p>That matters because the pipe server is part of host startup, not something the user manually launches from the tool window. The relevant shape in the code looks like this:</p>
+<pre><code class="language-csharp">protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress&lt;ServiceProgressData&gt; progress)
+{
+    _serviceProvider = new ServiceCollection()
+        .AddVsMcpBridgeServices(this)
+        .AddMvpVmServices()
+        .BuildServiceProvider();
+
+    _pipeServer = _serviceProvider.Resolve&lt;IPipeServer&gt;();
+    _pipeServer.Start();
+}
+</code></pre>
+<p>Inside the shared bridge layer, <code>PipeServer.Start()</code> spins up a dedicated listener thread and begins waiting for pipe clients on the fixed pipe name <code>VsMcpBridge</code>.</p>
 <h2>What &ldquo;listener&rdquo; means here</h2>
 <p>A listener is simply the side that opens the pipe and blocks until a client connects. In this design, the listener lives in the VSIX because the VSIX owns access to the Visual Studio automation and editor APIs.</p>
 <p>The important detail is that the listener is <strong>not</strong> waiting for natural-language text. It is waiting for a well-formed request envelope that has already passed through the MCP server process.</p>
+<p>That request is not &ldquo;chat text.&rdquo; It is a serialized command envelope with fields such as:</p>
+<ul>
+<li><code>Command</code></li>
+<li><code>RequestId</code></li>
+<li><code>Payload</code></li>
+</ul>
+<p>The payload then holds the typed request body for the specific operation being executed.</p>
 <h2>Why use a named pipe here</h2>
 <p>The named pipe exists to connect two local processes:</p>
 <ul>
@@ -24,7 +46,12 @@
 <li>the pipe server is available</li>
 <li>no bridge request has arrived yet</li>
 </ul>
-<p>This is an important mental model for the project. The tool window may or may not be open, but the bridge transport can already be active. The listener starts during package initialization, not when the user opens the UI.</p>
+<p>This is an important mental model for the project. Architecturally, the listener starts during package initialization, not when the user opens the tool window UI.</p>
+<p>In current real-world validation, however, keeping the <strong>VS MCP Bridge</strong> tool window open has still mattered operationally for successful end-to-end work. That means there is a difference between the clean architecture model and the currently proven runtime working mode. For study purposes, keep both ideas in mind:</p>
+<ul>
+<li>the listener itself is a package-startup concern</li>
+<li>the current workflow still depends on some UI/bootstrap conditions being satisfied</li>
+</ul>
 <h2>How a request reaches the listener</h2>
 <p>A typical flow looks like this:</p>
 <ol>
@@ -37,8 +64,95 @@
 <li>The MCP server returns the result to the AI client.</li>
 </ol>
 <p>In other words, the named pipe listener is the handoff point where the external MCP-facing process crosses into the Visual Studio host boundary.</p>
+<h2>What the client side actually does</h2>
+<p>The MCP-facing process is not the listener. It is the pipe <strong>client</strong>. In this repository, the client lives in <code>VsMcpBridge.McpServer</code>.</p>
+<p>At startup, the MCP server is configured to speak MCP over stdio:</p>
+<pre><code class="language-csharp">builder.Services
+    .AddSingleton&lt;ILogger, AppDataFolderLogger&gt;()
+    .AddSingleton&lt;IPipeClient, PipeClient&gt;()
+    .AddMcpServer()
+    .WithStdioServerTransport()
+    .WithTools&lt;VsTools&gt;();
+</code></pre>
+<p>And the process entry point is only a small host bootstrap:</p>
+<pre><code class="language-csharp">var builder = Host.CreateApplicationBuilder(args);
+McpServerHost.Configure(builder);
+
+await builder.Build().RunAsync();
+</code></pre>
+<p>When a tool is invoked, the client connects to the named pipe, sends one serialized line, and waits for one serialized response line:</p>
+<pre><code class="language-csharp">using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+await pipe.ConnectAsync(timeout: 5000, cancellationToken);
+
+await writer.WriteLineAsync(JsonSerializer.Serialize(envelope, JsonOptions));
+var responseJson = await reader.ReadLineAsync(cancellationToken);
+</code></pre>
+<p>This is one of the most useful details to understand: stdio is the transport between the AI client and the MCP server process, but the named pipe is the transport between the MCP server process and Visual Studio.</p>
+<h2>What the listener actually does</h2>
+<p>On the Visual Studio side, the listener waits for a client connection, then hands that connection off for request handling:</p>
+<pre><code class="language-csharp">pipe = new NamedPipeServerStream(
+    PipeName,
+    PipeDirection.InOut,
+    NamedPipeServerStream.MaxAllowedServerInstances,
+    PipeTransmissionMode.Byte,
+    PipeOptions.Asynchronous);
+
+pipe.WaitForConnection();
+_ = Task.Run(() =&gt; HandleConnectionAsync(pipe, ct), CancellationToken.None);
+</code></pre>
+<p>That means the listener thread is responsible for accepting connections, while the actual request work happens in a separate async handler.</p>
+<p>Inside that handler, the server reads the incoming line, deserializes the envelope, dispatches by command, and writes the response back across the same pipe connection.</p>
+<h2>How dispatch works in practice</h2>
+<p>Once the server has a <code>PipeMessage</code>, it does not try to interpret prose. It routes the request by command name:</p>
+<pre><code class="language-csharp">VsResponseBase response = envelope.Command switch
+{
+    PipeCommands.GetActiveDocument =&gt; await _vsService.GetActiveDocumentAsync(),
+    PipeCommands.GetSelectedText =&gt; await _vsService.GetSelectedTextAsync(),
+    PipeCommands.ListSolutionProjects =&gt; await _vsService.ListSolutionProjectsAsync(),
+    PipeCommands.GetErrorList =&gt; await _vsService.GetErrorListAsync(),
+    PipeCommands.ProposeTextEdit =&gt; await DispatchProposeEditAsync(envelope),
+    _ =&gt; new VsResponseBaseUnknown { Success = false, ErrorMessage = $"Unknown command: {envelope.Command}" }
+};
+</code></pre>
+<p>This is an important learning point for the current bridge: the named-pipe listener is not a generic conversational endpoint. It is a command dispatcher sitting at the boundary of the Visual Studio host.</p>
+<h2>Where Visual Studio work actually happens</h2>
+<p>The pipe server does <strong>not</strong> directly call DTE or editor APIs. Instead, it forwards the request into the host service layer through <code>IVsService</code>.</p>
+<p>That service layer is where operations such as these actually happen:</p>
+<ul>
+<li>get active document</li>
+<li>get selected text</li>
+<li>list solution projects</li>
+<li>read the Error List</li>
+<li>create approval-gated edit proposals</li>
+</ul>
+<p>That separation is useful because it keeps transport concerns in the pipe server and host-specific Visual Studio work in the service layer.</p>
+<h2>A concrete end-to-end mental model</h2>
+<p>If you want one simple way to visualize the whole path, use this:</p>
+<ol>
+<li>An AI tool calls an MCP tool such as <code>vs_get_active_document</code>.</li>
+<li>The MCP server receives the tool call over stdio.</li>
+<li><code>VsTools</code> forwards the request into <code>PipeClient</code>.</li>
+<li><code>PipeClient</code> connects to the <code>VsMcpBridge</code> named pipe and sends a serialized request.</li>
+<li><code>PipeServer</code> in the VSIX accepts the connection.</li>
+<li><code>PipeServer</code> dispatches the command to <code>IVsService</code>.</li>
+<li><code>VsService</code> performs the Visual Studio operation.</li>
+<li>The response goes back through the pipe to the MCP server.</li>
+<li>The MCP server returns the final tool result to the AI client over stdio.</li>
+</ol>
 <h2>Why this matters</h2>
 <p>If you are debugging startup, it helps to remember that the named pipe listener is one of the two waiting points in the system. The MCP server waits on stdio. The VSIX waits on the named pipe. The actual bridge only becomes active when those two waiting points are connected by a tool call.</p>
+<p>If you are debugging the current system, a few practical checkpoints are especially valuable:</p>
+<ul>
+<li>did the VSIX package initialize</li>
+<li>did <code>PipeServer.Start()</code> run</li>
+<li>is the pipe name the expected <code>VsMcpBridge</code></li>
+<li>did the client connect within the timeout window</li>
+<li>did the server receive a non-empty JSON line</li>
+<li>did the command dispatch to a known <code>PipeCommands</code> value</li>
+<li>did the Visual Studio service operation succeed</li>
+</ul>
 <h2>Takeaway</h2>
 <p>A named pipe listener is simply the Visual Studio-side endpoint that waits for local inter-process requests. In <strong>VS MCP Bridge</strong>, it exists so the VSIX can safely own Visual Studio operations while a separate MCP server process handles the AI-facing protocol.</p>
+<p>The most accurate short version for this repository is:</p>
+<p><strong>stdio gets into the bridge, and the named pipe gets into Visual Studio.</strong></p>
 

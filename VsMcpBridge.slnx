@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Libraries/">
+    <Project Path="Adventures.ChatEngine/Adventures.ChatEngine.csproj" />
     <Project Path="VsMcpBridge.McpServer/VsMcpBridge.McpServer.csproj" />
     <Project Path="VsMcpBridge.Shared.Wpf/VsMcpBridge.Shared.Wpf.csproj" />
     <Project Path="VsMcpBridge.Shared/VsMcpBridge.Shared.csproj" />
@@ -47,11 +48,10 @@
     <File Path="docs/session-handoffs/2026-04-14-preview-clarity-handoff.md" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="Adventures.ChatEngine.Tests/Adventures.ChatEngine.Tests.csproj" />
     <Project Path="VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj" />
     <Project Path="VsMcpBridge.Vsix.Tests/VsMcpBridge.Vsix.Tests.csproj" />
   </Folder>
-  <Project Path="Adventures.ChatEngine.Tests/Adventures.ChatEngine.Tests.csproj" />
-  <Project Path="Adventures.ChatEngine/Adventures.ChatEngine.csproj" />
   <Project Path="VsMcpBridge.App/VsMcpBridge.App.csproj" />
   <Project Path="VsMcpBridge.Vsix/VsMcpBridge.Vsix.csproj" Id="53f38b92-57a3-4d74-86d0-89d72a57a5a9" />
 </Solution>

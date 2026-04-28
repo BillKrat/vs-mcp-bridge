@@ -1,0 +1,175 @@
+<h1>How stdio Works in VS MCP Bridge</h1>
+
+<p>In the <strong>VS MCP Bridge</strong> architecture, stdio is the first transport boundary, not the whole system.</p>
+
+<p>That detail matters because it is easy to hear &ldquo;MCP server over stdio&rdquo; and assume the AI client is somehow talking directly to Visual Studio. It is not. In this codebase, stdio carries requests into the local MCP server process, and then a separate local bridge hop moves those requests into the VSIX.</p>
+
+<p>This post walks through exactly how that works in the current implementation.</p>
+
+<h2>The short version</h2>
+
+<p>The runtime path today is:</p>
+
+<pre><code>AI client
+  -&gt; MCP over stdio
+VsMcpBridge.McpServer
+  -&gt; JSON over named pipe
+VsMcpBridge.Vsix
+  -&gt; Visual Studio services / DTE / editor state</code></pre>
+
+<p>So stdio is the transport between the AI-facing side and the MCP server process. It is <strong>not</strong> the transport between the MCP server and Visual Studio.</p>
+
+<h2>Where stdio is enabled</h2>
+
+<p>The stdio transport is configured in the MCP host bootstrap:</p>
+
+<pre><code>builder.Services
+    .AddMcpServer()
+    .WithStdioServerTransport()
+    .WithTools&lt;VsTools&gt;();</code></pre>
+
+<p>That configuration lives in the <code>VsMcpBridge.McpServer</code> project, inside <code>McpServerHost.Configure(...)</code>. The important line is <code>WithStdioServerTransport()</code>.</p>
+
+<p>That single choice tells the MCP host to communicate through standard input and standard output instead of through HTTP, a socket, or some custom transport.</p>
+
+<h2>What stdio means here</h2>
+
+<p>Standard input and standard output are just process streams.</p>
+
+<ul>
+  <li><strong>stdin</strong> is how another process writes requests into this server process</li>
+  <li><strong>stdout</strong> is how this server process writes responses back out</li>
+</ul>
+
+<p>That makes stdio a good fit for local AI tooling because the MCP server can behave like a small worker process. An AI client launches it, keeps the process alive, writes protocol messages to stdin, and reads results from stdout.</p>
+
+<p>In other words, the MCP server does not need to expose a listening port. It just needs to stay attached to the calling client through those streams.</p>
+
+<h2>What the entry point actually does</h2>
+
+<p>The program entry point is intentionally small:</p>
+
+<pre><code>var builder = Host.CreateApplicationBuilder(args);
+McpServerHost.Configure(builder);
+
+await builder.Build().RunAsync();</code></pre>
+
+<p>This is useful because it keeps the startup story clear:</p>
+
+<ol>
+  <li>Create the host builder.</li>
+  <li>Register logging, pipe client, MCP server support, transport, and tools.</li>
+  <li>Build and run the host.</li>
+</ol>
+
+<p>Once the host runs, the stdio transport is live and the tool surface is advertised to the AI client.</p>
+
+<h2>What stdio does not do</h2>
+
+<p>It is just as important to understand what stdio is <strong>not</strong> doing.</p>
+
+<p>It is not:</p>
+
+<ul>
+  <li>calling Visual Studio APIs directly</li>
+  <li>loading inside the Visual Studio process</li>
+  <li>owning DTE or editor access</li>
+  <li>applying edits in the IDE</li>
+</ul>
+
+<p>Those responsibilities stay on the VSIX side.</p>
+
+<p>The MCP server process stays outside Visual Studio and acts as the AI-facing adapter. That separation is one of the main architectural boundaries in the repo.</p>
+
+<h2>How tool calls cross the stdio boundary</h2>
+
+<p>Once stdio is active, the MCP host exposes the tool class registered with <code>WithTools&lt;VsTools&gt;()</code>.</p>
+
+<p>That tool class contains methods such as:</p>
+
+<ul>
+  <li><code>vs_get_active_document</code></li>
+  <li><code>vs_get_selected_text</code></li>
+  <li><code>vs_list_solution_projects</code></li>
+  <li><code>vs_get_error_list</code></li>
+  <li><code>vs_propose_text_edit</code></li>
+</ul>
+
+<p>From the AI client&rsquo;s perspective, these are MCP tools. The client sends a request over stdio, the MCP host resolves the tool method, and the method executes inside the <code>VsMcpBridge.McpServer</code> process.</p>
+
+<p>But the tool method still does not talk to Visual Studio directly.</p>
+
+<h2>Where the request goes after stdio</h2>
+
+<p>Inside <code>VsTools</code>, the tool methods forward work through an injected <code>IPipeClient</code>.</p>
+
+<p>That client creates a local named-pipe connection to the VSIX-hosted server:</p>
+
+<pre><code>using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+await pipe.ConnectAsync(timeout: 5000, cancellationToken);</code></pre>
+
+<p>So the full transport chain is layered:</p>
+
+<ol>
+  <li>The AI client calls an MCP tool over stdio.</li>
+  <li>The MCP host routes that call to a <code>VsTools</code> method.</li>
+  <li>The tool method uses <code>PipeClient</code> to connect to the VSIX over a named pipe.</li>
+  <li>The VSIX executes the Visual Studio-specific work.</li>
+  <li>The result comes back through the pipe.</li>
+  <li>The MCP server returns that result over stdout to the AI client.</li>
+</ol>
+
+<p>This is why stdio is only the first half of the bridge story.</p>
+
+<h2>Why this split is useful</h2>
+
+<p>The design keeps two concerns separated cleanly:</p>
+
+<ul>
+  <li><strong>MCP-facing protocol work</strong> lives in the MCP server process</li>
+  <li><strong>Visual Studio host work</strong> lives in the VSIX</li>
+</ul>
+
+<p>That separation gives the system several advantages:</p>
+
+<ul>
+  <li>the MCP host remains lightweight and local-tool friendly</li>
+  <li>Visual Studio API access stays inside the Visual Studio process</li>
+  <li>the AI-facing side does not need direct knowledge of DTE or VS SDK details</li>
+  <li>transport debugging becomes easier because stdio and named-pipe issues can be reasoned about separately</li>
+</ul>
+
+<p>It also aligns with the safety model already present in the bridge. Even edit-oriented requests become proposals first, and the host stays responsible for approval and apply behavior.</p>
+
+<h2>Why logging discipline matters with stdio</h2>
+
+<p>One practical consequence of using stdio for MCP is that stdout must stay clean for protocol traffic. If the process writes arbitrary log lines to stdout, it can corrupt the client-server conversation.</p>
+
+<p>That is why the MCP host uses an app-data-backed logger rather than casually printing operational logs into the standard output stream.</p>
+
+<p>This is a subtle but important design rule: once stdout is part of the protocol surface, it stops being a safe place for ad hoc diagnostics.</p>
+
+<h2>What to remember when studying this code</h2>
+
+<p>If you are learning the system, keep these boundaries in mind:</p>
+
+<ul>
+  <li><code>Program.cs</code> starts the host.</li>
+  <li><code>McpServerHost.Configure(...)</code> wires up stdio and the tool surface.</li>
+  <li><code>VsTools</code> defines what the AI can ask for.</li>
+  <li><code>PipeClient</code> bridges from the MCP server process into the VSIX.</li>
+  <li>The VSIX owns the actual Visual Studio operations.</li>
+</ul>
+
+<p>Once you see those layers, the implementation becomes much easier to reason about. The server is not doing everything at once. It is playing one focused role in a larger transport chain.</p>
+
+<h2>Takeaway</h2>
+
+<p>In <strong>VS MCP Bridge</strong>, stdio is the process-to-process transport that lets an AI client speak MCP to the local server host. The server then forwards the actual IDE work through a separate named-pipe boundary into the VSIX.</p>
+
+<p>So the cleanest mental model is:</p>
+
+<pre><code>stdio gets into the bridge
+named pipes get into Visual Studio</code></pre>
+
+<p>That is the current implementation boundary, and it is one of the key ideas that makes the system easier to evolve without collapsing the MCP layer and the Visual Studio host layer into one process.</p>
