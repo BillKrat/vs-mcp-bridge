@@ -322,18 +322,13 @@ public sealed class ChatEngineTests
         {
             Content = new StringContent(
                 """
-                {
-                  "choices": [
-                    {
-                      "message": {
-                        "content": "hello from fake openai"
-                      }
-                    }
-                  ]
-                }
+                data: {"choices":[{"delta":{"content":"hello "}}]}
+                data: {"choices":[{"delta":{"content":"from fake openai"}}]}
+                data: [DONE]
+
                 """,
                 Encoding.UTF8,
-                "application/json"),
+                "text/event-stream"),
         });
         using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
             new Dictionary<string, string?>
@@ -386,12 +381,12 @@ public sealed class ChatEngineTests
         {
             Content = new StringContent(
                 """
-                {
-                  "choices": []
-                }
+                data: {"choices":[]}
+                data: [DONE]
+
                 """,
                 Encoding.UTF8,
-                "application/json"),
+                "text/event-stream"),
         });
         using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
             new Dictionary<string, string?>
@@ -407,7 +402,47 @@ public sealed class ChatEngineTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             engine!.SendAsync(new ChatRequest("ping"), CancellationToken.None));
 
-        Assert.Equal("OpenAI response did not contain choices[0].message.content.", exception.Message);
+        Assert.Equal("OpenAI streaming response did not contain choices[0].delta.content.", exception.Message);
+    }
+
+    [Fact]
+    public async Task OpenAiProvider_StreamAsync_ParsesSseAndEmitsChunks()
+    {
+        var handler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                data: {"choices":[{"delta":{"content":"hel"}}]}
+                data: {"choices":[{"delta":{"content":"lo"}}]}
+                data: [DONE]
+
+                """,
+                Encoding.UTF8,
+                "text/event-stream"),
+        });
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
+            new Dictionary<string, string?>
+            {
+                ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+                ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+                ["Adventures:ChatEngine:OpenAI:UseRealApi"] = "true",
+            },
+            handler);
+
+        IAiChatProvider provider = serviceProvider.GetRequiredService<IAiChatProvider>();
+        var chunks = new List<string>();
+
+        await foreach (ChatResponse chunk in provider.StreamAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None))
+        {
+            chunks.Add(chunk.Message);
+        }
+
+        Assert.Collection(
+            chunks,
+            first => Assert.Equal("hel", first),
+            second => Assert.Equal("lo", second));
     }
 
     private static IConfiguration CreateConfiguration(IDictionary<string, string?>? values = null)

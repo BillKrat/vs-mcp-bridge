@@ -3,6 +3,7 @@ using Adventures.ChatEngine.Models;
 using Adventures.ChatEngine.OpenAI.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -56,7 +57,18 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         ChatRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        yield return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        this.ValidateConfiguration();
+
+        if (!this.options.UseRealApi)
+        {
+            yield return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            yield break;
+        }
+
+        await foreach (ChatResponse chunk in this.StreamRealRequestAsync(request, cancellationToken).ConfigureAwait(false))
+        {
+            yield return chunk;
+        }
     }
 
     private void ValidateConfiguration()
@@ -116,6 +128,96 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         return new ChatResponse(content);
     }
 
+    private async IAsyncEnumerable<ChatResponse> StreamRealRequestAsync(
+        ChatRequest request,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ChatCompletionsEndpoint)
+        {
+            Content = JsonContent.Create(new
+            {
+                model = this.options.Model,
+                stream = true,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = request.Message,
+                    },
+                },
+            }),
+        };
+
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.options.ApiKey);
+        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        using HttpResponseMessage response = await this.httpClient
+            .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            string errorContent = await response.Content
+                .ReadAsStringAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            throw new InvalidOperationException(
+                $"OpenAI request failed with status code {(int)response.StatusCode} ({response.StatusCode}). Response: {CreateSafeSummary(errorContent)}");
+        }
+
+        await using Stream responseStream = await response.Content
+            .ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var reader = new StreamReader(responseStream);
+
+        bool emittedChunk = false;
+        bool receivedDone = false;
+
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string? line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+
+            if (line is null)
+            {
+                break;
+            }
+
+            if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data:", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string payload = line["data:".Length..].Trim();
+
+            if (payload == "[DONE]")
+            {
+                receivedDone = true;
+                break;
+            }
+
+            string? content = ExtractDeltaContent(payload);
+
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                emittedChunk = true;
+                yield return new ChatResponse(content);
+            }
+        }
+
+        if (receivedDone && !emittedChunk)
+        {
+            throw new InvalidOperationException("OpenAI streaming response did not contain choices[0].delta.content.");
+        }
+
+        if (!receivedDone && !cancellationToken.IsCancellationRequested)
+        {
+            throw new InvalidOperationException("OpenAI streaming response ended before [DONE] was received.");
+        }
+    }
+
     private static string CreateSafeSummary(string responseContent)
     {
         if (string.IsNullOrWhiteSpace(responseContent))
@@ -143,6 +245,29 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
         if (!firstChoice.TryGetProperty("message", out JsonElement message) ||
             !message.TryGetProperty("content", out JsonElement content) ||
+            content.ValueKind != JsonValueKind.String)
+        {
+            return null;
+        }
+
+        return content.GetString();
+    }
+
+    private static string? ExtractDeltaContent(string responseContent)
+    {
+        using JsonDocument document = JsonDocument.Parse(responseContent);
+
+        if (!document.RootElement.TryGetProperty("choices", out JsonElement choices) ||
+            choices.ValueKind != JsonValueKind.Array ||
+            choices.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        JsonElement firstChoice = choices[0];
+
+        if (!firstChoice.TryGetProperty("delta", out JsonElement delta) ||
+            !delta.TryGetProperty("content", out JsonElement content) ||
             content.ValueKind != JsonValueKind.String)
         {
             return null;
