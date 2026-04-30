@@ -1,6 +1,10 @@
+using Adventures.ChatEngine.Abstractions;
+using Adventures.ChatEngine.Extensions;
+using Adventures.ChatEngine.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
@@ -16,6 +20,11 @@ public static class McpServerHost
 
         builder.Services
             .AddSingleton<ILogger, AppDataFolderLogger>()
+            .AddSingleton<ILogger<Adventures.ChatEngine.Services.ChatEngine>>(serviceProvider =>
+                new BridgeLoggerAdapter<Adventures.ChatEngine.Services.ChatEngine>(serviceProvider.GetRequiredService<ILogger>()))
+            .AddSingleton<IAiChatProvider, HostPingPongChatProvider>()
+            .AddSingleton<IHostedService, ChatEngineVerificationHostedService>()
+            .AddChatEngine()
             .AddSingleton<IPipeClient, PipeClient>()
             .AddMcpServer()
             .WithStdioServerTransport()
