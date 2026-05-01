@@ -7,7 +7,7 @@ internal sealed class HostPingPongChatProvider : IAiChatProvider
 {
     public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
-        string message = request.Message == "ping" ? "pong" : "unknown";
+        string message = request.Message == "ping" ? "pong" : $"echo:{request.Message}";
         return Task.FromResult(new ChatResponse(message));
     }
 

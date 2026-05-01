@@ -75,6 +75,19 @@ public sealed class VsToolsTests
         Assert.Equal("ping", chatEngine.LastRequest?.Message);
     }
 
+    [Fact]
+    public async Task ChatEngineChatAsync_routes_input_through_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine);
+
+        var response = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+
+        Assert.Equal("echo:hello", response);
+        Assert.Equal("hello", chatEngine.LastRequest?.Message);
+    }
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }
@@ -117,14 +130,16 @@ public sealed class VsToolsTests
         public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken, Action<ChatEvent>? onEvent = null)
         {
             LastRequest = request;
-            return Task.FromResult(new ChatResponse("pong"));
+            var response = request.Message == "ping" ? "pong" : $"echo:{request.Message}";
+            return Task.FromResult(new ChatResponse(response));
         }
 
         public async IAsyncEnumerable<ChatEvent> StreamAsync(ChatRequest request, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
         {
             LastRequest = request;
             yield return new ChatEvent(ChatEventType.RequestStarted);
-            yield return new ChatEvent(ChatEventType.TokenGenerated, "pong");
+            var response = request.Message == "ping" ? "pong" : $"echo:{request.Message}";
+            yield return new ChatEvent(ChatEventType.TokenGenerated, response);
             yield return new ChatEvent(ChatEventType.ResponseCompleted);
             await Task.CompletedTask;
         }

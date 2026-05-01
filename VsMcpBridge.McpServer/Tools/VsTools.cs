@@ -32,6 +32,16 @@ public sealed class VsTools
         return response.Message;
     }
 
+    [McpServerTool(Name = "chat_engine_chat")]
+    [Description("Sends a message through Adventures.ChatEngine and returns the response message.")]
+    public async Task<string> ChatEngineChatAsync(
+        [Description("The message to send through Adventures.ChatEngine.")] string message,
+        CancellationToken ct)
+    {
+        var response = await _chatEngine.SendAsync(new ChatRequest(message), ct).ConfigureAwait(false);
+        return response.Message;
+    }
+
     [McpServerTool(Name = "vs_get_active_document")]
     [Description("Returns the file path, language, and full text of the document currently active in Visual Studio.")]
     public async Task<string> GetActiveDocumentAsync(CancellationToken ct)
