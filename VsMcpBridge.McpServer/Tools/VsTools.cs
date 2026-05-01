@@ -1,5 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using Adventures.ChatEngine.Abstractions;
+using Adventures.ChatEngine.Models;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Interfaces;
@@ -14,8 +16,21 @@ namespace VsMcpBridge.McpServer.Tools;
 public sealed class VsTools
 {
     private readonly IPipeClient _pipe;
+    private readonly IChatEngine _chatEngine;
 
-    public VsTools(IPipeClient pipe) => _pipe = pipe;
+    public VsTools(IPipeClient pipe, IChatEngine chatEngine)
+    {
+        _pipe = pipe;
+        _chatEngine = chatEngine;
+    }
+
+    [McpServerTool(Name = "chat_engine_ping")]
+    [Description("Sends a ping request through Adventures.ChatEngine and returns the response message.")]
+    public async Task<string> ChatEnginePingAsync(CancellationToken ct)
+    {
+        var response = await _chatEngine.SendAsync(new ChatRequest("ping"), ct).ConfigureAwait(false);
+        return response.Message;
+    }
 
     [McpServerTool(Name = "vs_get_active_document")]
     [Description("Returns the file path, language, and full text of the document currently active in Visual Studio.")]

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Adventures.ChatEngine.Abstractions;
+using Adventures.ChatEngine.Events;
+using Adventures.ChatEngine.Models;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -16,7 +19,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditAsync_preserves_backward_compatible_single_file_request_flow()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient);
+        var tools = new VsTools(pipeClient, new StubChatEngine());
 
         var response = await tools.ProposeTextEditAsync("sample.cs", "before", "after", CancellationToken.None);
 
@@ -29,7 +32,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditsAsync_sends_multi_file_request_through_pipe_client()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient);
+        var tools = new VsTools(pipeClient, new StubChatEngine());
         var fileEdits = new[]
         {
             new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
@@ -48,7 +51,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditsAsync_returns_clear_error_for_invalid_payload()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient);
+        var tools = new VsTools(pipeClient, new StubChatEngine());
 
         var response = await tools.ProposeTextEditsAsync(
             new[] { new ProposalFileEditRequest { FilePath = string.Empty, OriginalText = "before", ProposedText = "after" } },
@@ -57,6 +60,19 @@ public sealed class VsToolsTests
         Assert.Equal("Error: each file edit must include a non-empty filePath.", response);
         Assert.Equal(0, pipeClient.ProposeTextEditCalls);
         Assert.Equal(0, pipeClient.ProposeTextEditsCalls);
+    }
+
+    [Fact]
+    public async Task ChatEnginePingAsync_routes_ping_through_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine);
+
+        var response = await tools.ChatEnginePingAsync(CancellationToken.None);
+
+        Assert.Equal("pong", response);
+        Assert.Equal("ping", chatEngine.LastRequest?.Message);
     }
 
     private sealed class RecordingPipeClient : IPipeClient
@@ -91,6 +107,26 @@ public sealed class VsToolsTests
                 FilePath = fileEdits[0].FilePath,
                 Diff = string.Join("\n", fileEdits.Select(fileEdit => $"--- a/{fileEdit.FilePath}\n+++ b/{fileEdit.FilePath}\n-{fileEdit.OriginalText}\n+{fileEdit.ProposedText}\n"))
             });
+        }
+    }
+
+    private sealed class StubChatEngine : IChatEngine
+    {
+        public ChatRequest? LastRequest { get; private set; }
+
+        public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken, Action<ChatEvent>? onEvent = null)
+        {
+            LastRequest = request;
+            return Task.FromResult(new ChatResponse("pong"));
+        }
+
+        public async IAsyncEnumerable<ChatEvent> StreamAsync(ChatRequest request, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            yield return new ChatEvent(ChatEventType.RequestStarted);
+            yield return new ChatEvent(ChatEventType.TokenGenerated, "pong");
+            yield return new ChatEvent(ChatEventType.ResponseCompleted);
+            await Task.CompletedTask;
         }
     }
 }
