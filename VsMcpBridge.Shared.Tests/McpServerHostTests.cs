@@ -106,4 +106,30 @@ public sealed class McpServerHostTests
         Assert.IsType<OpenAiChatProvider>(provider);
         Assert.NotNull(chatEngine);
     }
+
+    [Fact]
+    public void Configure_when_provider_is_openai_allows_chat_engine_to_resolve_configuration_from_di()
+    {
+        var builder = Host.CreateApplicationBuilder([]);
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:Provider"] = "OpenAI",
+            ["Adventures:ChatEngine:OpenAI:Model"] = "test-model",
+            ["Adventures:ChatEngine:Retry:MaxAttempts"] = "2",
+        });
+
+        McpServerHost.Configure(builder);
+
+        using var host = builder.Build();
+        var services = host.Services;
+
+        IConfiguration configuration = services.GetRequiredService<IConfiguration>();
+        IChatEngine chatEngine = services.GetRequiredService<IChatEngine>();
+
+        Assert.Same(host.Services.GetRequiredService<IConfiguration>(), configuration);
+        Assert.Equal("OpenAI", configuration["Adventures:ChatEngine:Provider"]);
+        Assert.Equal("test-model", configuration["Adventures:ChatEngine:OpenAI:Model"]);
+        Assert.Equal("2", configuration["Adventures:ChatEngine:Retry:MaxAttempts"]);
+        Assert.NotNull(chatEngine);
+    }
 }
