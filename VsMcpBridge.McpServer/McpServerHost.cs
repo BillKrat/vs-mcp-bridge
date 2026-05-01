@@ -1,6 +1,8 @@
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Extensions;
+using Adventures.ChatEngine.OpenAI.Extensions;
 using Adventures.ChatEngine.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,20 +16,33 @@ namespace VsMcpBridge.McpServer;
 
 public static class McpServerHost
 {
+    private const string ProviderConfigurationKey = "Adventures:ChatEngine:Provider";
+
     public static void Configure(HostApplicationBuilder builder)
     {
         builder.Logging.ClearProviders();
 
-        builder.Services
+        IServiceCollection services = builder.Services;
+
+        services
             .AddSingleton<ILogger, AppDataFolderLogger>()
             .AddSingleton<ILogger<Adventures.ChatEngine.Services.ChatEngine>>(serviceProvider =>
                 new BridgeLoggerAdapter<Adventures.ChatEngine.Services.ChatEngine>(serviceProvider.GetRequiredService<ILogger>()))
-            .AddSingleton<IAiChatProvider, HostPingPongChatProvider>()
             .AddSingleton<IHostedService, ChatEngineVerificationHostedService>()
             .AddChatEngine()
             .AddSingleton<IPipeClient, PipeClient>()
             .AddMcpServer()
             .WithStdioServerTransport()
             .WithTools<VsTools>();
+
+        string? provider = builder.Configuration[ProviderConfigurationKey];
+
+        if (string.Equals(provider, "OpenAI", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddOpenAiProvider(builder.Configuration);
+            return;
+        }
+
+        services.AddSingleton<IAiChatProvider, HostPingPongChatProvider>();
     }
 }

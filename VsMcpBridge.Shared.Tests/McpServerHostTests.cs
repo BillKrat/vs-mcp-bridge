@@ -1,8 +1,11 @@
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
+using Adventures.ChatEngine.OpenAI.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +43,7 @@ public sealed class McpServerHostTests
     }
 
     [Fact]
-    public async Task Configure_registers_chat_engine_and_fake_provider_ping_path()
+    public async Task Configure_when_provider_is_missing_uses_fake_provider()
     {
         var builder = Host.CreateApplicationBuilder([]);
 
@@ -56,5 +59,51 @@ public sealed class McpServerHostTests
             CancellationToken.None);
 
         Assert.Equal("pong", response.Message);
+    }
+
+    [Fact]
+    public async Task Configure_when_provider_is_fake_uses_fake_provider()
+    {
+        var builder = Host.CreateApplicationBuilder([]);
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:Provider"] = "Fake",
+        });
+
+        McpServerHost.Configure(builder);
+
+        using var host = builder.Build();
+        var services = host.Services;
+
+        IAiChatProvider provider = services.GetRequiredService<IAiChatProvider>();
+        IChatEngine chatEngine = services.GetRequiredService<IChatEngine>();
+
+        ChatResponse response = await chatEngine.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("HostPingPongChatProvider", provider.GetType().Name);
+        Assert.Equal("pong", response.Message);
+    }
+
+    [Fact]
+    public void Configure_when_provider_is_openai_registers_openai_provider_without_requiring_api_key_at_build_time()
+    {
+        var builder = Host.CreateApplicationBuilder([]);
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Adventures:ChatEngine:Provider"] = "OpenAI",
+        });
+
+        McpServerHost.Configure(builder);
+
+        using var host = builder.Build();
+        var services = host.Services;
+
+        IAiChatProvider provider = services.GetRequiredService<IAiChatProvider>();
+        IChatEngine chatEngine = services.GetRequiredService<IChatEngine>();
+
+        Assert.IsType<OpenAiChatProvider>(provider);
+        Assert.NotNull(chatEngine);
     }
 }
