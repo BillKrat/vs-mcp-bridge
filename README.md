@@ -287,3 +287,7 @@ Use these docs together:
 - `docs/gated_turn-based_workflow-Codex.txt`: Bill and Codex collaboration workflow for gated execution
 - `docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
 - `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
+
+## AI Workflow
+
+For AI role separation and execution rules, see [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md).
