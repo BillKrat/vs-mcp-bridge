@@ -74,9 +74,13 @@
                   BorderThickness="1"
                   Visibility="{Binding HasPendingApproval, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel>
-              <TextBlock Text="Review ready"
+              <TextBlock Text="Current proposal"
                          Margin="0,0,0,6"
                          FontWeight="SemiBold"
+                         Foreground="{DynamicResource VsBrush.WindowText}" />
+              <TextBlock Text="Pending review"
+                         Margin="0,0,0,6"
+                         FontStyle="Italic"
                          Foreground="{DynamicResource VsBrush.WindowText}" />
               <TextBlock Text="{Binding ActivitySummary}"
                          Margin="0,0,0,6"
@@ -176,10 +180,11 @@
                   BorderThickness="1"
                   Visibility="{Binding HasLastCompletedProposalPreview, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel>
-              <TextBlock Text="Result"
+              <TextBlock Text="Last completed proposal"
                          Margin="0,0,0,6"
                          FontWeight="SemiBold"
                          Foreground="{DynamicResource VsBrush.WindowText}" />
+              <Separator Margin="0,0,0,6" />
               <TextBlock Text="{Binding ActivitySummary}"
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
