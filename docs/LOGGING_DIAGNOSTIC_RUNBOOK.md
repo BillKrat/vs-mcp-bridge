@@ -39,8 +39,9 @@ Set environment variables before launching Experimental Instance:
 Then:
 1. Launch VS Experimental Instance.
 2. Open the VS MCP Bridge tool window.
-3. Trigger one read-only MCP call and one proposal flow.
-4. Verify:
+3. Trigger `ping` in the request input surface and verify response behavior for the active chat provider mode.
+4. Trigger one read-only MCP call and one proposal flow.
+5. Verify:
    - tool window log text updates in real time
    - provider output lines include request/proposal correlation data
 

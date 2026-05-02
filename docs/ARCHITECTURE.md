@@ -23,6 +23,12 @@ Host behavior today:
 - `VsMcpBridge.Vsix` provides Visual Studio-backed behavior through DTE and Visual Studio services
 - `VsMcpBridge.App` provides workspace/file-system-backed behavior while reusing the same shared presenter, viewmodel, pipe server, approval workflow, and WPF view
 
+Request input behavior today:
+
+- built-in prompt commands remain presenter-routed (`what is the active file`, `list solution projects`, `show error list`)
+- non-built-in prompt input is now routed through host-registered `IChatRequestService`
+- both hosts support prompt-box `ping` through this seam (`ping -> pong` outside OpenAI mode)
+
 The VSIX tool window is split this way:
 
 - the view lives in `VsMcpBridge.Shared.Wpf/Views/LogToolWindowControl.xaml`
@@ -59,6 +65,7 @@ Current logging behavior is intentionally boundary-focused for triage:
 - `VsMcpBridge.App` supports configuration-driven logging providers and appends provider-fed entries to the shared MVP/VM UI log surface
 - App chat requests (including OpenAI mode) log request start/completion/failure with correlation IDs and elapsed timing
 - `VsMcpBridge.McpServer` logs MCP chat-tool boundaries and named-pipe client request boundaries with command, request id, success state, and elapsed timing
+- VSIX prompt-box chat requests now have host-side request handling through `IChatRequestService` with OpenAI/fake-mode compatibility behavior
 - `PipeServer` logs dispatch boundaries with command/request id and elapsed timing, plus explicit cancel/failure paths
 - `VsMcpBridge.Vsix` service operations log start/completion/failure with operation-level correlation and elapsed timing for the current read surface
 

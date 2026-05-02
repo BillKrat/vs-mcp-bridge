@@ -49,6 +49,7 @@ internal static class BridgeServiceCollectionExtensions
         services.AddSingleton<IEditApplier, VsixEditApplier>();
         services.AddSingleton<IProposalFilePicker, ProposalFilePicker>();
         services.AddSingleton<IThreadHelper, ThreadHelperAdapter>();
+        services.AddSingleton<IChatRequestService, VsixChatRequestService>();
         services.AddSingleton<IVsService, VsService>();
         services.AddSingleton<IPipeServer, PipeServer>();
         return services;

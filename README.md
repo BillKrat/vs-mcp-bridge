@@ -38,6 +38,12 @@ The standalone app now serves two purposes:
 - it is a reference host for developers who want to use the bridge outside a VSIX
 - it validates that host-specific code stays out of the VSIX when it belongs in shared or in an alternate host
 
+Prompt-box chat behavior now works in both hosts through a shared presenter seam:
+
+- the shared presenter routes non-built-in prompt requests through host-registered `IChatRequestService` implementations
+- both `VsMcpBridge.App` and `VsMcpBridge.Vsix` now support `ping` from the request input surface (`ping -> pong` in non-OpenAI mode)
+- built-in operational prompts remain unchanged (`what is the active file`, `list solution projects`, `show error list`)
+
 Host behavior today:
 
 - `VsMcpBridge.Vsix` provides Visual Studio-backed behavior through DTE and Visual Studio services
@@ -181,6 +187,14 @@ App chat/OpenAI configuration keys:
 - `Adventures:ChatEngine:OpenAI:ApiKey`
 - `Adventures:ChatEngine:OpenAI:Model` (preferred)
 - `Adventures:ChatEngine:Model` (compatibility fallback)
+
+VSIX chat/OpenAI configuration keys are read from environment variables:
+
+- `Adventures__ChatEngine__Provider`
+- `Adventures__ChatEngine__OpenAI__UseRealApi`
+- `Adventures__ChatEngine__OpenAI__ApiKey`
+- `Adventures__ChatEngine__OpenAI__Model` (preferred)
+- `Adventures__ChatEngine__Model` (compatibility fallback)
 
 App configuration resolution order includes:
 

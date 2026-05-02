@@ -54,6 +54,7 @@ Purpose:
 - starts the named-pipe listener
 - handles Visual Studio-backed requests
 - owns the tool window shell
+- now also hosts prompt-box chat request handling through a VSIX-side `IChatRequestService` implementation for parity with the standalone app
 
 Key files:
 
@@ -131,6 +132,7 @@ Logging hardening now in place:
 - MCP chat tools (`chat_engine_ping`, `chat_engine_chat`) emit correlation and elapsed timing logs at tool boundaries
 - MCP named-pipe client and shared pipe server emit boundary diagnostics with command, request id, success state, and elapsed timing
 - VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`) emit operation-level completion logs including elapsed timing and key result shape (file path, selection length, project/diagnostic count)
+- prompt-box chat input in both hosts now routes through host-specific `IChatRequestService` implementations, enabling comparable request/response behavior for `ping` and OpenAI-backed prompts without App↔VSIX coupling
 
 These additions improve triage for hangs and latency without changing the approval-first edit model.
 

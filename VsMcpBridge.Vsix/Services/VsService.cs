@@ -5,8 +5,11 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
+using System.Linq;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -602,5 +605,97 @@ public sealed class VsService : IVsService
         }
 
         return sb.ToString();
+    }
+}
+
+internal sealed class VsixChatRequestService : IChatRequestService
+{
+    private const string ProviderConfigurationKey = "Adventures:ChatEngine:Provider";
+    private const string ApiKeyConfigurationKey = "Adventures:ChatEngine:OpenAI:ApiKey";
+    private const string ModelConfigurationKey = "Adventures:ChatEngine:OpenAI:Model";
+    private const string FallbackModelConfigurationKey = "Adventures:ChatEngine:Model";
+    private const string UseRealApiConfigurationKey = "Adventures:ChatEngine:OpenAI:UseRealApi";
+    private const string ChatCompletionsEndpoint = "https://api.openai.com/v1/chat/completions";
+
+    private static readonly HttpClient HttpClient = new();
+    private readonly ILogger _logger;
+
+    public VsixChatRequestService(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<string> SendAsync(string message, System.Threading.CancellationToken cancellationToken = default)
+    {
+        var normalizedMessage = message?.Trim() ?? string.Empty;
+        var provider = GetConfigurationValue(ProviderConfigurationKey);
+
+        if (!string.Equals(provider, "OpenAI", StringComparison.OrdinalIgnoreCase))
+            return string.Equals(normalizedMessage, "ping", StringComparison.OrdinalIgnoreCase) ? "pong" : $"echo:{normalizedMessage}";
+
+        var useRealApi = bool.TryParse(GetConfigurationValue(UseRealApiConfigurationKey), out var parsedUseRealApi) && parsedUseRealApi;
+        if (!useRealApi)
+            return string.Equals(normalizedMessage, "ping", StringComparison.OrdinalIgnoreCase) ? "pong-from-openai" : "openai-stub-response";
+
+        var apiKey = GetConfigurationValue(ApiKeyConfigurationKey);
+        var model = GetConfigurationValue(ModelConfigurationKey) ?? GetConfigurationValue(FallbackModelConfigurationKey);
+
+        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
+            return "OpenAI is selected, but ApiKey/Model configuration is missing.";
+
+        _logger.LogInformation("VSIX chat request started [Provider=OpenAI] [MessageLength={MessageLength}].", normalizedMessage.Length);
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            model,
+            messages = new[]
+            {
+                new { role = "user", content = normalizedMessage }
+            }
+        });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, ChatCompletionsEndpoint)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+        using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+            return $"OpenAI request failed: {(int)response.StatusCode} {response.StatusCode}.";
+
+        var text = ExtractMessageContent(responseContent);
+        return string.IsNullOrWhiteSpace(text)
+            ? "OpenAI response did not contain message content."
+            : text;
+    }
+
+    private static string? GetConfigurationValue(string key)
+    {
+        var envKey = key.Replace(':', '_').Replace("__", "_").Replace("_", "__");
+        var prefixedKey = "VSMCPBRIDGE_" + envKey;
+
+        return Environment.GetEnvironmentVariable(prefixedKey)
+            ?? Environment.GetEnvironmentVariable(envKey)
+            ?? Environment.GetEnvironmentVariable(key);
+    }
+
+    private static string? ExtractMessageContent(string responseContent)
+    {
+        using var document = JsonDocument.Parse(responseContent);
+
+        if (!document.RootElement.TryGetProperty("choices", out var choices)
+            || choices.ValueKind != JsonValueKind.Array
+            || choices.GetArrayLength() == 0)
+            return null;
+
+        var firstChoice = choices[0];
+        if (!firstChoice.TryGetProperty("message", out var message)
+            || !message.TryGetProperty("content", out var content)
+            || content.ValueKind != JsonValueKind.String)
+            return null;
+
+        return content.GetString();
     }
 }
