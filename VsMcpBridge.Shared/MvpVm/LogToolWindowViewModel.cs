@@ -31,6 +31,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
         private string _pendingProposalSourceType = string.Empty;
+        private string _pendingProposalPreviewText = string.Empty;
         private string _pendingApprovalOriginalSegment = string.Empty;
         private string _pendingApprovalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _pendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -38,6 +39,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _lastCompletedProposalOriginalText = string.Empty;
         private string _lastCompletedProposalUpdatedText = string.Empty;
         private string _lastCompletedProposalSourceType = string.Empty;
+        private string _lastCompletedProposalPreviewText = string.Empty;
         private string _lastCompletedProposalOriginalSegment = string.Empty;
         private string _lastCompletedProposalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _lastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -257,6 +259,19 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public string PendingProposalPreviewText
+        {
+            get => _pendingProposalPreviewText;
+            set
+            {
+                if (SetProperty(ref _pendingProposalPreviewText, value))
+                {
+                    OnPropertyChanged(nameof(ProposalPreviewSummary));
+                    OnPropertyChanged(nameof(HasProposalPreviewSummary));
+                }
+            }
+        }
+
         public string PendingApprovalOriginalSegment
         {
             get => _pendingApprovalOriginalSegment;
@@ -427,6 +442,19 @@ namespace VsMcpBridge.Shared.MvpVm
                     OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
                     OnPropertyChanged(nameof(ProposalSourceSummary));
                     OnPropertyChanged(nameof(HasProposalSourceSummary));
+                }
+            }
+        }
+
+        public string LastCompletedProposalPreviewText
+        {
+            get => _lastCompletedProposalPreviewText;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalPreviewText, value))
+                {
+                    OnPropertyChanged(nameof(ProposalPreviewSummary));
+                    OnPropertyChanged(nameof(HasProposalPreviewSummary));
                 }
             }
         }
@@ -711,6 +739,15 @@ namespace VsMcpBridge.Shared.MvpVm
                     : string.Empty;
 
         public bool HasProposalSourceSummary => !string.IsNullOrWhiteSpace(ProposalSourceSummary);
+
+        public string ProposalPreviewSummary =>
+            HasPendingApproval
+                ? PendingProposalPreviewText
+                : HasLastCompletedProposalPreview
+                    ? LastCompletedProposalPreviewText
+                    : string.Empty;
+
+        public bool HasProposalPreviewSummary => !string.IsNullOrWhiteSpace(ProposalPreviewSummary);
 
         public string ProposalTargetSummary
         {

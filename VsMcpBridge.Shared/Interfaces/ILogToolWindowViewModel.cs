@@ -29,6 +29,7 @@ namespace VsMcpBridge.Shared.Interfaces
         string ProposalProposedText { get; set; }
         string PendingApprovalDescription { get; set; }
         string PendingProposalSourceType { get; set; }
+        string PendingProposalPreviewText { get; set; }
         string PendingApprovalOriginalSegment { get; set; }
         string PendingApprovalUpdatedSegment { get; set; }
         IReadOnlyList<ProposalReviewedChange> PendingApprovalReviewedChanges { get; set; }
@@ -36,6 +37,7 @@ namespace VsMcpBridge.Shared.Interfaces
         string LastCompletedProposalOriginalText { get; set; }
         string LastCompletedProposalUpdatedText { get; set; }
         string LastCompletedProposalSourceType { get; set; }
+        string LastCompletedProposalPreviewText { get; set; }
         string LastCompletedProposalOriginalSegment { get; set; }
         string LastCompletedProposalUpdatedSegment { get; set; }
         IReadOnlyList<ProposalReviewedChange> LastCompletedProposalReviewedChanges { get; set; }
@@ -49,6 +51,8 @@ namespace VsMcpBridge.Shared.Interfaces
         string PendingApprovalIncludedFilesHeader { get; }
         string ProposalSourceSummary { get; }
         bool HasProposalSourceSummary { get; }
+        string ProposalPreviewSummary { get; }
+        bool HasProposalPreviewSummary { get; }
         string ProposalTargetSummary { get; }
         bool HasProposalTargetSummary { get; }
         string ProposalStatusSummary { get; }

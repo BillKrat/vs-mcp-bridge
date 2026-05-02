@@ -105,6 +105,7 @@ public sealed class MvpVmTests
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
         Assert.Equal("Manual proposal", viewModel.ProposalSourceSummary);
+        Assert.Equal("after", viewModel.ProposalPreviewSummary);
         Assert.Equal("Pending review", viewModel.ProposalStatusSummary);
         Assert.True(viewModel.HasPendingApprovalRangePreview);
         Assert.Equal("before", viewModel.PendingApprovalOriginalSegment);
@@ -133,6 +134,7 @@ public sealed class MvpVmTests
         presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" }, "external-request");
 
         Assert.Equal("AI rewrite", viewModel.ProposalSourceSummary);
+        Assert.Equal("after", viewModel.ProposalPreviewSummary);
         Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
         Assert.Equal("Pending review", viewModel.ProposalStatusSummary);
     }
@@ -150,6 +152,7 @@ public sealed class MvpVmTests
         presenter.CompleteProposalCycle("Proposal rejected for 1 file. No changes were applied.");
 
         Assert.Equal("AI suggest fixes", viewModel.ProposalSourceSummary);
+        Assert.Equal("after", viewModel.ProposalPreviewSummary);
         Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
         Assert.Equal("Rejected", viewModel.ProposalStatusSummary);
     }
@@ -165,6 +168,33 @@ public sealed class MvpVmTests
 
         Assert.Equal("Failed", viewModel.ProposalStatusSummary);
         Assert.Equal("Manual proposal", viewModel.ProposalSourceSummary);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_uses_proposed_text_preview_for_manual_proposals_without_range_preview()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            ProposalProposedText = "first proposed line\nsecond line"
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", null, null, null, () => { }, () => { }, new[] { @"C:\repo\Manual.cs" });
+
+        Assert.Equal("first proposed line", viewModel.ProposalPreviewSummary);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_truncates_long_preview_safely()
+    {
+        var longLine = new string('a', 140);
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", longLine, null, () => { }, () => { });
+
+        Assert.True(viewModel.ProposalPreviewSummary.Length <= 120);
+        Assert.EndsWith("…", viewModel.ProposalPreviewSummary, StringComparison.Ordinal);
     }
 
     [Fact]

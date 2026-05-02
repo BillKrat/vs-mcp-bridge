@@ -112,6 +112,11 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
                 LogToolWindowViewModel.PendingProposalSourceType = ResolveProposalSourceType(requestId);
+                LogToolWindowViewModel.PendingProposalPreviewText = BuildProposalPreviewText(
+                    updatedSegment,
+                    reviewedChanges,
+                    LogToolWindowViewModel.ProposalProposedText,
+                    description);
                 LogToolWindowViewModel.PendingApprovalOriginalSegment = originalSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalUpdatedSegment = updatedSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalReviewedChanges = CloneReviewedChanges(reviewedChanges);
@@ -158,6 +163,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalOriginalText = LogToolWindowViewModel.ProposalOriginalText;
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = LogToolWindowViewModel.ProposalProposedText;
             LogToolWindowViewModel.LastCompletedProposalSourceType = LogToolWindowViewModel.PendingProposalSourceType;
+            LogToolWindowViewModel.LastCompletedProposalPreviewText = LogToolWindowViewModel.PendingProposalPreviewText;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = CloneReviewedChanges(LogToolWindowViewModel.PendingApprovalReviewedChanges);
@@ -451,6 +457,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _pendingRejectAction = null;
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
             LogToolWindowViewModel.PendingProposalSourceType = string.Empty;
+            LogToolWindowViewModel.PendingProposalPreviewText = string.Empty;
             LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -463,10 +470,79 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalOriginalText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalSourceType = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalPreviewText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
             LogToolWindowViewModel.LastCompletedProposalIncludedFiles = Array.Empty<string>();
+        }
+
+        private static string BuildProposalPreviewText(
+            string? updatedSegment,
+            IReadOnlyList<ProposalReviewedChange>? reviewedChanges,
+            string? proposedText,
+            string? description)
+        {
+            var previewSource =
+                FirstNonEmpty(updatedSegment)
+                ?? FirstNonEmpty(reviewedChanges?.FirstOrDefault()?.UpdatedSegment)
+                ?? FirstNonEmpty(proposedText)
+                ?? FirstNonEmpty(ExtractPreviewFromDescription(description));
+
+            return string.IsNullOrWhiteSpace(previewSource)
+                ? string.Empty
+                : TruncatePreview(previewSource);
+        }
+
+        private static string? ExtractPreviewFromDescription(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return null;
+
+            foreach (var line in description.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrWhiteSpace(trimmed))
+                    continue;
+
+                if (trimmed.StartsWith("Pending proposal", StringComparison.OrdinalIgnoreCase)
+                    || trimmed.StartsWith("--- ", StringComparison.Ordinal)
+                    || trimmed.StartsWith("+++ ", StringComparison.Ordinal)
+                    || trimmed.StartsWith("@@", StringComparison.Ordinal)
+                    || trimmed.StartsWith("File: ", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (trimmed.StartsWith("+", StringComparison.Ordinal))
+                    return trimmed.TrimStart('+').Trim();
+
+                if (!trimmed.StartsWith("-", StringComparison.Ordinal))
+                    return trimmed;
+            }
+
+            return null;
+        }
+
+        private static string? FirstNonEmpty(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static string TruncatePreview(string value)
+        {
+            var firstLine = value
+                .Replace("\r\n", "\n")
+                .Split('\n')
+                .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line))
+                ?.Trim()
+                ?? string.Empty;
+
+            const int maxLength = 120;
+            if (firstLine.Length <= maxLength)
+                return firstLine;
+
+            return firstLine.Substring(0, maxLength - 1).TrimEnd() + "…";
         }
 
         private string ResolveProposalSourceType(string? requestId)

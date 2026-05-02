@@ -87,6 +87,11 @@
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}"
                          Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalPreviewSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalPreviewSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ProposalTargetSummary}"
                          Margin="0,0,0,2"
                          TextWrapping="Wrap"
@@ -184,6 +189,11 @@
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}"
                          Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalPreviewSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalPreviewSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ProposalTargetSummary}"
                          Margin="0,0,0,2"
                          TextWrapping="Wrap"
