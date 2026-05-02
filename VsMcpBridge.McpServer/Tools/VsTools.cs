@@ -39,6 +39,10 @@ public sealed class VsTools
     private const string ChatEngineSuggestFixesWithTargetFailureError = "Error: chat_engine_suggest_fixes_with_target failed.";
     private const string ChatEngineExplainCodeInvalidInputError = "Error: chat_engine_explain_code requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineExplainCodeFailureError = "Error: chat_engine_explain_code failed.";
+    private const string ChatEngineExplainErrorInvalidInputError = "Error: chat_engine_explain_error requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineExplainErrorFailureError = "Error: chat_engine_explain_error failed.";
+    private const string ChatEngineSuggestErrorFixInvalidInputError = "Error: chat_engine_suggest_error_fix requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineSuggestErrorFixFailureError = "Error: chat_engine_suggest_error_fix failed.";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -97,6 +101,8 @@ public sealed class VsTools
             "chat_engine_suggest_fixes" => "AI fix suggestion",
             "chat_engine_suggest_fixes_with_target" => "AI fix proposal",
             "chat_engine_explain_code" => "AI code explanation",
+            "chat_engine_explain_error" => "AI error explanation",
+            "chat_engine_suggest_error_fix" => "AI error fix suggestion",
             _ => "AI suggestion"
         };
     }
@@ -509,6 +515,36 @@ public sealed class VsTools
             failureError: ChatEngineExplainCodeFailureError,
             logToolName: "chat_engine_explain_code",
             requestMessageFactory: static input => $"Explain the following code clearly and concisely:\n\n{input}").ConfigureAwait(false);
+    }
+
+    [McpServerTool(Name = "chat_engine_explain_error")]
+    [Description("Sends compiler or diagnostic text through Adventures.ChatEngine with an explanation prompt and returns a concise explanation of the likely cause.")]
+    public async Task<string> ChatEngineExplainErrorAsync(
+        [Description("The compiler or diagnostic error text to explain.")] string text,
+        CancellationToken ct)
+    {
+        return await ExecuteChatEngineToolAsync(
+            input: text,
+            ct: ct,
+            invalidInputError: ChatEngineExplainErrorInvalidInputError,
+            failureError: ChatEngineExplainErrorFailureError,
+            logToolName: "chat_engine_explain_error",
+            requestMessageFactory: static input => $"Explain the following compiler or diagnostic error and suggest the likely cause:\n\n{input}").ConfigureAwait(false);
+    }
+
+    [McpServerTool(Name = "chat_engine_suggest_error_fix")]
+    [Description("Sends compiler or diagnostic text through Adventures.ChatEngine with a likely-fix prompt and returns a suggested fix with explanation.")]
+    public async Task<string> ChatEngineSuggestErrorFixAsync(
+        [Description("The compiler or diagnostic error text to explain and suggest a fix for.")] string text,
+        CancellationToken ct)
+    {
+        return await ExecuteChatEngineToolAsync(
+            input: text,
+            ct: ct,
+            invalidInputError: ChatEngineSuggestErrorFixInvalidInputError,
+            failureError: ChatEngineSuggestErrorFixFailureError,
+            logToolName: "chat_engine_suggest_error_fix",
+            requestMessageFactory: static input => $"Given the following compiler or diagnostic error, suggest a likely fix and explain why:\n\n{input}").ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "vs_get_active_document")]

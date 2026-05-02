@@ -762,6 +762,120 @@ public sealed class VsToolsTests
     }
 
     [Fact]
+    public async Task ChatEngineExplainErrorAsync_returns_success_with_content_for_valid_input()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("diagnostic explanation");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineExplainErrorAsync("CS1002 ; expected", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("diagnostic explanation", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Explain the following compiler or diagnostic error and suggest the likely cause:\n\nCS1002 ; expected", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineExplainErrorAsync_returns_invalid_input_for_empty_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineExplainErrorAsync(string.Empty, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_explain_error requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineExplainErrorAsync_returns_provider_failure_when_chat_engine_fails()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineExplainErrorAsync("CS1002 ; expected", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_explain_error failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Explain the following compiler or diagnostic error and suggest the likely cause:\n\nCS1002 ; expected", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineSuggestErrorFixAsync_returns_success_with_content_for_valid_input()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("likely fix");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSuggestErrorFixAsync("CS1002 ; expected", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("likely fix", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Given the following compiler or diagnostic error, suggest a likely fix and explain why:\n\nCS1002 ; expected", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineSuggestErrorFixAsync_returns_invalid_input_for_empty_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSuggestErrorFixAsync(string.Empty, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_suggest_error_fix requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineSuggestErrorFixAsync_returns_provider_failure_when_chat_engine_fails()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSuggestErrorFixAsync("CS1002 ; expected", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_suggest_error_fix failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Given the following compiler or diagnostic error, suggest a likely fix and explain why:\n\nCS1002 ; expected", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
     public async Task ChatEngineTools_use_only_SendAsync_and_never_StreamAsync()
     {
         var pipeClient = new RecordingPipeClient();
@@ -773,8 +887,10 @@ public sealed class VsToolsTests
         await tools.ChatEngineRewriteAsync("hello", null, CancellationToken.None);
         await tools.ChatEngineSuggestFixesAsync("hello", CancellationToken.None);
         await tools.ChatEngineExplainCodeAsync("hello", CancellationToken.None);
+        await tools.ChatEngineExplainErrorAsync("hello", CancellationToken.None);
+        await tools.ChatEngineSuggestErrorFixAsync("hello", CancellationToken.None);
 
-        Assert.Equal(5, chatEngine.SendAsyncCalls);
+        Assert.Equal(7, chatEngine.SendAsyncCalls);
         Assert.Equal(0, chatEngine.StreamAsyncCalls);
     }
 
@@ -790,12 +906,16 @@ public sealed class VsToolsTests
         var rewriteResponseJson = await tools.ChatEngineRewriteAsync("hello", null, CancellationToken.None);
         var suggestFixesResponseJson = await tools.ChatEngineSuggestFixesAsync("hello", CancellationToken.None);
         var explainCodeResponseJson = await tools.ChatEngineExplainCodeAsync("hello", CancellationToken.None);
+        var explainErrorResponseJson = await tools.ChatEngineExplainErrorAsync("hello", CancellationToken.None);
+        var suggestErrorFixResponseJson = await tools.ChatEngineSuggestErrorFixAsync("hello", CancellationToken.None);
 
         AssertChatEngineChatResultJson(chatResponseJson, expectedContent: "result");
         AssertChatEngineChatResultJson(summarizeResponseJson, expectedContent: "result");
         AssertChatEngineChatResultJson(rewriteResponseJson, expectedContent: "result");
         AssertChatEngineChatResultJson(suggestFixesResponseJson, expectedContent: "result");
         AssertChatEngineChatResultJson(explainCodeResponseJson, expectedContent: "result");
+        AssertChatEngineChatResultJson(explainErrorResponseJson, expectedContent: "result");
+        AssertChatEngineChatResultJson(suggestErrorFixResponseJson, expectedContent: "result");
     }
 
     [Fact]
@@ -810,12 +930,16 @@ public sealed class VsToolsTests
         var rewriteResponseJson = await tools.ChatEngineRewriteAsync("hello", null, CancellationToken.None);
         var suggestFixesResponseJson = await tools.ChatEngineSuggestFixesAsync("hello", CancellationToken.None);
         var explainCodeResponseJson = await tools.ChatEngineExplainCodeAsync("hello", CancellationToken.None);
+        var explainErrorResponseJson = await tools.ChatEngineExplainErrorAsync("hello", CancellationToken.None);
+        var suggestErrorFixResponseJson = await tools.ChatEngineSuggestErrorFixAsync("hello", CancellationToken.None);
 
         AssertFailureErrorCode(chatResponseJson, "ProviderFailure");
         AssertFailureErrorCode(summarizeResponseJson, "ProviderFailure");
         AssertFailureErrorCode(rewriteResponseJson, "ProviderFailure");
         AssertFailureErrorCode(suggestFixesResponseJson, "ProviderFailure");
         AssertFailureErrorCode(explainCodeResponseJson, "ProviderFailure");
+        AssertFailureErrorCode(explainErrorResponseJson, "ProviderFailure");
+        AssertFailureErrorCode(suggestErrorFixResponseJson, "ProviderFailure");
     }
 
     [Fact]
@@ -830,6 +954,8 @@ public sealed class VsToolsTests
         await tools.ChatEngineRewriteAsync("hello", null, CancellationToken.None);
         await tools.ChatEngineSuggestFixesAsync("hello", CancellationToken.None);
         await tools.ChatEngineExplainCodeAsync("hello", CancellationToken.None);
+        await tools.ChatEngineExplainErrorAsync("hello", CancellationToken.None);
+        await tools.ChatEngineSuggestErrorFixAsync("hello", CancellationToken.None);
         await tools.ChatEngineRewriteWithTargetAsync("sample.cs", "hello", null, CancellationToken.None);
         await tools.ChatEngineSuggestFixesWithTargetAsync("sample.cs", "hello", CancellationToken.None);
 
