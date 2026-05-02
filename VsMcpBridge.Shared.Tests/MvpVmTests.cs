@@ -104,6 +104,8 @@ public sealed class MvpVmTests
 
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
+        Assert.Equal("Manual proposal", viewModel.ProposalSourceSummary);
+        Assert.Equal("Pending review", viewModel.ProposalStatusSummary);
         Assert.True(viewModel.HasPendingApprovalRangePreview);
         Assert.Equal("before", viewModel.PendingApprovalOriginalSegment);
         Assert.Equal("after", viewModel.PendingApprovalUpdatedSegment);
@@ -117,6 +119,52 @@ public sealed class MvpVmTests
         Assert.False(rejected);
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_exposes_ai_rewrite_source_and_target_in_view_model_when_request_context_indicates_ai_rewrite()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            LastSubmittedRequestText = "Please rewrite this text to be clearer and more concise."
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" }, "external-request");
+
+        Assert.Equal("AI rewrite", viewModel.ProposalSourceSummary);
+        Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
+        Assert.Equal("Pending review", viewModel.ProposalStatusSummary);
+    }
+
+    [Fact]
+    public void CompletedProposal_retains_terminal_status_and_target_visibility()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            LastSubmittedRequestText = "Please suggest fixes for the selected file."
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" }, "external-request");
+        presenter.CompleteProposalCycle("Proposal rejected for 1 file. No changes were applied.");
+
+        Assert.Equal("AI suggest fixes", viewModel.ProposalSourceSummary);
+        Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
+        Assert.Equal("Rejected", viewModel.ProposalStatusSummary);
+    }
+
+    [Fact]
+    public void CompletedProposal_failed_status_remains_visible()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" });
+        presenter.CompleteProposalCycle("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.");
+
+        Assert.Equal("Failed", viewModel.ProposalStatusSummary);
+        Assert.Equal("Manual proposal", viewModel.ProposalSourceSummary);
     }
 
     [Fact]

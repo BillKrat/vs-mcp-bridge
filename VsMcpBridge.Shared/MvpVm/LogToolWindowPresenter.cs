@@ -111,6 +111,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.IsRequestInProgress = false;
                 LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
+                LogToolWindowViewModel.PendingProposalSourceType = ResolveProposalSourceType(requestId);
                 LogToolWindowViewModel.PendingApprovalOriginalSegment = originalSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalUpdatedSegment = updatedSegment ?? string.Empty;
                 LogToolWindowViewModel.PendingApprovalReviewedChanges = CloneReviewedChanges(reviewedChanges);
@@ -156,6 +157,7 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             LogToolWindowViewModel.LastCompletedProposalOriginalText = LogToolWindowViewModel.ProposalOriginalText;
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = LogToolWindowViewModel.ProposalProposedText;
+            LogToolWindowViewModel.LastCompletedProposalSourceType = LogToolWindowViewModel.PendingProposalSourceType;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = CloneReviewedChanges(LogToolWindowViewModel.PendingApprovalReviewedChanges);
@@ -448,6 +450,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _pendingApproveAction = null;
             _pendingRejectAction = null;
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
+            LogToolWindowViewModel.PendingProposalSourceType = string.Empty;
             LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -459,10 +462,38 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             LogToolWindowViewModel.LastCompletedProposalOriginalText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalSourceType = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
             LogToolWindowViewModel.LastCompletedProposalIncludedFiles = Array.Empty<string>();
+        }
+
+        private string ResolveProposalSourceType(string? requestId)
+        {
+            if (!string.IsNullOrWhiteSpace(requestId)
+                && string.Equals(_activeManualRequestId, requestId, StringComparison.Ordinal))
+            {
+                return "Manual proposal";
+            }
+
+            var requestText = LogToolWindowViewModel.LastSubmittedRequestText;
+            if (!string.IsNullOrWhiteSpace(requestText))
+            {
+                var normalizedRequestText = requestText.Trim().ToLowerInvariant();
+                if (normalizedRequestText.IndexOf("suggest fixes", StringComparison.Ordinal) >= 0
+                    || normalizedRequestText.IndexOf("suggest improvements", StringComparison.Ordinal) >= 0)
+                {
+                    return "AI suggest fixes";
+                }
+
+                if (normalizedRequestText.IndexOf("rewrite", StringComparison.Ordinal) >= 0)
+                {
+                    return "AI rewrite";
+                }
+            }
+
+            return "Manual proposal";
         }
 
         private static IReadOnlyList<ProposalReviewedChange> CloneReviewedChanges(IReadOnlyList<ProposalReviewedChange>? reviewedChanges)

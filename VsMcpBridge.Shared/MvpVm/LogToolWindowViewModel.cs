@@ -30,12 +30,14 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _proposalOriginalText = string.Empty;
         private string _proposalProposedText = string.Empty;
         private string _pendingApprovalDescription = string.Empty;
+        private string _pendingProposalSourceType = string.Empty;
         private string _pendingApprovalOriginalSegment = string.Empty;
         private string _pendingApprovalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _pendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
         private IReadOnlyList<string> _pendingApprovalIncludedFiles = Array.Empty<string>();
         private string _lastCompletedProposalOriginalText = string.Empty;
         private string _lastCompletedProposalUpdatedText = string.Empty;
+        private string _lastCompletedProposalSourceType = string.Empty;
         private string _lastCompletedProposalOriginalSegment = string.Empty;
         private string _lastCompletedProposalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _lastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -166,6 +168,8 @@ namespace VsMcpBridge.Shared.MvpVm
                 if (SetProperty(ref _proposalFilePath, value))
                 {
                     OnPropertyChanged(nameof(ProposalActiveFileSummary));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
                     RemoveProposalFileCommand.NotifyCanExecuteChanged();
@@ -187,6 +191,8 @@ namespace VsMcpBridge.Shared.MvpVm
                 if (SetProperty(ref _proposalSelectedFiles, normalizedValue))
                 {
                     OnPropertyChanged(nameof(ProposalSelectionSummary));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
                     OnPropertyChanged(nameof(RequestPhaseSummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
@@ -238,6 +244,19 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public string PendingProposalSourceType
+        {
+            get => _pendingProposalSourceType;
+            set
+            {
+                if (SetProperty(ref _pendingProposalSourceType, value))
+                {
+                    OnPropertyChanged(nameof(ProposalSourceSummary));
+                    OnPropertyChanged(nameof(HasProposalSourceSummary));
+                }
+            }
+        }
+
         public string PendingApprovalOriginalSegment
         {
             get => _pendingApprovalOriginalSegment;
@@ -285,6 +304,8 @@ namespace VsMcpBridge.Shared.MvpVm
                 {
                     OnPropertyChanged(nameof(HasPendingApprovalIncludedFiles));
                     OnPropertyChanged(nameof(PendingApprovalIncludedFilesHeader));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
                 }
@@ -300,6 +321,8 @@ namespace VsMcpBridge.Shared.MvpVm
                 {
                     OnPropertyChanged(nameof(RequestPhaseSummary));
                     OnPropertyChanged(nameof(HasRequestPhaseSummary));
+                    OnPropertyChanged(nameof(ProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalStatusSummary));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
@@ -321,6 +344,12 @@ namespace VsMcpBridge.Shared.MvpVm
                     OnPropertyChanged(nameof(RequestPhaseSummary));
                     OnPropertyChanged(nameof(HasRequestPhaseSummary));
                     OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
+                    OnPropertyChanged(nameof(ProposalSourceSummary));
+                    OnPropertyChanged(nameof(HasProposalSourceSummary));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
+                    OnPropertyChanged(nameof(ProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalStatusSummary));
                     OnPropertyChanged(nameof(ActivityTitle));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
@@ -367,6 +396,12 @@ namespace VsMcpBridge.Shared.MvpVm
                     OnPropertyChanged(nameof(RequestPhaseSummary));
                     OnPropertyChanged(nameof(HasRequestPhaseSummary));
                     OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
+                    OnPropertyChanged(nameof(ProposalSourceSummary));
+                    OnPropertyChanged(nameof(HasProposalSourceSummary));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
+                    OnPropertyChanged(nameof(ProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalStatusSummary));
                     OnPropertyChanged(nameof(ActivityTitle));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
@@ -378,6 +413,20 @@ namespace VsMcpBridge.Shared.MvpVm
                     NotifyResetStateChanged();
                     NotifySessionStateChanged();
                     OpenGitChangesCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public string LastCompletedProposalSourceType
+        {
+            get => _lastCompletedProposalSourceType;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalSourceType, value))
+                {
+                    OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
+                    OnPropertyChanged(nameof(ProposalSourceSummary));
+                    OnPropertyChanged(nameof(HasProposalSourceSummary));
                 }
             }
         }
@@ -434,8 +483,11 @@ namespace VsMcpBridge.Shared.MvpVm
 
                 if (SetProperty(ref _lastCompletedProposalIncludedFiles, normalizedValue))
                 {
+                    OnPropertyChanged(nameof(HasLastCompletedProposalPreview));
                     OnPropertyChanged(nameof(HasLastCompletedProposalIncludedFiles));
                     OnPropertyChanged(nameof(LastCompletedProposalIncludedFilesHeader));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
                 }
@@ -463,6 +515,12 @@ namespace VsMcpBridge.Shared.MvpVm
                 {
                     OnPropertyChanged(nameof(RequestPhaseSummary));
                     OnPropertyChanged(nameof(HasRequestPhaseSummary));
+                    OnPropertyChanged(nameof(ProposalSourceSummary));
+                    OnPropertyChanged(nameof(HasProposalSourceSummary));
+                    OnPropertyChanged(nameof(ProposalTargetSummary));
+                    OnPropertyChanged(nameof(HasProposalTargetSummary));
+                    OnPropertyChanged(nameof(ProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalStatusSummary));
                     OnPropertyChanged(nameof(ActivityTitle));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
@@ -645,9 +703,65 @@ namespace VsMcpBridge.Shared.MvpVm
 
         public string PendingApprovalIncludedFilesHeader => $"Included Files ({PendingApprovalIncludedFiles.Count})";
 
+        public string ProposalSourceSummary =>
+            HasPendingApproval
+                ? PendingProposalSourceType
+                : HasLastCompletedProposalPreview
+                    ? LastCompletedProposalSourceType
+                    : string.Empty;
+
+        public bool HasProposalSourceSummary => !string.IsNullOrWhiteSpace(ProposalSourceSummary);
+
+        public string ProposalTargetSummary
+        {
+            get
+            {
+                var files = HasPendingApproval
+                    ? PendingApprovalIncludedFiles
+                    : HasLastCompletedProposalPreview
+                        ? LastCompletedProposalIncludedFiles
+                        : ProposalSelectedFiles;
+
+                if (files.Count == 1)
+                    return $"Target file: {files[0]}";
+
+                if (files.Count > 1)
+                    return $"Target files: {files.Count}";
+
+                if (!string.IsNullOrWhiteSpace(ProposalFilePath))
+                    return $"Target file: {ProposalFilePath}";
+
+                return string.Empty;
+            }
+        }
+
+        public bool HasProposalTargetSummary => !string.IsNullOrWhiteSpace(ProposalTargetSummary);
+
+        public string ProposalStatusSummary
+        {
+            get
+            {
+                if (HasPendingApproval)
+                    return "Pending review";
+
+                return ClassifyOutcome(StatusMessage) switch
+                {
+                    ProposalOutcomeCategory.Success => "Approved/applied",
+                    ProposalOutcomeCategory.Skip => "Approved/applied",
+                    ProposalOutcomeCategory.Rejected => "Rejected",
+                    ProposalOutcomeCategory.Failure => "Failed",
+                    _ => string.Empty
+                };
+            }
+        }
+
+        public bool HasProposalStatusSummary => !string.IsNullOrWhiteSpace(ProposalStatusSummary);
+
         public bool HasLastCompletedProposalPreview =>
             !string.IsNullOrEmpty(LastCompletedProposalOriginalText)
-            || !string.IsNullOrEmpty(LastCompletedProposalUpdatedText);
+            || !string.IsNullOrEmpty(LastCompletedProposalUpdatedText)
+            || !string.IsNullOrWhiteSpace(LastCompletedProposalSourceType)
+            || LastCompletedProposalIncludedFiles.Count > 0;
 
         public bool HasLastCompletedProposalRangePreview =>
             !string.IsNullOrEmpty(LastCompletedProposalOriginalSegment)

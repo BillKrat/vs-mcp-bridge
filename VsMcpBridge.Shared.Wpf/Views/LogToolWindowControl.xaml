@@ -82,6 +82,21 @@
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}" />
+              <TextBlock Text="{Binding ProposalSourceSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalTargetSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalTargetSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalStatusSummary}"
+                         Margin="0,0,0,6"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalStatusSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ActivityMetricsSummary}"
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
@@ -164,6 +179,21 @@
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}" />
+              <TextBlock Text="{Binding ProposalSourceSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalTargetSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalTargetSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalStatusSummary}"
+                         Margin="0,0,0,6"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalStatusSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ActivityMetricsSummary}"
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
