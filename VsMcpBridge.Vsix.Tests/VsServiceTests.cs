@@ -63,7 +63,8 @@ public sealed class VsServiceTests
         var viewModel = new LogToolWindowViewModel();
         var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
         var workflow = new InMemoryApprovalWorkflowService();
-        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new RecordingEditApplier(), presenter);
+        var editApplier = new RecordingEditApplier();
+        var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, editApplier, presenter);
 
         var response = await service.ProposeTextEditAsync("request-123", "sample.cs", "before", "after");
 
@@ -78,6 +79,7 @@ public sealed class VsServiceTests
         Assert.Contains("--- a/sample.cs", viewModel.PendingApprovalDescription);
         Assert.True(viewModel.ApproveCommand.CanExecute(null));
         Assert.True(viewModel.RejectCommand.CanExecute(null));
+        Assert.Empty(editApplier.AppliedProposals);
         var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Created edit proposal [RequestId=request-123] [ProposalId={proposalId}]"));
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal pending approval [RequestId=request-123] [ProposalId={proposalId}]"));

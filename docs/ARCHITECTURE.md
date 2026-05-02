@@ -98,6 +98,17 @@ This lifecycle is the same underlying bridge pattern for the currently exposed t
 - `vs_propose_text_edit`
 - `vs_propose_text_edits`
 
+## MCP Security Boundary
+
+The MCP-exposed surface is intentionally explicit and limited.
+
+- the MCP server registers a single tool container, `VsTools`, through `WithTools<VsTools>()`
+- only methods in `VsTools` marked with `McpServerTool` are exposed over MCP
+- the named-pipe hop does not accept arbitrary host actions; `PipeServer` dispatches only the hard-coded command allowlist defined in `PipeCommands`
+- unknown, empty, malformed, or blank-command pipe requests fail closed with a serialized error response rather than being dispatched
+- proposal/edit requests remain approval-gated: MCP can create proposals, but apply still happens only after an explicit approve action in the host UI
+- there is no MCP tool for arbitrary shell or process execution; host-specific process launches that exist elsewhere in the codebase are not part of the registered MCP tool surface
+
 ## PipeServer and VsService Interaction
 
 The named-pipe boundary separates transport concerns from host-specific behavior.

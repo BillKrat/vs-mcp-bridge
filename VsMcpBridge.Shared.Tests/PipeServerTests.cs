@@ -56,8 +56,10 @@ public sealed class PipeServerTests
         var server = new PipeServer(new StubVsService(), logger, new RecordingUnhandledExceptionSink());
 
         var responseJson = await server.ProcessRequestAsync(string.Empty);
+        using var document = JsonDocument.Parse(responseJson!);
 
-        Assert.Null(responseJson);
+        Assert.False(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal("Request payload was empty.", document.RootElement.GetProperty("errorMessage").GetString());
         Assert.Contains("Received an empty pipe request.", logger.WarningMessages);
     }
 
@@ -73,6 +75,35 @@ public sealed class PipeServerTests
 
         Assert.False(document.RootElement.GetProperty("success").GetBoolean());
         Assert.Contains("Unknown command", document.RootElement.GetProperty("errorMessage").GetString());
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsync_returns_failure_response_for_invalid_json()
+    {
+        var logger = new RecordingBridgeLogger();
+        var server = new PipeServer(new StubVsService(), logger, new RecordingUnhandledExceptionSink());
+
+        var responseJson = await server.ProcessRequestAsync("{not-json");
+        using var document = JsonDocument.Parse(responseJson!);
+
+        Assert.False(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal("Request payload was not valid JSON.", document.RootElement.GetProperty("errorMessage").GetString());
+        Assert.Contains(logger.WarningMessages, message => message.Contains("invalid JSON", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ProcessRequestAsync_returns_failure_response_for_blank_command()
+    {
+        var logger = new RecordingBridgeLogger();
+        var server = new PipeServer(new StubVsService(), logger, new RecordingUnhandledExceptionSink());
+        var requestJson = JsonSerializer.Serialize(new PipeMessage { RequestId = "request-blank", Command = " ", Payload = string.Empty }, JsonOptions);
+
+        var responseJson = await server.ProcessRequestAsync(requestJson);
+        using var document = JsonDocument.Parse(responseJson!);
+
+        Assert.False(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal("request-blank", document.RootElement.GetProperty("requestId").GetString());
+        Assert.Equal("Request command was missing.", document.RootElement.GetProperty("errorMessage").GetString());
     }
 
     [Fact]

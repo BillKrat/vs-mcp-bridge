@@ -97,21 +97,39 @@ public sealed class PipeServer : IPipeServer
         {
             stopwatch.Stop();
             _logger.LogWarning("Received an empty pipe request.");
-            return null;
+            return SerializeFailureResponse("Request payload was empty.");
         }
 
         if (Interlocked.CompareExchange(ref _hasHandledFirstRequest, 1, 0) == 0)
             _logger.LogTrace("Handling first bridge request.");
 
-        var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
+        PipeMessage? envelope;
+        try
+        {
+            envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(ex, "Received a pipe request with invalid JSON.");
+            return SerializeFailureResponse("Request payload was not valid JSON.");
+        }
+
         if (envelope == null)
         {
             stopwatch.Stop();
             _logger.LogWarning("Received a pipe request that could not be deserialized.");
-            return null;
+            return SerializeFailureResponse("Request payload could not be deserialized.");
         }
 
         envelope.RequestId = EnsureRequestId(envelope.RequestId);
+
+        if (string.IsNullOrWhiteSpace(envelope.Command))
+        {
+            stopwatch.Stop();
+            _logger.LogWarning($"Received a pipe request with a missing command [RequestId={envelope.RequestId}].");
+            return SerializeFailureResponse("Request command was missing.", envelope.RequestId);
+        }
 
         _logger.LogTrace($"Processing pipe request [Command={envelope.Command}] [RequestId={envelope.RequestId}] [PayloadLength={envelope.Payload?.Length ?? 0}].");
         _logger.LogInformation($"Dispatching pipe command '{envelope.Command}' [RequestId={envelope.RequestId}].");
@@ -317,6 +335,18 @@ public sealed class PipeServer : IPipeServer
             return fallbackRequestId!;
 
         return Guid.NewGuid().ToString("N");
+    }
+
+    private static string SerializeFailureResponse(string errorMessage, string? requestId = null)
+    {
+        var response = new VsResponseBaseUnknown
+        {
+            RequestId = EnsureRequestId(requestId),
+            Success = false,
+            ErrorMessage = errorMessage
+        };
+
+        return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
     }
 
     private static void WritePipeTrace(string message)

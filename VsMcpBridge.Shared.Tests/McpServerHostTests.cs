@@ -5,20 +5,72 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.McpServer;
 using VsMcpBridge.McpServer.Pipe;
+using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
+using VsMcpBridge.Shared.Models;
 using Xunit;
 
 namespace VsMcpBridge.Shared.Tests;
 
 public sealed class McpServerHostTests
 {
+    [Fact]
+    public void VsTools_exposes_only_the_expected_mcp_tool_allowlist()
+    {
+        var toolNames = typeof(VsTools)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .Select(method => method.GetCustomAttribute<McpServerToolAttribute>()?.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            new[]
+            {
+                "chat_engine_chat",
+                "chat_engine_ping",
+                "vs_get_active_document",
+                "vs_get_error_list",
+                "vs_get_selected_text",
+                "vs_list_solution_projects",
+                "vs_propose_text_edit",
+                "vs_propose_text_edits"
+            },
+            toolNames);
+    }
+
+    [Fact]
+    public void PipeCommands_defines_only_the_expected_dispatch_allowlist()
+    {
+        var commandNames = typeof(PipeCommands)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral && !field.IsInitOnly && field.FieldType == typeof(string))
+            .Select(field => (string)field.GetRawConstantValue()!)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            new[]
+            {
+                "vs_get_active_document",
+                "vs_get_error_list",
+                "vs_get_selected_text",
+                "vs_list_solution_projects",
+                "vs_propose_text_edit"
+            },
+            commandNames);
+    }
+
     [Fact]
     public void Configure_clears_default_logging_providers_and_registers_pipe_client_logger_and_tools()
     {
