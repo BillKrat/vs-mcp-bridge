@@ -24,10 +24,13 @@ public sealed class VsTools
     private const string ChatEngineChatFailureError = "Error: chat_engine_chat failed.";
     private const string ChatEngineChatFailureErrorCode = "ProviderFailure";
     private const string ChatEngineSummarizeInvalidInputError = "Error: chat_engine_summarize requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineSummarizeInvalidMaxLengthError = "Error: chat_engine_summarize max_length must be greater than 0 and less than or equal to 1000.";
     private const string ChatEngineSummarizeFailureError = "Error: chat_engine_summarize failed.";
     private const string ChatEngineRewriteInvalidInputError = "Error: chat_engine_rewrite requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineRewriteInvalidToneError = "Error: chat_engine_rewrite tone must be one of: formal, casual, technical.";
     private const string ChatEngineRewriteFailureError = "Error: chat_engine_rewrite failed.";
+    private const string ChatEngineSuggestFixesInvalidInputError = "Error: chat_engine_suggest_fixes requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineSuggestFixesFailureError = "Error: chat_engine_suggest_fixes failed.";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -200,15 +203,34 @@ public sealed class VsTools
     [Description("Sends text through Adventures.ChatEngine with a summarization prompt and returns the response message.")]
     public async Task<string> ChatEngineSummarizeAsync(
         [Description("The text to summarize through Adventures.ChatEngine.")] string text,
+        [Description("Optional maximum summary length in words.")] int? max_length,
         CancellationToken ct)
     {
+        if (max_length.HasValue && (max_length.Value <= 0 || max_length.Value > 1000))
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineSummarizeInvalidMaxLengthError,
+                errorCode: ChatEngineChatInvalidInputErrorCode,
+                requestId: Guid.NewGuid().ToString("N"));
+        }
+
         return await ExecuteChatEngineToolAsync(
             input: text,
             ct: ct,
             invalidInputError: ChatEngineSummarizeInvalidInputError,
             failureError: ChatEngineSummarizeFailureError,
             logToolName: "chat_engine_summarize",
-            requestMessageFactory: static input => $"Summarize the following text:\n\n{input}").ConfigureAwait(false);
+            requestMessageFactory: input =>
+            {
+                if (!max_length.HasValue)
+                {
+                    return $"Summarize the following text:\n\n{input}";
+                }
+
+                return $"Summarize the following text in no more than {max_length.Value} words:\n\n{input}";
+            }).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "chat_engine_rewrite")]
@@ -243,6 +265,21 @@ public sealed class VsTools
 
                 return $"Rewrite the following text to be clearer and more concise in a {tone!.Trim().ToLowerInvariant()} tone:\n\n{input}";
             }).ConfigureAwait(false);
+    }
+
+    [McpServerTool(Name = "chat_engine_suggest_fixes")]
+    [Description("Sends text through Adventures.ChatEngine with a review prompt and returns suggested improvements or fixes.")]
+    public async Task<string> ChatEngineSuggestFixesAsync(
+        [Description("The text to review for suggested improvements or fixes.")] string text,
+        CancellationToken ct)
+    {
+        return await ExecuteChatEngineToolAsync(
+            input: text,
+            ct: ct,
+            invalidInputError: ChatEngineSuggestFixesInvalidInputError,
+            failureError: ChatEngineSuggestFixesFailureError,
+            logToolName: "chat_engine_suggest_fixes",
+            requestMessageFactory: static input => $"Review the following text and suggest improvements or fixes:\n\n{input}").ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "vs_get_active_document")]
