@@ -91,6 +91,7 @@ public sealed class VsToolsTests
         Assert.True(response.Success);
         Assert.Equal("echo:hello", response.Content);
         Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
     }
@@ -111,6 +112,7 @@ public sealed class VsToolsTests
         Assert.False(response.Success);
         Assert.Null(response.Content);
         Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Null(chatEngine.LastRequest);
     }
@@ -129,6 +131,7 @@ public sealed class VsToolsTests
         Assert.False(response.Success);
         Assert.Null(response.Content);
         Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Null(chatEngine.LastRequest);
     }
@@ -147,6 +150,7 @@ public sealed class VsToolsTests
         Assert.False(response.Success);
         Assert.Null(response.Content);
         Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Null(chatEngine.LastRequest);
     }
@@ -165,6 +169,7 @@ public sealed class VsToolsTests
         Assert.False(response.Success);
         Assert.Null(response.Content);
         Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Null(chatEngine.LastRequest);
     }
@@ -183,6 +188,7 @@ public sealed class VsToolsTests
         Assert.False(response.Success);
         Assert.Null(response.Content);
         Assert.Equal("Error: chat_engine_chat failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
     }

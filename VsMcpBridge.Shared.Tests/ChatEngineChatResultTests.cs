@@ -14,6 +14,7 @@ public sealed class ChatEngineChatResultTests
             Success = true,
             Content = "hello",
             Error = null,
+            ErrorCode = null,
             RequestId = "req-123"
         };
 
@@ -24,6 +25,7 @@ public sealed class ChatEngineChatResultTests
         Assert.True(deserialized.Success);
         Assert.Equal("hello", deserialized.Content);
         Assert.Null(deserialized.Error);
+        Assert.Null(deserialized.ErrorCode);
         Assert.Equal("req-123", deserialized.RequestId);
     }
 
@@ -35,12 +37,14 @@ public sealed class ChatEngineChatResultTests
             Success = true,
             Content = "pong",
             Error = null,
+            ErrorCode = null,
             RequestId = "req-success"
         };
 
         Assert.True(result.Success);
         Assert.Equal("pong", result.Content);
         Assert.Null(result.Error);
+        Assert.Null(result.ErrorCode);
         Assert.Equal("req-success", result.RequestId);
     }
 
@@ -52,12 +56,14 @@ public sealed class ChatEngineChatResultTests
             Success = false,
             Content = null,
             Error = "chat_engine_chat failed",
+            ErrorCode = "ProviderFailure",
             RequestId = "req-failure"
         };
 
         Assert.False(result.Success);
         Assert.Null(result.Content);
         Assert.Equal("chat_engine_chat failed", result.Error);
+        Assert.Equal("ProviderFailure", result.ErrorCode);
         Assert.Equal("req-failure", result.RequestId);
     }
 }

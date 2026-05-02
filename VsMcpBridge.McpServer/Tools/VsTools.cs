@@ -20,7 +20,9 @@ public sealed class VsTools
 {
     private const int MaxChatEngineChatMessageLength = 4000;
     private const string ChatEngineChatInvalidInputError = "Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineChatInvalidInputErrorCode = "InvalidInput";
     private const string ChatEngineChatFailureError = "Error: chat_engine_chat failed.";
+    private const string ChatEngineChatFailureErrorCode = "ProviderFailure";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -88,6 +90,7 @@ public sealed class VsTools
                 Success = false,
                 Content = null,
                 Error = ChatEngineChatInvalidInputError,
+                ErrorCode = ChatEngineChatInvalidInputErrorCode,
                 RequestId = requestId
             });
         }
@@ -112,6 +115,7 @@ public sealed class VsTools
                 Success = true,
                 Content = response.Message,
                 Error = null,
+                ErrorCode = null,
                 RequestId = requestId
             });
         }
@@ -137,6 +141,7 @@ public sealed class VsTools
                 Success = false,
                 Content = null,
                 Error = ChatEngineChatFailureError,
+                ErrorCode = ChatEngineChatFailureErrorCode,
                 RequestId = requestId
             });
         }
