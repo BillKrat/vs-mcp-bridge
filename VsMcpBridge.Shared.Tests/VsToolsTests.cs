@@ -89,6 +89,19 @@ public sealed class VsToolsTests
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
     }
 
+    [Fact]
+    public async Task ChatEngineChatAsync_returns_controlled_error_when_chat_engine_fails()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var response = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+
+        Assert.Equal("Error: chat_engine_chat failed.", response);
+        Assert.Equal("hello", chatEngine.LastRequest?.Message);
+    }
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }
@@ -143,6 +156,25 @@ public sealed class VsToolsTests
             yield return new ChatEvent(ChatEventType.TokenGenerated, response);
             yield return new ChatEvent(ChatEventType.ResponseCompleted);
             await Task.CompletedTask;
+        }
+    }
+
+    private sealed class ThrowingChatEngine : IChatEngine
+    {
+        public ChatRequest? LastRequest { get; private set; }
+
+        public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken, Action<ChatEvent>? onEvent = null)
+        {
+            LastRequest = request;
+            throw new InvalidOperationException("provider failed");
+        }
+
+        public async IAsyncEnumerable<ChatEvent> StreamAsync(ChatRequest request, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            await Task.CompletedTask;
+            yield break;
+            throw new InvalidOperationException("provider failed");
         }
     }
 }

@@ -109,7 +109,7 @@ public sealed class VsTools
                 "MCP chat_engine_chat failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
                 requestId,
                 stopwatch.ElapsedMilliseconds);
-            throw;
+            return "Error: chat_engine_chat failed.";
         }
     }
 
