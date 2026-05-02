@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,10 @@ namespace VsMcpBridge.McpServer.Tools;
 [McpServerToolType]
 public sealed class VsTools
 {
+    private const int MaxChatEngineChatMessageLength = 4000;
+    private const string ChatEngineChatInvalidInputError = "Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineChatFailureError = "Error: chat_engine_chat failed.";
+
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
     private readonly ILogger _logger;
@@ -75,6 +80,18 @@ public sealed class VsTools
         CancellationToken ct)
     {
         var requestId = Guid.NewGuid().ToString("N");
+
+        if (string.IsNullOrWhiteSpace(message) || message.Length > MaxChatEngineChatMessageLength)
+        {
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = false,
+                Content = null,
+                Error = ChatEngineChatInvalidInputError,
+                RequestId = requestId
+            });
+        }
+
         var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation(
             "MCP chat_engine_chat started [RequestId={RequestId}] [MessageLength={MessageLength}].",
@@ -90,7 +107,13 @@ public sealed class VsTools
                 requestId,
                 stopwatch.ElapsedMilliseconds,
                 response.Message?.Length ?? 0);
-            return response.Message;
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = true,
+                Content = response.Message,
+                Error = null,
+                RequestId = requestId
+            });
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -109,7 +132,13 @@ public sealed class VsTools
                 "MCP chat_engine_chat failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
                 requestId,
                 stopwatch.ElapsedMilliseconds);
-            return "Error: chat_engine_chat failed.";
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = false,
+                Content = null,
+                Error = ChatEngineChatFailureError,
+                RequestId = requestId
+            });
         }
     }
 

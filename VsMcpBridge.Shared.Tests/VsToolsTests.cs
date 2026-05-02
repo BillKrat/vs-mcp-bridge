@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Adventures.ChatEngine.Abstractions;
@@ -83,10 +84,89 @@ public sealed class VsToolsTests
         var chatEngine = new StubChatEngine();
         var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
 
-        var response = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        var responseJson = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
 
-        Assert.Equal("echo:hello", response);
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("echo:hello", response.Content);
+        Assert.Null(response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineChatAsync_returns_controlled_error_for_null_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+#pragma warning disable CS8625
+        var responseJson = await tools.ChatEngineChatAsync(null, CancellationToken.None);
+#pragma warning restore CS8625
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineChatAsync_returns_controlled_error_for_empty_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineChatAsync(string.Empty, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineChatAsync_returns_controlled_error_for_whitespace_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineChatAsync("   ", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineChatAsync_returns_controlled_error_for_oversized_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineChatAsync(new string('x', 4001), CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_chat requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
     }
 
     [Fact]
@@ -96,9 +176,14 @@ public sealed class VsToolsTests
         var chatEngine = new ThrowingChatEngine();
         var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
 
-        var response = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        var responseJson = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
 
-        Assert.Equal("Error: chat_engine_chat failed.", response);
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_chat failed.", response.Error);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
     }
 

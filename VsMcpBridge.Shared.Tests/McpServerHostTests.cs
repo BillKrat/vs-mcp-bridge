@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.McpServer;
+using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
@@ -24,6 +25,12 @@ namespace VsMcpBridge.Shared.Tests;
 
 public sealed class McpServerHostTests
 {
+    private const string ProviderEnvironmentVariable = "Adventures__ChatEngine__Provider";
+    private const string OpenAiUseRealApiEnvironmentVariable = "Adventures__ChatEngine__OpenAI__UseRealApi";
+    private const string OpenAiApiKeyEnvironmentVariable = "Adventures__ChatEngine__OpenAI__ApiKey";
+    private const string OpenAiModelEnvironmentVariable = "Adventures__ChatEngine__OpenAI__Model";
+    private const string ChatEngineModelEnvironmentVariable = "Adventures__ChatEngine__Model";
+
     [Fact]
     public void VsTools_exposes_only_the_expected_mcp_tool_allowlist()
     {
@@ -97,20 +104,25 @@ public sealed class McpServerHostTests
     [Fact]
     public async Task Configure_when_provider_is_missing_uses_fake_provider()
     {
-        var builder = Host.CreateApplicationBuilder([]);
+        await WithClearedChatEngineEnvironmentAsync(async () =>
+        {
+            var builder = Host.CreateApplicationBuilder([]);
 
-        McpServerHost.Configure(builder);
+            McpServerHost.Configure(builder);
 
-        using var host = builder.Build();
-        var services = host.Services;
+            using var host = builder.Build();
+            var services = host.Services;
 
-        IChatEngine chatEngine = services.GetRequiredService<IChatEngine>();
+            IAiChatProvider provider = services.GetRequiredService<IAiChatProvider>();
+            IChatEngine chatEngine = services.GetRequiredService<IChatEngine>();
 
-        ChatResponse response = await chatEngine.SendAsync(
-            new ChatRequest("ping"),
-            CancellationToken.None);
+            ChatResponse response = await chatEngine.SendAsync(
+                new ChatRequest("ping"),
+                CancellationToken.None);
 
-        Assert.Equal("pong", response.Message);
+            Assert.IsType<HostPingPongChatProvider>(provider);
+            Assert.Equal("pong", response.Message);
+        });
     }
 
     [Fact]
@@ -183,5 +195,38 @@ public sealed class McpServerHostTests
         Assert.Equal("test-model", configuration["Adventures:ChatEngine:OpenAI:Model"]);
         Assert.Equal("2", configuration["Adventures:ChatEngine:Retry:MaxAttempts"]);
         Assert.NotNull(chatEngine);
+    }
+
+    private static async Task WithClearedChatEngineEnvironmentAsync(Func<Task> action)
+    {
+        var environmentVariableNames = new[]
+        {
+            ProviderEnvironmentVariable,
+            OpenAiUseRealApiEnvironmentVariable,
+            OpenAiApiKeyEnvironmentVariable,
+            OpenAiModelEnvironmentVariable,
+            ChatEngineModelEnvironmentVariable
+        };
+
+        var originalValues = environmentVariableNames.ToDictionary(
+            environmentVariableName => environmentVariableName,
+            environmentVariableName => Environment.GetEnvironmentVariable(environmentVariableName));
+
+        try
+        {
+            foreach (var environmentVariableName in environmentVariableNames)
+            {
+                Environment.SetEnvironmentVariable(environmentVariableName, null);
+            }
+
+            await action();
+        }
+        finally
+        {
+            foreach (var originalValue in originalValues)
+            {
+                Environment.SetEnvironmentVariable(originalValue.Key, originalValue.Value);
+            }
+        }
     }
 }
