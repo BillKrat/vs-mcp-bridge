@@ -123,6 +123,27 @@ public sealed class MvpVmTests
     }
 
     [Fact]
+    public void ShowApprovalPrompt_reject_command_invokes_callback()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+        var approved = false;
+        var rejected = false;
+
+        presenter.ShowApprovalPrompt("Apply change", "before", "after", null, () => approved = true, () => rejected = true);
+
+        Assert.True(viewModel.ApproveCommand.CanExecute(null));
+        Assert.True(viewModel.RejectCommand.CanExecute(null));
+
+        viewModel.RejectCommand.Execute(null);
+
+        Assert.False(approved);
+        Assert.True(rejected);
+        Assert.True(viewModel.HasPendingApproval);
+        Assert.Equal("Apply change", viewModel.PendingApprovalDescription);
+    }
+
+    [Fact]
     public void ShowApprovalPrompt_exposes_ai_rewrite_source_and_target_in_view_model_when_request_context_indicates_ai_rewrite()
     {
         var viewModel = new LogToolWindowViewModel
@@ -137,6 +158,23 @@ public sealed class MvpVmTests
         Assert.Equal("after", viewModel.ProposalPreviewSummary);
         Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
         Assert.Equal("Pending review", viewModel.ProposalStatusSummary);
+    }
+
+    [Fact]
+    public void ShowApprovalPrompt_exposes_error_context_for_error_explanation_workflows()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            LastSubmittedRequestText = "Explain the following compiler or diagnostic error and suggest the likely cause:\n\nCS1002 ; expected"
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" }, "external-request");
+
+        Assert.Equal("AI explain error", viewModel.ProposalSourceSummary);
+        Assert.True(viewModel.HasProposalErrorContextSummary);
+        Assert.Equal("From error", viewModel.ProposalErrorContextLabel);
+        Assert.Equal("CS1002 ; expected", viewModel.ProposalErrorContextSummary);
     }
 
     [Fact]
@@ -155,6 +193,25 @@ public sealed class MvpVmTests
         Assert.Equal("after", viewModel.ProposalPreviewSummary);
         Assert.Equal(@"Target file: C:\repo\Sample.cs", viewModel.ProposalTargetSummary);
         Assert.Equal("Rejected", viewModel.ProposalStatusSummary);
+        Assert.False(viewModel.HasProposalSuccessIndicator);
+    }
+
+    [Fact]
+    public void CompletedProposal_retains_error_context_for_error_fix_workflows()
+    {
+        var viewModel = new LogToolWindowViewModel
+        {
+            LastSubmittedRequestText = "Given the following compiler or diagnostic error, suggest a fix and apply it to the provided code:\n\nError:\nCS1525 Invalid expression term ';'\n\nCode:\nint x = ;"
+        };
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" }, "external-request");
+        presenter.CompleteProposalCycle("Apply succeeded for 1 file. All approved changes were applied.");
+
+        Assert.Equal("AI suggest error fix", viewModel.ProposalSourceSummary);
+        Assert.True(viewModel.HasProposalErrorContextSummary);
+        Assert.Equal("From error", viewModel.ProposalErrorContextLabel);
+        Assert.Equal("CS1525 Invalid expression term ';'", viewModel.ProposalErrorContextSummary);
     }
 
     [Fact]
@@ -168,6 +225,40 @@ public sealed class MvpVmTests
 
         Assert.Equal("Failed", viewModel.ProposalStatusSummary);
         Assert.Equal("Manual proposal", viewModel.ProposalSourceSummary);
+        Assert.False(viewModel.HasProposalSuccessIndicator);
+        Assert.True(viewModel.HasProposalErrorSummary);
+        Assert.Equal("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.", viewModel.ProposalErrorSummary);
+    }
+
+    [Fact]
+    public void CompletedProposal_success_exposes_confirmation_indicator()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" });
+        presenter.CompleteProposalCycle("Apply succeeded for 1 file. All approved changes were applied.");
+
+        Assert.Equal("Approved/applied", viewModel.ProposalStatusSummary);
+        Assert.True(viewModel.HasProposalSuccessIndicator);
+        Assert.False(viewModel.HasProposalErrorSummary);
+    }
+
+    [Fact]
+    public void ProposalErrorSummary_is_hidden_for_pending_and_rejected_proposals()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { @"C:\repo\Sample.cs" });
+
+        Assert.False(viewModel.HasProposalErrorSummary);
+        Assert.Equal(string.Empty, viewModel.ProposalErrorSummary);
+
+        presenter.CompleteProposalCycle("Proposal rejected for 1 file. No changes were applied.");
+
+        Assert.False(viewModel.HasProposalErrorSummary);
+        Assert.Equal(string.Empty, viewModel.ProposalErrorSummary);
     }
 
     [Fact]

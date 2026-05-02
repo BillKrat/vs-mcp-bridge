@@ -7,6 +7,12 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="400"
              Background="{DynamicResource VsBrush.Window}">
+  <UserControl.InputBindings>
+    <KeyBinding Key="Enter"
+                Command="{Binding ApproveCommand}" />
+    <KeyBinding Key="Escape"
+                Command="{Binding RejectCommand}" />
+  </UserControl.InputBindings>
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
   </UserControl.Resources>
@@ -91,6 +97,18 @@
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}"
                          Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalErrorContextLabel}"
+                         Margin="0,0,0,2"
+                         FontStyle="Italic"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalErrorContextSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalErrorContextSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="NoWrap"
+                         TextTrimming="CharacterEllipsis"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalErrorContextSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ProposalPreviewSummary}"
                          Margin="0,0,0,2"
                          TextWrapping="Wrap"
@@ -106,6 +124,17 @@
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}"
                          Visibility="{Binding HasProposalStatusSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="✓ Applied successfully"
+                         Margin="0,0,0,6"
+                         TextWrapping="Wrap"
+                         Foreground="ForestGreen"
+                         Visibility="{Binding HasProposalSuccessIndicator, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalErrorSummary}"
+                         Margin="0,0,0,6"
+                         TextWrapping="NoWrap"
+                         TextTrimming="CharacterEllipsis"
+                         Foreground="IndianRed"
+                         Visibility="{Binding HasProposalErrorSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ActivityMetricsSummary}"
                          Margin="0,0,0,6"
                          TextWrapping="Wrap"
@@ -165,7 +194,7 @@
 
               <StackPanel Orientation="Horizontal"
                           Margin="0,8,0,0">
-                <Button Content="Keep"
+                <Button Content="Approve"
                         Margin="0,0,8,0"
                         Command="{Binding ApproveCommand}" />
                 <Button Content="Reject"
@@ -194,6 +223,18 @@
                          TextWrapping="Wrap"
                          Foreground="{DynamicResource VsBrush.WindowText}"
                          Visibility="{Binding HasProposalSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalErrorContextLabel}"
+                         Margin="0,0,0,2"
+                         FontStyle="Italic"
+                         TextWrapping="Wrap"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalErrorContextSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
+              <TextBlock Text="{Binding ProposalErrorContextSummary}"
+                         Margin="0,0,0,2"
+                         TextWrapping="NoWrap"
+                         TextTrimming="CharacterEllipsis"
+                         Foreground="{DynamicResource VsBrush.WindowText}"
+                         Visibility="{Binding HasProposalErrorContextSummary, Converter={StaticResource BooleanToVisibilityConverter}}" />
               <TextBlock Text="{Binding ProposalPreviewSummary}"
                          Margin="0,0,0,2"
                          TextWrapping="Wrap"

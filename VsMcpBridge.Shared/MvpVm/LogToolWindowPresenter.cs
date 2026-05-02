@@ -112,6 +112,9 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.StatusMessage = string.Empty;
                 LogToolWindowViewModel.PendingApprovalDescription = description;
                 LogToolWindowViewModel.PendingProposalSourceType = ResolveProposalSourceType(requestId);
+                LogToolWindowViewModel.PendingProposalErrorContextText = BuildProposalErrorContextText(
+                    LogToolWindowViewModel.PendingProposalSourceType,
+                    LogToolWindowViewModel.LastSubmittedRequestText);
                 LogToolWindowViewModel.PendingProposalPreviewText = BuildProposalPreviewText(
                     updatedSegment,
                     reviewedChanges,
@@ -164,6 +167,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = LogToolWindowViewModel.ProposalProposedText;
             LogToolWindowViewModel.LastCompletedProposalSourceType = LogToolWindowViewModel.PendingProposalSourceType;
             LogToolWindowViewModel.LastCompletedProposalPreviewText = LogToolWindowViewModel.PendingProposalPreviewText;
+            LogToolWindowViewModel.LastCompletedProposalErrorContextText = LogToolWindowViewModel.PendingProposalErrorContextText;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = LogToolWindowViewModel.PendingApprovalOriginalSegment;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = LogToolWindowViewModel.PendingApprovalUpdatedSegment;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = CloneReviewedChanges(LogToolWindowViewModel.PendingApprovalReviewedChanges);
@@ -458,6 +462,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.PendingApprovalDescription = string.Empty;
             LogToolWindowViewModel.PendingProposalSourceType = string.Empty;
             LogToolWindowViewModel.PendingProposalPreviewText = string.Empty;
+            LogToolWindowViewModel.PendingProposalErrorContextText = string.Empty;
             LogToolWindowViewModel.PendingApprovalOriginalSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.PendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -471,6 +476,7 @@ namespace VsMcpBridge.Shared.MvpVm
             LogToolWindowViewModel.LastCompletedProposalUpdatedText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalSourceType = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalPreviewText = string.Empty;
+            LogToolWindowViewModel.LastCompletedProposalErrorContextText = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalOriginalSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalUpdatedSegment = string.Empty;
             LogToolWindowViewModel.LastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -557,6 +563,20 @@ namespace VsMcpBridge.Shared.MvpVm
             if (!string.IsNullOrWhiteSpace(requestText))
             {
                 var normalizedRequestText = requestText.Trim().ToLowerInvariant();
+                if (normalizedRequestText.IndexOf("compiler or diagnostic error", StringComparison.Ordinal) >= 0)
+                {
+                    if (normalizedRequestText.IndexOf("explain", StringComparison.Ordinal) >= 0)
+                    {
+                        return "AI explain error";
+                    }
+
+                    if (normalizedRequestText.IndexOf("suggest a likely fix", StringComparison.Ordinal) >= 0
+                        || normalizedRequestText.IndexOf("suggest a fix", StringComparison.Ordinal) >= 0)
+                    {
+                        return "AI suggest error fix";
+                    }
+                }
+
                 if (normalizedRequestText.IndexOf("suggest fixes", StringComparison.Ordinal) >= 0
                     || normalizedRequestText.IndexOf("suggest improvements", StringComparison.Ordinal) >= 0)
                 {
@@ -570,6 +590,39 @@ namespace VsMcpBridge.Shared.MvpVm
             }
 
             return "Manual proposal";
+        }
+
+        private static string BuildProposalErrorContextText(string sourceType, string? requestText)
+        {
+            if (!string.Equals(sourceType, "AI explain error", StringComparison.Ordinal)
+                && !string.Equals(sourceType, "AI suggest error fix", StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(requestText))
+                return string.Empty;
+
+            var normalizedRequestText = requestText.Replace("\r\n", "\n");
+            const string explicitErrorMarker = "\n\nError:\n";
+            var explicitErrorIndex = normalizedRequestText.IndexOf(explicitErrorMarker, StringComparison.Ordinal);
+            if (explicitErrorIndex >= 0)
+            {
+                var errorStart = explicitErrorIndex + explicitErrorMarker.Length;
+                var codeMarkerIndex = normalizedRequestText.IndexOf("\n\nCode:\n", errorStart, StringComparison.Ordinal);
+                var errorBlock = codeMarkerIndex >= 0
+                    ? normalizedRequestText.Substring(errorStart, codeMarkerIndex - errorStart)
+                    : normalizedRequestText.Substring(errorStart);
+                return TruncatePreview(errorBlock.Trim());
+            }
+
+            var promptSeparatorIndex = normalizedRequestText.IndexOf("\n\n", StringComparison.Ordinal);
+            if (promptSeparatorIndex >= 0 && promptSeparatorIndex + 2 < normalizedRequestText.Length)
+            {
+                return TruncatePreview(normalizedRequestText.Substring(promptSeparatorIndex + 2).Trim());
+            }
+
+            return string.Empty;
         }
 
         private static IReadOnlyList<ProposalReviewedChange> CloneReviewedChanges(IReadOnlyList<ProposalReviewedChange>? reviewedChanges)

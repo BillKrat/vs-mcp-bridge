@@ -32,6 +32,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _pendingApprovalDescription = string.Empty;
         private string _pendingProposalSourceType = string.Empty;
         private string _pendingProposalPreviewText = string.Empty;
+        private string _pendingProposalErrorContextText = string.Empty;
         private string _pendingApprovalOriginalSegment = string.Empty;
         private string _pendingApprovalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _pendingApprovalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -40,6 +41,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private string _lastCompletedProposalUpdatedText = string.Empty;
         private string _lastCompletedProposalSourceType = string.Empty;
         private string _lastCompletedProposalPreviewText = string.Empty;
+        private string _lastCompletedProposalErrorContextText = string.Empty;
         private string _lastCompletedProposalOriginalSegment = string.Empty;
         private string _lastCompletedProposalUpdatedSegment = string.Empty;
         private IReadOnlyList<ProposalReviewedChange> _lastCompletedProposalReviewedChanges = Array.Empty<ProposalReviewedChange>();
@@ -272,6 +274,20 @@ namespace VsMcpBridge.Shared.MvpVm
             }
         }
 
+        public string PendingProposalErrorContextText
+        {
+            get => _pendingProposalErrorContextText;
+            set
+            {
+                if (SetProperty(ref _pendingProposalErrorContextText, value))
+                {
+                    OnPropertyChanged(nameof(ProposalErrorContextLabel));
+                    OnPropertyChanged(nameof(ProposalErrorContextSummary));
+                    OnPropertyChanged(nameof(HasProposalErrorContextSummary));
+                }
+            }
+        }
+
         public string PendingApprovalOriginalSegment
         {
             get => _pendingApprovalOriginalSegment;
@@ -338,6 +354,9 @@ namespace VsMcpBridge.Shared.MvpVm
                     OnPropertyChanged(nameof(HasRequestPhaseSummary));
                     OnPropertyChanged(nameof(ProposalStatusSummary));
                     OnPropertyChanged(nameof(HasProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalSuccessIndicator));
+                    OnPropertyChanged(nameof(ProposalErrorSummary));
+                    OnPropertyChanged(nameof(HasProposalErrorSummary));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
                     OnPropertyChanged(nameof(HasActivityMetricsSummary));
@@ -365,6 +384,9 @@ namespace VsMcpBridge.Shared.MvpVm
                     OnPropertyChanged(nameof(HasProposalTargetSummary));
                     OnPropertyChanged(nameof(ProposalStatusSummary));
                     OnPropertyChanged(nameof(HasProposalStatusSummary));
+                    OnPropertyChanged(nameof(HasProposalSuccessIndicator));
+                    OnPropertyChanged(nameof(ProposalErrorSummary));
+                    OnPropertyChanged(nameof(HasProposalErrorSummary));
                     OnPropertyChanged(nameof(ActivityTitle));
                     OnPropertyChanged(nameof(ActivitySummary));
                     OnPropertyChanged(nameof(ActivityMetricsSummary));
@@ -455,6 +477,20 @@ namespace VsMcpBridge.Shared.MvpVm
                 {
                     OnPropertyChanged(nameof(ProposalPreviewSummary));
                     OnPropertyChanged(nameof(HasProposalPreviewSummary));
+                }
+            }
+        }
+
+        public string LastCompletedProposalErrorContextText
+        {
+            get => _lastCompletedProposalErrorContextText;
+            set
+            {
+                if (SetProperty(ref _lastCompletedProposalErrorContextText, value))
+                {
+                    OnPropertyChanged(nameof(ProposalErrorContextLabel));
+                    OnPropertyChanged(nameof(ProposalErrorContextSummary));
+                    OnPropertyChanged(nameof(HasProposalErrorContextSummary));
                 }
             }
         }
@@ -749,6 +785,18 @@ namespace VsMcpBridge.Shared.MvpVm
 
         public bool HasProposalPreviewSummary => !string.IsNullOrWhiteSpace(ProposalPreviewSummary);
 
+        public string ProposalErrorContextLabel =>
+            HasProposalErrorContextSummary ? "From error" : string.Empty;
+
+        public string ProposalErrorContextSummary =>
+            HasPendingApproval
+                ? PendingProposalErrorContextText
+                : HasLastCompletedProposalPreview
+                    ? LastCompletedProposalErrorContextText
+                    : string.Empty;
+
+        public bool HasProposalErrorContextSummary => !string.IsNullOrWhiteSpace(ProposalErrorContextSummary);
+
         public string ProposalTargetSummary
         {
             get
@@ -793,6 +841,30 @@ namespace VsMcpBridge.Shared.MvpVm
         }
 
         public bool HasProposalStatusSummary => !string.IsNullOrWhiteSpace(ProposalStatusSummary);
+
+        public bool HasProposalSuccessIndicator
+        {
+            get
+            {
+                if (HasPendingApproval)
+                    return false;
+
+                return ClassifyOutcome(StatusMessage) is ProposalOutcomeCategory.Success or ProposalOutcomeCategory.Skip;
+            }
+        }
+
+        public string ProposalErrorSummary
+        {
+            get
+            {
+                if (HasPendingApproval || ClassifyOutcome(StatusMessage) != ProposalOutcomeCategory.Failure)
+                    return string.Empty;
+
+                return FirstLineOrEmpty(StatusMessage);
+            }
+        }
+
+        public bool HasProposalErrorSummary => !string.IsNullOrWhiteSpace(ProposalErrorSummary);
 
         public bool HasLastCompletedProposalPreview =>
             !string.IsNullOrEmpty(LastCompletedProposalOriginalText)
@@ -972,6 +1044,19 @@ namespace VsMcpBridge.Shared.MvpVm
         private static string FormatFileCount(int count) => count == 1 ? "1 file" : $"{count} files";
 
         private static string FormatChangeCount(int count) => count == 1 ? "1 change" : $"{count} changes";
+
+        private static string FirstLineOrEmpty(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            return value!
+                .Replace("\r\n", "\n")
+                .Split('\n')
+                .Select(line => line.Trim())
+                .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line))
+                ?? string.Empty;
+        }
 
         private static ProposalOutcomeCategory ClassifyOutcome(string? statusMessage)
         {

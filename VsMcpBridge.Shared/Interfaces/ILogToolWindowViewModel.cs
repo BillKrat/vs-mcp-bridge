@@ -30,6 +30,7 @@ namespace VsMcpBridge.Shared.Interfaces
         string PendingApprovalDescription { get; set; }
         string PendingProposalSourceType { get; set; }
         string PendingProposalPreviewText { get; set; }
+        string PendingProposalErrorContextText { get; set; }
         string PendingApprovalOriginalSegment { get; set; }
         string PendingApprovalUpdatedSegment { get; set; }
         IReadOnlyList<ProposalReviewedChange> PendingApprovalReviewedChanges { get; set; }
@@ -38,6 +39,7 @@ namespace VsMcpBridge.Shared.Interfaces
         string LastCompletedProposalUpdatedText { get; set; }
         string LastCompletedProposalSourceType { get; set; }
         string LastCompletedProposalPreviewText { get; set; }
+        string LastCompletedProposalErrorContextText { get; set; }
         string LastCompletedProposalOriginalSegment { get; set; }
         string LastCompletedProposalUpdatedSegment { get; set; }
         IReadOnlyList<ProposalReviewedChange> LastCompletedProposalReviewedChanges { get; set; }
@@ -53,10 +55,16 @@ namespace VsMcpBridge.Shared.Interfaces
         bool HasProposalSourceSummary { get; }
         string ProposalPreviewSummary { get; }
         bool HasProposalPreviewSummary { get; }
+        string ProposalErrorContextLabel { get; }
+        string ProposalErrorContextSummary { get; }
+        bool HasProposalErrorContextSummary { get; }
         string ProposalTargetSummary { get; }
         bool HasProposalTargetSummary { get; }
         string ProposalStatusSummary { get; }
         bool HasProposalStatusSummary { get; }
+        bool HasProposalSuccessIndicator { get; }
+        string ProposalErrorSummary { get; }
+        bool HasProposalErrorSummary { get; }
         bool HasLastCompletedProposalPreview { get; }
         bool HasLastCompletedProposalRangePreview { get; }
         bool HasLastCompletedProposalReviewedChanges { get; }
