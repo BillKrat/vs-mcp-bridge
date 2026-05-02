@@ -268,6 +268,63 @@ public sealed class VsToolsTests
         Assert.Equal("Summarize the following text:\n\nsome text", chatEngine.LastRequest?.Message);
     }
 
+    [Fact]
+    public async Task ChatEngineRewriteAsync_returns_success_with_content_for_valid_input()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("rewrite");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteAsync("some text", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("rewrite", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Rewrite the following text to be clearer and more concise:\n\nsome text", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteAsync_returns_invalid_input_for_empty_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteAsync(string.Empty, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_rewrite requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteAsync_returns_provider_failure_when_chat_engine_fails()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteAsync("some text", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_rewrite failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Rewrite the following text to be clearer and more concise:\n\nsome text", chatEngine.LastRequest?.Message);
+    }
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }

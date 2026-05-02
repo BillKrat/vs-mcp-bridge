@@ -25,6 +25,8 @@ public sealed class VsTools
     private const string ChatEngineChatFailureErrorCode = "ProviderFailure";
     private const string ChatEngineSummarizeInvalidInputError = "Error: chat_engine_summarize requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineSummarizeFailureError = "Error: chat_engine_summarize failed.";
+    private const string ChatEngineRewriteInvalidInputError = "Error: chat_engine_rewrite requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineRewriteFailureError = "Error: chat_engine_rewrite failed.";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -199,6 +201,21 @@ public sealed class VsTools
             failureError: ChatEngineSummarizeFailureError,
             logToolName: "chat_engine_summarize",
             requestMessageFactory: static input => $"Summarize the following text:\n\n{input}").ConfigureAwait(false);
+    }
+
+    [McpServerTool(Name = "chat_engine_rewrite")]
+    [Description("Sends text through Adventures.ChatEngine with a rewrite prompt and returns the response message.")]
+    public async Task<string> ChatEngineRewriteAsync(
+        [Description("The text to rewrite through Adventures.ChatEngine.")] string text,
+        CancellationToken ct)
+    {
+        return await ExecuteChatEngineToolAsync(
+            input: text,
+            ct: ct,
+            invalidInputError: ChatEngineRewriteInvalidInputError,
+            failureError: ChatEngineRewriteFailureError,
+            logToolName: "chat_engine_rewrite",
+            requestMessageFactory: static input => $"Rewrite the following text to be clearer and more concise:\n\n{input}").ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "vs_get_active_document")]
