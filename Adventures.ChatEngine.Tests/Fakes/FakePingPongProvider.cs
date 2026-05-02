@@ -7,6 +7,7 @@ internal sealed class FakePingPongProvider : IAiChatProvider
 {
     private readonly Queue<Exception> exceptionsToThrow = new();
     private readonly Queue<string> streamChunks = new();
+    private Exception? streamFailureAfterChunks;
 
     public bool WasCalled { get; private set; }
     public int CallCount { get; private set; }
@@ -19,11 +20,18 @@ internal sealed class FakePingPongProvider : IAiChatProvider
     public void SetStreamChunks(params string[] chunks)
     {
         this.streamChunks.Clear();
+        this.streamFailureAfterChunks = null;
 
         foreach (string chunk in chunks)
         {
             this.streamChunks.Enqueue(chunk);
         }
+    }
+
+    public void SetStreamChunksThenFail(Exception exception, params string[] chunks)
+    {
+        this.SetStreamChunks(chunks);
+        this.streamFailureAfterChunks = exception;
     }
 
     public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
@@ -56,6 +64,13 @@ internal sealed class FakePingPongProvider : IAiChatProvider
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return new ChatResponse(chunk);
+            }
+
+            if (this.streamFailureAfterChunks != null)
+            {
+                Exception exception = this.streamFailureAfterChunks;
+                this.streamFailureAfterChunks = null;
+                throw exception;
             }
 
             yield break;

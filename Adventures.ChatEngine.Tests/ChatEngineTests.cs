@@ -248,6 +248,40 @@ public sealed class ChatEngineTests
     }
 
     [Fact]
+    public async Task StreamAsync_WhenProviderFailsAfterPartialContent_DoesNotRetryAfterTokensWereEmitted()
+    {
+        var provider = new FakePingPongProvider();
+        provider.SetStreamChunksThenFail(new InvalidOperationException("stream-failure"), "par");
+        var engine = new ChatEngineService(provider, NullLogger<ChatEngineService>.Instance, CreateConfiguration());
+
+        var events = new List<ChatEvent>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (ChatEvent chatEvent in engine.StreamAsync(
+                new ChatRequest("ping"),
+                CancellationToken.None))
+            {
+                events.Add(chatEvent);
+            }
+        });
+
+        Assert.Equal("stream-failure", exception.Message);
+        Assert.Collection(
+            events,
+            first => Assert.Equal(ChatEventType.RequestStarted, first.Type),
+            second =>
+            {
+                Assert.Equal(ChatEventType.TokenGenerated, second.Type);
+                Assert.Equal("par", second.Content);
+            });
+        Assert.DoesNotContain(events, chatEvent => chatEvent.Type == ChatEventType.RetryScheduled);
+        Assert.DoesNotContain(events, chatEvent => chatEvent.Type == ChatEventType.RetryAttempt);
+        Assert.DoesNotContain(events, chatEvent => chatEvent.Type == ChatEventType.RetryExhausted);
+        Assert.Equal(1, provider.CallCount);
+    }
+
+    [Fact]
     public async Task SendAsync_WhenProviderStreamsChunks_ReturnsAggregatedResponse()
     {
         var provider = new FakePingPongProvider();

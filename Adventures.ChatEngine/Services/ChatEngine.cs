@@ -80,6 +80,7 @@ public sealed class ChatEngine : IChatEngine
         {
             bool wasCancelledDuringProviderCall = false;
             bool completedSuccessfully = false;
+            bool emittedContentThisAttempt = false;
 
             responseBuilder = new StringBuilder();
 
@@ -115,6 +116,7 @@ public sealed class ChatEngine : IChatEngine
 
                 ChatResponse chunk = enumerator.Current;
                 responseBuilder.Append(chunk.Message);
+                emittedContentThisAttempt = true;
                 yield return new ChatEvent(ChatEventType.TokenGenerated, chunk.Message);
             }
 
@@ -128,6 +130,11 @@ public sealed class ChatEngine : IChatEngine
             if (completedSuccessfully)
             {
                 break;
+            }
+
+            if (emittedContentThisAttempt)
+            {
+                throw lastException!;
             }
 
             if (attempt == maxProviderAttempts)
