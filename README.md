@@ -206,6 +206,137 @@ Operational logging note:
 
 - request-path diagnostics now include correlation IDs and elapsed timing across App chat requests, MCP chat tools, pipe transport, shared pipe dispatch, and VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`)
 
+## MCP Streaming Policy (STRICT)
+
+### Decision
+
+The MCP server in this repository **does NOT support streaming responses over stdio**.
+
+All MCP tool calls must:
+
+- accept a request
+- return a **single, final, structured JSON result**
+
+This is a deliberate architectural constraint.
+
+---
+
+### Rationale
+
+The MCP stdio transport is based on:
+
+- JSON-RPC request/response
+- newline-delimited messages
+- strict stdout protocol boundaries
+
+Partial output, token streaming, or incremental emission over stdout:
+
+- violates protocol expectations
+- risks corrupting MCP communication
+- introduces non-deterministic behavior
+
+---
+
+### Required Design Rule
+
+**Streaming is NOT allowed at the MCP tool layer.**
+
+Specifically:
+
+- `VsTools` MUST NOT:
+  - emit partial responses
+  - buffer streaming tokens
+  - switch between streaming and non-streaming paths
+  - call `StreamAsync` for tool responses
+
+- All tool methods MUST:
+  - call non-streaming execution paths (`SendAsync`)
+  - return a single final result
+
+---
+
+### Allowed Usage of Streaming
+
+Streaming is allowed ONLY:
+
+- inside `Adventures.ChatEngine`
+- for internal execution concerns
+- not observable at the MCP boundary
+
+The MCP layer must always return a fully materialized result.
+
+---
+
+### Enforcement
+
+Any PR that:
+
+- introduces streaming into MCP tools
+- adds buffering logic for streamed tokens
+- emits partial responses
+
+will be rejected.
+
+---
+
+### Future Work (Explicitly Deferred)
+
+If streaming support is ever required, it must be implemented as a **separate, explicit design slice** that includes:
+
+- protocol-level changes
+- client expectations
+- structured incremental messaging (not stdout token streaming)
+- new tests and validation
+
+It MUST NOT be introduced incrementally or implicitly.
+
+---
+
+### Summary
+
+MCP tools in this repository are:
+
+> **Request → Execute → Single Final Response**
+
+No exceptions.
+
+## ChatEngine-Backed MCP Tool Pattern
+
+ChatEngine-backed MCP tools in this repository must follow a strict, repeatable pattern.
+
+Required rules:
+
+- tools must be non-streaming
+- tools must use `SendAsync` only
+- tools must validate input before calling ChatEngine
+- tools must return serialized `ChatEngineChatResult` JSON
+- tools must use `ErrorCode` values consistently
+
+Testing requirements for any new ChatEngine-backed MCP tool:
+
+- add or update MCP tool allowlist tests
+- add a success-path test
+- add an invalid-input test
+- add a provider-failure test
+
+This pattern is the baseline for safe AI-backed MCP tool additions in this repository.
+
+## ChatEngine Proposal-Ready Boundary
+
+ChatEngine-backed MCP tools return `ChatEngineChatResult` only.
+
+`ProposalReadyChatResult` is an internal preparation structure only. It exists to normalize ChatEngine output for future proposal workflows, but it does not change the MCP contract.
+
+Rules:
+
+- no ChatEngine-backed MCP tool may apply edits directly
+- AI-generated changes must flow through proposal, approval, and apply
+- the adapter does not change the MCP tool JSON shape
+- ChatEngine tools must not create proposals unless the caller supplies an explicit target file path and original text context
+- no implicit active-document targeting is allowed
+
+The MCP boundary remains read-only for ChatEngine-backed tools unless and until a separate proposal-driven workflow explicitly routes output into the existing approval/apply path.
+
 ## Test
 
 Shared layer:
@@ -291,3 +422,7 @@ Use these docs together:
 ## AI Workflow
 
 For AI role separation and execution rules, see [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md).
+
+See: `MCP Streaming Policy (STRICT)`
+
+This rule is enforced to preserve protocol integrity and system determinism.
