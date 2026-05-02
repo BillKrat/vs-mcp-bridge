@@ -300,6 +300,14 @@ MCP tools in this repository are:
 
 No exceptions.
 
+## Safe AI Editing v1
+
+- AI tools are read-only unless they are explicitly target-based.
+- Target-based AI tools create proposals only.
+- Approval and apply remain required for any file mutation.
+- Apply-time validation prevents stale, missing, ambiguous, or partial mutations.
+- Multi-file AI proposals remain deferred until a deterministic output schema exists.
+
 ## ChatEngine-Backed MCP Tool Pattern
 
 ChatEngine-backed MCP tools in this repository must follow a strict, repeatable pattern.
@@ -336,6 +344,20 @@ Rules:
 - no implicit active-document targeting is allowed
 
 The MCP boundary remains read-only for ChatEngine-backed tools unless and until a separate proposal-driven workflow explicitly routes output into the existing approval/apply path.
+
+Multi-file ChatEngine proposal tools are deferred.
+
+They require an explicit deterministic output contract before implementation.
+
+Free-form model output must not be split heuristically into per-file edits.
+
+The following are not allowed:
+
+- delimiter guessing
+- section guessing
+- file-order guessing
+
+Any future multi-file ChatEngine proposal implementation must define a strict output schema before creating multi-file proposals.
 
 ## Test
 
