@@ -402,6 +402,139 @@ public sealed class VsToolsTests
     }
 
     [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_creates_proposal_for_valid_input()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("rewritten text");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("sample.cs", "original text", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("Proposal created", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Rewrite the following text to be clearer and more concise:\n\noriginal text", chatEngine.LastRequest?.Message);
+        Assert.Equal(1, pipeClient.ProposeTextEditCalls);
+        Assert.Equal("sample.cs", pipeClient.LastProposedFilePath);
+        Assert.Equal("original text", pipeClient.LastProposedOriginalText);
+        Assert.Equal("rewritten text", pipeClient.LastProposedText);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_requires_explicit_file_path()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("   ", "original text", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.Null(chatEngine.LastRequest);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_requires_explicit_original_text()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("sample.cs", "", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.Null(chatEngine.LastRequest);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_returns_invalid_input_without_creating_proposal()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync(string.Empty, "original text", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_rewrite_with_target requires a non-empty filePath and originalText.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_invalid_input_never_calls_chat_engine_or_proposal_api()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new TrackingChatEngine("rewritten text");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("", "", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.Equal(0, chatEngine.SendAsyncCalls);
+        Assert.Equal(0, chatEngine.StreamAsyncCalls);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_returns_provider_failure_without_creating_proposal()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("sample.cs", "original text", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_rewrite_with_target failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Rewrite the following text to be clearer and more concise:\n\noriginal text", chatEngine.LastRequest?.Message);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+    }
+
+    [Fact]
+    public async Task ChatEngineRewriteWithTargetAsync_success_path_calls_proposal_api_exactly_once_and_never_apply_directly()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new TrackingChatEngine("rewritten text");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineRewriteWithTargetAsync("sample.cs", "original text", null, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal(1, chatEngine.SendAsyncCalls);
+        Assert.Equal(0, chatEngine.StreamAsyncCalls);
+        Assert.Equal(1, pipeClient.ProposeTextEditCalls);
+        Assert.Equal(0, pipeClient.ProposeTextEditsCalls);
+    }
+
+    [Fact]
     public async Task ChatEngineSuggestFixesAsync_returns_success_with_content_for_valid_input()
     {
         var pipeClient = new RecordingPipeClient();
@@ -505,6 +638,22 @@ public sealed class VsToolsTests
         AssertFailureErrorCode(rewriteResponseJson, "ProviderFailure");
     }
 
+    [Fact]
+    public async Task ChatEngineTools_do_not_call_proposal_or_apply_pipe_apis()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new TrackingChatEngine("result");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        await tools.ChatEngineSummarizeAsync("hello", null, CancellationToken.None);
+        await tools.ChatEngineRewriteAsync("hello", null, CancellationToken.None);
+        await tools.ChatEngineSuggestFixesAsync("hello", CancellationToken.None);
+
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+        Assert.Equal(0, pipeClient.ProposeTextEditsCalls);
+    }
+
     private static void AssertChatEngineChatResultJson(string responseJson, string expectedContent)
     {
         var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
@@ -532,6 +681,9 @@ public sealed class VsToolsTests
     {
         public int ProposeTextEditCalls { get; private set; }
         public int ProposeTextEditsCalls { get; private set; }
+        public string? LastProposedFilePath { get; private set; }
+        public string? LastProposedOriginalText { get; private set; }
+        public string? LastProposedText { get; private set; }
         public IReadOnlyList<ProposalFileEditRequest> LastFileEdits { get; private set; } = Array.Empty<ProposalFileEditRequest>();
 
         public Task<GetActiveDocumentResponse> GetActiveDocumentAsync(CancellationToken ct = default) => throw new NotSupportedException();
@@ -542,6 +694,9 @@ public sealed class VsToolsTests
         public Task<ProposeTextEditResponse> ProposeTextEditAsync(string filePath, string originalText, string proposedText, CancellationToken ct = default)
         {
             ProposeTextEditCalls++;
+            LastProposedFilePath = filePath;
+            LastProposedOriginalText = originalText;
+            LastProposedText = proposedText;
             return Task.FromResult(new ProposeTextEditResponse
             {
                 Success = true,
