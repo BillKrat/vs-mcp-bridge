@@ -5,6 +5,7 @@ using System.Text.Json;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
 using Microsoft.Extensions.Logging;
+using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Interfaces;
@@ -29,8 +30,15 @@ public sealed class VsTools
     private const string ChatEngineRewriteInvalidInputError = "Error: chat_engine_rewrite requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineRewriteInvalidToneError = "Error: chat_engine_rewrite tone must be one of: formal, casual, technical.";
     private const string ChatEngineRewriteFailureError = "Error: chat_engine_rewrite failed.";
+    private const string ChatEngineRewriteWithTargetInvalidInputError = "Error: chat_engine_rewrite_with_target requires a non-empty filePath and originalText.";
+    private const string ChatEngineRewriteWithTargetInvalidToneError = "Error: chat_engine_rewrite_with_target tone must be one of: formal, casual, technical.";
+    private const string ChatEngineRewriteWithTargetFailureError = "Error: chat_engine_rewrite_with_target failed.";
     private const string ChatEngineSuggestFixesInvalidInputError = "Error: chat_engine_suggest_fixes requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineSuggestFixesFailureError = "Error: chat_engine_suggest_fixes failed.";
+    private const string ChatEngineSuggestFixesWithTargetInvalidInputError = "Error: chat_engine_suggest_fixes_with_target requires a non-empty filePath and originalText.";
+    private const string ChatEngineSuggestFixesWithTargetFailureError = "Error: chat_engine_suggest_fixes_with_target failed.";
+    private const string ChatEngineExplainCodeInvalidInputError = "Error: chat_engine_explain_code requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineExplainCodeFailureError = "Error: chat_engine_explain_code failed.";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -60,16 +68,37 @@ public sealed class VsTools
         string? content,
         string? error,
         string? errorCode,
-        string requestId)
+        string requestId,
+        string toolName,
+        string shortDescription)
     {
-        return JsonSerializer.Serialize(new ChatEngineChatResult
+        var result = new ChatEngineChatResult
         {
             Success = success,
             Content = NormalizeChatEngineChatField(content),
             Error = NormalizeChatEngineChatField(error),
             ErrorCode = errorCode,
             RequestId = requestId
-        });
+        };
+
+        _ = ChatEngineResultAdapter.ToProposalReady(result, toolName, shortDescription);
+
+        return JsonSerializer.Serialize(result);
+    }
+
+    private static string GetToolShortDescription(string toolName)
+    {
+        return toolName switch
+        {
+            "chat_engine_chat" => "AI chat response",
+            "chat_engine_summarize" => "AI summary suggestion",
+            "chat_engine_rewrite" => "AI rewrite suggestion",
+            "chat_engine_rewrite_with_target" => "AI rewrite proposal",
+            "chat_engine_suggest_fixes" => "AI fix suggestion",
+            "chat_engine_suggest_fixes_with_target" => "AI fix proposal",
+            "chat_engine_explain_code" => "AI code explanation",
+            _ => "AI suggestion"
+        };
     }
 
     private async Task<string> ExecuteChatEngineToolAsync(
@@ -89,7 +118,9 @@ public sealed class VsTools
                 content: null,
                 error: invalidInputError,
                 errorCode: ChatEngineChatInvalidInputErrorCode,
-                requestId: requestId);
+                requestId: requestId,
+                toolName: logToolName,
+                shortDescription: GetToolShortDescription(logToolName));
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -114,7 +145,9 @@ public sealed class VsTools
                 content: response.Message,
                 error: null,
                 errorCode: null,
-                requestId: requestId);
+                requestId: requestId,
+                toolName: logToolName,
+                shortDescription: GetToolShortDescription(logToolName));
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -140,7 +173,9 @@ public sealed class VsTools
                 content: null,
                 error: failureError,
                 errorCode: ChatEngineChatFailureErrorCode,
-                requestId: requestId);
+                requestId: requestId,
+                toolName: logToolName,
+                shortDescription: GetToolShortDescription(logToolName));
         }
     }
 
@@ -213,7 +248,9 @@ public sealed class VsTools
                 content: null,
                 error: ChatEngineSummarizeInvalidMaxLengthError,
                 errorCode: ChatEngineChatInvalidInputErrorCode,
-                requestId: Guid.NewGuid().ToString("N"));
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_summarize",
+                shortDescription: GetToolShortDescription("chat_engine_summarize"));
         }
 
         return await ExecuteChatEngineToolAsync(
@@ -247,7 +284,9 @@ public sealed class VsTools
                 content: null,
                 error: ChatEngineRewriteInvalidToneError,
                 errorCode: ChatEngineChatInvalidInputErrorCode,
-                requestId: Guid.NewGuid().ToString("N"));
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_rewrite",
+                shortDescription: GetToolShortDescription("chat_engine_rewrite"));
         }
 
         return await ExecuteChatEngineToolAsync(
@@ -267,6 +306,104 @@ public sealed class VsTools
             }).ConfigureAwait(false);
     }
 
+    [McpServerTool(Name = "chat_engine_rewrite_with_target")]
+    [Description("Rewrites explicit target text through Adventures.ChatEngine and creates an approval-gated proposal.")]
+    public async Task<string> ChatEngineRewriteWithTargetAsync(
+        [Description("Absolute path to the file to target.")] string filePath,
+        [Description("The original text to rewrite and propose.")] string originalText,
+        [Description("Optional tone for the rewrite: formal, casual, or technical.")] string? tone,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(originalText))
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineRewriteWithTargetInvalidInputError,
+                errorCode: ChatEngineChatInvalidInputErrorCode,
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_rewrite_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_rewrite_with_target"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tone) && !IsValidRewriteTone(tone))
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineRewriteWithTargetInvalidToneError,
+                errorCode: ChatEngineChatInvalidInputErrorCode,
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_rewrite_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_rewrite_with_target"));
+        }
+
+        string resultJson = await ExecuteChatEngineToolAsync(
+            input: originalText,
+            ct: ct,
+            invalidInputError: ChatEngineRewriteWithTargetInvalidInputError,
+            failureError: ChatEngineRewriteWithTargetFailureError,
+            logToolName: "chat_engine_rewrite_with_target",
+            requestMessageFactory: input =>
+            {
+                if (string.IsNullOrWhiteSpace(tone))
+                {
+                    return $"Rewrite the following text to be clearer and more concise:\n\n{input}";
+                }
+
+                return $"Rewrite the following text to be clearer and more concise in a {tone!.Trim().ToLowerInvariant()} tone:\n\n{input}";
+            }).ConfigureAwait(false);
+
+        ChatEngineChatResult? result = JsonSerializer.Deserialize<ChatEngineChatResult>(resultJson);
+        if (result is null)
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineRewriteWithTargetFailureError,
+                errorCode: ChatEngineChatFailureErrorCode,
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_rewrite_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_rewrite_with_target"));
+        }
+
+        if (!result.Success)
+        {
+            return resultJson;
+        }
+
+        ProposalReadyChatResult proposalReady = ChatEngineResultAdapter.ToProposalReady(
+            result,
+            "rewrite_with_target",
+            GetToolShortDescription("chat_engine_rewrite_with_target"));
+        ProposeTextEditResponse proposalResponse = await _pipe.ProposeTextEditAsync(
+            filePath,
+            originalText,
+            proposalReady.SuggestedText ?? string.Empty,
+            ct).ConfigureAwait(false);
+
+        if (!proposalResponse.Success)
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineRewriteWithTargetFailureError,
+                errorCode: ChatEngineChatFailureErrorCode,
+                requestId: result.RequestId ?? Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_rewrite_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_rewrite_with_target"));
+        }
+
+        return BuildChatEngineResultJson(
+            success: true,
+            content: "Proposal created",
+            error: null,
+            errorCode: null,
+            requestId: result.RequestId ?? Guid.NewGuid().ToString("N"),
+            toolName: "chat_engine_rewrite_with_target",
+            shortDescription: GetToolShortDescription("chat_engine_rewrite_with_target"));
+    }
+
     [McpServerTool(Name = "chat_engine_suggest_fixes")]
     [Description("Sends text through Adventures.ChatEngine with a review prompt and returns suggested improvements or fixes.")]
     public async Task<string> ChatEngineSuggestFixesAsync(
@@ -280,6 +417,98 @@ public sealed class VsTools
             failureError: ChatEngineSuggestFixesFailureError,
             logToolName: "chat_engine_suggest_fixes",
             requestMessageFactory: static input => $"Review the following text and suggest improvements or fixes:\n\n{input}").ConfigureAwait(false);
+    }
+
+    [McpServerTool(Name = "chat_engine_suggest_fixes_with_target")]
+    [Description("Reviews explicit target text through Adventures.ChatEngine and creates an approval-gated proposal.")]
+    public async Task<string> ChatEngineSuggestFixesWithTargetAsync(
+        [Description("Absolute path to the file to target.")] string filePath,
+        [Description("The original text to review and propose improvements for.")] string originalText,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(originalText))
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineSuggestFixesWithTargetInvalidInputError,
+                errorCode: ChatEngineChatInvalidInputErrorCode,
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_suggest_fixes_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_suggest_fixes_with_target"));
+        }
+
+        string resultJson = await ExecuteChatEngineToolAsync(
+            input: originalText,
+            ct: ct,
+            invalidInputError: ChatEngineSuggestFixesWithTargetInvalidInputError,
+            failureError: ChatEngineSuggestFixesWithTargetFailureError,
+            logToolName: "chat_engine_suggest_fixes_with_target",
+            requestMessageFactory: static input => $"Review the following text and suggest improvements or fixes:\n\n{input}").ConfigureAwait(false);
+
+        ChatEngineChatResult? result = JsonSerializer.Deserialize<ChatEngineChatResult>(resultJson);
+        if (result is null)
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineSuggestFixesWithTargetFailureError,
+                errorCode: ChatEngineChatFailureErrorCode,
+                requestId: Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_suggest_fixes_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_suggest_fixes_with_target"));
+        }
+
+        if (!result.Success)
+        {
+            return resultJson;
+        }
+
+        ProposalReadyChatResult proposalReady = ChatEngineResultAdapter.ToProposalReady(
+            result,
+            "suggest_fixes_with_target",
+            GetToolShortDescription("chat_engine_suggest_fixes_with_target"));
+        ProposeTextEditResponse proposalResponse = await _pipe.ProposeTextEditAsync(
+            filePath,
+            originalText,
+            proposalReady.SuggestedText ?? string.Empty,
+            ct).ConfigureAwait(false);
+
+        if (!proposalResponse.Success)
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineSuggestFixesWithTargetFailureError,
+                errorCode: ChatEngineChatFailureErrorCode,
+                requestId: result.RequestId ?? Guid.NewGuid().ToString("N"),
+                toolName: "chat_engine_suggest_fixes_with_target",
+                shortDescription: GetToolShortDescription("chat_engine_suggest_fixes_with_target"));
+        }
+
+        return BuildChatEngineResultJson(
+            success: true,
+            content: "Proposal created",
+            error: null,
+            errorCode: null,
+            requestId: result.RequestId ?? Guid.NewGuid().ToString("N"),
+            toolName: "chat_engine_suggest_fixes_with_target",
+            shortDescription: GetToolShortDescription("chat_engine_suggest_fixes_with_target"));
+    }
+
+    [McpServerTool(Name = "chat_engine_explain_code")]
+    [Description("Sends code or text through Adventures.ChatEngine with an explanation prompt and returns a concise explanation.")]
+    public async Task<string> ChatEngineExplainCodeAsync(
+        [Description("The code or text to explain.")] string text,
+        CancellationToken ct)
+    {
+        return await ExecuteChatEngineToolAsync(
+            input: text,
+            ct: ct,
+            invalidInputError: ChatEngineExplainCodeInvalidInputError,
+            failureError: ChatEngineExplainCodeFailureError,
+            logToolName: "chat_engine_explain_code",
+            requestMessageFactory: static input => $"Explain the following code clearly and concisely:\n\n{input}").ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "vs_get_active_document")]

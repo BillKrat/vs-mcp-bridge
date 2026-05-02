@@ -45,9 +45,12 @@ public sealed class McpServerHostTests
             new[]
             {
                 "chat_engine_chat",
+                "chat_engine_explain_code",
                 "chat_engine_ping",
                 "chat_engine_rewrite",
+                "chat_engine_rewrite_with_target",
                 "chat_engine_suggest_fixes",
+                "chat_engine_suggest_fixes_with_target",
                 "chat_engine_summarize",
                 "vs_get_active_document",
                 "vs_get_error_list",
