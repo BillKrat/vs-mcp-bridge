@@ -107,6 +107,10 @@ Use one minimal read-only tool first:
 
 - `vs_get_active_document`
 
+Repo-owned validation option:
+
+- run `.\scripts\validate-mcp.ps1` from the repo root to perform a minimal stdio validation against the built MCP server artifact (`initialize`, `tools/list`, and `vs_get_active_document`)
+
 Why this one:
 
 - it is the simplest end-to-end proof that Cursor can call the MCP server, the MCP server can connect to the VSIX pipe, and the VSIX can answer a request
