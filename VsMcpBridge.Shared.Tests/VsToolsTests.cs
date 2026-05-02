@@ -118,6 +118,24 @@ public sealed class VsToolsTests
     }
 
     [Fact]
+    public async Task ChatEngineChatAsync_trims_success_content()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("  trimmed content  \n");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("trimmed content", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+    }
+
+    [Fact]
     public async Task ChatEngineChatAsync_returns_controlled_error_for_empty_input_without_calling_chat_engine()
     {
         var pipeClient = new RecordingPipeClient();
@@ -193,6 +211,63 @@ public sealed class VsToolsTests
         Assert.Equal("hello", chatEngine.LastRequest?.Message);
     }
 
+    [Fact]
+    public async Task ChatEngineSummarizeAsync_returns_success_with_content_for_valid_input()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine("summary");
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSummarizeAsync("some text", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.True(response.Success);
+        Assert.Equal("summary", response.Content);
+        Assert.Null(response.Error);
+        Assert.Null(response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Summarize the following text:\n\nsome text", chatEngine.LastRequest?.Message);
+    }
+
+    [Fact]
+    public async Task ChatEngineSummarizeAsync_returns_invalid_input_for_empty_input_without_calling_chat_engine()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSummarizeAsync(string.Empty, CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_summarize requires a non-empty message no longer than 4000 characters.", response.Error);
+        Assert.Equal("InvalidInput", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Null(chatEngine.LastRequest);
+    }
+
+    [Fact]
+    public async Task ChatEngineSummarizeAsync_returns_provider_failure_when_chat_engine_fails()
+    {
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new ThrowingChatEngine();
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
+
+        var responseJson = await tools.ChatEngineSummarizeAsync("some text", CancellationToken.None);
+        var response = JsonSerializer.Deserialize<ChatEngineChatResult>(responseJson);
+
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Null(response.Content);
+        Assert.Equal("Error: chat_engine_summarize failed.", response.Error);
+        Assert.Equal("ProviderFailure", response.ErrorCode);
+        Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
+        Assert.Equal("Summarize the following text:\n\nsome text", chatEngine.LastRequest?.Message);
+    }
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }
@@ -230,12 +305,19 @@ public sealed class VsToolsTests
 
     private sealed class StubChatEngine : IChatEngine
     {
+        private readonly string? _fixedResponse;
+
+        public StubChatEngine(string? fixedResponse = null)
+        {
+            _fixedResponse = fixedResponse;
+        }
+
         public ChatRequest? LastRequest { get; private set; }
 
         public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken, Action<ChatEvent>? onEvent = null)
         {
             LastRequest = request;
-            var response = request.Message == "ping" ? "pong" : $"echo:{request.Message}";
+            var response = _fixedResponse ?? (request.Message == "ping" ? "pong" : $"echo:{request.Message}");
             return Task.FromResult(new ChatResponse(response));
         }
 
@@ -243,7 +325,7 @@ public sealed class VsToolsTests
         {
             LastRequest = request;
             yield return new ChatEvent(ChatEventType.RequestStarted);
-            var response = request.Message == "ping" ? "pong" : $"echo:{request.Message}";
+            var response = _fixedResponse ?? (request.Message == "ping" ? "pong" : $"echo:{request.Message}");
             yield return new ChatEvent(ChatEventType.TokenGenerated, response);
             yield return new ChatEvent(ChatEventType.ResponseCompleted);
             await Task.CompletedTask;
@@ -268,4 +350,5 @@ public sealed class VsToolsTests
             throw new InvalidOperationException("provider failed");
         }
     }
+
 }

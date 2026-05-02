@@ -46,6 +46,7 @@ public sealed class McpServerHostTests
             {
                 "chat_engine_chat",
                 "chat_engine_ping",
+                "chat_engine_summarize",
                 "vs_get_active_document",
                 "vs_get_error_list",
                 "vs_get_selected_text",

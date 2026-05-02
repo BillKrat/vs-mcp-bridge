@@ -23,6 +23,8 @@ public sealed class VsTools
     private const string ChatEngineChatInvalidInputErrorCode = "InvalidInput";
     private const string ChatEngineChatFailureError = "Error: chat_engine_chat failed.";
     private const string ChatEngineChatFailureErrorCode = "ProviderFailure";
+    private const string ChatEngineSummarizeInvalidInputError = "Error: chat_engine_summarize requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineSummarizeFailureError = "Error: chat_engine_summarize failed.";
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
@@ -33,6 +35,11 @@ public sealed class VsTools
         _pipe = pipe;
         _chatEngine = chatEngine;
         _logger = logger;
+    }
+
+    private static string? NormalizeChatEngineChatField(string? value)
+    {
+        return value?.Trim();
     }
 
     [McpServerTool(Name = "chat_engine_ping")]
@@ -89,7 +96,7 @@ public sealed class VsTools
             {
                 Success = false,
                 Content = null,
-                Error = ChatEngineChatInvalidInputError,
+                Error = NormalizeChatEngineChatField(ChatEngineChatInvalidInputError),
                 ErrorCode = ChatEngineChatInvalidInputErrorCode,
                 RequestId = requestId
             });
@@ -113,7 +120,7 @@ public sealed class VsTools
             return JsonSerializer.Serialize(new ChatEngineChatResult
             {
                 Success = true,
-                Content = response.Message,
+                Content = NormalizeChatEngineChatField(response.Message),
                 Error = null,
                 ErrorCode = null,
                 RequestId = requestId
@@ -140,7 +147,80 @@ public sealed class VsTools
             {
                 Success = false,
                 Content = null,
-                Error = ChatEngineChatFailureError,
+                Error = NormalizeChatEngineChatField(ChatEngineChatFailureError),
+                ErrorCode = ChatEngineChatFailureErrorCode,
+                RequestId = requestId
+            });
+        }
+    }
+
+    [McpServerTool(Name = "chat_engine_summarize")]
+    [Description("Sends text through Adventures.ChatEngine with a summarization prompt and returns the response message.")]
+    public async Task<string> ChatEngineSummarizeAsync(
+        [Description("The text to summarize through Adventures.ChatEngine.")] string text,
+        CancellationToken ct)
+    {
+        var requestId = Guid.NewGuid().ToString("N");
+
+        if (string.IsNullOrWhiteSpace(text) || text.Length > MaxChatEngineChatMessageLength)
+        {
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = false,
+                Content = null,
+                Error = NormalizeChatEngineChatField(ChatEngineSummarizeInvalidInputError),
+                ErrorCode = ChatEngineChatInvalidInputErrorCode,
+                RequestId = requestId
+            });
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP chat_engine_summarize started [RequestId={RequestId}] [MessageLength={MessageLength}].",
+            requestId,
+            text?.Length ?? 0);
+
+        try
+        {
+            var prompt = $"Summarize the following text:\n\n{text}";
+            var response = await _chatEngine.SendAsync(new ChatRequest(prompt), ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP chat_engine_summarize completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                response.Message?.Length ?? 0);
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = true,
+                Content = NormalizeChatEngineChatField(response.Message),
+                Error = null,
+                ErrorCode = null,
+                RequestId = requestId
+            });
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP chat_engine_summarize canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP chat_engine_summarize failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            return JsonSerializer.Serialize(new ChatEngineChatResult
+            {
+                Success = false,
+                Content = null,
+                Error = NormalizeChatEngineChatField(ChatEngineSummarizeFailureError),
                 ErrorCode = ChatEngineChatFailureErrorCode,
                 RequestId = requestId
             });
