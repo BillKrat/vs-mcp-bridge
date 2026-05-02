@@ -26,6 +26,7 @@ public sealed class VsTools
     private const string ChatEngineSummarizeInvalidInputError = "Error: chat_engine_summarize requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineSummarizeFailureError = "Error: chat_engine_summarize failed.";
     private const string ChatEngineRewriteInvalidInputError = "Error: chat_engine_rewrite requires a non-empty message no longer than 4000 characters.";
+    private const string ChatEngineRewriteInvalidToneError = "Error: chat_engine_rewrite tone must be one of: formal, casual, technical.";
     private const string ChatEngineRewriteFailureError = "Error: chat_engine_rewrite failed.";
 
     private readonly IPipeClient _pipe;
@@ -42,6 +43,13 @@ public sealed class VsTools
     private static string? NormalizeChatEngineChatField(string? value)
     {
         return value?.Trim();
+    }
+
+    private static bool IsValidRewriteTone(string? tone)
+    {
+        return string.Equals(tone, "formal", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(tone, "casual", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(tone, "technical", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string BuildChatEngineResultJson(
@@ -207,15 +215,34 @@ public sealed class VsTools
     [Description("Sends text through Adventures.ChatEngine with a rewrite prompt and returns the response message.")]
     public async Task<string> ChatEngineRewriteAsync(
         [Description("The text to rewrite through Adventures.ChatEngine.")] string text,
+        [Description("Optional tone for the rewrite: formal, casual, or technical.")] string? tone,
         CancellationToken ct)
     {
+        if (!string.IsNullOrWhiteSpace(tone) && !IsValidRewriteTone(tone))
+        {
+            return BuildChatEngineResultJson(
+                success: false,
+                content: null,
+                error: ChatEngineRewriteInvalidToneError,
+                errorCode: ChatEngineChatInvalidInputErrorCode,
+                requestId: Guid.NewGuid().ToString("N"));
+        }
+
         return await ExecuteChatEngineToolAsync(
             input: text,
             ct: ct,
             invalidInputError: ChatEngineRewriteInvalidInputError,
             failureError: ChatEngineRewriteFailureError,
             logToolName: "chat_engine_rewrite",
-            requestMessageFactory: static input => $"Rewrite the following text to be clearer and more concise:\n\n{input}").ConfigureAwait(false);
+            requestMessageFactory: input =>
+            {
+                if (string.IsNullOrWhiteSpace(tone))
+                {
+                    return $"Rewrite the following text to be clearer and more concise:\n\n{input}";
+                }
+
+                return $"Rewrite the following text to be clearer and more concise in a {tone!.Trim().ToLowerInvariant()} tone:\n\n{input}";
+            }).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "vs_get_active_document")]
