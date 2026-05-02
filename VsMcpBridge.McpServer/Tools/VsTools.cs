@@ -1,7 +1,9 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Diagnostics;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
+using Microsoft.Extensions.Logging;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Interfaces;
@@ -17,19 +19,53 @@ public sealed class VsTools
 {
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
+    private readonly ILogger _logger;
 
-    public VsTools(IPipeClient pipe, IChatEngine chatEngine)
+    public VsTools(IPipeClient pipe, IChatEngine chatEngine, ILogger logger)
     {
         _pipe = pipe;
         _chatEngine = chatEngine;
+        _logger = logger;
     }
 
     [McpServerTool(Name = "chat_engine_ping")]
     [Description("Sends a ping request through Adventures.ChatEngine and returns the response message.")]
     public async Task<string> ChatEnginePingAsync(CancellationToken ct)
     {
-        var response = await _chatEngine.SendAsync(new ChatRequest("ping"), ct).ConfigureAwait(false);
-        return response.Message;
+        var requestId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation("MCP chat_engine_ping started [RequestId={RequestId}].", requestId);
+
+        try
+        {
+            var response = await _chatEngine.SendAsync(new ChatRequest("ping"), ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP chat_engine_ping completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                response.Message?.Length ?? 0);
+            return response.Message;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP chat_engine_ping canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP chat_engine_ping failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "chat_engine_chat")]
@@ -38,8 +74,43 @@ public sealed class VsTools
         [Description("The message to send through Adventures.ChatEngine.")] string message,
         CancellationToken ct)
     {
-        var response = await _chatEngine.SendAsync(new ChatRequest(message), ct).ConfigureAwait(false);
-        return response.Message;
+        var requestId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP chat_engine_chat started [RequestId={RequestId}] [MessageLength={MessageLength}].",
+            requestId,
+            message?.Length ?? 0);
+
+        try
+        {
+            var response = await _chatEngine.SendAsync(new ChatRequest(message), ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP chat_engine_chat completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                response.Message?.Length ?? 0);
+            return response.Message;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP chat_engine_chat canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP chat_engine_chat failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
     }
 
     [McpServerTool(Name = "vs_get_active_document")]

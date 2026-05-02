@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace Adventures.ChatEngine.OpenAI.Services;
 
@@ -34,11 +35,28 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
     public async Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
+        string requestId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        this.logger.LogInformation(
+            "OpenAI provider SendAsync started [RequestId={RequestId}] [UseRealApi={UseRealApi}] [MessageLength={MessageLength}].",
+            requestId,
+            this.options.UseRealApi,
+            request.Message?.Length ?? 0);
+
         this.ValidateConfiguration();
 
         if (this.options.UseRealApi)
         {
-            return await this.SendRealRequestAsync(request, cancellationToken).ConfigureAwait(false);
+            this.logger.LogInformation("OpenAI provider using real API mode [RequestId={RequestId}].", requestId);
+
+            ChatResponse realResponse = await this.SendRealRequestAsync(request, cancellationToken).ConfigureAwait(false);
+            stopwatch.Stop();
+            this.logger.LogInformation(
+                "OpenAI provider SendAsync completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                realResponse.Message?.Length ?? 0);
+            return realResponse;
         }
 
         this.logger.LogInformation(
@@ -50,6 +68,12 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         _ = this.httpClient;
 
         string message = request.Message == "ping" ? "pong-from-openai" : "openai-stub-response";
+        stopwatch.Stop();
+        this.logger.LogInformation(
+            "OpenAI provider SendAsync completed in stub mode [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [Response={Response}].",
+            requestId,
+            stopwatch.ElapsedMilliseconds,
+            message);
         return new ChatResponse(message);
     }
 
@@ -57,18 +81,37 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         ChatRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        string requestId = Guid.NewGuid().ToString("N");
+        this.logger.LogInformation(
+            "OpenAI provider StreamAsync started [RequestId={RequestId}] [UseRealApi={UseRealApi}] [MessageLength={MessageLength}].",
+            requestId,
+            this.options.UseRealApi,
+            request.Message?.Length ?? 0);
+
         this.ValidateConfiguration();
 
         if (!this.options.UseRealApi)
         {
-            yield return await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            ChatResponse stubResponse = await this.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            this.logger.LogInformation(
+                "OpenAI provider StreamAsync yielding stub response [RequestId={RequestId}] [ResponseLength={ResponseLength}].",
+                requestId,
+                stubResponse.Message?.Length ?? 0);
+            yield return stubResponse;
             yield break;
         }
 
+        this.logger.LogInformation("OpenAI provider StreamAsync entering real stream mode [RequestId={RequestId}].", requestId);
         await foreach (ChatResponse chunk in this.StreamRealRequestAsync(request, cancellationToken).ConfigureAwait(false))
         {
+            this.logger.LogDebug(
+                "OpenAI provider StreamAsync yielded chunk [RequestId={RequestId}] [ChunkLength={ChunkLength}].",
+                requestId,
+                chunk.Message?.Length ?? 0);
             yield return chunk;
         }
+
+        this.logger.LogInformation("OpenAI provider StreamAsync completed [RequestId={RequestId}].", requestId);
     }
 
     private void ValidateConfiguration()
@@ -86,6 +129,8 @@ public sealed class OpenAiChatProvider : IAiChatProvider
 
     private async Task<ChatResponse> SendRealRequestAsync(ChatRequest request, CancellationToken cancellationToken)
     {
+        this.logger.LogDebug("OpenAI SendRealRequestAsync preparing HTTP request.");
+
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ChatCompletionsEndpoint)
         {
             Content = JsonContent.Create(new
@@ -107,6 +152,10 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         using HttpResponseMessage response = await this.httpClient
             .SendAsync(httpRequest, cancellationToken)
             .ConfigureAwait(false);
+
+        this.logger.LogDebug(
+            "OpenAI SendRealRequestAsync received HTTP response [StatusCode={StatusCode}].",
+            (int)response.StatusCode);
 
         string responseContent = await response.Content
             .ReadAsStringAsync(cancellationToken)
@@ -132,6 +181,8 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         ChatRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        this.logger.LogDebug("OpenAI StreamRealRequestAsync preparing streaming HTTP request.");
+
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ChatCompletionsEndpoint)
         {
             Content = JsonContent.Create(new
@@ -155,6 +206,10 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         using HttpResponseMessage response = await this.httpClient
             .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
+
+        this.logger.LogDebug(
+            "OpenAI StreamRealRequestAsync received HTTP response headers [StatusCode={StatusCode}].",
+            (int)response.StatusCode);
 
         if (!response.IsSuccessStatusCode)
         {

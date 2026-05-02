@@ -22,8 +22,8 @@ public sealed class PipeClientTests
 
         Assert.Contains(logger.VerboseMessages, message => message.Contains($"Attempting pipe connection to '{pipeName}'", StringComparison.Ordinal));
         Assert.Contains(logger.VerboseMessages, message => message.Contains("Pipe request failed", StringComparison.Ordinal));
-        Assert.Empty(logger.InformationMessages);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Pipe request started", StringComparison.Ordinal));
         Assert.Empty(logger.WarningMessages);
-        Assert.Empty(logger.Errors);
+        Assert.Contains(logger.Errors, error => error.Message.Contains("Pipe request failed", StringComparison.Ordinal));
     }
 }

@@ -125,6 +125,15 @@ Verified recently:
 - successful proposal creation, approval, and apply through `vs_propose_text_edit`
 - post-apply connectivity via a follow-up successful read-only tool call
 
+Logging hardening now in place:
+
+- App chat/OpenAI requests emit correlation and elapsed timing logs for start, completion, cancellation, and failure
+- MCP chat tools (`chat_engine_ping`, `chat_engine_chat`) emit correlation and elapsed timing logs at tool boundaries
+- MCP named-pipe client and shared pipe server emit boundary diagnostics with command, request id, success state, and elapsed timing
+- VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`) emit operation-level completion logs including elapsed timing and key result shape (file path, selection length, project/diagnostic count)
+
+These additions improve triage for hangs and latency without changing the approval-first edit model.
+
 ## Current Technical Priorities
 
 The next phase should optimize for stability and coverage, not initial runtime proof.
@@ -142,6 +151,7 @@ Priority order:
 2. Edit application still rebuilds the full document and may need hardening around formatting and line endings.
 3. Diagnostics must remain file/debug-based for MCP host work so stdio JSON transport stays clean.
 4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
+5. Increased log volume at `Trace` can reduce signal if left enabled continuously; operators should use diagnostic levels during focused investigation windows.
 
 ## Operational Note: Tool Window Readiness
 

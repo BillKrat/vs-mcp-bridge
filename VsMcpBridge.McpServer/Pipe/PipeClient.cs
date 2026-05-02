@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
 using VsMcpBridge.Shared.Interfaces;
@@ -32,7 +33,9 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
         where TResponse : VsResponseBase, new()
     {
         var requestId = string.IsNullOrWhiteSpace(request.RequestId) ? "(none)" : request.RequestId;
+        var stopwatch = Stopwatch.StartNew();
         _logger.LogTrace($"Attempting pipe connection to '{_pipeName}' [Command={command}] [RequestId={requestId}].");
+        _logger.LogInformation($"Pipe request started [Command={command}] [RequestId={requestId}].");
 
         try
         {
@@ -56,7 +59,9 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
 
             if (string.IsNullOrEmpty(responseJson))
             {
+                stopwatch.Stop();
                 _logger.LogTrace($"Received empty pipe response [Command={command}] [RequestId={requestId}].");
+                _logger.LogWarning($"Pipe request completed with empty response [Command={command}] [RequestId={requestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
                 return new TResponse
                 {
                     RequestId = requestId,
@@ -79,12 +84,22 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
             }
 
             response.RequestId = string.IsNullOrWhiteSpace(response.RequestId) ? requestId : response.RequestId;
+            stopwatch.Stop();
             _logger.LogTrace($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}].");
+            _logger.LogInformation($"Pipe request completed [Command={command}] [RequestId={requestId}] [Success={response.Success}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
             return response;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning($"Pipe request canceled [Command={command}] [RequestId={requestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
+            throw;
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             _logger.LogTrace($"Pipe request failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
+            _logger.LogError(ex, $"Pipe request failed [Command={command}] [RequestId={requestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
             throw;
         }
     }

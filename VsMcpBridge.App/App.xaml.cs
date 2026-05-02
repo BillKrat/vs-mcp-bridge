@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System.Windows;
 using VsMcpBridge.App.Composition;
 using VsMcpBridge.Shared.Composition;
@@ -16,8 +17,16 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .AddEnvironmentVariables(prefix: "VSMCPBRIDGE_")
+            .Build();
+
         _serviceProvider = new ServiceCollection()
-            .AddVsMcpBridgeAppServices()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddVsMcpBridgeAppServices(configuration)
             .AddMvpVmServices()
             .BuildServiceProvider();
 

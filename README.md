@@ -155,6 +155,43 @@ The standalone app can be built with the normal .NET SDK:
 dotnet build .\VsMcpBridge.App\VsMcpBridge.App.csproj
 ```
 
+### Logging Configuration (Diagnostic Mode)
+
+The App and VSIX hosts support switchable logging output with shared UI log surfacing.
+
+App configuration key (from `VsMcpBridge.App/appsettings.json`):
+
+- `VsMcpBridge:Logging:Provider` (`Debug` or `StdErr`)
+- `VsMcpBridge:Logging:MinimumLevel` (`Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`)
+
+Environment variable overrides use `VSMCPBRIDGE_` with `__` separators:
+
+- `VSMCPBRIDGE_VsMcpBridge__Logging__Provider`
+- `VSMCPBRIDGE_VsMcpBridge__Logging__MinimumLevel`
+
+Notes:
+
+- logs are still surfaced in the shared MVP/VM UI log view through the shared log sink
+- selecting `StdErr` writes log lines to standard error for external diagnostic capture
+
+App chat/OpenAI configuration keys:
+
+- `Adventures:ChatEngine:Provider` (`Fake` or `OpenAI`)
+- `Adventures:ChatEngine:OpenAI:UseRealApi` (`true`/`false`)
+- `Adventures:ChatEngine:OpenAI:ApiKey`
+- `Adventures:ChatEngine:OpenAI:Model` (preferred)
+- `Adventures:ChatEngine:Model` (compatibility fallback)
+
+App configuration resolution order includes:
+
+- `appsettings.json`
+- unprefixed environment variables (for example `Adventures__ChatEngine__OpenAI__ApiKey`)
+- `VSMCPBRIDGE_`-prefixed environment overrides
+
+Operational logging note:
+
+- request-path diagnostics now include correlation IDs and elapsed timing across App chat requests, MCP chat tools, pipe transport, shared pipe dispatch, and VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`)
+
 ## Test
 
 Shared layer:

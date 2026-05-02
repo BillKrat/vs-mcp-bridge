@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,7 +47,10 @@ public sealed class VsService : IVsService
 
     public async Task<GetActiveDocumentResponse> GetActiveDocumentAsync()
     {
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation("Running VS service operation 'GetActiveDocument'.");
+        _logger.LogTrace($"VS service operation 'GetActiveDocument' started [OperationId={operationId}].");
 
         try
         {
@@ -55,13 +59,19 @@ public sealed class VsService : IVsService
             var dte = await GetDteAsync();
             var doc = GetActiveDocumentOnUIThread(dte);
             if (doc == null)
+            {
+                stopwatch.Stop();
+                _logger.LogInformation($"VS service operation 'GetActiveDocument' completed without active document [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
                 return new GetActiveDocumentResponse { Success = false, ErrorMessage = "No active document." };
+            }
 
             var textDoc = doc.Object("TextDocument") as TextDocument;
             var content = GetDocumentText(textDoc);
             var filePath = doc.FullName;
             var language = doc.Language;
 
+            stopwatch.Stop();
+            _logger.LogInformation($"VS service operation 'GetActiveDocument' completed [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}] [FilePath={filePath}].");
             return new GetActiveDocumentResponse
             {
                 Success = true,
@@ -72,6 +82,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             _logger.LogError(ex, "VS service operation 'GetActiveDocument' failed.");
             throw;
         }
@@ -79,7 +90,10 @@ public sealed class VsService : IVsService
 
     public async Task<GetSelectedTextResponse> GetSelectedTextAsync()
     {
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation("Running VS service operation 'GetSelectedText'.");
+        _logger.LogTrace($"VS service operation 'GetSelectedText' started [OperationId={operationId}].");
 
         try
         {
@@ -88,12 +102,18 @@ public sealed class VsService : IVsService
             var dte = await GetDteAsync();
             var doc = GetActiveDocumentOnUIThread(dte);
             if (doc == null)
+            {
+                stopwatch.Stop();
+                _logger.LogInformation($"VS service operation 'GetSelectedText' completed without active document [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
                 return new GetSelectedTextResponse { Success = false, ErrorMessage = "No active document." };
+            }
 
             var textDoc = doc.Object("TextDocument") as TextDocument;
             var text = GetSelectedText(textDoc);
             var filePath = doc.FullName;
 
+            stopwatch.Stop();
+            _logger.LogInformation($"VS service operation 'GetSelectedText' completed [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}] [FilePath={filePath}] [SelectionLength={text?.Length ?? 0}].");
             return new GetSelectedTextResponse
             {
                 Success = true,
@@ -103,6 +123,7 @@ public sealed class VsService : IVsService
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             _logger.LogError(ex, "VS service operation 'GetSelectedText' failed.");
             throw;
         }
@@ -110,7 +131,10 @@ public sealed class VsService : IVsService
 
     public async Task<ListSolutionProjectsResponse> ListSolutionProjectsAsync()
     {
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation("Running VS service operation 'ListSolutionProjects'.");
+        _logger.LogTrace($"VS service operation 'ListSolutionProjects' started [OperationId={operationId}].");
 
         try
         {
@@ -119,7 +143,11 @@ public sealed class VsService : IVsService
             var dte = await GetDteAsync();
             var solution = GetSolution(dte);
             if (solution == null)
+            {
+                stopwatch.Stop();
+                _logger.LogInformation($"VS service operation 'ListSolutionProjects' completed without open solution [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
                 return new ListSolutionProjectsResponse { Success = false, ErrorMessage = "No solution open." };
+            }
 
             var projects = new List<ProjectInfo>();
             foreach (var project in EnumerateSolutionProjects(solution))
@@ -127,10 +155,13 @@ public sealed class VsService : IVsService
                 projects.Add(CreateProjectInfo(project));
             }
 
+            stopwatch.Stop();
+            _logger.LogInformation($"VS service operation 'ListSolutionProjects' completed [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}] [ProjectCount={projects.Count}].");
             return new ListSolutionProjectsResponse { Success = true, Projects = projects };
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             _logger.LogError(ex, "VS service operation 'ListSolutionProjects' failed.");
             throw;
         }
@@ -138,7 +169,10 @@ public sealed class VsService : IVsService
 
     public async Task<GetErrorListResponse> GetErrorListAsync()
     {
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation("Running VS service operation 'GetErrorList'.");
+        _logger.LogTrace($"VS service operation 'GetErrorList' started [OperationId={operationId}].");
 
         try
         {
@@ -171,14 +205,19 @@ public sealed class VsService : IVsService
             }
             catch (Exception ex)
             {
+                stopwatch.Stop();
+                _logger.LogError(ex, $"VS service operation 'GetErrorList' failed while reading diagnostics [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
                 _logger.LogError(ex, "Failed to read the Visual Studio Error List.");
                 return new GetErrorListResponse { Success = false, ErrorMessage = "Failed to read the Visual Studio Error List." };
             }
 
+            stopwatch.Stop();
+            _logger.LogInformation($"VS service operation 'GetErrorList' completed [OperationId={operationId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}] [DiagnosticCount={diagnostics.Count}].");
             return new GetErrorListResponse { Success = true, Diagnostics = diagnostics };
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             _logger.LogError(ex, "VS service operation 'GetErrorList' failed.");
             throw;
         }
@@ -492,7 +531,7 @@ public sealed class VsService : IVsService
         {
             _approvalWorkflowService.MarkFailed(proposalId);
             var message = ProposalOutcomeMessageBuilder.BuildGenericFailureMessage(proposal);
-            _logToolWindowPresenter.CompleteProposalCycle(message);
+            _logToolWindowPresenter.CompleteProposalCycle(message, proposal.RequestId);
             _logger.LogError(ex, $"{message} [RequestId={proposal.RequestId}] [ProposalId={proposal.ProposalId}]");
         }
     }

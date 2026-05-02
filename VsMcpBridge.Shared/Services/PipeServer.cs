@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
@@ -90,8 +91,11 @@ public sealed class PipeServer : IPipeServer
 
     public async Task<string?> ProcessRequestAsync(string? requestJson)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         if (string.IsNullOrWhiteSpace(requestJson))
         {
+            stopwatch.Stop();
             _logger.LogWarning("Received an empty pipe request.");
             return null;
         }
@@ -102,6 +106,7 @@ public sealed class PipeServer : IPipeServer
         var envelope = JsonSerializer.Deserialize<PipeMessage>(requestJson!, JsonOptions);
         if (envelope == null)
         {
+            stopwatch.Stop();
             _logger.LogWarning("Received a pipe request that could not be deserialized.");
             return null;
         }
@@ -110,10 +115,26 @@ public sealed class PipeServer : IPipeServer
 
         _logger.LogTrace($"Processing pipe request [Command={envelope.Command}] [RequestId={envelope.RequestId}] [PayloadLength={envelope.Payload?.Length ?? 0}].");
         _logger.LogInformation($"Dispatching pipe command '{envelope.Command}' [RequestId={envelope.RequestId}].");
-        var response = await DispatchAsync(envelope);
-        response.RequestId = envelope.RequestId;
-        _logger.LogInformation($"Pipe command '{envelope.Command}' completed [RequestId={envelope.RequestId}] [Success={response.Success}].");
-        return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
+        try
+        {
+            var response = await DispatchAsync(envelope);
+            response.RequestId = envelope.RequestId;
+            stopwatch.Stop();
+            _logger.LogInformation($"Pipe command '{envelope.Command}' completed [RequestId={envelope.RequestId}] [Success={response.Success}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
+            return JsonSerializer.Serialize(response, response.GetType(), JsonOptions);
+        }
+        catch (OperationCanceledException) when (_cts?.IsCancellationRequested == true)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning($"Pipe command '{envelope.Command}' canceled [RequestId={envelope.RequestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex, $"Pipe command '{envelope.Command}' failed [RequestId={envelope.RequestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
+            throw;
+        }
     }
 
     private void ListenLoop(CancellationToken ct)

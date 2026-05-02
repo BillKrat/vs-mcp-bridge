@@ -52,6 +52,23 @@ The bridge is intentionally conservative at this stage:
 - diagnostics and unhandled exception capture are built in
 - shared bridge infrastructure is decoupled from the VSIX so other hosts can provide their own implementations
 
+## Logging and Diagnostics Flow
+
+Current logging behavior is intentionally boundary-focused for triage:
+
+- `VsMcpBridge.App` supports configuration-driven logging providers and appends provider-fed entries to the shared MVP/VM UI log surface
+- App chat requests (including OpenAI mode) log request start/completion/failure with correlation IDs and elapsed timing
+- `VsMcpBridge.McpServer` logs MCP chat-tool boundaries and named-pipe client request boundaries with command, request id, success state, and elapsed timing
+- `PipeServer` logs dispatch boundaries with command/request id and elapsed timing, plus explicit cancel/failure paths
+- `VsMcpBridge.Vsix` service operations log start/completion/failure with operation-level correlation and elapsed timing for the current read surface
+
+Diagnostic sinks remain transport-safe:
+
+- MCP server file diagnostics: `%LocalAppData%\VsMcpBridge\Logs\McpServer\pipe-client.log`
+- VSIX pipe trace diagnostics: `%LocalAppData%\VsMcpBridge\Logs\Vsix\pipe-server-trace.log`
+
+These diagnostics are additive and are designed to avoid polluting MCP stdio JSON traffic.
+
 ## MCP Bridge Request Lifecycle
 
 For a normal MCP tool call, the request path is:

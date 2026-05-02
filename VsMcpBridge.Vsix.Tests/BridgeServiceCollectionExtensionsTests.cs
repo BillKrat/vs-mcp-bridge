@@ -27,7 +27,8 @@ public sealed class BridgeServiceCollectionExtensionsTests
 
         Assert.Same(package, provider.GetRequiredService<IAsyncPackage>());
         Assert.Same(package, provider.GetRequiredService<AsyncPackage>());
-        Assert.IsType<ActivityLogBridgeLogger>(provider.GetRequiredService<ILogger>());
+        Assert.NotNull(provider.GetRequiredService<ILogger>());
+        Assert.NotNull(provider.GetRequiredService<IBridgeLogSink>());
         Assert.IsType<FileUnhandledExceptionSink>(provider.GetRequiredService<IUnhandledExceptionSink>());
         Assert.IsType<InMemoryApprovalWorkflowService>(provider.GetRequiredService<IApprovalWorkflowService>());
         Assert.NotNull(provider.GetRequiredService<IEditApplier>());

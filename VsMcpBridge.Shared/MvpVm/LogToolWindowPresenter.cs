@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
 
 namespace VsMcpBridge.Shared.MvpVm
@@ -18,6 +19,8 @@ namespace VsMcpBridge.Shared.MvpVm
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
+        private readonly IBridgeLogSink? _logSink;
+        private readonly IChatRequestService? _chatRequestService;
         private readonly IProposalDraftState? _proposalDraftState;
         private readonly IProposalFilePicker? _proposalFilePicker;
         private readonly List<ProposalEditorFileDraft> _proposalFileDrafts = new();
@@ -32,6 +35,8 @@ namespace VsMcpBridge.Shared.MvpVm
             _serviceProvider = serviceProvider;
             _logger = logger;
             _threadHelper = threadHelper;
+            _logSink = _serviceProvider.GetService<IBridgeLogSink>();
+            _chatRequestService = _serviceProvider.GetService<IChatRequestService>();
             _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
@@ -48,6 +53,9 @@ namespace VsMcpBridge.Shared.MvpVm
 
             if (LogToolWindowViewModel is INotifyPropertyChanged notifyPropertyChanged)
                 notifyPropertyChanged.PropertyChanged += OnViewModelPropertyChanged;
+
+            if (_logSink != null)
+                _logSink.EntryLogged += OnLogEntryLogged;
         }
 
         public ILogToolWindowControl LogToolWindowControl { get; set; } = null!;
@@ -63,6 +71,16 @@ namespace VsMcpBridge.Shared.MvpVm
             SyncProposalDraftState();
 
             _logger.LogInformation("VS MCP Bridge tool window Initialized.");
+        }
+
+        private void OnLogEntryLogged(BridgeLogEntry entry)
+        {
+            if (entry == null)
+                return;
+
+            AppendLog(BridgeLogFormatter.FormatLine(entry.TimestampUtc, entry.Level, entry.CategoryName, entry.Message));
+            if (entry.Exception != null)
+                AppendLog(entry.Exception.ToString());
         }
 
         public void AppendLog(string message)
@@ -317,6 +335,13 @@ namespace VsMcpBridge.Shared.MvpVm
                         return true;
                     }
                 default:
+                    if (_chatRequestService != null)
+                    {
+                        var response = await _chatRequestService.SendAsync(submittedRequestText);
+                        CompletePromptRequest(response);
+                        return true;
+                    }
+
                     if (_proposalFileDrafts.Count == 0)
                     {
                         CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.");
@@ -750,10 +775,10 @@ namespace VsMcpBridge.Shared.MvpVm
                 return;
             }
 
-            _threadHelper.Run(() =>
+            _threadHelper.Run(async () =>
             {
+                await _threadHelper.SwitchToMainThreadAsync();
                 action();
-                return Task.CompletedTask;
             });
         }
     }

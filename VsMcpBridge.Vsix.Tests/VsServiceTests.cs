@@ -98,7 +98,7 @@ public sealed class VsServiceTests
         Assert.True(response.Success);
         Assert.True(viewModel.HasPendingApproval);
         Assert.Equal(1, threadHelper.RunCalls);
-        Assert.Equal(0, threadHelper.SwitchCalls);
+        Assert.Equal(1, threadHelper.SwitchCalls);
     }
 
     [Fact]
@@ -158,8 +158,14 @@ public sealed class VsServiceTests
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
-        Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
-        Assert.Contains(logger.InformationMessages, message => message.Contains($"Apply succeeded [RequestId=request-123] [ProposalId={proposalId}]"));
+        Assert.Contains(logger.InformationMessages, message =>
+            message.Contains("Proposal approved", StringComparison.Ordinal)
+            && message.Contains("RequestId=request-123", StringComparison.Ordinal)
+            && message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message =>
+            message.Contains("Apply succeeded for 1 file. All approved changes were applied.", StringComparison.Ordinal)
+            && message.Contains("RequestId=request-123", StringComparison.Ordinal)
+            && message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -213,7 +219,10 @@ public sealed class VsServiceTests
         Assert.False(viewModel.ApproveCommand.CanExecute(null));
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
-        Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal rejected [RequestId=request-123] [ProposalId={proposalId}]"));
+        Assert.Contains(logger.InformationMessages, message =>
+            message.Contains("Proposal rejected for 1 file. No changes were applied.", StringComparison.Ordinal)
+            && message.Contains("RequestId=request-123", StringComparison.Ordinal)
+            && message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -241,7 +250,10 @@ public sealed class VsServiceTests
         Assert.False(viewModel.RejectCommand.CanExecute(null));
         Assert.False(viewModel.IsProposalProposedTextReadOnly);
         Assert.Contains(logger.InformationMessages, message => message.Contains($"Proposal approved [RequestId=request-123] [ProposalId={proposalId}]"));
-        Assert.Contains(logger.Errors, error => error.Message.Contains($"Apply failed [RequestId=request-123] [ProposalId={proposalId}]"));
+        Assert.Contains(logger.Errors, error =>
+            error.Message.Contains("Apply failed for 1 file. No changes were applied. Review the bridge log for details.", StringComparison.Ordinal)
+            && error.Message.Contains("RequestId=request-123", StringComparison.Ordinal)
+            && error.Message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
     }
 
     [Fact]

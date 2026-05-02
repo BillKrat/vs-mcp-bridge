@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Models;
+using Microsoft.Extensions.Logging.Abstractions;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
@@ -19,7 +20,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditAsync_preserves_backward_compatible_single_file_request_flow()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient, new StubChatEngine());
+        var tools = new VsTools(pipeClient, new StubChatEngine(), NullLogger.Instance);
 
         var response = await tools.ProposeTextEditAsync("sample.cs", "before", "after", CancellationToken.None);
 
@@ -32,7 +33,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditsAsync_sends_multi_file_request_through_pipe_client()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient, new StubChatEngine());
+        var tools = new VsTools(pipeClient, new StubChatEngine(), NullLogger.Instance);
         var fileEdits = new[]
         {
             new ProposalFileEditRequest { FilePath = "first.cs", OriginalText = "before-1", ProposedText = "after-1" },
@@ -51,7 +52,7 @@ public sealed class VsToolsTests
     public async Task ProposeTextEditsAsync_returns_clear_error_for_invalid_payload()
     {
         var pipeClient = new RecordingPipeClient();
-        var tools = new VsTools(pipeClient, new StubChatEngine());
+        var tools = new VsTools(pipeClient, new StubChatEngine(), NullLogger.Instance);
 
         var response = await tools.ProposeTextEditsAsync(
             new[] { new ProposalFileEditRequest { FilePath = string.Empty, OriginalText = "before", ProposedText = "after" } },
@@ -67,7 +68,7 @@ public sealed class VsToolsTests
     {
         var pipeClient = new RecordingPipeClient();
         var chatEngine = new StubChatEngine();
-        var tools = new VsTools(pipeClient, chatEngine);
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
 
         var response = await tools.ChatEnginePingAsync(CancellationToken.None);
 
@@ -80,7 +81,7 @@ public sealed class VsToolsTests
     {
         var pipeClient = new RecordingPipeClient();
         var chatEngine = new StubChatEngine();
-        var tools = new VsTools(pipeClient, chatEngine);
+        var tools = new VsTools(pipeClient, chatEngine, NullLogger.Instance);
 
         var response = await tools.ChatEngineChatAsync("hello", CancellationToken.None);
 
