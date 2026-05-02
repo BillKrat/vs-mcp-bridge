@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,6 +22,14 @@ public sealed class MvpVmTests
     {
         return new ServiceCollection()
             .AddSingleton(vsService)
+            .BuildServiceProvider();
+    }
+
+    private static IServiceProvider CreateServiceProvider(IVsService vsService, IConfiguration configuration)
+    {
+        return new ServiceCollection()
+            .AddSingleton(vsService)
+            .AddSingleton(configuration)
             .BuildServiceProvider();
     }
 
@@ -536,8 +545,10 @@ public sealed class MvpVmTests
         Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
-        Assert.Contains("> what is the active file", viewModel.LogText, StringComparison.Ordinal);
-        Assert.Contains("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("what is the active file", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -697,7 +708,8 @@ public sealed class MvpVmTests
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Contains("Solution projects:", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Contains("- VsMcpBridge", viewModel.StatusMessage, StringComparison.Ordinal);
-        Assert.Contains("> list solution projects", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("list solution projects", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -717,7 +729,8 @@ public sealed class MvpVmTests
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Contains("Error list:", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Contains("Warning: Something happened.", viewModel.StatusMessage, StringComparison.Ordinal);
-        Assert.Contains("> show error list", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("show error list", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -735,8 +748,62 @@ public sealed class MvpVmTests
         Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Equal("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", viewModel.StatusMessage);
-        Assert.Contains("> ping", viewModel.LogText, StringComparison.Ordinal);
-        Assert.Contains("Unsupported request.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("> ping", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("Unsupported request.", viewModel.LogText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_does_not_append_raw_prompt_by_default()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "what is the active file";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("what is the active file", viewModel.LogText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_does_not_append_raw_response_by_default()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "what is the active file";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_appends_raw_prompt_and_response_only_when_audit_flag_is_enabled()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["VsMcpBridge:Audit:LogRawPromptResponse"] = "true"
+            })
+            .Build();
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService, configuration), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "what is the active file";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Contains("[audit] > what is the active file", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Contains("[audit] Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
     }
 
     [Fact]

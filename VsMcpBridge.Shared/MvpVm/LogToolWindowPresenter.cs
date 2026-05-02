@@ -15,12 +15,14 @@ namespace VsMcpBridge.Shared.MvpVm
     public class LogToolWindowPresenter : ILogToolWindowPresenter
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
+        private const string RawPromptResponseAuditConfigurationKey = "VsMcpBridge:Audit:LogRawPromptResponse";
 
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
         private readonly IBridgeLogSink? _logSink;
         private readonly IChatRequestService? _chatRequestService;
+        private readonly bool _logRawPromptResponse;
         private readonly IProposalDraftState? _proposalDraftState;
         private readonly IProposalFilePicker? _proposalFilePicker;
         private readonly List<ProposalEditorFileDraft> _proposalFileDrafts = new();
@@ -37,6 +39,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _threadHelper = threadHelper;
             _logSink = _serviceProvider.GetService<IBridgeLogSink>();
             _chatRequestService = _serviceProvider.GetService<IChatRequestService>();
+            _logRawPromptResponse = TryGetBooleanConfiguration(_serviceProvider, RawPromptResponseAuditConfigurationKey);
             _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
@@ -233,7 +236,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 LogToolWindowViewModel.LastSubmittedRequestText = submittedRequestText;
                 LogToolWindowViewModel.IsRequestInProgress = true;
                 LogToolWindowViewModel.StatusMessage = string.Empty;
-                AppendActivityEntry($"> {submittedRequestText}");
+                AppendPromptActivityEntry(submittedRequestText);
 
                 var toolDispatchHandled = await TryDispatchPromptRequestAsync(submittedRequestText);
                 if (toolDispatchHandled)
@@ -356,7 +359,7 @@ namespace VsMcpBridge.Shared.MvpVm
         {
             LogToolWindowViewModel.IsRequestInProgress = false;
             LogToolWindowViewModel.StatusMessage = responseText;
-            AppendActivityEntry(responseText);
+            AppendResponseActivityEntry(responseText);
         }
 
         private void AppendActivityEntry(string message)
@@ -369,6 +372,35 @@ namespace VsMcpBridge.Shared.MvpVm
                         ? message
                         : $"{existingLog}{Environment.NewLine}{Environment.NewLine}{message}";
             });
+        }
+
+        private void AppendPromptActivityEntry(string submittedRequestText)
+        {
+            AppendActivityEntry(_logRawPromptResponse
+                ? $"[audit] > {submittedRequestText}"
+                : "Prompt submitted. Raw prompt logging is disabled.");
+        }
+
+        private void AppendResponseActivityEntry(string responseText)
+        {
+            AppendActivityEntry(_logRawPromptResponse
+                ? $"[audit] {responseText}"
+                : "Response received. Raw response logging is disabled.");
+        }
+
+        private static bool TryGetBooleanConfiguration(IServiceProvider serviceProvider, string key)
+        {
+            var configurationType = Type.GetType("Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Configuration.Abstractions");
+            if (configurationType == null)
+                return false;
+
+            var configuration = serviceProvider.GetService(configurationType);
+            if (configuration == null)
+                return false;
+
+            var indexer = configurationType.GetProperty("Item");
+            var rawValue = indexer?.GetValue(configuration, new object[] { key }) as string;
+            return bool.TryParse(rawValue, out var parsed) && parsed;
         }
 
         private static string BuildActiveFileSummary(GetActiveDocumentResponse response)
