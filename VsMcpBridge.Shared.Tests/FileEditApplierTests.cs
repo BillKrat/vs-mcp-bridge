@@ -148,6 +148,22 @@ public sealed class FileEditApplierTests
     }
 
     [Fact]
+    public async Task ApplyAsync_throws_when_target_file_no_longer_exists()
+    {
+        var path = Path.GetTempFileName();
+        File.Delete(path);
+
+        var applier = new FileEditApplier();
+
+        await Assert.ThrowsAsync<FileNotFoundException>(() => applier.ApplyAsync(new EditProposal
+        {
+            FilePath = path,
+            Diff = CreateDiff("sample.cs", "before\ncontent\n", "after\ncontent\n"),
+            RangeEdit = RangeEditBuilder.Build("before\ncontent\n", "after\ncontent\n")
+        }));
+    }
+
+    [Fact]
     public async Task ApplyAsync_throws_when_target_range_changed_even_if_surrounding_document_exists()
     {
         var path = Path.GetTempFileName();

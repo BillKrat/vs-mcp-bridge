@@ -369,4 +369,118 @@ public sealed class VsServiceTests
             message.Contains("RequestId=request-multi") &&
             message.Contains($"ProposalId={proposalId}"));
     }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_marks_proposal_failed_when_target_file_no_longer_exists()
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            System.IO.File.WriteAllText(path, "before");
+
+            var logger = new RecordingBridgeLogger();
+            IThreadHelper threadHelper = new TestThreadHelper();
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+            var workflow = new InMemoryApprovalWorkflowService();
+            var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new FileEditApplier(), presenter);
+
+            await service.ProposeTextEditAsync("request-missing-file", path, "before", "after");
+            System.IO.File.Delete(path);
+
+            var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+            viewModel.ApproveCommand.Execute(null);
+
+            Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+            Assert.Equal("Apply failed for 1 file. No changes were applied. Review the bridge log for details.", viewModel.StatusMessage);
+            Assert.Contains(logger.Errors, error =>
+                error.Exception is System.IO.FileNotFoundException
+                && error.Message.Contains("Apply failed for 1 file. No changes were applied. Review the bridge log for details.", StringComparison.Ordinal)
+                && error.Message.Contains("RequestId=request-missing-file", StringComparison.Ordinal)
+                && error.Message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditAsync_approve_command_marks_proposal_failed_when_original_text_no_longer_matches_current_file_content()
+    {
+        var path = System.IO.Path.GetTempFileName();
+        try
+        {
+            System.IO.File.WriteAllText(path, "before");
+
+            var logger = new RecordingBridgeLogger();
+            IThreadHelper threadHelper = new TestThreadHelper();
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+            var workflow = new InMemoryApprovalWorkflowService();
+            var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new FileEditApplier(), presenter);
+
+            await service.ProposeTextEditAsync("request-drift", path, "before", "after");
+            System.IO.File.WriteAllText(path, "drifted");
+
+            var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+            viewModel.ApproveCommand.Execute(null);
+
+            Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+            Assert.Equal("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.", viewModel.StatusMessage);
+            Assert.Equal("drifted", System.IO.File.ReadAllText(path));
+            Assert.Contains(logger.WarningMessages, message =>
+                message.Contains("Apply failed for 1 file because at least one target no longer matches the approved content. No changes were applied.", StringComparison.Ordinal)
+                && message.Contains("RequestId=request-drift", StringComparison.Ordinal)
+                && message.Contains($"ProposalId={proposalId}", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task ProposeTextEditsAsync_approve_command_never_partially_applies_changes_when_one_target_fails_validation()
+    {
+        var firstPath = System.IO.Path.GetTempFileName();
+        var secondPath = System.IO.Path.GetTempFileName();
+        try
+        {
+            System.IO.File.WriteAllText(firstPath, "alpha\nbeta\n");
+            System.IO.File.WriteAllText(secondPath, "one\ntwo\n");
+
+            var logger = new RecordingBridgeLogger();
+            IThreadHelper threadHelper = new TestThreadHelper();
+            var viewModel = new LogToolWindowViewModel();
+            var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), logger, threadHelper, viewModel);
+            var workflow = new InMemoryApprovalWorkflowService();
+            var service = new VsService(TestPackageFactory.CreatePackage(), logger, threadHelper, workflow, new FileEditApplier(), presenter);
+
+            await service.ProposeTextEditsAsync("request-no-partial", new[]
+            {
+                new ProposalFileEditRequest { FilePath = firstPath, OriginalText = "alpha\nbeta\n", ProposedText = "alpha\nBETA\n" },
+                new ProposalFileEditRequest { FilePath = secondPath, OriginalText = "one\ntwo\n", ProposedText = "ONE\ntwo\n" }
+            });
+
+            System.IO.File.WriteAllText(secondPath, "drift\ntwo\n");
+
+            var proposalId = Assert.Single(TestWorkflowHelpers.GetProposalIds(workflow));
+            viewModel.ApproveCommand.Execute(null);
+
+            Assert.Equal(ProposalStatus.Failed, workflow.Get(proposalId)!.Status);
+            Assert.Equal("Apply failed for 2 files because at least one target no longer matches the approved content. No changes were applied.", viewModel.StatusMessage);
+            Assert.Equal("alpha\nbeta\n", System.IO.File.ReadAllText(firstPath));
+            Assert.Equal("drift\ntwo\n", System.IO.File.ReadAllText(secondPath));
+        }
+        finally
+        {
+            if (System.IO.File.Exists(firstPath))
+                System.IO.File.Delete(firstPath);
+            if (System.IO.File.Exists(secondPath))
+                System.IO.File.Delete(secondPath);
+        }
+    }
 }
