@@ -44,7 +44,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
             if (_proposalFilePicker != null)
-            LogToolWindowViewModel.SetProposalBrowseHandler(OnBrowseProposalFileRequested);
+                LogToolWindowViewModel.SetProposalBrowseHandler(OnBrowseProposalFileRequested);
             else
                 LogToolWindowViewModel.SetProposalBrowseHandler(null);
             LogToolWindowViewModel.SetProposalRemoveHandler(OnRemoveProposalFileRequested);
@@ -395,8 +395,8 @@ namespace VsMcpBridge.Shared.MvpVm
 
         private void AppendResponseActivityEntry(string responseText)
         {
-            AppendActivityEntry(_logRawPromptResponse
-                ? $"[audit] {responseText}"
+            AppendActivityEntry(!_logRawPromptResponse
+                ? $"{responseText}"
                 : "Response received. Raw response logging is disabled.");
         }
 

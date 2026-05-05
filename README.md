@@ -302,11 +302,41 @@ No exceptions.
 
 ## Safe AI Editing v1
 
+- Core invariant:
+  - AI may suggest and propose.
+  - Only validated, approved proposals may mutate.
+- Required flow:
+  - `AI -> Suggest -> Propose -> Approve -> Validate -> Apply`
 - AI tools are read-only unless they are explicitly target-based.
 - Target-based AI tools create proposals only.
 - Approval and apply remain required for any file mutation.
 - Apply-time validation prevents stale, missing, ambiguous, or partial mutations.
 - Multi-file AI proposals remain deferred until a deterministic output schema exists.
+
+### Tool Surface
+
+Read-only tools:
+
+- `chat_engine_chat`
+- `chat_engine_summarize`
+- `chat_engine_rewrite`
+- `chat_engine_suggest_fixes`
+- `chat_engine_explain_code`
+- `chat_engine_explain_error`
+- `chat_engine_suggest_error_fix`
+
+Mutation-capable tools (proposal-only):
+
+- `chat_engine_rewrite_with_target`
+- `chat_engine_suggest_fixes_with_target`
+- `chat_engine_suggest_error_fix_with_target`
+
+Rules:
+
+- mutation-capable means proposal creation only
+- no direct file writes
+- no apply path
+- no auto-apply
 
 ## ChatEngine-Backed MCP Tool Pattern
 
@@ -318,6 +348,9 @@ Required rules:
 - tools must use `SendAsync` only
 - tools must validate input before calling ChatEngine
 - tools must return serialized `ChatEngineChatResult` JSON
+- tools must populate `RequestId`
+- tools must populate `ErrorCode` on failure
+- tools must use controlled error messages
 - tools must use `ErrorCode` values consistently
 
 Testing requirements for any new ChatEngine-backed MCP tool:
@@ -341,6 +374,10 @@ Rules:
 - AI-generated changes must flow through proposal, approval, and apply
 - the adapter does not change the MCP tool JSON shape
 - ChatEngine tools must not create proposals unless the caller supplies an explicit target file path and original text context
+- proposal tools require explicit `filePath`
+- proposal tools require explicit `originalText`
+- error-fix proposal tools also require explicit `errorText`
+- invalid inputs must not call ChatEngine or proposal APIs
 - no implicit active-document targeting is allowed
 
 The MCP boundary remains read-only for ChatEngine-backed tools unless and until a separate proposal-driven workflow explicitly routes output into the existing approval/apply path.
@@ -358,6 +395,27 @@ The following are not allowed:
 - file-order guessing
 
 Any future multi-file ChatEngine proposal implementation must define a strict output schema before creating multi-file proposals.
+
+## VSIX Review Experience v1
+
+The current review UI provides:
+
+- source/type visibility for AI and manual proposals
+- target file or file count visibility
+- status visibility for pending review, approved/applied, rejected, and failed proposals
+- a lightweight proposal preview
+- the existing diff/review surface
+- inline error display for failed proposals
+- visual confirmation for applied proposals
+- `From error` context for error-driven workflows
+- keyboard shortcuts:
+  - `Enter -> approve`
+  - `Esc -> reject`
+
+Intentional limitation:
+
+- no proposal history model exists
+- the UI tracks only one pending proposal and one last completed proposal
 
 ## Test
 
