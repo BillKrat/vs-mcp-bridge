@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VsMcpBridge.App.Services;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.Shared.Diagnostics;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -11,13 +12,10 @@ namespace VsMcpBridge.App.Composition;
 
 internal static class BridgeServiceCollectionExtensions
 {
-    private const string ProviderConfigurationKey = "VsMcpBridge:Logging:Provider";
-    private const string MinimumLevelConfigurationKey = "VsMcpBridge:Logging:MinimumLevel";
-
     internal static IServiceCollection AddVsMcpBridgeAppServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var minimumLevel = ResolveMinimumLevel(configuration[MinimumLevelConfigurationKey]);
-        var provider = configuration[ProviderConfigurationKey];
+        var minimumLevel = ResolveMinimumLevel(configuration[ConfigurationKeys.LoggingMinimumLevel]);
+        var provider = configuration[ConfigurationKeys.LoggingProvider];
 
         services.AddSingleton<IBridgeLogSink, BridgeLogSink>();
         services.AddSingleton<AppSessionState>();
@@ -35,8 +33,8 @@ internal static class BridgeServiceCollectionExtensions
                 primaryProvider = new DebugBridgeLoggerProvider(settings);
 
             var uiProvider = new UiBridgeLoggerProvider(logSink, settings);
-            var primaryLogger = primaryProvider.CreateLogger("VsMcpBridge");
-            var uiLogger = uiProvider.CreateLogger("VsMcpBridge");
+            var primaryLogger = primaryProvider.CreateLogger(BridgeRuntimeConstants.LoggerCategory);
+            var uiLogger = uiProvider.CreateLogger(BridgeRuntimeConstants.LoggerCategory);
 
             return new CompositeBridgeLogger(primaryLogger, uiLogger);
         });

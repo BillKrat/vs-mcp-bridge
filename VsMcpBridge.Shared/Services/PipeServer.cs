@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
@@ -19,7 +20,7 @@ namespace VsMcpBridge.Shared.Services;
 /// </summary>
 public sealed class PipeServer : IPipeServer
 {
-    private const string PipeName = "VsMcpBridge";
+    private const string PipeName = BridgeRuntimeConstants.PipeName;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private static readonly object TraceSync = new();
 
@@ -354,7 +355,7 @@ public sealed class PipeServer : IPipeServer
         try
         {
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var logDirectory = Path.Combine(localAppData, "VsMcpBridge", "Logs", "Vsix");
+            var logDirectory = Path.Combine(localAppData, BridgeRuntimeConstants.PipeName, "Logs", "Vsix");
             var logPath = Path.Combine(logDirectory, "pipe-server-trace.log");
             var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
 

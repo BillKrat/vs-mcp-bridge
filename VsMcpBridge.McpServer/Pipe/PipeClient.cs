@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Models;
 
@@ -14,7 +15,7 @@ namespace VsMcpBridge.McpServer.Pipe;
 /// </summary>
 public sealed class PipeClient(ILogger logger) : IPipeClient
 {
-    private const string DefaultPipeName = "VsMcpBridge";
+    private const string DefaultPipeName = BridgeRuntimeConstants.PipeName;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private readonly ILogger _logger = logger;
     private readonly string _pipeName = DefaultPipeName;

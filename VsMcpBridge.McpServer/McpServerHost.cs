@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.McpServer.Pipe;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -15,8 +16,6 @@ namespace VsMcpBridge.McpServer;
 
 public static class McpServerHost
 {
-    private const string ProviderConfigurationKey = "Adventures:ChatEngine:Provider";
-
     public static void Configure(HostApplicationBuilder builder)
     {
         builder.Logging.ClearProviders();
@@ -34,7 +33,7 @@ public static class McpServerHost
             .WithStdioServerTransport()
             .WithTools<VsTools>();
 
-        string? provider = builder.Configuration[ProviderConfigurationKey];
+        string? provider = builder.Configuration[ConfigurationKeys.ChatEngineProvider];
 
         if (string.Equals(provider, "OpenAI", StringComparison.OrdinalIgnoreCase))
         {

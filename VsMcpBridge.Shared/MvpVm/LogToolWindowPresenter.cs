@@ -395,8 +395,8 @@ namespace VsMcpBridge.Shared.MvpVm
 
         private void AppendResponseActivityEntry(string responseText)
         {
-            AppendActivityEntry(!_logRawPromptResponse
-                ? $"{responseText}"
+            AppendActivityEntry(_logRawPromptResponse
+                ? $"[audit] {responseText}"
                 : "Response received. Raw response logging is disabled.");
         }
 
