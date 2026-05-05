@@ -5,15 +5,14 @@ using Adventures.ChatEngine.Models;
 using Adventures.ChatEngine.OpenAI.Configuration;
 using Adventures.ChatEngine.OpenAI.Extensions;
 using Adventures.ChatEngine.OpenAI.Services;
+using Adventures.ChatEngine.Services;
 using Adventures.ChatEngine.Tests.Fakes;
-using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 
 namespace Adventures.ChatEngine.Tests;

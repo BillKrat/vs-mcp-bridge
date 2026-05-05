@@ -8,18 +8,18 @@ using System.Runtime.CompilerServices;
 
 namespace Adventures.ChatEngine.Services;
 
-public sealed class ChatEngine : IChatEngine
+public sealed class ChatEngineService : IChatEngine
 {
     private const string RetryMaxAttemptsConfigurationKey = "Adventures:ChatEngine:Retry:MaxAttempts";
     private const int MaxProviderAttempts = 3;
 
     private readonly IConfiguration configuration;
-    private readonly ILogger<ChatEngine> logger;
+    private readonly ILogger<ChatEngineService> logger;
     private readonly IAiChatProvider provider;
 
-    public ChatEngine(
+    public ChatEngineService(
         IAiChatProvider provider,
-        ILogger<ChatEngine> logger,
+        ILogger<ChatEngineService> logger,
         IConfiguration configuration)
     {
         this.provider = provider;

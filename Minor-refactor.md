@@ -1,0 +1,1 @@
+- Renamed ChatEngine to ChatEngineService so that the class name does not clash with namespace.

@@ -1,6 +1,6 @@
 using Adventures.ChatEngine.Abstractions;
+using Adventures.ChatEngine.Services;
 using Microsoft.Extensions.DependencyInjection;
-using ChatEngineService = Adventures.ChatEngine.Services.ChatEngine;
 
 namespace Adventures.ChatEngine.Extensions;
 

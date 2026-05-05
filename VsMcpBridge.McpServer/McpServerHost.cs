@@ -2,7 +2,6 @@ using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Extensions;
 using Adventures.ChatEngine.OpenAI.Extensions;
 using Adventures.ChatEngine.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,8 +25,8 @@ public static class McpServerHost
 
         services
             .AddSingleton<ILogger, AppDataFolderLogger>()
-            .AddSingleton<ILogger<Adventures.ChatEngine.Services.ChatEngine>>(serviceProvider =>
-                new BridgeLoggerAdapter<Adventures.ChatEngine.Services.ChatEngine>(serviceProvider.GetRequiredService<ILogger>()))
+            .AddSingleton<ILogger<ChatEngineService>>(serviceProvider =>
+                new BridgeLoggerAdapter<ChatEngineService>(serviceProvider.GetRequiredService<ILogger>()))
             .AddSingleton<IHostedService, ChatEngineVerificationHostedService>()
             .AddChatEngine()
             .AddSingleton<IPipeClient, PipeClient>()
