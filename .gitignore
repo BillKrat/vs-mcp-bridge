@@ -432,3 +432,4 @@ VsMcpBridge.Vsix/obj/
 .DS_Store
 **/.DS_Store
 .cursor/
+/docs
