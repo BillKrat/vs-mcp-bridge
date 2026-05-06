@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace VsMcpBridge.Shared.MvpVm
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
+        private readonly IConfiguration? _configuration;
         private readonly IBridgeLogSink? _logSink;
         private readonly IChatRequestService? _chatRequestService;
         private readonly bool _logRawPromptResponse;
@@ -36,9 +38,10 @@ namespace VsMcpBridge.Shared.MvpVm
             _serviceProvider = serviceProvider;
             _logger = logger;
             _threadHelper = threadHelper;
+            _configuration = _serviceProvider.GetService<IConfiguration>();
             _logSink = _serviceProvider.GetService<IBridgeLogSink>();
             _chatRequestService = _serviceProvider.GetService<IChatRequestService>();
-            _logRawPromptResponse = TryGetBooleanConfiguration(_serviceProvider, ConfigurationKeys.AuditLogRawPromptResponse);
+            _logRawPromptResponse = TryGetBooleanConfiguration(_configuration, ConfigurationKeys.AuditLogRawPromptResponse);
             _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;
@@ -399,18 +402,12 @@ namespace VsMcpBridge.Shared.MvpVm
                 : "Response received. Raw response logging is disabled.");
         }
 
-        private static bool TryGetBooleanConfiguration(IServiceProvider serviceProvider, string key)
+        private static bool TryGetBooleanConfiguration(IConfiguration? configuration, string key)
         {
-            var configurationType = Type.GetType("Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Configuration.Abstractions");
-            if (configurationType == null)
-                return false;
-
-            var configuration = serviceProvider.GetService(configurationType);
             if (configuration == null)
                 return false;
 
-            var indexer = configurationType.GetProperty("Item");
-            var rawValue = indexer?.GetValue(configuration, new object[] { key }) as string;
+            var rawValue = configuration[key];
             return bool.TryParse(rawValue, out var parsed) && parsed;
         }
 
