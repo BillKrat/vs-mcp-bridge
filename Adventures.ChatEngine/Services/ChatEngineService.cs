@@ -60,6 +60,7 @@ public sealed class ChatEngineService : IChatEngine
         [EnumeratorCancellation] CancellationToken cancellationToken,
         Action<ChatResponse>? captureResponse = null)
     {
+        this.logger.LogTrace("ChatEngineService.StreamAsyncCore entered.");
         this.logger.LogInformation("Starting request processing for message {Message}.", request.Message);
         yield return new ChatEvent(ChatEventType.RequestStarted);
 
@@ -78,6 +79,7 @@ public sealed class ChatEngineService : IChatEngine
 
         for (int attempt = 1; attempt <= maxProviderAttempts; attempt++)
         {
+            this.logger.LogTrace("ChatEngineService.StreamAsyncCore starting provider attempt {AttemptNumber} of {MaxAttempts}.", attempt, maxProviderAttempts);
             bool wasCancelledDuringProviderCall = false;
             bool completedSuccessfully = false;
             bool emittedContentThisAttempt = false;
@@ -115,6 +117,7 @@ public sealed class ChatEngineService : IChatEngine
                 }
 
                 ChatResponse chunk = enumerator.Current;
+                this.logger.LogTrace("ChatEngineService.StreamAsyncCore received provider chunk on attempt {AttemptNumber}.", attempt);
                 responseBuilder.Append(chunk.Message);
                 emittedContentThisAttempt = true;
                 yield return new ChatEvent(ChatEventType.TokenGenerated, chunk.Message);
@@ -159,6 +162,7 @@ public sealed class ChatEngineService : IChatEngine
         }
 
         ChatResponse response = new(responseBuilder?.ToString() ?? string.Empty);
+        this.logger.LogTrace("ChatEngineService.StreamAsyncCore completed provider aggregation.");
 
         captureResponse?.Invoke(response);
 

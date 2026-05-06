@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Text;
+using System;
 
 namespace Adventures.ChatEngine.Tests;
 
@@ -315,6 +316,35 @@ public sealed class ChatEngineTests
     }
 
     [Fact]
+    public async Task OpenAiProvider_WhenRegistered_EngineEmitsTraceDiagnosticsForPingFlow()
+    {
+        var logEntries = new List<LogEntry>();
+        using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(
+            new Dictionary<string, string?>
+            {
+                ["Adventures:ChatEngine:OpenAI:ApiKey"] = "stub-key",
+                ["Adventures:ChatEngine:OpenAI:Model"] = "stub-model",
+            },
+            loggerEntries: logEntries);
+
+        IChatEngine? engine = serviceProvider.GetService<IChatEngine>();
+
+        ChatResponse response = await engine!.SendAsync(
+            new ChatRequest("ping"),
+            CancellationToken.None);
+
+        Assert.Equal("pong-from-openai", response.Message);
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Trace && entry.Message.Contains("StreamAsyncCore entered.", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Trace && entry.Message.Contains("starting provider attempt 1 of 3", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Trace && entry.Message.Contains("received provider chunk on attempt 1", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Trace && entry.Message.Contains("completed provider aggregation.", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Information && entry.Message.Contains("OpenAI provider StreamAsync started", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Information && entry.Message.Contains("OpenAI provider StreamAsync yielding stub response", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Information && entry.Message.Contains("OpenAI provider SendAsync started", StringComparison.Ordinal));
+        Assert.Contains(logEntries, entry => entry.Level == LogLevel.Information && entry.Message.Contains("OpenAI provider SendAsync completed in stub mode", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task OpenAiProvider_WhenApiKeyMissing_ThrowsClearConfigurationError()
     {
         using ServiceProvider serviceProvider = CreateOpenAiServiceProvider(new Dictionary<string, string?>
@@ -487,12 +517,17 @@ public sealed class ChatEngineTests
 
     private static ServiceProvider CreateOpenAiServiceProvider(
         IDictionary<string, string?> values,
-        HttpMessageHandler? handler = null)
+        HttpMessageHandler? handler = null,
+        List<LogEntry>? loggerEntries = null)
     {
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(CreateConfiguration(values));
-        services.AddSingleton<ILogger<ChatEngineService>>(NullLogger<ChatEngineService>.Instance);
-        services.AddSingleton<ILogger<OpenAiChatProvider>>(NullLogger<OpenAiChatProvider>.Instance);
+        services.AddSingleton<ILogger<ChatEngineService>>(loggerEntries is null
+            ? NullLogger<ChatEngineService>.Instance
+            : new RecordingLogger<ChatEngineService>(loggerEntries));
+        services.AddSingleton<ILogger<OpenAiChatProvider>>(loggerEntries is null
+            ? NullLogger<OpenAiChatProvider>.Instance
+            : new RecordingLogger<OpenAiChatProvider>(loggerEntries));
         services.AddChatEngine();
         services.AddOpenAiProvider(CreateConfiguration(values));
 
@@ -537,6 +572,25 @@ public sealed class ChatEngineTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             return Task.FromResult(handler(request));
+        }
+    }
+
+    private sealed record LogEntry(LogLevel Level, string Category, string Message);
+
+    private sealed class RecordingLogger<T>(List<LogEntry> entries) : ILogger<T>
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            entries.Add(new LogEntry(logLevel, typeof(T).Name, formatter(state, exception)));
         }
     }
 }

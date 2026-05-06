@@ -37,6 +37,7 @@ public sealed class OpenAiChatProvider : IAiChatProvider
     {
         string requestId = Guid.NewGuid().ToString("N");
         var stopwatch = Stopwatch.StartNew();
+        this.logger.LogTrace("OpenAI provider SendAsync entered [RequestId={RequestId}].", requestId);
         this.logger.LogInformation(
             "OpenAI provider SendAsync started [RequestId={RequestId}] [UseRealApi={UseRealApi}] [MessageLength={MessageLength}].",
             requestId,
@@ -68,6 +69,10 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         _ = this.httpClient;
 
         string message = request.Message == "ping" ? "pong-from-openai" : "openai-stub-response";
+        this.logger.LogTrace(
+            "OpenAI provider SendAsync resolved stub response [RequestId={RequestId}] [ResponseLength={ResponseLength}].",
+            requestId,
+            message.Length);
         stopwatch.Stop();
         this.logger.LogInformation(
             "OpenAI provider SendAsync completed in stub mode [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [Response={Response}].",
@@ -125,6 +130,12 @@ public sealed class OpenAiChatProvider : IAiChatProvider
         {
             throw new InvalidOperationException($"Missing required configuration value: {ModelConfigurationKey}");
         }
+
+        this.logger.LogTrace(
+            "OpenAI provider configuration validated [UseRealApi={UseRealApi}] [Model={Model}] [ApiKeyConfigured={ApiKeyConfigured}].",
+            this.options.UseRealApi,
+            this.options.Model,
+            !string.IsNullOrWhiteSpace(this.options.ApiKey));
     }
 
     private async Task<ChatResponse> SendRealRequestAsync(ChatRequest request, CancellationToken cancellationToken)
