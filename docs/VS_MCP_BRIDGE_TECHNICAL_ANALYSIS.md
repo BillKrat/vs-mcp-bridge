@@ -128,6 +128,7 @@ Verified recently:
 
 Logging hardening now in place:
 
+- App, VSIX, and MCP host now share a common `IConfiguration` bootstrap path so configuration behavior can evolve consistently across hosts rather than relying on scattered direct environment reads
 - App chat/OpenAI requests emit correlation and elapsed timing logs for start, completion, cancellation, and failure
 - MCP chat tools (`chat_engine_ping`, `chat_engine_chat`) emit correlation and elapsed timing logs at tool boundaries
 - MCP named-pipe client and shared pipe server emit boundary diagnostics with command, request id, success state, and elapsed timing
@@ -135,6 +136,15 @@ Logging hardening now in place:
 - prompt-box chat input in both hosts now routes through host-specific `IChatRequestService` implementations, enabling comparable request/response behavior for `ping` and OpenAI-backed prompts without App↔VSIX coupling
 
 These additions improve triage for hangs and latency without changing the approval-first edit model.
+
+Current logging direction:
+
+- `Trace` should describe verbose class/process flow across the decoupled bridge so the runtime remains diagnosable during rapid triage
+- `Information` is the default user-facing level and should carry non-verbose operational feedback
+- avoid redundant paired Trace and Information documentation or logging for the same event
+- `StdErr` is the preferred transport-safe out-of-band channel for diagnostics that must not pollute MCP stdio traffic
+- when Trace is enabled, Trace-level output should also surface through the shared UI log view so it is visible to the operator and AI tools during investigation
+- the shared logging pipeline now includes an abstraction seam that can forward trace and possibly information events to additional persistence targets such as SQL; the current first implementation step is a file-backed forwarder
 
 ## Current Technical Priorities
 
@@ -145,13 +155,14 @@ Priority order:
 1. add automated coverage for stdio MCP startup and named-pipe request flow
 2. harden proposal/apply behavior, especially document formatting and line-ending preservation
 3. keep diagnostics strong without reintroducing stdout pollution
-4. expand capability only after the current validated slice remains stable
+4. harden the logging seam so future persistence targets such as file-forwarding and SQL-forwarding can be added without changing core callers
+5. expand capability only after the current validated slice remains stable
 
 ## Known Risk Areas
 
 1. The bridge now has a validated runtime path, but automated regression coverage for the MCP and pipe boundaries is still thin.
 2. Edit application still rebuilds the full document and may need hardening around formatting and line endings.
-3. Diagnostics must remain file/debug-based for MCP host work so stdio JSON transport stays clean.
+3. Diagnostics must remain transport-safe for MCP host work so stdio JSON transport stays clean; StdErr and file-backed sinks are acceptable, stdout is not.
 4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
 5. Increased log volume at `Trace` can reduce signal if left enabled continuously; operators should use diagnostic levels during focused investigation windows.
 

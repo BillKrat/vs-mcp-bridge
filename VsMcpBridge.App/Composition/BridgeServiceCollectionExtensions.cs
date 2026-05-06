@@ -17,6 +17,7 @@ internal static class BridgeServiceCollectionExtensions
         var minimumLevel = ResolveMinimumLevel(configuration[ConfigurationKeys.LoggingMinimumLevel]);
         var provider = configuration[ConfigurationKeys.LoggingProvider];
 
+        services.AddSingleton<IBridgeLogForwarder, FileBridgeLogForwarder>();
         services.AddSingleton<IBridgeLogSink, BridgeLogSink>();
         services.AddSingleton<AppSessionState>();
         services.AddSingleton<IProposalDraftState>(serviceProvider => serviceProvider.GetRequiredService<AppSessionState>());

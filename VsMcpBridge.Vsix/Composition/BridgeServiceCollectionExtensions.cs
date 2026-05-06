@@ -26,6 +26,7 @@ internal static class BridgeServiceCollectionExtensions
 
         services.AddSingleton(configuration);
 
+        services.AddSingleton<IBridgeLogForwarder, FileBridgeLogForwarder>();
         services.AddSingleton<IBridgeLogSink, BridgeLogSink>();
         services.AddSingleton<ILogLevelSettings>(_ => new LogLevelSettings { MinimumLevel = minimumLevel });
         services.AddSingleton<ILogger>(serviceProvider =>

@@ -62,12 +62,23 @@ The bridge is intentionally conservative at this stage:
 
 Current logging behavior is intentionally boundary-focused for triage:
 
+- App, VSIX, and MCP host configuration now flow through a shared `IConfiguration` bootstrap path with environment variables, prefixed environment variables, `appsettings.json`, and `%LocalAppData%\VsMcpBridge\appsettings.user.json` loaded in that order
 - `VsMcpBridge.App` supports configuration-driven logging providers and appends provider-fed entries to the shared MVP/VM UI log surface
 - App chat requests (including OpenAI mode) log request start/completion/failure with correlation IDs and elapsed timing
 - `VsMcpBridge.McpServer` logs MCP chat-tool boundaries and named-pipe client request boundaries with command, request id, success state, and elapsed timing
 - VSIX prompt-box chat requests now have host-side request handling through `IChatRequestService` with OpenAI/fake-mode compatibility behavior
 - `PipeServer` logs dispatch boundaries with command/request id and elapsed timing, plus explicit cancel/failure paths
 - `VsMcpBridge.Vsix` service operations log start/completion/failure with operation-level correlation and elapsed timing for the current read surface
+
+Logging intent:
+
+- `Trace` is the verbose class/process flow level and should make decoupled host/process boundaries diagnosable rather than opaque
+- `Information` is the default user-facing informational level
+- callers should avoid redundant duplicate `Trace` plus `Information` entries for the same event and instead choose the level that best matches the audience
+- `Warning` and `Error` are reserved for actionable failure or exceptional conditions
+- when Trace is enabled, Trace-level output should also be surfaced through the shared MVP/VM UI log view so it remains visible during rapid AI-assisted triage
+- `StdErr` is the preferred out-of-band diagnostic channel for transport-safe external capture because it does not corrupt MCP stdio JSON traffic
+- the shared bridge log sink now includes a forwarding seam, initially backed by file output, so SQL-backed or other persistence targets can later be added without changing core logging callers
 
 Diagnostic sinks remain transport-safe:
 

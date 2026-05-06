@@ -163,6 +163,17 @@ dotnet build .\VsMcpBridge.App\VsMcpBridge.App.csproj
 
 ### Logging Configuration (Diagnostic Mode)
 
+The App, VSIX, and MCP host now share the same configuration bootstrap model through `IConfiguration`.
+
+Current shared configuration source order is:
+
+- environment variables
+- `VSMCPBRIDGE_`-prefixed environment variables
+- `appsettings.json`
+- `%LocalAppData%\VsMcpBridge\appsettings.user.json`
+
+Because later configuration sources override earlier ones, the user settings file is currently the highest-precedence shared source.
+
 The App and VSIX hosts support switchable logging output with shared UI log surfacing.
 
 App configuration key (from `VsMcpBridge.App/appsettings.json`):
@@ -177,8 +188,12 @@ Environment variable overrides use `VSMCPBRIDGE_` with `__` separators:
 
 Notes:
 
-- logs are still surfaced in the shared MVP/VM UI log view through the shared log sink
-- selecting `StdErr` writes log lines to standard error for external diagnostic capture
+- `Information` is the default user-facing level and should be the primary mechanism used to surface information to the user
+- `Trace` is intended for verbose class/process flow so the decoupled host/runtime boundaries do not become a black box during triage
+- avoid redundant paired `Trace` and `Information` messages for the same event; log at the level that best matches the purpose
+- logs are still surfaced in the shared MVP/VM UI log view through the shared log sink, and Trace-level output should be surfaced there when Trace is enabled so it is visible during AI-assisted triage
+- selecting `StdErr` writes transport-safe out-of-band diagnostics to standard error and is the preferred channel for information that must not pollute MCP stdio JSON traffic
+- Warning and Error should be used for actionable failures or exceptional conditions
 
 App chat/OpenAI configuration keys:
 
@@ -188,7 +203,7 @@ App chat/OpenAI configuration keys:
 - `Adventures:ChatEngine:OpenAI:Model` (preferred)
 - `Adventures:ChatEngine:Model` (compatibility fallback)
 
-VSIX chat/OpenAI configuration keys are read from environment variables:
+VSIX and MCP host chat/OpenAI configuration keys now participate in the shared `IConfiguration` bootstrap path and may come from any configured source:
 
 - `Adventures__ChatEngine__Provider`
 - `Adventures__ChatEngine__OpenAI__UseRealApi`
@@ -196,11 +211,10 @@ VSIX chat/OpenAI configuration keys are read from environment variables:
 - `Adventures__ChatEngine__OpenAI__Model` (preferred)
 - `Adventures__ChatEngine__Model` (compatibility fallback)
 
-App configuration resolution order includes:
+Logging design direction:
 
-- `appsettings.json`
-- unprefixed environment variables (for example `Adventures__ChatEngine__OpenAI__ApiKey`)
-- `VSMCPBRIDGE_`-prefixed environment overrides
+- each environment may resolve its own appropriate logger implementation, but configuration should drive provider selection rather than host-specific ad hoc environment reads
+- the shared logging pipeline now includes a persistence/forwarding seam, initially backed by a file forwarder, so file-backed or UI-backed behavior can later be extended to SQL-backed sinks without changing core callers
 
 Operational logging note:
 
