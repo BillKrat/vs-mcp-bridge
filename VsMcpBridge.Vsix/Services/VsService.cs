@@ -1,5 +1,6 @@
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
@@ -618,10 +619,12 @@ internal sealed class VsixChatRequestService : IChatRequestService
     private const string ChatCompletionsEndpoint = "https://api.openai.com/v1/chat/completions";
 
     private static readonly HttpClient HttpClient = new();
+    private readonly IConfiguration _configuration;
     private readonly ILogger _logger;
 
-    public VsixChatRequestService(ILogger logger)
+    public VsixChatRequestService(IConfiguration configuration, ILogger logger)
     {
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -671,14 +674,9 @@ internal sealed class VsixChatRequestService : IChatRequestService
             : text;
     }
 
-    private static string? GetConfigurationValue(string key)
+    private string? GetConfigurationValue(string key)
     {
-        var envKey = key.Replace(':', '_').Replace("__", "_").Replace("_", "__");
-        var prefixedKey = "VSMCPBRIDGE_" + envKey;
-
-        return Environment.GetEnvironmentVariable(prefixedKey)
-            ?? Environment.GetEnvironmentVariable(envKey)
-            ?? Environment.GetEnvironmentVariable(key);
+        return this._configuration[key];
     }
 
     private static string? ExtractMessageContent(string responseContent)
