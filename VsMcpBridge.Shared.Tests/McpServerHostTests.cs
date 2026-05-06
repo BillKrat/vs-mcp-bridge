@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -15,6 +16,8 @@ using System.Threading.Tasks;
 using VsMcpBridge.McpServer;
 using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.McpServer.Pipe;
+using VsMcpBridge.Shared.Configuration;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -203,6 +206,45 @@ public sealed class McpServerHostTests
         Assert.Equal("test-model", configuration["Adventures:ChatEngine:OpenAI:Model"]);
         Assert.Equal("2", configuration["Adventures:ChatEngine:Retry:MaxAttempts"]);
         Assert.NotNull(chatEngine);
+    }
+
+    [Fact]
+    public void Shared_configuration_bootstrap_allows_host_configuration_sources_to_override_in_expected_order()
+    {
+        var basePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(basePath);
+
+        var userSettingsPath = BridgeConfigurationFactory.GetDefaultUserSettingsFilePath();
+        var userSettingsDirectory = Path.GetDirectoryName(userSettingsPath)!;
+        Directory.CreateDirectory(userSettingsDirectory);
+
+        var environmentVariableName = $"{ConfigurationKeys.VsMcpBridgeEnvironmentPrefix}Adventures__ChatEngine__Provider";
+        var originalEnvironmentValue = Environment.GetEnvironmentVariable(environmentVariableName);
+
+        try
+        {
+            File.WriteAllText(Path.Combine(basePath, ConfigurationKeys.AppSettingsFileName), "{\"Adventures\":{\"ChatEngine\":{\"Provider\":\"FromAppSettings\"}}}");
+            File.WriteAllText(userSettingsPath, "{\"Adventures\":{\"ChatEngine\":{\"Provider\":\"FromUserSettings\"}}}");
+            Environment.SetEnvironmentVariable(environmentVariableName, "FromEnvironment");
+
+            var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+            {
+                ContentRootPath = basePath,
+                Args = []
+            });
+
+            BridgeConfigurationFactory.AddDefaultSources(builder.Configuration, userSettingsPath);
+
+            Assert.Equal("FromUserSettings", builder.Configuration[ConfigurationKeys.ChatEngineProvider]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(environmentVariableName, originalEnvironmentValue);
+            if (Directory.Exists(basePath))
+                Directory.Delete(basePath, recursive: true);
+            if (File.Exists(userSettingsPath))
+                File.Delete(userSettingsPath);
+        }
     }
 
     private static async Task WithClearedChatEngineEnvironmentAsync(Func<Task> action)
