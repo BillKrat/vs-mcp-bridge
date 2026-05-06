@@ -34,7 +34,7 @@ internal static class BridgeServiceCollectionExtensions
             var logSink = serviceProvider.GetRequiredService<IBridgeLogSink>();
             ILoggerProvider primaryProvider;
 
-            if (string.Equals(provider, "StdErr", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(provider, ConfigurationKeys.LoggingProviderStdErr, StringComparison.OrdinalIgnoreCase))
                 primaryProvider = new StdErrLoggerProvider(settings);
             else
                 primaryProvider = new ActivityLogBridgeLoggerProvider(settings);

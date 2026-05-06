@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using VsMcpBridge.Shared.Composition;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.MvpVm;
@@ -960,7 +961,7 @@ public sealed class MvpVmTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["VsMcpBridge:Audit:LogRawPromptResponse"] = "true"
+                [ConfigurationKeys.AuditLogRawPromptResponse] = "true"
             })
             .Build();
         var viewModel = new LogToolWindowViewModel();

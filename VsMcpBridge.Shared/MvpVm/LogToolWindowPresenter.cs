@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
@@ -15,8 +16,6 @@ namespace VsMcpBridge.Shared.MvpVm
     public class LogToolWindowPresenter : ILogToolWindowPresenter
     {
         private const string InitialLogMessage = "VS MCP Bridge log will appear here.";
-        private const string RawPromptResponseAuditConfigurationKey = "VsMcpBridge:Audit:LogRawPromptResponse";
-
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private readonly IThreadHelper _threadHelper;
@@ -39,7 +38,7 @@ namespace VsMcpBridge.Shared.MvpVm
             _threadHelper = threadHelper;
             _logSink = _serviceProvider.GetService<IBridgeLogSink>();
             _chatRequestService = _serviceProvider.GetService<IChatRequestService>();
-            _logRawPromptResponse = TryGetBooleanConfiguration(_serviceProvider, RawPromptResponseAuditConfigurationKey);
+            _logRawPromptResponse = TryGetBooleanConfiguration(_serviceProvider, ConfigurationKeys.AuditLogRawPromptResponse);
             _proposalDraftState = _serviceProvider.GetService<IProposalDraftState>();
             _proposalFilePicker = _serviceProvider.GetService<IProposalFilePicker>();
             LogToolWindowViewModel = logToolWindowViewModel;

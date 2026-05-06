@@ -35,7 +35,7 @@ public static class McpServerHost
 
         string? provider = builder.Configuration[ConfigurationKeys.ChatEngineProvider];
 
-        if (string.Equals(provider, "OpenAI", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(provider, ConfigurationKeys.ChatEngineProviderOpenAi, StringComparison.OrdinalIgnoreCase))
         {
             services.AddOpenAiProvider(builder.Configuration);
             return;
