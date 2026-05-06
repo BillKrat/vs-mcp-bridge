@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
@@ -14,14 +15,16 @@ namespace VsMcpBridge.Vsix.Composition;
 
 internal static class BridgeServiceCollectionExtensions
 {
-    internal static IServiceCollection AddVsMcpBridgeServices(this IServiceCollection services, IAsyncPackage package)
+    internal static IServiceCollection AddVsMcpBridgeServices(this IServiceCollection services, IAsyncPackage package, IConfiguration configuration)
     {
-        var minimumLevel = ResolveMinimumLevel(Environment.GetEnvironmentVariable(ConfigurationKeys.VsMcpBridgeLoggingMinimumLevelEnvironmentVariable));
-        var provider = Environment.GetEnvironmentVariable(ConfigurationKeys.VsMcpBridgeLoggingProviderEnvironmentVariable);
+        var minimumLevel = ResolveMinimumLevel(configuration[ConfigurationKeys.LoggingMinimumLevel]);
+        var provider = configuration[ConfigurationKeys.LoggingProvider];
 
         services.AddSingleton(package);
         if (package is AsyncPackage asyncPackage)
             services.AddSingleton(asyncPackage);
+
+        services.AddSingleton(configuration);
 
         services.AddSingleton<IBridgeLogSink, BridgeLogSink>();
         services.AddSingleton<ILogLevelSettings>(_ => new LogLevelSettings { MinimumLevel = minimumLevel });

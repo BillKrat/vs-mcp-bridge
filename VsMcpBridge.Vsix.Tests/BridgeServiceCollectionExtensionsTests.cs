@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using VsMcpBridge.Shared.Composition;
@@ -20,13 +21,15 @@ public sealed class BridgeServiceCollectionExtensionsTests
     {
         var package = TestPackageFactory.CreatePackage();
         var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
 
-        services.AddVsMcpBridgeServices(package);
+        services.AddVsMcpBridgeServices(package, configuration);
         services.AddMvpVmServices();
         using var provider = services.BuildServiceProvider();
 
         Assert.Same(package, provider.GetRequiredService<IAsyncPackage>());
         Assert.Same(package, provider.GetRequiredService<AsyncPackage>());
+        Assert.Same(configuration, provider.GetRequiredService<IConfiguration>());
         Assert.NotNull(provider.GetRequiredService<ILogger>());
         Assert.NotNull(provider.GetRequiredService<IBridgeLogSink>());
         Assert.IsType<FileUnhandledExceptionSink>(provider.GetRequiredService<IUnhandledExceptionSink>());

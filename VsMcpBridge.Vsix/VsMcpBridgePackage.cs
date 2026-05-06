@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using VsMcpBridge.Shared.Configuration;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
@@ -30,6 +32,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
     private IPipeServer? _pipeServer;
     private IUnhandledExceptionSink? _exceptionSink;
     private ILogger? _logger;
+    private IConfiguration? _configuration;
 
     public ILogger Logger { get { return _logger!; } }
     public Microsoft.Extensions.DependencyInjection.ServiceProvider ServiceProvider { get { return _serviceProvider!; } }
@@ -45,8 +48,9 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             bootstrapLogger.LogTrace("Building VS MCP Bridge service collection.");
+            _configuration = BridgeConfigurationFactory.Create(AppContext.BaseDirectory);
             _serviceProvider = new ServiceCollection()
-                .AddVsMcpBridgeServices(this)
+                .AddVsMcpBridgeServices(this, _configuration)
                 .AddMvpVmServices()
                 .BuildServiceProvider();
 

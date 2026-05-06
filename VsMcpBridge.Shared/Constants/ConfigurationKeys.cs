@@ -2,6 +2,9 @@ namespace VsMcpBridge.Shared.Constants;
 
 public static class ConfigurationKeys
 {
+    public const string AppSettingsFileName = "appsettings.json";
+    public const string UserSettingsFileName = "appsettings.user.json";
+
     public const string LoggingProvider = "VsMcpBridge:Logging:Provider";
     public const string LoggingMinimumLevel = "VsMcpBridge:Logging:MinimumLevel";
 
