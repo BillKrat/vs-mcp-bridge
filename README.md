@@ -6,6 +6,7 @@ AI session entry point:
 
 - for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
 - for ending or pausing an AI-assisted session cleanly, use [AI_STOP.md](AI_STOP.md)
+- for the repeatable App-host `ping` trace workflow and its durable artifacts, use [docs/app-host-ping-trace-workflow.md](docs/app-host-ping-trace-workflow.md)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
 

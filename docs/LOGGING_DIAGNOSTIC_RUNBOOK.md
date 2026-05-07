@@ -25,6 +25,12 @@ Chat/OpenAI validation using the existing App request box:
 - `ping` with `Adventures:ChatEngine:Provider=OpenAI` and `UseRealApi=false` should return the OpenAI stub response
 - with `UseRealApi=true`, verify OpenAI request completion or non-success status with sanitized response summary in logs
 
+Repeatable App-host ping workflow:
+
+- use `docs/app-host-ping-trace-workflow.md` when you need a durable AI-runnable procedure for launching the App host, exercising `ping`, capturing correlated logs, generating a Mermaid sequence diagram, and comparing the observed flow against code
+- store dated artifacts under `artifacts/logs/`, `docs/diagrams/`, and `docs/blog-drafts/` rather than overwriting prior runs
+- keep App-host observations separate from inferred or separately observed VSIX-host paths
+
 Expected evidence:
 - startup messages from presenter/service initialization
 - request start + request completion lines

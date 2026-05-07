@@ -60,14 +60,14 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-06-logging-ux-and-configuration-migration-handoff.md`
+- `docs/session-handoffs/2026-05-07-app-host-ping-trace-handoff.md`
 
 That handoff currently captures:
 
-- the completed Trace logging and OpenAI ping diagnostics slice
-- the completed first VSIX runtime `Environment` to `IConfiguration` migration slice
-- the current VSIX logging UX issue where disabled raw prompt/response logging still surfaces noisy placeholder lines in the tool window
-- the suggested next step to fix that UX before continuing the broader migration inventory
+- the completed prompt-flow request-id propagation slice across presenter and host chat services
+- the validated App-host end-to-end `ping -> pong` trace run with durable artifacts
+- the repeatable workflow for AI-driven end-to-end trace capture, Mermaid generation, and code comparison
+- the suggested next step to repeat or extend the same process for future host or provider slices
 
 ## Current Working Guidance
 
@@ -96,7 +96,7 @@ A good session bootstrap prompt is:
 
 A good resume prompt is:
 
-- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-06-logging-ux-and-configuration-migration-handoff.md.`
+- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-07-app-host-ping-trace-handoff.md.`
 
 A good closeout prompt is:
 

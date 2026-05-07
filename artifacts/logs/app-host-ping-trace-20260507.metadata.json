@@ -1,0 +1,33 @@
+{
+  "date": "2026-05-07",
+  "repoRoot": "Y:\\vs-mcp-bridge",
+  "branch": "feature/approval-apply-ui-slice",
+  "commit": "2ed6e93",
+  "host": "VsMcpBridge.App",
+  "interactionMode": "UI automation against live WPF window",
+  "logging": {
+    "provider": "StdErr",
+    "minimumLevel": "Trace"
+  },
+  "chatEngine": {
+    "provider": "Fake",
+    "useRealApi": false,
+    "apiKeyConfigured": false,
+    "modelConfigured": true
+  },
+  "request": {
+    "prompt": "ping",
+    "requestId": "6c4940351f3a436da5392a3c7092b98e",
+    "visibleResult": "pong"
+  },
+  "artifacts": {
+    "diagram": "docs/diagrams/app-host-ping-trace-20260507.mmd",
+    "log": "artifacts/logs/app-host-ping-trace-20260507.log",
+    "blogDraft": "docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md"
+  },
+  "notes": [
+    "This run validates the App-host path only.",
+    "The request was exercised through the live WPF window using automation rather than a human click.",
+    "Observed presenter and App chat-service logs shared a single correlation id across the request flow."
+  ]
+}

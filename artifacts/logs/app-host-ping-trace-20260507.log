@@ -1,0 +1,23 @@
+Observed App-host ping trace run
+Date: 2026-05-07
+Branch: feature/approval-apply-ui-slice
+Commit: 2ed6e93
+Host: VsMcpBridge.App
+Interaction mode: UI automation against live WPF window
+Provider: Fake
+RequestId: 6c4940351f3a436da5392a3c7092b98e
+Prompt: ping
+Visible result: pong
+
+Observed log transcript:
+[2026-05-07T11:19:10.6369341Z] [Information] [VsMcpBridge] VS MCP Bridge tool window Initialized.
+[2026-05-07T11:19:09.9223544Z] [Trace] [VsMcpBridge] Waiting for pipe client connection on 'VsMcpBridge'.
+[2026-05-07T11:20:39.9134222Z] [Trace] [VsMcpBridge] Prompt-box request submission started [RequestId=6c4940351f3a436da5392a3c7092b98e] [RequestLength=4] [SelectedFileCount=0].
+[2026-05-07T11:20:39.9167712Z] [Trace] [VsMcpBridge] Prompt-box request dispatch evaluating route [RequestId=6c4940351f3a436da5392a3c7092b98e] [NormalizedPrompt=ping] [HasChatRequestService=True] [SelectedFileCount=0].
+[2026-05-07T11:20:39.9172572Z] [Trace] [VsMcpBridge] Prompt-box request routed to chat request service [RequestId=6c4940351f3a436da5392a3c7092b98e] [RequestLength=4].
+[2026-05-07T11:20:39.9283188Z] [Information] [VsMcpBridge] App chat request started [RequestId=6c4940351f3a436da5392a3c7092b98e] [Provider=Fake] [MessageLength=4].
+[2026-05-07T11:20:39.9296949Z] [Information] [VsMcpBridge] App chat request completed [RequestId=6c4940351f3a436da5392a3c7092b98e] [Provider=Fake] [ElapsedMs=0] [ResponseLength=4].
+[2026-05-07T11:20:39.9307031Z] [Trace] [VsMcpBridge] Prompt-box chat request service returned response [RequestId=6c4940351f3a436da5392a3c7092b98e] [ResponseLength=4].
+[2026-05-07T11:20:39.9313175Z] [Trace] [VsMcpBridge] Prompt-box response is being applied to the visible UI state [RequestId=6c4940351f3a436da5392a3c7092b98e] [ResponseLength=4] [HasContent=True].
+[2026-05-07T11:20:39.9323367Z] [Trace] [VsMcpBridge] Prompt-box response application completed [RequestId=6c4940351f3a436da5392a3c7092b98e] [StatusMessageLength=4] [IsRequestInProgress=False].
+[2026-05-07T11:20:39.9335226Z] [Trace] [VsMcpBridge] Prompt-box request handled through request routing path [RequestId=6c4940351f3a436da5392a3c7092b98e].

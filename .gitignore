@@ -73,6 +73,12 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+!artifacts/
+artifacts/*
+!artifacts/logs/
+artifacts/logs/*
+!artifacts/logs/app-host-ping-trace-20260507.log
+!artifacts/logs/app-host-ping-trace-20260507.metadata.json
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -105,6 +111,7 @@ StyleCopReport.xml
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+!artifacts/logs/app-host-ping-trace-20260507.log
 *.tlog
 *.vspscc
 *.vssscc
@@ -433,3 +440,16 @@ VsMcpBridge.Vsix/obj/
 **/.DS_Store
 .cursor/
 /docs
+!/docs/
+/docs/*
+!/docs/app-host-ping-trace-workflow.md
+!/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md
+!/docs/session-handoffs/
+/docs/session-handoffs/*
+!/docs/session-handoffs/2026-05-07-app-host-ping-trace-handoff.md
+!/docs/diagrams/
+/docs/diagrams/*
+!/docs/diagrams/app-host-ping-trace-20260507.mmd
+!/docs/blog-drafts/
+/docs/blog-drafts/*
+!/docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md

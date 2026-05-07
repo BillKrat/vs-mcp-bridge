@@ -1,0 +1,28 @@
+sequenceDiagram
+	actor User
+	participant UI as App WPF Tool Window
+	participant Presenter as LogToolWindowPresenter
+	participant Chat as IChatRequestService
+	participant AppChat as AppChatRequestService
+	participant VM as LogToolWindowViewModel
+
+	User->>UI: Enter "ping" and click Send
+	UI->>Presenter: SubmitProposalCommand
+	Presenter->>Presenter: SubmitProposalAsync()
+	Presenter->>Presenter: Log Trace "request submission started"\n[RequestId=6c4940351f3a436da5392a3c7092b98e]
+	Presenter->>VM: LastSubmittedRequestText="ping"\nIsRequestInProgress=true
+	Presenter->>Presenter: TryDispatchPromptRequestAsync("ping")
+	Presenter->>Presenter: Log Trace "dispatch evaluating route"
+	Presenter->>Chat: SendAsync("ping", requestId)
+	Chat->>AppChat: SendAsync("ping", requestId)
+	AppChat->>AppChat: Log Information "chat request started"
+	AppChat->>AppChat: Fake provider branch returns "pong"
+	AppChat->>AppChat: Log Information "chat request completed"
+	AppChat-->>Presenter: "pong"
+	Presenter->>Presenter: Log Trace "chat request service returned response"
+	Presenter->>Presenter: CompletePromptRequest("pong", requestId)
+	Presenter->>Presenter: Log Trace "response is being applied"
+	Presenter->>VM: IsRequestInProgress=false\nStatusMessage="pong"
+	Presenter->>Presenter: Log Trace "response application completed"
+	Presenter->>Presenter: Log Trace "request handled through request routing path"
+	VM-->>UI: Visible result shows "pong"
