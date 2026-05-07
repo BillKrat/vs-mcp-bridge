@@ -715,8 +715,7 @@ public sealed class MvpVmTests
         Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
-        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
-        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("what is the active file", viewModel.LogText, StringComparison.Ordinal);
         Assert.DoesNotContain("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
     }
@@ -878,7 +877,7 @@ public sealed class MvpVmTests
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Contains("Solution projects:", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Contains("- VsMcpBridge", viewModel.StatusMessage, StringComparison.Ordinal);
-        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("list solution projects", viewModel.LogText, StringComparison.Ordinal);
     }
 
@@ -899,7 +898,7 @@ public sealed class MvpVmTests
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Contains("Error list:", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Contains("Warning: Something happened.", viewModel.StatusMessage, StringComparison.Ordinal);
-        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("show error list", viewModel.LogText, StringComparison.Ordinal);
     }
 
@@ -918,8 +917,7 @@ public sealed class MvpVmTests
         Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Equal("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", viewModel.StatusMessage);
-        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
-        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("> ping", viewModel.LogText, StringComparison.Ordinal);
         Assert.DoesNotContain("Unsupported request.", viewModel.LogText, StringComparison.Ordinal);
     }
@@ -935,7 +933,7 @@ public sealed class MvpVmTests
 
         viewModel.SubmitProposalCommand.Execute(null);
 
-        Assert.Contains("Prompt submitted. Raw prompt logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("what is the active file", viewModel.LogText, StringComparison.Ordinal);
     }
 
@@ -950,9 +948,35 @@ public sealed class MvpVmTests
 
         viewModel.SubmitProposalCommand.Execute(null);
 
-        Assert.Contains("Response received. Raw response logging is disabled.", viewModel.LogText, StringComparison.Ordinal);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
         Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_chat_request_surfaces_ping_response_in_status_without_placeholder_log_noise()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [ConfigurationKeys.AuditLogRawPromptResponse] = "false"
+            })
+            .Build();
+        var viewModel = new LogToolWindowViewModel();
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton<IVsService>(new StubVsService())
+            .AddSingleton<IConfiguration>(configuration)
+            .AddSingleton<IChatRequestService>(new StubChatRequestService("pong"))
+            .BuildServiceProvider();
+        _ = new LogToolWindowPresenter(serviceProvider, new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "ping";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal("pong", viewModel.StatusMessage);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
     }
 
     [Fact]
@@ -975,6 +999,12 @@ public sealed class MvpVmTests
         Assert.Contains("[audit] > what is the active file", viewModel.LogText, StringComparison.Ordinal);
         Assert.Contains("[audit] Active file: active.cs", viewModel.LogText, StringComparison.Ordinal);
     }
+
+internal sealed class StubChatRequestService(string response) : IChatRequestService
+{
+    public System.Threading.Tasks.Task<string> SendAsync(string message, System.Threading.CancellationToken cancellationToken = default)
+        => System.Threading.Tasks.Task.FromResult(response);
+}
 
     [Fact]
     public void SubmitProposalCommand_when_selected_file_has_no_change_clears_working_and_surfaces_no_op_status()

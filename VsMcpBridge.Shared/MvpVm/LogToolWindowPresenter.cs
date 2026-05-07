@@ -390,16 +390,14 @@ namespace VsMcpBridge.Shared.MvpVm
 
         private void AppendPromptActivityEntry(string submittedRequestText)
         {
-            AppendActivityEntry(_logRawPromptResponse
-                ? $"[audit] > {submittedRequestText}"
-                : "Prompt submitted. Raw prompt logging is disabled.");
+            if (_logRawPromptResponse)
+                AppendActivityEntry($"[audit] > {submittedRequestText}");
         }
 
         private void AppendResponseActivityEntry(string responseText)
         {
-            AppendActivityEntry(_logRawPromptResponse
-                ? $"[audit] {responseText}"
-                : "Response received. Raw response logging is disabled.");
+            if (_logRawPromptResponse)
+                AppendActivityEntry($"[audit] {responseText}");
         }
 
         private static bool TryGetBooleanConfiguration(IConfiguration? configuration, string key)
