@@ -1,13 +1,13 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
-using VsMcpBridge.Shared.Configuration;
 using VsMcpBridge.Shared.Composition;
+using VsMcpBridge.Shared.Configuration;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Vsix.Composition;
@@ -49,6 +49,7 @@ public sealed class VsMcpBridgePackage : AsyncPackage, IAsyncPackage
 
             bootstrapLogger.LogTrace("Building VS MCP Bridge service collection.");
             _configuration = BridgeConfigurationFactory.Create(AppContext.BaseDirectory);
+
             _serviceProvider = new ServiceCollection()
                 .AddVsMcpBridgeServices(this, _configuration)
                 .AddMvpVmServices()

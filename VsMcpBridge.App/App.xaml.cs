@@ -1,9 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using System.Windows;
 using VsMcpBridge.App.Composition;
-using VsMcpBridge.Shared.Configuration;
 using VsMcpBridge.Shared.Composition;
+using VsMcpBridge.Shared.Configuration;
 using VsMcpBridge.Shared.Interfaces;
 
 namespace VsMcpBridge.App;
@@ -21,7 +20,6 @@ public partial class App : Application
         var configuration = BridgeConfigurationFactory.Create(AppContext.BaseDirectory);
 
         _serviceProvider = new ServiceCollection()
-            .AddSingleton<IConfiguration>(configuration)
             .AddVsMcpBridgeAppServices(configuration)
             .AddMvpVmServices()
             .BuildServiceProvider();

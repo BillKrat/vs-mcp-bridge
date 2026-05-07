@@ -15,8 +15,9 @@ internal static class BridgeServiceCollectionExtensions
     internal static IServiceCollection AddVsMcpBridgeAppServices(this IServiceCollection services, IConfiguration configuration)
     {
         var minimumLevel = ResolveMinimumLevel(configuration[ConfigurationKeys.LoggingMinimumLevel]);
-        var provider = configuration[ConfigurationKeys.LoggingProvider];
 
+        var provider = configuration[ConfigurationKeys.LoggingProvider];
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IBridgeLogForwarder, FileBridgeLogForwarder>();
         services.AddSingleton<IBridgeLogSink, BridgeLogSink>();
         services.AddSingleton<AppSessionState>();
