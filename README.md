@@ -2,6 +2,11 @@
 
 `vs-mcp-bridge` is a local integration that exposes selected IDE and workspace state to AI tooling through the Model Context Protocol (MCP).
 
+AI session entry point:
+
+- for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
+- for ending or pausing an AI-assisted session cleanly, use [AI_STOP.md](AI_STOP.md)
+
 The solution is split into host-specific runtimes plus shared infrastructure:
 
 - `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
@@ -194,6 +199,7 @@ Notes:
 - logs are still surfaced in the shared MVP/VM UI log view through the shared log sink, and Trace-level output should be surfaced there when Trace is enabled so it is visible during AI-assisted triage
 - selecting `StdErr` writes transport-safe out-of-band diagnostics to standard error and is the preferred channel for information that must not pollute MCP stdio JSON traffic
 - Warning and Error should be used for actionable failures or exceptional conditions
+- current known VSIX chat UX gap: when raw prompt/response audit logging is disabled, the tool window still surfaces placeholder lines such as `Prompt submitted. Raw prompt logging is disabled.` and `Response received. Raw response logging is disabled.`; this is currently poor user-facing output and should be redesigned or suppressed rather than treated as durable operator log value
 
 App chat/OpenAI configuration keys:
 

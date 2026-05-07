@@ -45,6 +45,12 @@ Then:
    - tool window log text updates in real time
    - provider output lines include request/proposal correlation data
 
+Current caution from manual validation on 2026-05-06:
+
+- if raw prompt/response audit logging is disabled, the tool window may still show placeholder lines such as `Prompt submitted. Raw prompt logging is disabled.` and `Response received. Raw response logging is disabled.`
+- treat those lines as known UX noise for now; they are not the desired long-term operator-facing behavior
+- when collecting artifacts, distinguish these placeholder messages from the actual boundary logs used to localize failures
+
 ## 3) MCP hang localization checklist
 
 When reproducing ping/pong or chat startup hangs, capture the last observed stage:

@@ -8,7 +8,7 @@ This document is the living technical reference for `vs-mcp-bridge`.
 
 Its job is to stay grounded in the repository as it exists now, not in an aspirational future architecture.
 
-For fast onboarding, start with `README.md`, `docs/ARCHITECTURE.md`, and `docs/gated_turn-based_workflow-Codex.txt`.
+For fast onboarding, start with `AI_START.md`, then continue with `README.md`, `docs/ARCHITECTURE.md`, and `docs/gated_turn-based_workflow-Codex.txt`.
 
 ## Executive Summary
 
@@ -145,6 +145,13 @@ Current logging direction:
 - `StdErr` is the preferred transport-safe out-of-band channel for diagnostics that must not pollute MCP stdio traffic
 - when Trace is enabled, Trace-level output should also surface through the shared UI log view so it is visible to the operator and AI tools during investigation
 - the shared logging pipeline now includes an abstraction seam that can forward trace and possibly information events to additional persistence targets such as SQL; the current first implementation step is a file-backed forwarder
+
+Current observed gap from manual validation on 2026-05-06:
+
+- in the VSIX tool window chat surface, disabling raw prompt/response logging still emits placeholder lines indicating that prompt or response logging is disabled
+- those lines are currently surfacing in front of or alongside useful OpenAI request boundary logs and are not acceptable as user-facing output in their current form
+- the logging direction remains valid, but the UX treatment of disabled raw audit logging needs a focused follow-up slice
+- the next session should address that UX issue before broadening the logging surface further, then continue the Environment-to-IConfiguration migration inventory
 
 ## Current Technical Priorities
 

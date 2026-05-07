@@ -80,6 +80,12 @@ Logging intent:
 - `StdErr` is the preferred out-of-band diagnostic channel for transport-safe external capture because it does not corrupt MCP stdio JSON traffic
 - the shared bridge log sink now includes a forwarding seam, initially backed by file output, so SQL-backed or other persistence targets can later be added without changing core logging callers
 
+Current known UX gap:
+
+- in the VSIX prompt-box chat flow, disabling raw prompt/response audit logging currently still surfaces placeholder user-facing lines indicating that raw prompt/response logging is disabled
+- manual testing on 2026-05-06 showed those placeholder lines mixed into the tool window output around otherwise useful OpenAI request boundary logs, producing noisy and low-value operator output
+- this is currently a UX issue, not an architectural change in logging direction; the next follow-up should decide whether those messages belong in status text, a different surface, or should be suppressed entirely
+
 Diagnostic sinks remain transport-safe:
 
 - MCP server file diagnostics: `%LocalAppData%\VsMcpBridge\Logs\McpServer\pipe-client.log`

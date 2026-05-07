@@ -1,0 +1,103 @@
+# AI Start
+
+This is the canonical entry point for starting or resuming an AI-assisted session in `vs-mcp-bridge`.
+
+If you are an AI assistant starting fresh, read this file first.
+
+For session closeout, use `AI_STOP.md`.
+
+## Purpose
+
+Use this document to quickly establish the minimum reliable context for a productive session without assuming `README.md` alone contains every current handoff detail.
+
+This file does not replace the detailed docs. It tells you what to read next and in what order.
+
+## Fast Start Rules
+
+1. Treat repository files as the source of truth.
+2. Prefer current docs and current code over prior chat history.
+3. For a new session, start with the core grounding set below.
+4. For a resumed session, read the latest relevant handoff in `docs/session-handoffs/` after the core grounding set.
+5. Before changing code, confirm whether there is an active handoff or recent manual-test finding that changes priorities.
+
+## Core Grounding Set
+
+Read these first in order:
+
+1. `README.md`
+2. `docs/ARCHITECTURE.md`
+3. `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
+4. `docs/CODING_STANDARDS.md`
+5. `docs/AI_WORKFLOW.md`
+
+Use these as needed after that:
+
+- `docs/MVPVM_OVERVIEW.md` for UI/presenter/viewmodel boundaries
+- `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
+- `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
+
+## New Session vs Resume Session
+
+### If starting a new session
+
+After reading the core grounding set:
+
+1. inspect `docs/session-handoffs/`
+2. read the most recent handoff that matches the current work area
+3. check the current branch and working tree state
+4. ask or infer the next concrete slice from the user request and current handoff state
+
+### If resuming an existing session
+
+After reading the core grounding set:
+
+1. read the handoff file explicitly named by the user, if one is provided
+2. otherwise, inspect `docs/session-handoffs/` and choose the most recent relevant handoff
+3. treat that handoff plus the current repository state as the active resume point
+4. verify whether any later commits or docs have changed the intended next step
+
+## Current Known Resume Point
+
+If the user does not specify another handoff, start here first:
+
+- `docs/session-handoffs/2026-05-06-logging-ux-and-configuration-migration-handoff.md`
+
+That handoff currently captures:
+
+- the completed Trace logging and OpenAI ping diagnostics slice
+- the completed first VSIX runtime `Environment` to `IConfiguration` migration slice
+- the current VSIX logging UX issue where disabled raw prompt/response logging still surfaces noisy placeholder lines in the tool window
+- the suggested next step to fix that UX before continuing the broader migration inventory
+
+## Current Working Guidance
+
+Keep these repo-specific themes in mind:
+
+- preserve the decoupled host pattern with no App↔VSIX coupling
+- prefer `IConfiguration`-based runtime configuration over scattered direct environment reads
+- keep logging useful to operators: `Trace` for verbose diagnostics, `Information` for meaningful user-facing output
+- do not remove problematic logging blindly; prefer disabling, suppressing, or relocating it until the correct surfacing is understood
+- keep MVP/VM boundaries intact in shared WPF UI work
+- keep MCP stdout clean and route diagnostics through approved channels
+
+## When Ending A Session
+
+Before ending a meaningful work session:
+
+1. update durable docs if behavior or priorities changed
+2. create or update a handoff in `docs/session-handoffs/` if the next session would benefit from a clean resume point
+3. record concrete next steps, validation status, and any known blockers
+
+## Suggested User Prompt
+
+A good session bootstrap prompt is:
+
+- `Read AI_START.md and use it to establish context before doing anything else.`
+
+A good resume prompt is:
+
+- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-06-logging-ux-and-configuration-migration-handoff.md.`
+
+A good closeout prompt is:
+
+- `Read AI_STOP.md and do the required closeout updates before ending the session.`
