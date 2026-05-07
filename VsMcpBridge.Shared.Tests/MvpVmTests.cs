@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Constants;
@@ -19,6 +20,18 @@ namespace VsMcpBridge.Shared.Tests;
 
 public sealed class MvpVmTests
 {
+    private static string ExtractRequestId(string message)
+    {
+        const string marker = "[RequestId=";
+        var startIndex = message.IndexOf(marker, StringComparison.Ordinal);
+        if (startIndex < 0)
+            return string.Empty;
+
+        startIndex += marker.Length;
+        var endIndex = message.IndexOf(']', startIndex);
+        return endIndex < 0 ? string.Empty : message[startIndex..endIndex];
+    }
+
     private static IServiceProvider CreateServiceProvider(IVsService vsService)
     {
         return new ServiceCollection()
@@ -1029,6 +1042,13 @@ public sealed class MvpVmTests
         Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box chat request service returned response", StringComparison.Ordinal));
         Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box response is being applied to the visible UI state", StringComparison.Ordinal));
         Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box response application completed", StringComparison.Ordinal));
+        var requestId = Assert.Single(logger.VerboseMessages
+            .Where(message => message.Contains("Prompt-box request submission started", StringComparison.Ordinal))
+            .Select(ExtractRequestId)
+            .Where(id => !string.IsNullOrWhiteSpace(id)));
+        Assert.All(
+            logger.VerboseMessages.Where(message => message.Contains("Prompt-box", StringComparison.Ordinal)),
+            message => Assert.Contains(requestId, message, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -1054,7 +1074,7 @@ public sealed class MvpVmTests
 
 internal sealed class StubChatRequestService(string response) : IChatRequestService
 {
-    public System.Threading.Tasks.Task<string> SendAsync(string message, System.Threading.CancellationToken cancellationToken = default)
+    public System.Threading.Tasks.Task<string> SendAsync(string message, string? requestId = null, System.Threading.CancellationToken cancellationToken = default)
         => System.Threading.Tasks.Task.FromResult(response);
 }
 

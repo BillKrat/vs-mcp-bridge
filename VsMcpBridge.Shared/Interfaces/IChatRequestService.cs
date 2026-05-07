@@ -5,5 +5,5 @@ namespace VsMcpBridge.Shared.Interfaces;
 
 public interface IChatRequestService
 {
-    Task<string> SendAsync(string message, CancellationToken cancellationToken = default);
+    Task<string> SendAsync(string message, string? requestId = null, CancellationToken cancellationToken = default);
 }

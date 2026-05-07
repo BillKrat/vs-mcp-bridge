@@ -28,16 +28,16 @@ internal sealed class AppChatRequestService : IChatRequestService
         _logger = logger;
     }
 
-    public async Task<string> SendAsync(string message, CancellationToken cancellationToken = default)
+    public async Task<string> SendAsync(string message, string? requestId = null, CancellationToken cancellationToken = default)
     {
-        var requestId = Guid.NewGuid().ToString("N");
+        var correlationId = string.IsNullOrWhiteSpace(requestId) ? Guid.NewGuid().ToString("N") : requestId;
         var stopwatch = Stopwatch.StartNew();
         var normalizedMessage = message?.Trim() ?? string.Empty;
         var provider = _configuration[ProviderConfigurationKey];
 
         _logger.LogInformation(
             "App chat request started [RequestId={RequestId}] [Provider={Provider}] [MessageLength={MessageLength}].",
-            requestId,
+            correlationId,
             string.IsNullOrWhiteSpace(provider) ? "(missing)" : provider,
             normalizedMessage.Length);
 
@@ -52,7 +52,7 @@ internal sealed class AppChatRequestService : IChatRequestService
                 stopwatch.Stop();
                 _logger.LogInformation(
                     "App chat request completed [RequestId={RequestId}] [Provider={Provider}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
-                    requestId,
+                    correlationId,
                     string.IsNullOrWhiteSpace(provider) ? "(missing)" : provider,
                     stopwatch.ElapsedMilliseconds,
                     fakeResponse.Length);
@@ -69,7 +69,7 @@ internal sealed class AppChatRequestService : IChatRequestService
                 stopwatch.Stop();
                 _logger.LogInformation(
                     "App chat request completed in OpenAI stub mode [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
-                    requestId,
+                    correlationId,
                     stopwatch.ElapsedMilliseconds,
                     stubResponse.Length);
                 return stubResponse;
@@ -83,7 +83,7 @@ internal sealed class AppChatRequestService : IChatRequestService
                 stopwatch.Stop();
                 _logger.LogWarning(
                     "App chat request missing OpenAI configuration [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ApiKeyConfigured={ApiKeyConfigured}] [ModelConfigured={ModelConfigured}].",
-                    requestId,
+                    correlationId,
                     stopwatch.ElapsedMilliseconds,
                     !string.IsNullOrWhiteSpace(apiKey),
                     !string.IsNullOrWhiteSpace(model));
@@ -111,7 +111,7 @@ internal sealed class AppChatRequestService : IChatRequestService
                 stopwatch.Stop();
                 _logger.LogWarning(
                     "App chat request failed with non-success OpenAI status [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [StatusCode={StatusCode}] [ResponseSummary={ResponseSummary}].",
-                    requestId,
+                    correlationId,
                     stopwatch.ElapsedMilliseconds,
                     (int)response.StatusCode,
                     CreateSafeSummary(responseContent));
@@ -124,7 +124,7 @@ internal sealed class AppChatRequestService : IChatRequestService
                 stopwatch.Stop();
                 _logger.LogWarning(
                     "App chat request completed without OpenAI message content [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
-                    requestId,
+                    correlationId,
                     stopwatch.ElapsedMilliseconds);
                 return "OpenAI response did not contain message content.";
             }
@@ -132,7 +132,7 @@ internal sealed class AppChatRequestService : IChatRequestService
             stopwatch.Stop();
             _logger.LogInformation(
                 "App chat request completed [RequestId={RequestId}] [Provider=OpenAI] [ElapsedMs={ElapsedMs}] [ResponseLength={ResponseLength}].",
-                requestId,
+                correlationId,
                 stopwatch.ElapsedMilliseconds,
                 text.Length);
             return text;
@@ -142,7 +142,7 @@ internal sealed class AppChatRequestService : IChatRequestService
             stopwatch.Stop();
             _logger.LogWarning(
                 "App chat request canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
-                requestId,
+                correlationId,
                 stopwatch.ElapsedMilliseconds);
             throw;
         }
@@ -152,7 +152,7 @@ internal sealed class AppChatRequestService : IChatRequestService
             _logger.LogError(
                 ex,
                 "App chat request failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [Provider={Provider}].",
-                requestId,
+                correlationId,
                 stopwatch.ElapsedMilliseconds,
                 string.IsNullOrWhiteSpace(provider) ? "(missing)" : provider);
             return "Chat request failed. Review bridge logs for details.";

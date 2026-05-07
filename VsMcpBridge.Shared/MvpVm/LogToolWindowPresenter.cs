@@ -334,7 +334,9 @@ namespace VsMcpBridge.Shared.MvpVm
         private async Task<bool> TryDispatchPromptRequestAsync(string submittedRequestText)
         {
             var normalizedPrompt = submittedRequestText.Trim().ToLowerInvariant();
-            _logger.LogTrace("Prompt-box request dispatch evaluating route [NormalizedPrompt={NormalizedPrompt}] [HasChatRequestService={HasChatRequestService}] [SelectedFileCount={SelectedFileCount}].",
+            var requestId = _activeManualRequestId;
+            _logger.LogTrace("Prompt-box request dispatch evaluating route [RequestId={RequestId}] [NormalizedPrompt={NormalizedPrompt}] [HasChatRequestService={HasChatRequestService}] [SelectedFileCount={SelectedFileCount}].",
+                requestId,
                 normalizedPrompt,
                 _chatRequestService != null,
                 _proposalFileDrafts.Count);
@@ -345,56 +347,58 @@ namespace VsMcpBridge.Shared.MvpVm
                 case "what is the active file":
                 case "show active file":
                     {
-                        _logger.LogTrace("Prompt-box request routed to built-in active file handler.");
+                        _logger.LogTrace("Prompt-box request routed to built-in active file handler [RequestId={RequestId}].", requestId);
                         var response = await vsService.GetActiveDocumentAsync();
-                        CompletePromptRequest(BuildActiveFileSummary(response));
+                        CompletePromptRequest(BuildActiveFileSummary(response), requestId);
                         return true;
                     }
                 case "list solution projects":
                     {
-                        _logger.LogTrace("Prompt-box request routed to built-in project list handler.");
+                        _logger.LogTrace("Prompt-box request routed to built-in project list handler [RequestId={RequestId}].", requestId);
                         var response = await vsService.ListSolutionProjectsAsync();
-                        CompletePromptRequest(BuildProjectListSummary(response));
+                        CompletePromptRequest(BuildProjectListSummary(response), requestId);
                         return true;
                     }
                 case "show error list":
                     {
-                        _logger.LogTrace("Prompt-box request routed to built-in error list handler.");
+                        _logger.LogTrace("Prompt-box request routed to built-in error list handler [RequestId={RequestId}].", requestId);
                         var response = await vsService.GetErrorListAsync();
-                        CompletePromptRequest(BuildErrorListSummary(response));
+                        CompletePromptRequest(BuildErrorListSummary(response), requestId);
                         return true;
                     }
                 default:
                     if (_chatRequestService != null)
                     {
-                        _logger.LogTrace("Prompt-box request routed to chat request service [RequestLength={RequestLength}].", submittedRequestText.Length);
-                        var response = await _chatRequestService.SendAsync(submittedRequestText);
-                        _logger.LogTrace("Prompt-box chat request service returned response [ResponseLength={ResponseLength}].", response?.Length ?? 0);
-                        CompletePromptRequest(response);
+                        _logger.LogTrace("Prompt-box request routed to chat request service [RequestId={RequestId}] [RequestLength={RequestLength}].", requestId, submittedRequestText.Length);
+                        var response = await _chatRequestService.SendAsync(submittedRequestText, requestId);
+                        _logger.LogTrace("Prompt-box chat request service returned response [RequestId={RequestId}] [ResponseLength={ResponseLength}].", requestId, response?.Length ?? 0);
+                        CompletePromptRequest(response, requestId);
                         return true;
                     }
 
                     if (_proposalFileDrafts.Count == 0)
                     {
-                        _logger.LogTrace("Prompt-box request had no matching built-in route or chat service and will return unsupported-request guidance.");
-                        CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.");
+                        _logger.LogTrace("Prompt-box request had no matching built-in route or chat service and will return unsupported-request guidance [RequestId={RequestId}].", requestId);
+                        CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", requestId);
                         return true;
                     }
 
-                    _logger.LogTrace("Prompt-box request will fall through to proposal submission workflow [SelectedFileCount={SelectedFileCount}].", _proposalFileDrafts.Count);
+                    _logger.LogTrace("Prompt-box request will fall through to proposal submission workflow [RequestId={RequestId}] [SelectedFileCount={SelectedFileCount}].", requestId, _proposalFileDrafts.Count);
                     return false;
             }
         }
 
-        private void CompletePromptRequest(string responseText)
+        private void CompletePromptRequest(string responseText, string? requestId = null)
         {
-            _logger.LogTrace("Prompt-box response is being applied to the visible UI state [ResponseLength={ResponseLength}] [HasContent={HasContent}].",
+            _logger.LogTrace("Prompt-box response is being applied to the visible UI state [RequestId={RequestId}] [ResponseLength={ResponseLength}] [HasContent={HasContent}].",
+                requestId,
                 responseText?.Length ?? 0,
                 !string.IsNullOrWhiteSpace(responseText));
             LogToolWindowViewModel.IsRequestInProgress = false;
             LogToolWindowViewModel.StatusMessage = responseText;
             AppendResponseActivityEntry(responseText);
-            _logger.LogTrace("Prompt-box response application completed [StatusMessageLength={StatusMessageLength}] [IsRequestInProgress={IsRequestInProgress}].",
+            _logger.LogTrace("Prompt-box response application completed [RequestId={RequestId}] [StatusMessageLength={StatusMessageLength}] [IsRequestInProgress={IsRequestInProgress}].",
+                requestId,
                 LogToolWindowViewModel.StatusMessage?.Length ?? 0,
                 LogToolWindowViewModel.IsRequestInProgress);
         }

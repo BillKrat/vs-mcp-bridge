@@ -628,17 +628,28 @@ internal sealed class VsixChatRequestService : IChatRequestService
         _logger = logger;
     }
 
-    public async Task<string> SendAsync(string message, System.Threading.CancellationToken cancellationToken = default)
+    public async Task<string> SendAsync(string message, string? requestId = null, System.Threading.CancellationToken cancellationToken = default)
     {
+        var correlationId = string.IsNullOrWhiteSpace(requestId) ? Guid.NewGuid().ToString("N") : requestId;
         var normalizedMessage = message?.Trim() ?? string.Empty;
         var provider = GetConfigurationValue(ProviderConfigurationKey);
+        _logger.LogTrace("VSIX chat request dispatch started [RequestId={RequestId}] [Provider={Provider}] [MessageLength={MessageLength}].",
+            correlationId,
+            string.IsNullOrWhiteSpace(provider) ? "(missing)" : provider,
+            normalizedMessage.Length);
 
         if (!string.Equals(provider, "OpenAI", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogTrace("VSIX chat request dispatch completed in fake mode [RequestId={RequestId}].", correlationId);
             return string.Equals(normalizedMessage, "ping", StringComparison.OrdinalIgnoreCase) ? "pong" : $"echo:{normalizedMessage}";
+        }
 
         var useRealApi = bool.TryParse(GetConfigurationValue(UseRealApiConfigurationKey), out var parsedUseRealApi) && parsedUseRealApi;
         if (!useRealApi)
+        {
+            _logger.LogTrace("VSIX chat request dispatch completed in OpenAI stub mode [RequestId={RequestId}].", correlationId);
             return string.Equals(normalizedMessage, "ping", StringComparison.OrdinalIgnoreCase) ? "pong-from-openai" : "openai-stub-response";
+        }
 
         var apiKey = GetConfigurationValue(ApiKeyConfigurationKey);
         var model = GetConfigurationValue(ModelConfigurationKey) ?? GetConfigurationValue(FallbackModelConfigurationKey);
@@ -646,7 +657,7 @@ internal sealed class VsixChatRequestService : IChatRequestService
         if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
             return "OpenAI is selected, but ApiKey/Model configuration is missing.";
 
-        _logger.LogInformation("VSIX chat request started [Provider=OpenAI] [MessageLength={MessageLength}].", normalizedMessage.Length);
+        _logger.LogInformation("VSIX chat request started [RequestId={RequestId}] [Provider=OpenAI] [MessageLength={MessageLength}].", correlationId, normalizedMessage.Length);
 
         var payload = JsonSerializer.Serialize(new
         {
@@ -669,6 +680,9 @@ internal sealed class VsixChatRequestService : IChatRequestService
             return $"OpenAI request failed: {(int)response.StatusCode} {response.StatusCode}.";
 
         var text = ExtractMessageContent(responseContent);
+        _logger.LogTrace("VSIX chat request dispatch completed with visible response content [RequestId={RequestId}] [ResponseLength={ResponseLength}].",
+            correlationId,
+            text?.Length ?? 0);
         return string.IsNullOrWhiteSpace(text)
             ? "OpenAI response did not contain message content."
             : text;
