@@ -721,6 +721,26 @@ public sealed class MvpVmTests
     }
 
     [Fact]
+    public void SubmitProposalCommand_with_show_active_file_alias_dispatches_to_built_in_active_file_handler()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "show active file";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(1, vsService.GetActiveDocumentCalls);
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal("Active file: active.cs", viewModel.StatusMessage);
+        Assert.Equal("Result", viewModel.ActivityTitle);
+        Assert.Equal("Active file: active.cs", viewModel.ActivitySummary);
+    }
+
+    [Fact]
     public void SubmitProposalCommand_submits_multiple_selected_files_through_vs_service()
     {
         var firstPath = Path.GetTempFileName();
@@ -976,7 +996,39 @@ public sealed class MvpVmTests
 
         Assert.False(viewModel.IsRequestInProgress);
         Assert.Equal("pong", viewModel.StatusMessage);
+        Assert.Equal("Result", viewModel.ActivityTitle);
+        Assert.Equal("pong", viewModel.ActivitySummary);
         Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_chat_request_emits_trace_breadcrumbs_for_prompt_flow()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [ConfigurationKeys.AuditLogRawPromptResponse] = "false"
+            })
+            .Build();
+        var viewModel = new LogToolWindowViewModel();
+        var logger = new RecordingBridgeLogger();
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton<IVsService>(new StubVsService())
+            .AddSingleton<IConfiguration>(configuration)
+            .AddSingleton<IChatRequestService>(new StubChatRequestService("pong"))
+            .BuildServiceProvider();
+        _ = new LogToolWindowPresenter(serviceProvider, logger, new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "ping";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box request submission started", StringComparison.Ordinal));
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box request dispatch evaluating route", StringComparison.Ordinal));
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box request routed to chat request service", StringComparison.Ordinal));
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box chat request service returned response", StringComparison.Ordinal));
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box response is being applied to the visible UI state", StringComparison.Ordinal));
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Prompt-box response application completed", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -245,6 +245,10 @@ namespace VsMcpBridge.Shared.MvpVm
             {
                 var submittedRequestText = BuildSubmittedRequestText();
                 var requestId = Guid.NewGuid().ToString("N");
+                _logger.LogTrace("Prompt-box request submission started [RequestId={RequestId}] [RequestLength={RequestLength}] [SelectedFileCount={SelectedFileCount}].",
+                    requestId,
+                    submittedRequestText.Length,
+                    _proposalFileDrafts.Count);
                 _activeManualRequestId = requestId;
                 _suppressedRequestIds.Remove(requestId);
                 LogToolWindowViewModel.LastSubmittedRequestText = submittedRequestText;
@@ -255,6 +259,7 @@ namespace VsMcpBridge.Shared.MvpVm
                 var toolDispatchHandled = await TryDispatchPromptRequestAsync(submittedRequestText);
                 if (toolDispatchHandled)
                 {
+                    _logger.LogTrace("Prompt-box request handled through request routing path [RequestId={RequestId}].", requestId);
                     _activeManualRequestId = null;
                     return;
                 }
@@ -329,24 +334,32 @@ namespace VsMcpBridge.Shared.MvpVm
         private async Task<bool> TryDispatchPromptRequestAsync(string submittedRequestText)
         {
             var normalizedPrompt = submittedRequestText.Trim().ToLowerInvariant();
+            _logger.LogTrace("Prompt-box request dispatch evaluating route [NormalizedPrompt={NormalizedPrompt}] [HasChatRequestService={HasChatRequestService}] [SelectedFileCount={SelectedFileCount}].",
+                normalizedPrompt,
+                _chatRequestService != null,
+                _proposalFileDrafts.Count);
             var vsService = _serviceProvider.GetRequiredService<IVsService>();
 
             switch (normalizedPrompt)
             {
                 case "what is the active file":
+                case "show active file":
                     {
+                        _logger.LogTrace("Prompt-box request routed to built-in active file handler.");
                         var response = await vsService.GetActiveDocumentAsync();
                         CompletePromptRequest(BuildActiveFileSummary(response));
                         return true;
                     }
                 case "list solution projects":
                     {
+                        _logger.LogTrace("Prompt-box request routed to built-in project list handler.");
                         var response = await vsService.ListSolutionProjectsAsync();
                         CompletePromptRequest(BuildProjectListSummary(response));
                         return true;
                     }
                 case "show error list":
                     {
+                        _logger.LogTrace("Prompt-box request routed to built-in error list handler.");
                         var response = await vsService.GetErrorListAsync();
                         CompletePromptRequest(BuildErrorListSummary(response));
                         return true;
@@ -354,26 +367,36 @@ namespace VsMcpBridge.Shared.MvpVm
                 default:
                     if (_chatRequestService != null)
                     {
+                        _logger.LogTrace("Prompt-box request routed to chat request service [RequestLength={RequestLength}].", submittedRequestText.Length);
                         var response = await _chatRequestService.SendAsync(submittedRequestText);
+                        _logger.LogTrace("Prompt-box chat request service returned response [ResponseLength={ResponseLength}].", response?.Length ?? 0);
                         CompletePromptRequest(response);
                         return true;
                     }
 
                     if (_proposalFileDrafts.Count == 0)
                     {
+                        _logger.LogTrace("Prompt-box request had no matching built-in route or chat service and will return unsupported-request guidance.");
                         CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.");
                         return true;
                     }
 
+                    _logger.LogTrace("Prompt-box request will fall through to proposal submission workflow [SelectedFileCount={SelectedFileCount}].", _proposalFileDrafts.Count);
                     return false;
             }
         }
 
         private void CompletePromptRequest(string responseText)
         {
+            _logger.LogTrace("Prompt-box response is being applied to the visible UI state [ResponseLength={ResponseLength}] [HasContent={HasContent}].",
+                responseText?.Length ?? 0,
+                !string.IsNullOrWhiteSpace(responseText));
             LogToolWindowViewModel.IsRequestInProgress = false;
             LogToolWindowViewModel.StatusMessage = responseText;
             AppendResponseActivityEntry(responseText);
+            _logger.LogTrace("Prompt-box response application completed [StatusMessageLength={StatusMessageLength}] [IsRequestInProgress={IsRequestInProgress}].",
+                LogToolWindowViewModel.StatusMessage?.Length ?? 0,
+                LogToolWindowViewModel.IsRequestInProgress);
         }
 
         private void AppendActivityEntry(string message)

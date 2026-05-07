@@ -58,6 +58,27 @@
           <Border Margin="0,0,0,8"
                   Padding="8"
                   BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
+                  BorderThickness="1">
+            <StackPanel>
+              <TextBlock Text="{Binding ActivityTitle}"
+                         Margin="0,0,0,6"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource VsBrush.WindowText}" />
+              <TextBox IsReadOnly="True"
+                       AcceptsReturn="True"
+                       BorderThickness="0"
+                       Background="Transparent"
+                       VerticalScrollBarVisibility="Auto"
+                       HorizontalScrollBarVisibility="Disabled"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource VsBrush.WindowText}"
+                       Text="{Binding ActivitySummary, Mode=OneWay}" />
+            </StackPanel>
+          </Border>
+
+          <Border Margin="0,0,0,8"
+                  Padding="8"
+                  BorderBrush="{DynamicResource VsBrush.CommandBarBorder}"
                   BorderThickness="1"
                   Visibility="{Binding IsRequestInProgress, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel>
