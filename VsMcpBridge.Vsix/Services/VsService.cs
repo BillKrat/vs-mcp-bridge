@@ -87,7 +87,7 @@ public sealed class VsService : IVsService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "VS service operation 'GetActiveDocument' failed.");
+            _logger.LogError(ex, "VS service operation 'GetActiveDocument' failed [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].", operationId, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -128,7 +128,7 @@ public sealed class VsService : IVsService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "VS service operation 'GetSelectedText' failed.");
+            _logger.LogError(ex, "VS service operation 'GetSelectedText' failed [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].", operationId, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -156,7 +156,7 @@ public sealed class VsService : IVsService
             var projects = new List<ProjectInfo>();
             foreach (var project in EnumerateSolutionProjects(solution))
             {
-                projects.Add(CreateProjectInfo(project));
+                projects.Add(CreateProjectInfo(project, operationId));
             }
 
             stopwatch.Stop();
@@ -166,7 +166,7 @@ public sealed class VsService : IVsService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "VS service operation 'ListSolutionProjects' failed.");
+            _logger.LogError(ex, "VS service operation 'ListSolutionProjects' failed [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].", operationId, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -222,7 +222,7 @@ public sealed class VsService : IVsService
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "VS service operation 'GetErrorList' failed.");
+            _logger.LogError(ex, "VS service operation 'GetErrorList' failed [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].", operationId, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -402,14 +402,14 @@ public sealed class VsService : IVsService
         }
     }
 
-    private static ProjectInfo CreateProjectInfo(Project project)
+    private ProjectInfo CreateProjectInfo(Project project, string operationId)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
         return new ProjectInfo
         {
             Name = project.Name,
             FullPath = project.FullName,
-            TargetFramework = GetTargetFramework(project)
+            TargetFramework = GetTargetFramework(project, operationId)
         };
     }
 
@@ -426,15 +426,16 @@ public sealed class VsService : IVsService
         return selection?.Text ?? string.Empty;
     }
 
-    private static string GetTargetFramework(Project project)
+    private string GetTargetFramework(Project project, string operationId)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
         try
         {
             return project.Properties?.Item("TargetFrameworkMoniker")?.Value?.ToString() ?? string.Empty;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogDebug(ex, "Unable to resolve TargetFrameworkMoniker for project '{ProjectName}' [OperationId={OperationId}].", project.Name, operationId);
             return string.Empty;
         }
     }

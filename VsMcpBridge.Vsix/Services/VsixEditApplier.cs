@@ -1,5 +1,6 @@
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
@@ -15,11 +16,13 @@ internal sealed class VsixEditApplier : IEditApplier
 {
     private readonly IAsyncPackage _package;
     private readonly IThreadHelper _threadHelper;
+    private readonly ILogger _logger;
 
-    public VsixEditApplier(IAsyncPackage package, IThreadHelper threadHelper)
+    public VsixEditApplier(IAsyncPackage package, IThreadHelper threadHelper, ILogger logger)
     {
         _package = package;
         _threadHelper = threadHelper;
+        _logger = logger;
     }
 
     public async Task<EditApplyResult> ApplyAsync(EditProposal proposal)
@@ -56,8 +59,9 @@ internal sealed class VsixEditApplier : IEditApplier
                 appliedEdits.Add(plannedEdit);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "VSIX edit apply failed; attempting rollback for {AppliedEditCount} already-applied edit(s).", appliedEdits.Count);
             RestoreAppliedEdits(appliedEdits);
             throw;
         }
