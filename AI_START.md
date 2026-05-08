@@ -60,14 +60,14 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-07-app-host-ping-trace-handoff.md`
+- `docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md`
 
 That handoff currently captures:
 
-- the completed prompt-flow request-id propagation slice across presenter and host chat services
-- the validated App-host end-to-end `ping -> pong` trace run with durable artifacts
-- the repeatable workflow for AI-driven end-to-end trace capture, Mermaid generation, and code comparison
-- the suggested next step to repeat or extend the same process for future host or provider slices
+- the current stopping point for the incomplete VSIX built-in selected-text prompt investigation
+- the confirmed manual validation that `what is the active file` works as expected in the VSIX prompt UI
+- the known gap that `what is the selected text` still needs observed response/log capture and comparison against the expected routing path
+- the recommended next steps to reproduce the issue with logs and determine whether the disconnect is in routing or selected-text retrieval
 
 ## Current Working Guidance
 
@@ -96,7 +96,7 @@ A good session bootstrap prompt is:
 
 A good resume prompt is:
 
-- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-07-app-host-ping-trace-handoff.md.`
+- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md.`
 
 A good closeout prompt is:
 

@@ -139,3 +139,33 @@ A good closeout prompt is:
 - `AI_STOP.md` is the exit checklist
 - `AI_START.md` should point to the current best resume target
 - `AI_STOP.md` should be used to keep `AI_START.md` and the handoff trail current
+
+## Latest Session Closeout
+
+Date: 2026-05-08
+Branch: `feature/approval-apply-ui-slice`
+
+### What Changed
+
+- preserved the validated placeholder-path fix and its regression tests from the earlier slice
+- confirmed the prior App-host and VSIX-host ping trace workflow session was fully completed before the later context-loss issue
+- confirmed manual VSIX behavior that `what is the active file` works as expected in the prompt UI
+- created `docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md` for the new stopping point
+- updated `AI_START.md` so the next session resumes from the incomplete selected-text prompt investigation
+
+### Validation Performed
+
+- previously validated placeholder-path fix remains documented as:
+  - `VsMcpBridge.Vsix.Tests`: 25/25 passed
+  - workspace build: successful
+- manual VSIX validation confirmed `what is the active file` behaves as expected when no real editor document is active
+
+### Current Working Tree State
+
+- validated but uncommitted changes remain in the working tree
+- modified files currently include code/doc updates for the placeholder-path fix plus AI/handoff documentation updates
+- if the session stops before commit, resume from `docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md`
+
+### Recommended Next Step
+
+- reproduce `what is the selected text` in the Experimental Instance with a known selection, capture the visible response and logs, and compare the observed flow against presenter routing and `VsService.GetSelectedTextAsync`

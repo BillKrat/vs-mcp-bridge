@@ -146,12 +146,12 @@ The observed sequence matched the current code for:
 Suggested next priority:
 
 1. preserve the VSIX-host artifact pattern by repeating it after future prompt-routing or provider changes
-2. optionally extend the same observed workflow to the MCP -> pipe -> VSIX path when a broader end-to-end trace is needed
+2. optionally extend the same observed workflow to the MCP -> pipe -> VSIX path when a broader end-to-end trace is needed, but use a pipe-backed MCP tool rather than `chat_engine_ping`
 3. optionally address the current nullable warnings in `LogToolWindowPresenter.cs` as a focused cleanup slice after preserving the observed host workflows
 
 Smallest next useful chunk:
 
-- produce an observed MCP-to-VSIX `ping` run with the same artifact set: logs, metadata, Mermaid sequence, and a code-comparison note
+- produce an observed MCP-to-VSIX transport run with the same artifact set using a pipe-backed tool such as `vs_get_active_document`: logs, metadata, Mermaid sequence, and a code-comparison note
 
 ## Constraints To Preserve
 

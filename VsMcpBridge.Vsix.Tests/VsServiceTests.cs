@@ -21,6 +21,25 @@ public sealed class VsServiceTests
             .BuildServiceProvider();
     }
 
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("   ", false)]
+    [InlineData("<no document>", false)]
+    [InlineData("<misc files>", false)]
+    [InlineData("C:\\src\\Program.cs", true)]
+    [InlineData("Y:\\vs-mcp-bridge\\README.md", true)]
+    public void HasUsableDocumentPath_returns_expected_result(string? filePath, bool expected)
+    {
+        Assert.Equal(expected, VsService.HasUsableDocumentPath(filePath));
+    }
+
+    [Fact]
+    public void HasUsableDocumentPath_rejects_paths_with_invalid_characters()
+    {
+        Assert.False(VsService.HasUsableDocumentPath("C:\\temp\\<no document>"));
+    }
+
     [Fact]
     public void Constructor_logs_bridge_service_startup()
     {

@@ -65,6 +65,11 @@ Current caution from manual validation on 2026-05-06:
 
 ## 3) MCP hang localization checklist
 
+Important scope note:
+
+- `chat_engine_ping` validates the MCP host chat-engine path but does not traverse the named-pipe bridge into the VSIX host
+- when you need to prove MCP -> pipe -> VSIX transport, use a pipe-backed tool such as `vs_get_active_document`, `vs_get_selected_text`, `vs_list_solution_projects`, `vs_get_error_list`, or a proposal tool
+
 When reproducing ping/pong or chat startup hangs, capture the last observed stage:
 
 1. `McpServer` request entry

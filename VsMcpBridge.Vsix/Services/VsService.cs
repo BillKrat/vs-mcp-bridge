@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -380,7 +381,23 @@ public sealed class VsService : IVsService
     private static Document? GetActiveDocumentOnUIThread(DTE2 dte)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
-        return dte.ActiveDocument;
+        var document = dte.ActiveDocument;
+        if (!HasUsableDocumentPath(document?.FullName))
+            return null;
+
+        return document;
+    }
+
+    internal static bool HasUsableDocumentPath(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return false;
+
+        var trimmedPath = filePath.Trim();
+        if (trimmedPath.StartsWith("<", StringComparison.Ordinal) && trimmedPath.EndsWith(">", StringComparison.Ordinal))
+            return false;
+
+        return trimmedPath.IndexOfAny(Path.GetInvalidPathChars()) < 0;
     }
 
     private static Solution? GetSolution(DTE2 dte)
