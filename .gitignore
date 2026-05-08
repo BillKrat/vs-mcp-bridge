@@ -79,6 +79,8 @@ artifacts/*
 artifacts/logs/*
 !artifacts/logs/app-host-ping-trace-20260507.log
 !artifacts/logs/app-host-ping-trace-20260507.metadata.json
+!artifacts/logs/vsix-host-ping-trace-20260508.log
+!artifacts/logs/vsix-host-ping-trace-20260508.metadata.json
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -112,6 +114,7 @@ StyleCopReport.xml
 *_wpftmp.csproj
 *.log
 !artifacts/logs/app-host-ping-trace-20260507.log
+!artifacts/logs/vsix-host-ping-trace-20260508.log
 *.tlog
 *.vspscc
 *.vssscc
@@ -443,6 +446,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/
 /docs/*
 !/docs/app-host-ping-trace-workflow.md
+!/docs/vsix-host-ping-trace-workflow.md
 !/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md
 !/docs/session-handoffs/
 /docs/session-handoffs/*
@@ -450,6 +454,8 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
+!/docs/diagrams/vsix-host-ping-trace-20260508.mmd
 !/docs/blog-drafts/
 /docs/blog-drafts/*
 !/docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md
+!/docs/blog-drafts/vsix-host-ping-trace-walkthrough-20260508.md

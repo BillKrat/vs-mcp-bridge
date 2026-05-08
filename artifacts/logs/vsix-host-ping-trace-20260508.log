@@ -1,0 +1,23 @@
+Observed VSIX-host ping trace run
+Date: 2026-05-08
+Branch: feature/approval-apply-ui-slice
+Commit: 224b554
+Host: VsMcpBridge.Vsix (Experimental Instance)
+Interaction mode: UI automation against live VS MCP Bridge tool window
+Observed provider path: OpenAI
+RequestId: cf7657ab510c489ba96e5b01ce03bfa7
+Prompt: ping
+Visible result: pong
+
+Observed log transcript:
+[2026-05-08T16:42:15.3188937Z] [Information] [VsMcpBridge] VS MCP Bridge tool window Initialized.
+[2026-05-08T16:43:22.7057033Z] [Trace] [VsMcpBridge] Prompt-box request submission started [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [RequestLength=4] [SelectedFileCount=0].
+[2026-05-08T16:43:22.7091971Z] [Trace] [VsMcpBridge] Prompt-box request dispatch evaluating route [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [NormalizedPrompt=ping] [HasChatRequestService=True] [SelectedFileCount=0].
+[2026-05-08T16:43:22.7102423Z] [Trace] [VsMcpBridge] Prompt-box request routed to chat request service [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [RequestLength=4].
+[2026-05-08T16:43:22.7128441Z] [Trace] [VsMcpBridge] VSIX chat request dispatch started [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [Provider=OpenAI] [MessageLength=4].
+[2026-05-08T16:43:22.7138896Z] [Information] [VsMcpBridge] VSIX chat request started [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [Provider=OpenAI] [MessageLength=4].
+[2026-05-08T16:43:24.5465741Z] [Trace] [VsMcpBridge] VSIX chat request dispatch completed with visible response content [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [ResponseLength=4].
+[2026-05-08T16:43:24.5785881Z] [Trace] [VsMcpBridge] Prompt-box chat request service returned response [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [ResponseLength=4].
+[2026-05-08T16:43:24.5795854Z] [Trace] [VsMcpBridge] Prompt-box response is being applied to the visible UI state [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [ResponseLength=4] [HasContent=True].
+[2026-05-08T16:43:24.5795854Z] [Trace] [VsMcpBridge] Prompt-box response application completed [RequestId=cf7657ab510c489ba96e5b01ce03bfa7] [StatusMessageLength=4] [IsRequestInProgress=False].
+[2026-05-08T16:43:24.5936360Z] [Trace] [VsMcpBridge] Prompt-box request handled through request routing path [RequestId=cf7657ab510c489ba96e5b01ce03bfa7].

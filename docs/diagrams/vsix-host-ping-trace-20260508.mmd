@@ -1,0 +1,29 @@
+sequenceDiagram
+	actor User
+	participant VS as Visual Studio Experimental Instance
+	participant UI as VS MCP Bridge Tool Window
+	participant Presenter as LogToolWindowPresenter
+	participant Chat as IChatRequestService
+	participant VsixChat as VsixChatRequestService
+	participant VM as LogToolWindowViewModel
+
+	User->>UI: Enter "ping" and click Send
+	UI->>Presenter: SubmitProposalCommand
+	Presenter->>Presenter: SubmitProposalAsync()
+	Presenter->>Presenter: Log Trace "request submission started"\n[RequestId=cf7657ab510c489ba96e5b01ce03bfa7]
+	Presenter->>VM: LastSubmittedRequestText="ping"\nIsRequestInProgress=true
+	Presenter->>Presenter: TryDispatchPromptRequestAsync("ping")
+	Presenter->>Presenter: Log Trace "dispatch evaluating route"
+	Presenter->>Chat: SendAsync("ping", requestId)
+	Chat->>VsixChat: SendAsync("ping", requestId)
+	VsixChat->>VsixChat: Log Trace "dispatch started"\n[Provider=OpenAI]
+	VsixChat->>VsixChat: Log Information "chat request started"
+	VsixChat->>VsixChat: Resolve configured provider path and return visible response content
+	VsixChat-->>Presenter: "pong"
+	Presenter->>Presenter: Log Trace "chat request service returned response"
+	Presenter->>Presenter: CompletePromptRequest("pong", requestId)
+	Presenter->>Presenter: Log Trace "response is being applied"
+	Presenter->>VM: IsRequestInProgress=false\nStatusMessage="pong"
+	Presenter->>Presenter: Log Trace "response application completed"
+	Presenter->>Presenter: Log Trace "request handled through request routing path"
+	VM-->>UI: Visible result shows "pong"

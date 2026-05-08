@@ -51,6 +51,12 @@ Then:
    - tool window log text updates in real time
    - provider output lines include request/proposal correlation data
 
+Repeatable VSIX-host ping workflow:
+
+- use `docs/vsix-host-ping-trace-workflow.md` when you need a durable AI-runnable procedure for launching the Experimental Instance, exercising `ping`, capturing correlated tool-window evidence, generating a Mermaid sequence diagram, and comparing the observed flow against code
+- store dated artifacts under `artifacts/logs/`, `docs/diagrams/`, and `docs/blog-drafts/` rather than overwriting prior runs
+- record the effective provider path observed inside the Experimental Instance instead of assuming it from prior documentation
+
 Current caution from manual validation on 2026-05-06:
 
 - if raw prompt/response audit logging is disabled, the tool window may still show placeholder lines such as `Prompt submitted. Raw prompt logging is disabled.` and `Response received. Raw response logging is disabled.`
