@@ -753,6 +753,46 @@ public sealed class MvpVmTests
         Assert.Equal("Active file: active.cs", viewModel.ActivitySummary);
     }
 
+
+    [Fact]
+    public void SubmitProposalCommand_with_selected_text_prompt_dispatches_to_vs_service_and_appends_response()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "what is the selected text";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(1, vsService.GetSelectedTextCalls);
+        Assert.Equal(0, vsService.ProposeTextEditCalls);
+        Assert.Equal(0, vsService.ProposeTextEditsCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal($"Selected text from active.cs:{System.Environment.NewLine}selected", viewModel.StatusMessage);
+        Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
+        Assert.DoesNotContain("what is the selected text", viewModel.LogText, StringComparison.Ordinal);
+        Assert.DoesNotContain("selected", viewModel.LogText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SubmitProposalCommand_with_show_selected_text_alias_dispatches_to_built_in_selected_text_handler()
+    {
+        var viewModel = new LogToolWindowViewModel();
+        var vsService = new StubVsService();
+        _ = new LogToolWindowPresenter(CreateServiceProvider(vsService), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
+
+        viewModel.RequestInputText = "show selected text";
+
+        viewModel.SubmitProposalCommand.Execute(null);
+
+        Assert.Equal(1, vsService.GetSelectedTextCalls);
+        Assert.False(viewModel.IsRequestInProgress);
+        Assert.Equal($"Selected text from active.cs:{System.Environment.NewLine}selected", viewModel.StatusMessage);
+        Assert.Equal("Result", viewModel.ActivityTitle);
+        Assert.Equal($"Selected text from active.cs:{System.Environment.NewLine}selected", viewModel.ActivitySummary);
+    }
+
     [Fact]
     public void SubmitProposalCommand_submits_multiple_selected_files_through_vs_service()
     {
@@ -949,7 +989,7 @@ public sealed class MvpVmTests
         Assert.Equal(0, vsService.ProposeTextEditCalls);
         Assert.Equal(0, vsService.ProposeTextEditsCalls);
         Assert.False(viewModel.IsRequestInProgress);
-        Assert.Equal("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", viewModel.StatusMessage);
+        Assert.Equal("Unsupported request. Try 'what is the active file', 'what is the selected text', 'list solution projects', or 'show error list'.", viewModel.StatusMessage);
         Assert.Equal("VS MCP Bridge log will appear here.", viewModel.LogText);
         Assert.DoesNotContain("> ping", viewModel.LogText, StringComparison.Ordinal);
         Assert.DoesNotContain("Unsupported request.", viewModel.LogText, StringComparison.Ordinal);

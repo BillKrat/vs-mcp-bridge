@@ -50,3 +50,20 @@ This separation is intentional and enforced to maintain:
 - architectural control
 - minimal scope
 - predictable changes
+
+## Observability Requirement
+
+At any point in application development, important workflows should remain testable as end-to-end observed runs. The expected evidence is:
+
+- a repeatable automation or documented manual trigger with automated capture steps
+- correlated logs that show the request path across meaningful boundaries
+- a Mermaid sequence diagram generated from observed artifacts
+- a clear comparison between observed flow and intended code flow
+
+New code should follow the existing logging pattern when applicable so AI sessions can quickly triage failures and isolate the first missing boundary instead of reverse-engineering black-box behavior.
+
+Concrete examples of this standard are maintained in:
+
+- `docs/app-host-ping-trace-workflow.md`
+- `docs/vsix-host-ping-trace-workflow.md`
+- `docs/vsix-host-selected-text-trace-workflow.md`

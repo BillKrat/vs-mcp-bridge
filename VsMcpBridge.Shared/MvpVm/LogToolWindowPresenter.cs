@@ -352,6 +352,14 @@ namespace VsMcpBridge.Shared.MvpVm
                         CompletePromptRequest(BuildActiveFileSummary(response), requestId);
                         return true;
                     }
+                case "what is the selected text":
+                case "show selected text":
+                    {
+                        _logger.LogTrace("Prompt-box request routed to built-in selected text handler [RequestId={RequestId}].", requestId);
+                        var response = await vsService.GetSelectedTextAsync();
+                        CompletePromptRequest(BuildSelectedTextSummary(response), requestId);
+                        return true;
+                    }
                 case "list solution projects":
                     {
                         _logger.LogTrace("Prompt-box request routed to built-in project list handler [RequestId={RequestId}].", requestId);
@@ -379,7 +387,7 @@ namespace VsMcpBridge.Shared.MvpVm
                     if (_proposalFileDrafts.Count == 0)
                     {
                         _logger.LogTrace("Prompt-box request had no matching built-in route or chat service and will return unsupported-request guidance [RequestId={RequestId}].", requestId);
-                        CompletePromptRequest("Unsupported request. Try 'what is the active file', 'list solution projects', or 'show error list'.", requestId);
+                        CompletePromptRequest("Unsupported request. Try 'what is the active file', 'what is the selected text', 'list solution projects', or 'show error list'.", requestId);
                         return true;
                     }
 
@@ -444,6 +452,21 @@ namespace VsMcpBridge.Shared.MvpVm
             return string.IsNullOrWhiteSpace(response.FilePath)
                 ? "No active file."
                 : $"Active file: {response.FilePath}";
+        }
+
+        private static string BuildSelectedTextSummary(GetSelectedTextResponse response)
+        {
+            if (!response.Success)
+                return string.IsNullOrWhiteSpace(response.ErrorMessage) ? "Unable to determine the selected text." : response.ErrorMessage;
+
+            if (string.IsNullOrWhiteSpace(response.SelectedText))
+                return string.IsNullOrWhiteSpace(response.FilePath)
+                    ? "No selected text."
+                    : $"No selected text in {response.FilePath}.";
+
+            return string.IsNullOrWhiteSpace(response.FilePath)
+                ? $"Selected text:{Environment.NewLine}{response.SelectedText}"
+                : $"Selected text from {response.FilePath}:{Environment.NewLine}{response.SelectedText}";
         }
 
         private static string BuildProjectListSummary(ListSolutionProjectsResponse response)

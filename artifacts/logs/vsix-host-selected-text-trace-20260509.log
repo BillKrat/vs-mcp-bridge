@@ -1,0 +1,42 @@
+Observed VSIX-host selected-text prompt validation
+Date: 2026-05-09
+Repo: Y:\vs-mcp-bridge
+Branch: feature/approval-apply-ui-slice
+Commit at artifact creation: 12b4cbf
+Host: VsMcpBridge.Vsix (Visual Studio Experimental Instance)
+Interaction mode: manual validation against live VS MCP Bridge tool window
+
+Observed tool-window state:
+VS MCP Bridge tool window initialized.
+
+Observed prompt:
+what is the selected text
+
+Observed VS service operation:
+Operation: GetSelectedText
+OperationId: ce4e2bba4e324963932b1ba7e8a6c20c
+ElapsedMs: 18
+FilePath: Y:\vs-mcp-bridge\VsMcpBridge.Vsix\Services\ProposalFilePicker.cs
+SelectionLength: 208
+
+Observed visible response prefix:
+Selected text from Y:\vs-mcp-bridge\VsMcpBridge.Vsix\Services\ProposalFilePicker.cs:
+var dialog = new OpenFileDialog
+{
+    CheckFileExists = true,
+    CheckPathExists = true,
+    Multiselect = false,
+    Title = "Select proposal file"
+};
+
+Observed workflow shape:
+User -> VS MCP Bridge Tool Window -> LogToolWindowPresenter -> IVsService/VsService -> Visual Studio editor selection -> VsService -> Presenter -> Tool Window response.
+
+Validation conclusion:
+The manual run validated that the VSIX prompt-box input "what is the selected text" reached the VS service GetSelectedText operation and returned the active editor selection to the visible tool-window response.
+
+Evidence boundaries:
+- This artifact records the observed UI/log output supplied for the manual validation.
+- No MCP client invocation was observed for this run.
+- No apply/proposal mutation was observed for this run.
+- No full timestamped diagnostic transcript was captured with this artifact.

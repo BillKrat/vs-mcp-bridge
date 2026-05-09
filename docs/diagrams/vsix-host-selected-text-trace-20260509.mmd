@@ -1,0 +1,15 @@
+sequenceDiagram
+	actor User
+	participant UI as VS MCP Bridge Tool Window
+	participant Presenter as LogToolWindowPresenter
+	participant VsService as IVsService / VsService
+	participant Editor as Visual Studio editor selection
+
+	User->>UI: Enter "what is the selected text"
+	UI->>Presenter: Submit prompt
+	Presenter->>VsService: GetSelectedText
+	VsService->>Editor: Read active editor selection
+	Editor-->>VsService: Selection from ProposalFilePicker.cs\nSelectionLength=208
+	VsService-->>Presenter: Selected text response\nOperationId=ce4e2bba4e324963932b1ba7e8a6c20c\nElapsedMs=18
+	Presenter-->>UI: Visible response begins with selected text summary
+	UI-->>User: Shows selected text from ProposalFilePicker.cs

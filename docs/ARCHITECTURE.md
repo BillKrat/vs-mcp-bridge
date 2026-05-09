@@ -80,11 +80,19 @@ Logging intent:
 - `StdErr` is the preferred out-of-band diagnostic channel for transport-safe external capture because it does not corrupt MCP stdio JSON traffic
 - the shared bridge log sink now includes a forwarding seam, initially backed by file output, so SQL-backed or other persistence targets can later be added without changing core logging callers
 
-Current known UX gap:
+Automation and diagramming requirement:
 
-- in the VSIX prompt-box chat flow, disabling raw prompt/response audit logging currently still surfaces placeholder user-facing lines indicating that raw prompt/response logging is disabled
-- manual testing on 2026-05-06 showed those placeholder lines mixed into the tool window output around otherwise useful OpenAI request boundary logs, producing noisy and low-value operator output
-- this is currently a UX issue, not an architectural change in logging direction; the next follow-up should decide whether those messages belong in status text, a different surface, or should be suppressed entirely
+- every application workflow that matters for development or triage should remain runnable end-to-end through repeatable automation or a documented manual-plus-automation workflow
+- each observed run should be able to produce a Mermaid sequence diagram from captured logs/artifacts that mirrors the actual application workflow
+- new code should participate in the established logging pattern when it crosses a meaningful boundary, performs host/process work, calls external services, or can fail in a way future AI sessions must diagnose
+- logs should include correlation IDs, operation names, success/failure state, and elapsed timing where applicable so AI can quickly localize the first missing or failing boundary
+- avoid creating black-box paths: if a workflow cannot be traced from entry point to result, add the minimum logging/automation evidence needed before expanding that workflow further
+
+Current durable workflow examples:
+
+- `docs/app-host-ping-trace-workflow.md`
+- `docs/vsix-host-ping-trace-workflow.md`
+- `docs/vsix-host-selected-text-trace-workflow.md`
 
 Diagnostic sinks remain transport-safe:
 

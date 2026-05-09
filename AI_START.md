@@ -60,14 +60,15 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md`
+- `docs/session-handoffs/2026-05-09-selected-text-validation.md`
 
-That handoff currently captures:
+That handoff captures the completed manual VSIX selected-text validation. The selected-text path now has durable observed artifacts:
 
-- the current stopping point for the incomplete VSIX built-in selected-text prompt investigation
-- the confirmed manual validation that `what is the active file` works as expected in the VSIX prompt UI
-- the known gap that `what is the selected text` still needs observed response/log capture and comparison against the expected routing path
-- the recommended next steps to reproduce the issue with logs and determine whether the disconnect is in routing or selected-text retrieval
+- `docs/vsix-host-selected-text-trace-workflow.md`
+- `artifacts/logs/vsix-host-selected-text-trace-20260509.log`
+- `docs/diagrams/vsix-host-selected-text-trace-20260509.mmd`
+
+Use those artifacts when reconstructing or triaging the selected-text prompt path before relying on chat history.
 
 ## Current Working Guidance
 
@@ -79,6 +80,8 @@ Keep these repo-specific themes in mind:
 - do not remove problematic logging blindly; prefer disabling, suppressing, or relocating it until the correct surfacing is understood
 - keep MVP/VM boundaries intact in shared WPF UI work
 - keep MCP stdout clean and route diagnostics through approved channels
+- preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
+- require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 
 ## When Ending A Session
 
@@ -96,7 +99,7 @@ A good session bootstrap prompt is:
 
 A good resume prompt is:
 
-- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md.`
+- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-09-selected-text-validation.md.`
 
 A good closeout prompt is:
 

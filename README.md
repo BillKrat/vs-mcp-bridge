@@ -8,6 +8,7 @@ AI session entry point:
 - for ending or pausing an AI-assisted session cleanly, use [AI_STOP.md](AI_STOP.md)
 - for the repeatable App-host `ping` trace workflow and its durable artifacts, use [docs/app-host-ping-trace-workflow.md](docs/app-host-ping-trace-workflow.md)
 - for the repeatable VSIX-host `ping` trace workflow and its durable artifacts, use [docs/vsix-host-ping-trace-workflow.md](docs/vsix-host-ping-trace-workflow.md)
+- for the repeatable VSIX-host selected-text trace workflow and its durable artifacts, use [docs/vsix-host-selected-text-trace-workflow.md](docs/vsix-host-selected-text-trace-workflow.md)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
 
@@ -201,7 +202,7 @@ Notes:
 - logs are still surfaced in the shared MVP/VM UI log view through the shared log sink, and Trace-level output should be surfaced there when Trace is enabled so it is visible during AI-assisted triage
 - selecting `StdErr` writes transport-safe out-of-band diagnostics to standard error and is the preferred channel for information that must not pollute MCP stdio JSON traffic
 - Warning and Error should be used for actionable failures or exceptional conditions
-- current known VSIX chat UX gap: when raw prompt/response audit logging is disabled, the tool window still surfaces placeholder lines such as `Prompt submitted. Raw prompt logging is disabled.` and `Response received. Raw response logging is disabled.`; this is currently poor user-facing output and should be redesigned or suppressed rather than treated as durable operator log value
+- new request paths should be observable end-to-end; when a workflow matters for development or triage, preserve enough logging and repeatable automation to run it and generate a Mermaid sequence diagram from captured evidence
 
 App chat/OpenAI configuration keys:
 
@@ -227,6 +228,7 @@ Logging design direction:
 Operational logging note:
 
 - request-path diagnostics now include correlation IDs and elapsed timing across App chat requests, MCP chat tools, pipe transport, shared pipe dispatch, and VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`)
+- every new host/process/tool workflow should either reuse that pattern or document why it is not applicable; the default expectation is that AI can run the workflow, capture logs, produce a Mermaid diagram, and isolate the first failing boundary without reverse-engineering the code path
 
 ## MCP Streaming Policy (STRICT)
 
