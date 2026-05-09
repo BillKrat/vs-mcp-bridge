@@ -16,6 +16,11 @@ if (-not (Test-Path -LiteralPath $projectPath)) {
     throw "Project not found: $projectPath"
 }
 
+$projectExtension = [System.IO.Path]::GetExtension($projectPath)
+if (($projectExtension -eq ".sln" -or $projectExtension -eq ".slnx") -and $Platform -eq "AnyCPU") {
+    $Platform = "Any CPU"
+}
+
 $candidateMsbuildPaths = @(
     "C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\arm64\MSBuild.exe",
     "C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\MSBuild.exe",
