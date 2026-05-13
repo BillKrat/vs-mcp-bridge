@@ -61,8 +61,8 @@ The bridge is intentionally conservative at this stage:
 ## Bridge Tool Boundary
 
 Shared bridge tools execute through a catalog/executor boundary in `VsMcpBridge.Shared.Tools`.
-The initial catalog is compiled and in-memory only; it is intentionally empty until future slices move existing commands or add new tool packs.
-MEF discovery, directory-loaded tools, regex search, BM25 search, and host-specific tool packs are future extensions of this boundary, not part of the initial runtime path.
+The initial catalog is compiled and in-memory only; the first compiled regex text-search tool proves the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
+MEF discovery, directory-loaded tools, BM25 search, and host-specific tool packs are future extensions of this boundary, not part of the initial runtime path.
 
 The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.

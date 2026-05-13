@@ -24,6 +24,7 @@ public sealed class BridgeToolInfrastructureTests
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
     }
 
     [Fact]
@@ -37,6 +38,7 @@ public sealed class BridgeToolInfrastructureTests
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
     }
 
     [Fact]
@@ -126,6 +128,89 @@ public sealed class BridgeToolInfrastructureTests
             && error.Exception is System.InvalidOperationException);
     }
 
+    [Fact]
+    public async Task Executor_invokes_compiled_regex_search_tool_by_tool_id()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var executor = provider.GetRequiredService<IBridgeToolExecutor>();
+        var request = CreateRegexRequest("error", new[] { "one error", "two warnings" });
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(RegexTextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        var matches = GetMatches(result);
+        var match = Assert.Single(matches);
+        Assert.Equal(0, match.EntryIndex);
+        Assert.Equal("error", match.Value);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution started")
+            && message.Contains($"[ToolId={RegexTextSearchTool.ToolId}]")
+            && message.Contains("[RequestId=request-123]")
+            && message.Contains("[OperationId=operation-456]"));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed")
+            && message.Contains($"[ToolId={RegexTextSearchTool.ToolId}]")
+            && message.Contains("[Success=True]")
+            && message.Contains("[RequestId=request-123]")
+            && message.Contains("[OperationId=operation-456]"));
+    }
+
+    [Fact]
+    public async Task Regex_search_supports_literal_and_regex_patterns()
+    {
+        var result = await ExecuteRegexSearchAsync(@"\bCS\d{4}\b", new[] { "CS1002 expected ;", "no diagnostic", "CS1525 invalid term" });
+
+        Assert.True(result.Success);
+        var matches = GetMatches(result);
+        Assert.Equal(2, matches.Count);
+        Assert.Equal("CS1002", matches[0].Value);
+        Assert.Equal("CS1525", matches[1].Value);
+        Assert.Equal(2, result.Data["matchCount"]);
+        Assert.Equal(2, result.Data["totalMatchCount"]);
+    }
+
+    [Fact]
+    public async Task Regex_search_honors_case_sensitivity()
+    {
+        var insensitive = await ExecuteRegexSearchAsync("error", new[] { "Error", "error" }, caseSensitive: false);
+        var sensitive = await ExecuteRegexSearchAsync("error", new[] { "Error", "error" }, caseSensitive: true);
+
+        Assert.Equal(2, GetMatches(insensitive).Count);
+        var sensitiveMatch = Assert.Single(GetMatches(sensitive));
+        Assert.Equal("error", sensitiveMatch.Value);
+    }
+
+    [Fact]
+    public async Task Regex_search_limits_returned_results()
+    {
+        var result = await ExecuteRegexSearchAsync("hit", new[] { "hit hit", "hit" }, maxResults: 2);
+
+        Assert.True(result.Success);
+        var matches = GetMatches(result);
+        Assert.Equal(2, matches.Count);
+        Assert.Equal(2, result.Data["matchCount"]);
+        Assert.Equal(3, result.Data["totalMatchCount"]);
+        Assert.Equal(true, result.Data["limited"]);
+    }
+
+    [Fact]
+    public async Task Regex_search_returns_structured_failure_for_invalid_regex()
+    {
+        var result = await ExecuteRegexSearchAsync("[", new[] { "anything" });
+
+        Assert.False(result.Success);
+        Assert.Equal("InvalidRegex", result.ErrorCode);
+        Assert.Equal(RegexTextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.Contains("Invalid regular expression", result.Message);
+    }
+
     private static BridgeToolRequest CreateRequest(string toolId)
         => new BridgeToolRequest
         {
@@ -134,6 +219,40 @@ public sealed class BridgeToolInfrastructureTests
             OperationId = "operation-456",
             Arguments = new Dictionary<string, object?> { ["input"] = "hello" }
         };
+
+    private static BridgeToolRequest CreateRegexRequest(string pattern, IReadOnlyList<string> entries, bool caseSensitive = false, int? maxResults = null)
+    {
+        var arguments = new Dictionary<string, object?>
+        {
+            ["pattern"] = pattern,
+            ["entries"] = entries,
+            ["caseSensitive"] = caseSensitive
+        };
+
+        if (maxResults.HasValue)
+            arguments["maxResults"] = maxResults.Value;
+
+        return new BridgeToolRequest
+        {
+            ToolId = RegexTextSearchTool.ToolId,
+            RequestId = "request-123",
+            OperationId = "operation-456",
+            Arguments = arguments
+        };
+    }
+
+    private static async Task<BridgeToolResult> ExecuteRegexSearchAsync(string pattern, IReadOnlyList<string> entries, bool caseSensitive = false, int? maxResults = null)
+    {
+        var logger = new RecordingBridgeLogger();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new RegexTextSearchTool() }),
+            logger);
+
+        return await executor.ExecuteAsync(CreateRegexRequest(pattern, entries, caseSensitive, maxResults), CancellationToken.None);
+    }
+
+    private static IReadOnlyList<RegexTextSearchMatch> GetMatches(BridgeToolResult result)
+        => Assert.IsAssignableFrom<IReadOnlyList<RegexTextSearchMatch>>(result.Data["matches"]);
 
     private sealed class FakeBridgeTool : IBridgeTool
     {

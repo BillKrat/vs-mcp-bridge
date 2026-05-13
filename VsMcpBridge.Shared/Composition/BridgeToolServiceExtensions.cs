@@ -8,6 +8,7 @@ namespace VsMcpBridge.Shared.Composition
     {
         public static IServiceCollection AddBridgeToolServices(this IServiceCollection services)
         {
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, RegexTextSearchTool>());
             services.TryAddSingleton<IBridgeToolCatalog, CompiledBridgeToolCatalog>();
             services.TryAddSingleton<IBridgeToolExecutor, BridgeToolExecutor>();
 
