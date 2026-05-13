@@ -60,15 +60,15 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-09-selected-text-validation.md`
+- `docs/session-handoffs/2026-05-09-tool-execution-validation.md`
 
-That handoff captures the completed manual VSIX selected-text validation. The selected-text path now has durable observed artifacts:
+That handoff captures the completed compiled bridge tool execution validation. The tool execution path now has durable observed artifacts:
 
-- `docs/vsix-host-selected-text-trace-workflow.md`
-- `artifacts/logs/vsix-host-selected-text-trace-20260509.log`
-- `docs/diagrams/vsix-host-selected-text-trace-20260509.mmd`
+- `docs/tool-execution-trace-workflow.md`
+- `artifacts/logs/tool-regex-search-trace-20260509.log`
+- `docs/diagrams/tool-regex-search-trace-20260509.mmd`
 
-Use those artifacts when reconstructing or triaging the selected-text prompt path before relying on chat history.
+Use those artifacts when reconstructing or triaging the compiled bridge tool execution path before relying on chat history. For VSIX selected-text work, use `docs/session-handoffs/2026-05-09-selected-text-validation.md`.
 
 ## Current Working Guidance
 
@@ -99,7 +99,7 @@ A good session bootstrap prompt is:
 
 A good resume prompt is:
 
-- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-09-selected-text-validation.md.`
+- `Read AI_START.md, then resume from docs/session-handoffs/2026-05-09-tool-execution-validation.md.`
 
 A good closeout prompt is:
 

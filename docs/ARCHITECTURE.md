@@ -66,6 +66,7 @@ MEF discovery, directory-loaded tools, BM25 search, and host-specific tool packs
 
 The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.
+The durable baseline for this boundary is `docs/tool-execution-trace-workflow.md` with observed artifacts under `artifacts/logs/tool-regex-search-trace-20260509.*` and `docs/diagrams/tool-regex-search-trace-20260509.mmd`.
 
 ## Logging and Diagnostics Flow
 

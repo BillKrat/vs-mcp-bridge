@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Caller
+    participant DI as Shared DI Composition
+    participant Executor as BridgeToolExecutor
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Tool as RegexTextSearchTool
+    participant Result as BridgeToolResult
+    participant Log as RecordingBridgeLogger
+
+    Caller->>DI: AddBridgeToolServices()
+    DI-->>Caller: IBridgeToolCatalog + IBridgeToolExecutor
+    Caller->>Catalog: GetTools()
+    Catalog-->>Caller: bridge.regexTextSearch descriptor
+    Caller->>Executor: ExecuteAsync(requestId, operationId, toolId)
+    Executor->>Log: Information "Bridge tool execution started"
+    Executor->>Catalog: TryGetTool("bridge.regexTextSearch")
+    Catalog-->>Executor: RegexTextSearchTool
+    Executor->>Tool: ExecuteAsync(BridgeToolRequest)
+    Tool->>Tool: Compile regex "error|warning"
+    Tool->>Tool: Search supplied entries
+    Tool-->>Executor: BridgeToolResult Success, 2 matches
+    Executor->>Log: Information "Bridge tool execution completed"
+    Executor-->>Caller: BridgeToolResult with preserved requestId and operationId
+    Caller->>Result: Inspect matchCount, totalMatchCount, limited, matches

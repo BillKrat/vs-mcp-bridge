@@ -1,0 +1,9 @@
+Observed branch: main
+Observed commit: 85401fd
+Catalog descriptor: Id=bridge.regexTextSearch; Name=Regex Text Search; Category=Search; Source=Compiled; Host=Shared
+[Information] [VsMcpBridge] Bridge tool execution started [ToolId=bridge.regexTextSearch] [RequestId=tool-trace-20260509-req-001] [OperationId=tool-regex-search-20260509-op-001].
+[Information] [VsMcpBridge] Bridge tool execution completed [ToolId=bridge.regexTextSearch] [RequestId=tool-trace-20260509-req-001] [OperationId=tool-regex-search-20260509-op-001] [Success=True] [ElapsedMs=9].
+BridgeToolResult: Success=True; ToolId=bridge.regexTextSearch; RequestId=tool-trace-20260509-req-001; OperationId=tool-regex-search-20260509-op-001; ErrorCode=; Message=Regex text search completed with 2 matched result(s).
+Result data: matchCount=2; totalMatchCount=2; limited=False
+Match: EntryIndex=1; MatchIndex=0; MatchLength=7; Value=Warning; EntryText=Warning: configuration fallback used
+Match: EntryIndex=2; MatchIndex=0; MatchLength=5; Value=Error; EntryText=Error: sample failure marker

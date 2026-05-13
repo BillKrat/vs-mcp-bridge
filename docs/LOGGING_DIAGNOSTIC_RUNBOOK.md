@@ -64,7 +64,20 @@ Repeatable VSIX-host selected-text workflow:
 - store dated artifacts under `artifacts/logs/`, `docs/diagrams/`, and `docs/blog-drafts/` rather than overwriting prior runs
 - record the selected file, selected text sentinel, and whether the interaction was manual or automated
 
-## 3) End-to-end automation and Mermaid evidence
+## 3) Bridge tool execution validation
+
+Use `docs/tool-execution-trace-workflow.md` when you need a durable AI-runnable procedure for validating the shared bridge tool catalog/executor path.
+
+The current baseline validates:
+
+- compiled catalog discovery for `bridge.regexTextSearch`
+- `BridgeToolExecutor` start/completion logging
+- request id and operation id preservation
+- structured `BridgeToolResult` output
+
+This workflow intentionally does not validate MEF, directory-loaded plugins, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
+
+## 4) End-to-end automation and Mermaid evidence
 
 For any workflow that matters to development or triage, the expected standard is:
 
@@ -83,7 +96,7 @@ New code should use the existing boundary logging pattern when applicable:
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.
 
-## 4) MCP hang localization checklist
+## 5) MCP hang localization checklist
 
 Important scope note:
 
@@ -117,7 +130,7 @@ Use this compact sequence during incident triage. The first missing marker usual
 7. `Pipe request completed`
 8. `MCP chat_engine_ping completed` or `MCP chat_engine_chat completed`
 
-## 5) Artifacts to collect
+## 6) Artifacts to collect
 
 - App UI log text (copy from tool window)
 - stderr capture from host process
@@ -131,7 +144,7 @@ Environment/config snapshot to capture with artifacts:
 - `Adventures:ChatEngine:OpenAI:UseRealApi`
 - whether `Adventures:ChatEngine:OpenAI:ApiKey` and `Adventures:ChatEngine:OpenAI:Model` are populated (do not paste secrets)
 
-## 6) Fast rollback
+## 7) Fast rollback
 
 After diagnostics, set provider back to default:
 

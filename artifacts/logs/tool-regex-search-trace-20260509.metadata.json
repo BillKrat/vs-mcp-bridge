@@ -1,0 +1,33 @@
+{
+  "runName": "tool-regex-search-trace-20260509",
+  "artifactCreatedUtc": "2026-05-13T00:00:00Z",
+  "observedRunLabelDate": "2026-05-09",
+  "repositoryRoot": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "commit": "85401fd",
+  "toolId": "bridge.regexTextSearch",
+  "toolName": "Regex Text Search",
+  "catalog": "CompiledBridgeToolCatalog",
+  "executor": "BridgeToolExecutor",
+  "requestId": "tool-trace-20260509-req-001",
+  "operationId": "tool-regex-search-20260509-op-001",
+  "input": {
+    "pattern": "error|warning",
+    "entries": [
+      "Info: startup complete",
+      "Warning: configuration fallback used",
+      "Error: sample failure marker",
+      "Trace: execution complete"
+    ],
+    "caseSensitive": false,
+    "maxResults": 10
+  },
+  "observedResult": {
+    "success": true,
+    "matchCount": 2,
+    "totalMatchCount": 2,
+    "limited": false
+  },
+  "captureMethod": "Temporary console harness using AddBridgeToolServices, RecordingBridgeLogger, IBridgeToolExecutor, and RegexTextSearchTool.",
+  "validationScope": "Compiled shared bridge tool execution boundary only. No MEF, directory-loaded plugins, BM25, MCP transport, presenter, or proposal behavior was exercised."
+}
