@@ -8,6 +8,7 @@ namespace VsMcpBridge.Shared.Composition
     {
         public static IServiceCollection AddMvpVmServices(this IServiceCollection services)
         {
+            services.AddSingleton<IProposalManager, ProposalManager>();
             services.AddSingleton<ILogToolWindowPresenter, LogToolWindowPresenter>();
             services.AddSingleton<ILogToolWindowViewModel, LogToolWindowViewModel>();
 

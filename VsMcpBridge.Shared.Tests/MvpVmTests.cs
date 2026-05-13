@@ -66,6 +66,7 @@ public sealed class MvpVmTests
         services.AddMvpVmServices();
         using var provider = services.BuildServiceProvider();
 
+        Assert.IsType<ProposalManager>(provider.GetRequiredService<IProposalManager>());
         Assert.IsType<LogToolWindowPresenter>(provider.GetRequiredService<ILogToolWindowPresenter>());
         Assert.IsType<LogToolWindowViewModel>(provider.GetRequiredService<ILogToolWindowViewModel>());
     }
@@ -1720,10 +1721,13 @@ internal sealed class StubChatRequestService(string response) : IChatRequestServ
             LastSubmittedRequestText = "Update the file."
         };
         var presenter = new LogToolWindowPresenter(CreateServiceProvider(new StubVsService()), new RecordingBridgeLogger(), new TestThreadHelper(), viewModel);
-        var presenterType = typeof(LogToolWindowPresenter);
+        var proposalManager = typeof(LogToolWindowPresenter)
+            .GetField("_proposalManager", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(presenter)!;
 
-        presenterType.GetField("_activeManualRequestId", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .SetValue(presenter, "request-1");
+        proposalManager.GetType()
+            .GetProperty(nameof(IProposalManager.ActiveManualRequestId))!
+            .SetValue(proposalManager, "request-1");
 
         viewModel.ResetProposalCommand.Execute(null);
         presenter.ShowApprovalPrompt("Pending proposal", "before", "after", null, () => { }, () => { }, new[] { "sample.cs" }, "request-1");
