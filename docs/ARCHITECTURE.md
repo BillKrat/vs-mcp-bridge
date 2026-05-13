@@ -58,6 +58,15 @@ The bridge is intentionally conservative at this stage:
 - diagnostics and unhandled exception capture are built in
 - shared bridge infrastructure is decoupled from the VSIX so other hosts can provide their own implementations
 
+## Bridge Tool Boundary
+
+Shared bridge tools execute through a catalog/executor boundary in `VsMcpBridge.Shared.Tools`.
+The initial catalog is compiled and in-memory only; it is intentionally empty until future slices move existing commands or add new tool packs.
+MEF discovery, directory-loaded tools, regex search, BM25 search, and host-specific tool packs are future extensions of this boundary, not part of the initial runtime path.
+
+The executor owns the tool execution boundary logging contract.
+Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.
+
 ## Logging and Diagnostics Flow
 
 Current logging behavior is intentionally boundary-focused for triage:
