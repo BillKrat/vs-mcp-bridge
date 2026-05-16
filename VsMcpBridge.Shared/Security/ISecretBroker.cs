@@ -5,6 +5,6 @@ namespace VsMcpBridge.Shared.Security
 {
     public interface ISecretBroker
     {
-        Task<string?> ResolveAsync(ISecretReference reference, CancellationToken cancellationToken);
+        Task<SecretResolutionResult> ResolveAsync(ISecretReference reference, CancellationToken cancellationToken);
     }
 }

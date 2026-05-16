@@ -77,8 +77,10 @@ The current baseline validates:
 - structured `BridgeToolResult` output
 - required capability metadata flowing from tool descriptor to policy context and audit metadata
 - optional `CapabilityToolExecutionPolicy` decisions for allowed, denied, or unknown required capabilities when a harness or host explicitly configures that policy
+- structured secret references flowing from request arguments to policy context, broker resolution, and audit metadata without storing raw secret values
 - policy evaluation before tool invocation
 - approval evaluation before tool invocation when a descriptor requires approval
+- safe `SecretReferenceUnresolved` failure before tool execution when the configured broker cannot resolve a reference
 - redacted Trace-level request/result payload logging
 - terminal `BridgeAuditEnvelope` emission when an audit sink is registered
 
@@ -125,6 +127,7 @@ New code should use the existing boundary logging pattern when applicable:
 - keep MCP stdout clean and route diagnostics through UI log, file log, Debug, or StdErr as appropriate
 - send tool execution payload-oriented log fields through `ISecurityRedactor`; do not write raw secrets, tokens, passwords, bearer values, prompts containing secrets, exception dumps containing secrets, or trace artifacts containing secrets
 - when capturing capability metadata or capability policy decisions, treat them as declarative policy input; record the redacted required-capability list but do not infer that authentication, OAuth scopes, role/user identity, UI prompts, persistent policy storage, remote authorization, or sandboxing exists
+- when capturing secret-reference metadata, record only reference kind/provider/id and redacted broker status; do not infer that production secret storage, encryption, key-vault integration, external providers, persistence, or raw secret injection exists
 - for approval-required tool traces, record only redacted approval reason metadata and confirm denied approvals return `ApprovalDenied` without invoking the tool
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.

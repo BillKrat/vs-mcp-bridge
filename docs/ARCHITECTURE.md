@@ -97,8 +97,10 @@ The executor is the shared enforcement point for foundational tool security beha
 - `IToolExecutionPolicy` evaluates a `ToolExecutionSecurityContext` before a tool runs.
 - tool descriptors can declare required `BridgeCapability` metadata, and that metadata flows into `ToolExecutionSecurityContext` for future capability-aware policy decisions.
 - `IToolExecutionApprovalService` evaluates a `ToolExecutionApprovalContext` only when a tool descriptor marks `ApprovalRequirement = Required`.
+- request arguments can carry structured `ISecretReference` values so tools can point at named secrets without placing raw secret values in the normal execution path.
+- `ISecretBroker` is the indirection seam for future secret resolution; the default `NoOpSecretBroker` returns unresolved.
 - `ISecurityRedactor` masks obvious secret-like values before payload-oriented logs or audit metadata are emitted.
-- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, successful, failed, canceled, or unknown-tool outcomes, including redacted required-capability metadata.
+- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, secret-reference-unresolved, successful, failed, canceled, or unknown-tool outcomes, including redacted required-capability and secret-reference metadata.
 - request id and operation id remain part of the policy, audit, logging, and result path.
 
 Current safe defaults preserve existing runtime behavior:
@@ -109,6 +111,7 @@ Current safe defaults preserve existing runtime behavior:
 - `AllowToolExecutionApprovalService` is the default approval service for hosts or tests that do not override the seam.
 - `CapabilityToolExecutionPolicy` is available as an explicit opt-in policy that can allow or deny based on descriptor-declared capabilities.
 - the default DI policy remains `AllowToolExecutionPolicy`, so existing runtime behavior is unchanged unless a host or test deliberately replaces it.
+- `NoOpSecretBroker` is the default secret broker, so structured secret references fail safely with `SecretReferenceUnresolved` instead of resolving to raw values.
 - `NoOpAuditSink` records nothing unless a host or test overrides it.
 - `BridgeSecurityRedactor` performs basic masking for obvious keys such as `apiKey`, `token`, `password`, `secret`, and bearer authorization values.
 
@@ -120,6 +123,7 @@ The durable approval-aware evidence is `docs/diagrams/tool-approval-trace-202605
 That trace uses a shared-test fake approval-required tool and proves approved and denied decisions without adding a runtime tool, UI prompt, proposal approval redesign, or MCP transport change.
 Capability metadata is declarative only in the current system. It is visible to policy and audit, and the optional `CapabilityToolExecutionPolicy` can evaluate static allowed/denied capability names.
 It does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, persistent policy storage, remote authorization, or production authorization by itself.
+Secret references are also contract-only. They provide structured indirection and safe observability metadata, but they do not implement real secret storage, encryption, Azure Key Vault, external providers, authentication, persistence, or raw secret injection into tools.
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.

@@ -32,6 +32,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
+        Assert.IsType<NoOpSecretBroker>(provider.GetRequiredService<ISecretBroker>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
@@ -54,6 +55,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
+        Assert.IsType<NoOpSecretBroker>(provider.GetRequiredService<ISecretBroker>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
@@ -300,6 +302,116 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("operation-456", auditEvent.OperationId);
         Assert.Equal("capability policy allowed", auditEvent.Metadata["policyReason"]);
         Assert.Equal("workspace.read,token=[REDACTED]", auditEvent.Metadata["requiredCapabilities"]);
+    }
+
+    [Fact]
+    public async Task Executor_flows_secret_references_to_policy_context_without_raw_secret_values()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingSecretAwarePolicy(ToolExecutionPolicyDecision.Allow("secret refs inspected"));
+        var broker = new RecordingSecretBroker(SecretResolutionResult.ResolvedReference("Synthetic reference resolved"));
+        var tool = new FakeBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy,
+            new AllowToolExecutionApprovalService(),
+            broker);
+        var request = CreateRequestWithSecretReference("fake.echo", new SecretReference("openai-api-key", SecretReferenceKind.Named, "test-provider"));
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Same(request, tool.LastRequest);
+        Assert.Equal(1, policy.CallCount);
+        Assert.Equal(new[] { "openai-api-key" }, policy.LastContext!.SecretReferences.Select(reference => reference.ReferenceId).ToArray());
+        Assert.Equal(1, broker.CallCount);
+        Assert.Equal("openai-api-key", broker.LastReference!.ReferenceId);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal("Named:test-provider:openai-api-key", auditEvent.Metadata["secretReferences"]);
+        Assert.Equal("Secret references resolved", auditEvent.Metadata["secretResolution"]);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_returns_structured_failure_for_unresolved_secret_reference()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingSecretAwarePolicy(ToolExecutionPolicyDecision.Allow("policy allowed"));
+        var broker = new RecordingSecretBroker(SecretResolutionResult.Unresolved("missing secret=raw-broker-secret"));
+        var tool = new FakeBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy,
+            new AllowToolExecutionApprovalService(),
+            broker);
+        var request = CreateRequestWithSecretReference("fake.echo", new SecretReference("token=raw-reference-secret", SecretReferenceKind.Named));
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("SecretReferenceUnresolved", result.ErrorCode);
+        Assert.Contains("token=[REDACTED]", result.Message);
+        Assert.Contains("secret=[REDACTED]", result.Message);
+        Assert.Null(tool.LastRequest);
+        Assert.Equal(1, policy.CallCount);
+        Assert.Equal(1, broker.CallCount);
+        Assert.DoesNotContain(logger.VerboseMessages, message => message.Contains("raw-reference-secret"));
+        Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("raw-broker-secret"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("SecretReferenceUnresolved", auditEvent.ErrorCode);
+        Assert.Equal("Named:token=[REDACTED]", auditEvent.Metadata["secretReferences"]);
+        Assert.Contains("secret=[REDACTED]", auditEvent.Metadata["secretResolution"]);
+        Assert.DoesNotContain(auditEvent.Metadata["secretReferences"], "raw-reference-secret");
+        Assert.DoesNotContain(auditEvent.Metadata["secretResolution"], "raw-broker-secret");
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_runs_policy_and_approval_before_unresolved_secret_reference_failure()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingSecretAwarePolicy(ToolExecutionPolicyDecision.Allow("policy allowed"));
+        var approvalService = new RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision.Approve("operator approved"));
+        var broker = new RecordingSecretBroker(SecretResolutionResult.Unresolved("No synthetic secret"));
+        var tool = new ApprovalRequiredBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy,
+            approvalService,
+            broker);
+        var request = CreateRequestWithSecretReference(ApprovalRequiredBridgeTool.ToolId, new SecretReference("openai-api-key", SecretReferenceKind.Named));
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("SecretReferenceUnresolved", result.ErrorCode);
+        Assert.Null(tool.LastRequest);
+        Assert.Equal(1, policy.CallCount);
+        Assert.Equal(1, approvalService.CallCount);
+        Assert.Equal(1, broker.CallCount);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.Equal("Approved", auditEvent.Metadata["approvalDecision"]);
+        Assert.Equal("Named:openai-api-key", auditEvent.Metadata["secretReferences"]);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
     }
 
     [Fact]
@@ -992,6 +1104,19 @@ public sealed class BridgeToolInfrastructureTests
             Arguments = new Dictionary<string, object?> { ["input"] = "hello" }
         };
 
+    private static BridgeToolRequest CreateRequestWithSecretReference(string toolId, ISecretReference secretReference)
+        => new BridgeToolRequest
+        {
+            ToolId = toolId,
+            RequestId = "request-123",
+            OperationId = "operation-456",
+            Arguments = new Dictionary<string, object?>
+            {
+                ["input"] = "hello",
+                ["apiKey"] = secretReference
+            }
+        };
+
     private static BridgeToolRequest CreateRegexRequest(string pattern, IReadOnlyList<string> entries, bool caseSensitive = false, int? maxResults = null)
     {
         var arguments = new Dictionary<string, object?>
@@ -1213,6 +1338,27 @@ public sealed class BridgeToolInfrastructureTests
         }
     }
 
+    private sealed class RecordingSecretAwarePolicy : IToolExecutionPolicy
+    {
+        private readonly ToolExecutionPolicyDecision _decision;
+
+        public RecordingSecretAwarePolicy(ToolExecutionPolicyDecision decision)
+        {
+            _decision = decision;
+        }
+
+        public int CallCount { get; private set; }
+
+        public ToolExecutionSecurityContext? LastContext { get; private set; }
+
+        public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastContext = context;
+            return Task.FromResult(_decision);
+        }
+    }
+
     private sealed class RecordingToolExecutionApprovalService : IToolExecutionApprovalService
     {
         private readonly ToolExecutionApprovalDecision _decision;
@@ -1231,6 +1377,27 @@ public sealed class BridgeToolInfrastructureTests
             CallCount++;
             LastContext = context;
             return Task.FromResult(_decision);
+        }
+    }
+
+    private sealed class RecordingSecretBroker : ISecretBroker
+    {
+        private readonly SecretResolutionResult _result;
+
+        public RecordingSecretBroker(SecretResolutionResult result)
+        {
+            _result = result;
+        }
+
+        public int CallCount { get; private set; }
+
+        public ISecretReference? LastReference { get; private set; }
+
+        public Task<SecretResolutionResult> ResolveAsync(ISecretReference reference, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastReference = reference;
+            return Task.FromResult(_result);
         }
     }
 

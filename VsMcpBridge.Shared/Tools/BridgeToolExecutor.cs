@@ -18,9 +18,10 @@ namespace VsMcpBridge.Shared.Tools
         private readonly IAuditSink _auditSink;
         private readonly IToolExecutionPolicy _policy;
         private readonly IToolExecutionApprovalService _approvalService;
+        private readonly ISecretBroker _secretBroker;
 
         public BridgeToolExecutor(IBridgeToolCatalog catalog, ILogger logger)
-            : this(catalog, logger, new BridgeSecurityRedactor(), new NoOpAuditSink(), new AllowToolExecutionPolicy(), new AllowToolExecutionApprovalService())
+            : this(catalog, logger, new BridgeSecurityRedactor(), new NoOpAuditSink(), new AllowToolExecutionPolicy(), new AllowToolExecutionApprovalService(), new NoOpSecretBroker())
         {
         }
 
@@ -30,7 +31,7 @@ namespace VsMcpBridge.Shared.Tools
             ISecurityRedactor redactor,
             IAuditSink auditSink,
             IToolExecutionPolicy policy)
-            : this(catalog, logger, redactor, auditSink, policy, new AllowToolExecutionApprovalService())
+            : this(catalog, logger, redactor, auditSink, policy, new AllowToolExecutionApprovalService(), new NoOpSecretBroker())
         {
         }
 
@@ -41,6 +42,18 @@ namespace VsMcpBridge.Shared.Tools
             IAuditSink auditSink,
             IToolExecutionPolicy policy,
             IToolExecutionApprovalService approvalService)
+            : this(catalog, logger, redactor, auditSink, policy, approvalService, new NoOpSecretBroker())
+        {
+        }
+
+        public BridgeToolExecutor(
+            IBridgeToolCatalog catalog,
+            ILogger logger,
+            ISecurityRedactor redactor,
+            IAuditSink auditSink,
+            IToolExecutionPolicy policy,
+            IToolExecutionApprovalService approvalService,
+            ISecretBroker secretBroker)
         {
             _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -48,6 +61,7 @@ namespace VsMcpBridge.Shared.Tools
             _auditSink = auditSink ?? throw new ArgumentNullException(nameof(auditSink));
             _policy = policy ?? throw new ArgumentNullException(nameof(policy));
             _approvalService = approvalService ?? throw new ArgumentNullException(nameof(approvalService));
+            _secretBroker = secretBroker ?? throw new ArgumentNullException(nameof(secretBroker));
         }
 
         public async Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
@@ -60,6 +74,11 @@ namespace VsMcpBridge.Shared.Tools
                 $"Bridge tool execution started [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}].");
             _logger.LogTrace(
                 $"Bridge tool request payload [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [Arguments={RedactPayload(request.Arguments)}].");
+            var initialContext = new ToolExecutionSecurityContext(request, descriptor: null);
+            var secretReferences = initialContext.SecretReferences;
+            var secretReferenceMetadata = FormatSecretReferences(secretReferences);
+            _logger.LogTrace(
+                $"Bridge tool secret reference metadata [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [SecretReferences={RedactValue(secretReferenceMetadata)}].");
 
             if (!_catalog.TryGetTool(request.ToolId, out var tool))
             {
@@ -73,6 +92,8 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: false,
                     policyReason: "Unknown tool",
                     requiredCapabilities: "None",
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: "NotEvaluated",
                     approvalRequirement: ToolExecutionApprovalRequirement.NotRequired,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Unknown tool",
@@ -84,7 +105,8 @@ namespace VsMcpBridge.Shared.Tools
             var requiredCapabilities = FormatCapabilities(tool.Descriptor.RequiredCapabilities);
             _logger.LogTrace(
                 $"Bridge tool capability metadata [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [RequiredCapabilities={RedactValue(requiredCapabilities)}].");
-            var policyDecision = await _policy.EvaluateAsync(new ToolExecutionSecurityContext(request, tool.Descriptor), cancellationToken).ConfigureAwait(false)
+            var securityContext = new ToolExecutionSecurityContext(request, tool.Descriptor);
+            var policyDecision = await _policy.EvaluateAsync(securityContext, cancellationToken).ConfigureAwait(false)
                 ?? ToolExecutionPolicyDecision.Deny("Policy returned no decision");
             if (!policyDecision.Allowed)
             {
@@ -98,6 +120,8 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: false,
                     policyReason: policyDecision.Reason,
                     requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: "NotEvaluated",
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Policy denied before approval",
@@ -119,8 +143,33 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: false,
                     policyReason: policyDecision.Reason,
                     requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: "NotEvaluated",
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "Denied",
+                    approvalReason: approvalDecision.Reason,
+                    stopwatch.ElapsedMilliseconds,
+                    cancellationToken).ConfigureAwait(false);
+                return result;
+            }
+
+            var secretResolution = await ResolveSecretReferencesAsync(secretReferences, cancellationToken).ConfigureAwait(false);
+            if (!secretResolution.Resolved)
+            {
+                stopwatch.Stop();
+                var result = BridgeToolResult.Failed(request, "SecretReferenceUnresolved", RedactValue(secretResolution.Reason));
+                _logger.LogWarning(
+                    $"Bridge tool secret reference resolution failed [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [Reason={RedactValue(secretResolution.Reason)}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
+                await EmitAuditAsync(
+                    request,
+                    result,
+                    allowed: false,
+                    policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: secretResolution.Reason,
+                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
+                    approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
@@ -144,6 +193,8 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: true,
                     policyReason: policyDecision.Reason,
                     requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: secretResolution.Reason,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -163,6 +214,8 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: true,
                     policyReason: policyDecision.Reason,
                     requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: secretResolution.Reason,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -183,6 +236,8 @@ namespace VsMcpBridge.Shared.Tools
                     allowed: true,
                     policyReason: policyDecision.Reason,
                     requiredCapabilities: requiredCapabilities,
+                    secretReferences: secretReferenceMetadata,
+                    secretResolution: secretResolution.Reason,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -215,6 +270,8 @@ namespace VsMcpBridge.Shared.Tools
             bool allowed,
             string policyReason,
             string requiredCapabilities,
+            string secretReferences,
+            string secretResolution,
             ToolExecutionApprovalRequirement approvalRequirement,
             string approvalDecision,
             string approvalReason,
@@ -238,6 +295,8 @@ namespace VsMcpBridge.Shared.Tools
                         {
                             ["policyReason"] = RedactValue(policyReason),
                             ["requiredCapabilities"] = RedactValue(requiredCapabilities),
+                            ["secretReferences"] = RedactValue(secretReferences),
+                            ["secretResolution"] = RedactValue(secretResolution),
                             ["approvalRequirement"] = approvalRequirement.ToString(),
                             ["approvalDecision"] = approvalDecision,
                             ["approvalReason"] = RedactValue(approvalReason)
@@ -252,6 +311,24 @@ namespace VsMcpBridge.Shared.Tools
             }
         }
 
+        private async Task<SecretResolutionResult> ResolveSecretReferencesAsync(
+            IReadOnlyList<ISecretReference> secretReferences,
+            CancellationToken cancellationToken)
+        {
+            if (secretReferences.Count == 0)
+                return SecretResolutionResult.ResolvedReference("No secret references");
+
+            foreach (var reference in secretReferences)
+            {
+                var result = await _secretBroker.ResolveAsync(reference, cancellationToken).ConfigureAwait(false)
+                    ?? SecretResolutionResult.Unresolved("Secret broker returned no result.");
+                if (!result.Resolved)
+                    return SecretResolutionResult.Unresolved($"Secret reference '{reference.ReferenceId}' was not resolved: {result.Reason}");
+            }
+
+            return SecretResolutionResult.ResolvedReference("Secret references resolved");
+        }
+
         private static string FormatCapabilities(IReadOnlyList<BridgeCapability>? capabilities)
         {
             if (capabilities == null || capabilities.Count == 0)
@@ -263,6 +340,25 @@ namespace VsMcpBridge.Shared.Tools
                 .ToArray();
 
             return names.Length == 0 ? "None" : string.Join(",", names);
+        }
+
+        private static string FormatSecretReferences(IReadOnlyList<ISecretReference>? secretReferences)
+        {
+            if (secretReferences == null || secretReferences.Count == 0)
+                return "None";
+
+            var metadata = secretReferences
+                .Where(reference => reference != null && !string.IsNullOrWhiteSpace(reference.ReferenceId))
+                .Select(reference =>
+                {
+                    var redactionMetadata = new SecretRedactionMetadata(reference);
+                    return string.IsNullOrWhiteSpace(redactionMetadata.Provider)
+                        ? $"{redactionMetadata.Kind}:{redactionMetadata.ReferenceId}"
+                        : $"{redactionMetadata.Kind}:{redactionMetadata.Provider}:{redactionMetadata.ReferenceId}";
+                })
+                .ToArray();
+
+            return metadata.Length == 0 ? "None" : string.Join(",", metadata);
         }
 
         private static string GetApprovalDecisionName(BridgeToolDescriptor descriptor, ToolExecutionApprovalDecision decision)

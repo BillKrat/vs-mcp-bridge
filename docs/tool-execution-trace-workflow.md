@@ -8,7 +8,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
-- proving the minimal policy/capability/approval/redaction/audit seams around execution
+- proving the minimal policy/capability/approval/secret-reference/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
 - generating a Mermaid sequence diagram from observed behavior
@@ -179,6 +179,8 @@ For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAudi
 Capability-aware traces should use a fake or test tool descriptor with `RequiredCapabilities` populated; existing compiled tools declare no required capabilities by default.
 Capability metadata is policy input only in the current bridge. `CapabilityToolExecutionPolicy` can be used explicitly in tests or harnesses to evaluate static allowed, denied, and unknown required capabilities.
 It is not authentication, OAuth scope enforcement, role/user identity, UI permission prompting, persistent policy storage, remote authorization, sandboxing, or production authorization.
+Secret-reference traces should use synthetic `SecretReference` values and a fake broker. The default `NoOpSecretBroker` returns unresolved, and unresolved references must produce a structured `SecretReferenceUnresolved` result before tool execution.
+Secret references are future-proof indirection metadata only; they are not real secret storage, encryption, Azure Key Vault integration, external provider integration, authentication, persistence, or raw secret injection.
 Approval-aware traces should use a fake or test tool descriptor with `ApprovalRequirement=Required`; existing compiled tools remain approval-not-required by default.
 The current durable approval trace uses the shared-test `ApprovalRequiredBridgeTool` fixture and `RecordingToolExecutionApprovalService`.
 
@@ -227,6 +229,8 @@ For failure-path traces, capture:
 - exception type if one was logged
 - whether the failure was structured by the tool or caught by `BridgeToolExecutor`
 - which required capabilities were declared by the descriptor
+- which secret references were declared in the request arguments
+- whether secret references resolved or failed structurally
 - whether policy allowed or denied execution
 - whether tool approval was not required, approved, or denied
 - whether an audit envelope was emitted with request id and operation id
@@ -312,12 +316,14 @@ Confirm:
 - `BridgeToolExecutor.ExecuteAsync` logs redacted required-capability metadata after catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
 - `ToolExecutionSecurityContext.RequiredCapabilities` exposes descriptor-declared capabilities to policy
+- `ToolExecutionSecurityContext.SecretReferences` exposes structured request secret references to policy
 - `CapabilityToolExecutionPolicy` is optional and is not the default DI policy
 - when `CapabilityToolExecutionPolicy` denies, `BridgeToolExecutor` returns a structured `PolicyDenied` result before approval or tool execution
 - `BridgeToolExecutor.ExecuteAsync` evaluates approval only when the descriptor requires it
 - approval-denied executions return structured `ApprovalDenied` failures and do not invoke the tool
+- unresolved secret references return structured `SecretReferenceUnresolved` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
-- audit metadata includes redacted required capabilities, approval requirement, approval decision, and redacted approval reason
+- audit metadata includes redacted required capabilities, secret references, secret resolution status, approval requirement, approval decision, and redacted approval reason
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex

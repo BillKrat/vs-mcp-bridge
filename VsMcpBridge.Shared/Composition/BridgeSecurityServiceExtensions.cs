@@ -12,6 +12,7 @@ namespace VsMcpBridge.Shared.Composition
             services.TryAddSingleton<IAuditSink, NoOpAuditSink>();
             services.TryAddSingleton<IToolExecutionPolicy, AllowToolExecutionPolicy>();
             services.TryAddSingleton<IToolExecutionApprovalService, AllowToolExecutionApprovalService>();
+            services.TryAddSingleton<ISecretBroker, NoOpSecretBroker>();
 
             return services;
         }
