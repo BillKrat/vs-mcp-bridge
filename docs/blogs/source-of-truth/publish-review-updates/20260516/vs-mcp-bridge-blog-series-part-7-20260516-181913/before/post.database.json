@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  149,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "5520e2d5-c597-492d-8b41-e467152364cd"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 7",
+    "description":  "Signal Map for the Current Bridge. This post maps the current VS MCP Bridge to the signals it already exposes, the signals that need tightening, and the missing evidence that still makes validation harder than it should be.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-7",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T18:34:00.000",
+    "dateModified":  "2026-04-23T06:19:04.573",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "ec732acbf8bf3791041c9a602a6934b986b664ed2e849aef3a14d535a16633a4",
+    "export":  {
+                   "phase":  "before-review-update",
+                   "folder":  "before",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:19:13.981Z"
+               }
+}

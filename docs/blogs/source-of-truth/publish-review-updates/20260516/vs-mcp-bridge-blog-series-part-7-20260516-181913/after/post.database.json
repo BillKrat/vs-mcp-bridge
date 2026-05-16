@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  149,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "5520e2d5-c597-492d-8b41-e467152364cd"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 7",
+    "description":  "How VS MCP Bridge uses durable logs, metadata, Mermaid traces, workflow documents, and session handoffs to make architecture validation and AI-assisted troubleshooting reconstructable.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-7",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T18:34:00.000",
+    "dateModified":  "2026-05-16T16:19:14.223",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "fb04e6e7507a6dd5d425e06f72b020cf74cd129cc7efc19df0f4734e03446bdf",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:19:14.285Z"
+               }
+}

@@ -30,10 +30,12 @@ Current migration note:
 - `blog-publishing-review-plan-20260516.md` records the publishing-readiness plan for the cleaned canonical post set, including DB target identifiers, intentional tokens, Mermaid references, stale-link review, publish order, and post-publish verification checklist.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first read-only pre-publish compare for Part 1 against the live DB row, preserved DB export, and canonical repo source.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-2-20260516.md` records the read-only pre-publish compare for Part 2 before the single-post review update.
+- `prepublish-compare-vs-mcp-bridge-blog-series-part-7-20260516.md` records the read-only pre-publish compare for Part 7 before the single-post review update.
 - `prepublish-compare-ready-posts-20260516.md` records the batch read-only pre-publish compare for all 14 posts marked ready for publishing review.
 - `prepublish-blocked-row-diff-20260516.md` records the read-only inspection of the six rows whose current live DB state no longer matched the preserved export baseline.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first single-post review update, before/after exports, and rendered-cache behavior for Part 1.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-2-20260516.md` records the Part 2 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
+- `publish-review-update-vs-mcp-bridge-blog-series-part-7-20260516.md` records the Part 7 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
 - `blogai-cache-reload-inspection-20260516.md` records the BlogAI/BlogEngine post-cache reload inspection after the first Part 1 DB body update and documents the safe development reload verification path.
 - `gwn-wiki-extension-link-mapping-20260516.md` records the preserved `GwnWikiExtension` plugin settings export from `dbo.be_DataStoreSettings` and explains how bracket-style tokens resolve to production-domain links.
 
