@@ -1,0 +1,93 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  130,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "5232e959-6845-4c32-9ba0-956980aebffc"
+               },
+    "title":  "Understanding Dependency Injection (DI)",
+    "description":  "Basics of understanding dependency injection - by example.",
+    "author":  "BillKrat",
+    "slug":  "understanding-dependency-injection",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2025-03-30T04:09:00.000",
+    "dateModified":  "2025-11-11T07:02:07.647",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "links":  [
+                  {
+                      "url":  "https://www.linqpad.net/Download.aspx",
+                      "kind":  "external"
+                  },
+                  {
+                      "url":  "/file.axd?file=/Blogs/IOC/WeatherForecastR5.linq",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/001-AppAnimatedGif.gif",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/002-OverView-CodeSkeleton.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/003-PagesAndService.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/004-HomePage.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/005-WeatherPage.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/006-ToggleService.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/007-HtmlBase.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/008-Formatters.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/009-Foo.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/011-WebAppExtension.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/011b-WebAppExtension.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/007b-GetHtml.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Blogs/IOC/012-Middleware.png",
+                      "kind":  "internal"
+                  }
+              ],
+    "export":  {
+                   "folder":  "understanding-dependency-injection",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

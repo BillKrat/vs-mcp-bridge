@@ -5,6 +5,25 @@
 ## Script
 
 - [Publish-BlogPostDraft.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Publish-BlogPostDraft.ps1)
+- [Export-BlogPostsFromDatabase.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-BlogPostsFromDatabase.ps1)
+
+## Read-Only Export
+
+`Export-BlogPostsFromDatabase.ps1` preserves existing BlogEngine database rows before repo-side blog rewrites.
+
+```powershell
+.\scripts\blog-publishing\Export-BlogPostsFromDatabase.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS
+```
+
+Default output:
+
+```text
+docs/blogs/source-of-truth/db-export-20260516/
+```
+
+The export writes `manifest.json`, `README.md`, and one folder per `dbo.be_Posts` row containing `post.database.json` plus exact `content.html`.
+It is read-only and does not publish, reload, update, or delete database records.
 
 ## Required Parameters
 

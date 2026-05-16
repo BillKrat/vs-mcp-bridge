@@ -1,0 +1,37 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  100,
+                   "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                   "postId":  "28fa9abd-b1ad-467c-8149-d56970121cbf"
+               },
+    "title":  "Welcome to Development\u0027s blog",
+    "description":  "The description is used as the meta description as well as shown in the related posts. It is recommended that you write a description, but not mandatory",
+    "author":  "admin",
+    "slug":  "Welcome-to-Developments-blog",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2023-07-29T21:46:24.140",
+    "dateModified":  "2023-07-29T16:46:24.140",
+    "categories":  [
+                       "General"
+                   ],
+    "tags":  [
+                 "welcome"
+             ],
+    "links":  [
+                  {
+                      "url":  "/Development/Account/login.aspx",
+                      "kind":  "internal"
+                  }
+              ],
+    "export":  {
+                   "folder":  "welcome-to-developments-blog",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

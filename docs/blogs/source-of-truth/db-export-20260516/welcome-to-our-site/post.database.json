@@ -1,0 +1,39 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  114,
+                   "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                   "postId":  "4fd150b6-303b-43fb-9057-e24a6009c6c9"
+               },
+    "title":  "Welcome to our site",
+    "description":  "This is the time to relax....\u0026nbsp;\nand enjoy our site",
+    "author":  "Admin",
+    "slug":  "welcome-to-our-site",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2023-09-25T16:34:00.000",
+    "dateModified":  "2023-09-25T14:36:23.127",
+    "categories":  [
+                       "Public"
+                   ],
+    "tags":  [
+
+             ],
+    "links":  [
+                  {
+                      "url":  "data:[embedded-data-omitted-from-manifest]",
+                      "kind":  "embedded-data",
+                      "length":  1356790,
+                      "sha256":  "cb70b54677ffd14cfb37a689d3be16cb08155941e424ed8e06afd3eddd8f198c"
+                  }
+              ],
+    "export":  {
+                   "folder":  "welcome-to-our-site",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

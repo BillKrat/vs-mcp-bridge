@@ -1,0 +1,533 @@
+{
+    "exportName":  "db-export-20260516",
+    "exportedAt":  "2026-05-16T20:56:27.197Z",
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "includesDeleted":  true
+               },
+    "counts":  {
+                   "posts":  22,
+                   "published":  20,
+                   "drafts":  0,
+                   "deleted":  2,
+                   "duplicateSlugs":  0,
+                   "ambiguousRecords":  0
+               },
+    "posts":  [
+                  {
+                      "postRowId":  100,
+                      "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                      "postId":  "28fa9abd-b1ad-467c-8149-d56970121cbf",
+                      "slug":  "Welcome-to-Developments-blog",
+                      "title":  "Welcome to Development\u0027s blog",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2023-07-29T21:46:24.140",
+                      "dateModified":  "2023-07-29T16:46:24.140",
+                      "folder":  "welcome-to-developments-blog",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "/Development/Account/login.aspx",
+                                        "kind":  "internal"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  110,
+                      "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                      "postId":  "7b58c1cf-f188-4286-9379-893620cdd186",
+                      "slug":  "creating-a-post",
+                      "title":  "Creating a Post",
+                      "status":  "deleted",
+                      "isPublished":  true,
+                      "isDeleted":  true,
+                      "dateCreated":  "2023-09-01T01:06:00.000",
+                      "dateModified":  "2025-02-08T15:16:30.103",
+                      "folder":  "creating-a-post",
+                      "linkCount":  3,
+                      "links":  [
+                                    {
+                                        "url":  "/bloghelp/image.axd?picture=/Menus/CreateAPostR2.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/bloghelp/image.axd?picture=/Posts/Publish.gif",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/videos/creatingapost.mp4",
+                                        "kind":  "internal"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  111,
+                      "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                      "postId":  "6b807649-b0c3-4e9f-92aa-150cc42985ce",
+                      "slug":  "difference-between-post-and-page",
+                      "title":  "Difference between Post and Page",
+                      "status":  "deleted",
+                      "isPublished":  true,
+                      "isDeleted":  true,
+                      "dateCreated":  "2023-09-01T01:08:00.000",
+                      "dateModified":  "2025-02-08T15:16:25.447",
+                      "folder":  "difference-between-post-and-page",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  114,
+                      "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                      "postId":  "4fd150b6-303b-43fb-9057-e24a6009c6c9",
+                      "slug":  "welcome-to-our-site",
+                      "title":  "Welcome to our site",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2023-09-25T16:34:00.000",
+                      "dateModified":  "2023-09-25T14:36:23.127",
+                      "folder":  "welcome-to-our-site",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "data:[embedded-data-omitted-from-manifest]",
+                                        "kind":  "embedded-data",
+                                        "length":  1356790,
+                                        "sha256":  "cb70b54677ffd14cfb37a689d3be16cb08155941e424ed8e06afd3eddd8f198c"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  115,
+                      "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                      "postId":  "0226b556-2721-4f0d-b434-3eac79082048",
+                      "slug":  "this-one-will-only-be-seen-by-subscribers",
+                      "title":  "This one will only be seen by subscribers",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2023-09-25T16:37:00.000",
+                      "dateModified":  "2023-09-25T14:37:55.783",
+                      "folder":  "this-one-will-only-be-seen-by-subscribers",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  122,
+                      "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                      "postId":  "813ae766-098e-472d-a127-5093d4e19ca7",
+                      "slug":  "blog-engine-billkrat-fork-documentation",
+                      "title":  "Blog Engine (BillKrat Fork) documentation",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2025-02-08T23:19:00.000",
+                      "dateModified":  "2025-02-08T15:20:23.373",
+                      "folder":  "blog-engine-billkrat-fork-documentation",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  123,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "3a6db24e-a8aa-4598-88fa-58d21d4fff25",
+                      "slug":  "how-to-publish-your-own-blog-smarterasp",
+                      "title":  "How to publish your own blog [SmarterAsp]",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2025-02-13T02:04:00.000",
+                      "dateModified":  "2025-07-19T08:44:22.827",
+                      "folder":  "how-to-publish-your-own-blog-smarterasp",
+                      "linkCount":  7,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/BlogEngine.NET",
+                                        "kind":  "external"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/001-create_site.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/002-ShowWebDeploy.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/003-GetWebDeployInfo.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/004-PublishDialog.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/005-SaveDeployInfo.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Host/PublishBlog/006-Publish.png",
+                                        "kind":  "internal"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  130,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "5232e959-6845-4c32-9ba0-956980aebffc",
+                      "slug":  "understanding-dependency-injection",
+                      "title":  "Understanding Dependency Injection (DI)",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2025-03-30T04:09:00.000",
+                      "dateModified":  "2025-11-11T07:02:07.647",
+                      "folder":  "understanding-dependency-injection",
+                      "linkCount":  15,
+                      "links":  [
+                                    {
+                                        "url":  "https://www.linqpad.net/Download.aspx",
+                                        "kind":  "external"
+                                    },
+                                    {
+                                        "url":  "/file.axd?file=/Blogs/IOC/WeatherForecastR5.linq",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/001-AppAnimatedGif.gif",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/002-OverView-CodeSkeleton.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/003-PagesAndService.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/004-HomePage.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/005-WeatherPage.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/006-ToggleService.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/007-HtmlBase.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/008-Formatters.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/009-Foo.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/011-WebAppExtension.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/011b-WebAppExtension.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/007b-GetHtml.png",
+                                        "kind":  "internal"
+                                    },
+                                    {
+                                        "url":  "/image.axd?picture=/Blogs/IOC/012-Middleware.png",
+                                        "kind":  "internal"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  135,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "46828793-1f3d-4031-906e-87c1c31dce7e",
+                      "slug":  "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
+                      "title":  "WPF VSIX Threading: Understanding UI Switching, Async Behavior, and Pipe Safety",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-03-28T11:41:00.000",
+                      "dateModified":  "2026-03-28T04:46:13.027",
+                      "folder":  "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  141,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "ae00d3f4-7c9a-4084-b690-d974e945d69e",
+                      "slug":  "why-vsix-project-should-target-net-framework-4-7-2",
+                      "title":  "Why a VSIX Project Should Target .NET Framework 4.7.2",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-01T17:02:00.000",
+                      "dateModified":  "2026-04-01T10:03:20.493",
+                      "folder":  "why-vsix-project-should-target-net-framework-4-7-2",
+                      "linkCount":  2,
+                      "links":  [
+                                    {
+                                        "url":  "https://learn.microsoft.com/en-us/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions?view=visualstudio",
+                                        "kind":  "external"
+                                    },
+                                    {
+                                        "url":  "https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.toolwindowpane?view=visualstudiosdk-2022",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  142,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "43bf6aae-15c9-4c90-b3b2-66ac51c4a7c8",
+                      "slug":  "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
+                      "title":  "Understanding a Local MCP Server Over Stdio and Local-Only Communication Over a Named Pipe",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-01T17:04:00.000",
+                      "dateModified":  "2026-04-12T10:31:23.680",
+                      "folder":  "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
+                      "linkCount":  3,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md",
+                                        "kind":  "external"
+                                    },
+                                    {
+                                        "url":  "https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.standardinput?view=net-10.0",
+                                        "kind":  "external"
+                                    },
+                                    {
+                                        "url":  "https://learn.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeserverstream?view=net-10.0",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  143,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "f0c7a958-f41a-4143-b601-82ce84fd4af0",
+                      "slug":  "vs-mcp-bridge-blog-series-part-1",
+                      "title":  "VS MCP Bridge Blog Series: Part 1",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T16:25:00.000",
+                      "dateModified":  "2026-05-12T17:56:50.340",
+                      "folder":  "vs-mcp-bridge-blog-series-part-1",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  144,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "cad63f28-5739-40be-b8f6-0288a1e3da20",
+                      "slug":  "vs-mcp-bridge-blog-series-part-2",
+                      "title":  "VS MCP Bridge Blog Series: Part 2",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T17:35:00.000",
+                      "dateModified":  "2026-05-12T17:58:49.887",
+                      "folder":  "vs-mcp-bridge-blog-series-part-2",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  145,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "78dbd347-397e-4185-b6d5-d67558cc06be",
+                      "slug":  "vs-mcp-bridge-blog-series-part-3",
+                      "title":  "VS MCP Bridge Blog Series: Part 3",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T17:48:00.000",
+                      "dateModified":  "2026-05-12T18:00:24.280",
+                      "folder":  "vs-mcp-bridge-blog-series-part-3",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  146,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "f62f7756-269a-4d49-a87d-c0394c7627d9",
+                      "slug":  "vs-mcp-bridge-blog-series-part-4",
+                      "title":  "VS MCP Bridge Blog Series: Part 4",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T18:01:00.000",
+                      "dateModified":  "2026-04-12T10:30:50.303",
+                      "folder":  "vs-mcp-bridge-blog-series-part-4",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  147,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "bd97e5de-4b4e-4660-98f1-465bd53eddec",
+                      "slug":  "vs-mcp-bridge-blog-series-part-5",
+                      "title":  "VS MCP Bridge Blog Series: Part 5",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T18:10:00.000",
+                      "dateModified":  "2026-04-23T06:18:01.040",
+                      "folder":  "vs-mcp-bridge-blog-series-part-5",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  148,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "12db1be9-4143-476d-a12a-04c7ca045a71",
+                      "slug":  "vs-mcp-bridge-blog-series-part-6",
+                      "title":  "VS MCP Bridge Blog Series: Part 6",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T18:17:00.000",
+                      "dateModified":  "2026-04-23T06:18:44.137",
+                      "folder":  "vs-mcp-bridge-blog-series-part-6",
+                      "linkCount":  1,
+                      "links":  [
+                                    {
+                                        "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md",
+                                        "kind":  "external"
+                                    }
+                                ]
+                  },
+                  {
+                      "postRowId":  149,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "5520e2d5-c597-492d-8b41-e467152364cd",
+                      "slug":  "vs-mcp-bridge-blog-series-part-7",
+                      "title":  "VS MCP Bridge Blog Series: Part 7",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-11T18:34:00.000",
+                      "dateModified":  "2026-04-23T06:19:04.573",
+                      "folder":  "vs-mcp-bridge-blog-series-part-7",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  150,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "5465cc54-65ab-4c4f-b6ac-4539de01c365",
+                      "slug":  "understanding-ai-chat-sessions-models-and-agents",
+                      "title":  "Understanding AI Chat Sessions, Models, and Agents",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-12T16:40:00.000",
+                      "dateModified":  "2026-04-23T05:17:24.893",
+                      "folder":  "understanding-ai-chat-sessions-models-and-agents",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  151,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "6484fa94-5d8b-429a-99c6-779b300bc336",
+                      "slug":  "understanding-a-named-pipe-listener",
+                      "title":  "Understanding a Named Pipe Listener",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-17T22:36:00.000",
+                      "dateModified":  "2026-04-27T10:30:04.773",
+                      "folder":  "understanding-a-named-pipe-listener",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  155,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "d0541943-0de1-4c25-a7af-9950c55f1591",
+                      "slug":  "how-stdio-works-in-vs-mcp-bridge",
+                      "title":  "How stdio Works in VS MCP Bridge",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-19T23:24:00.000",
+                      "dateModified":  "2026-04-27T10:21:07.833",
+                      "folder":  "how-stdio-works-in-vs-mcp-bridge",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  },
+                  {
+                      "postRowId":  156,
+                      "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                      "postId":  "b3da6b1c-a955-4ec2-afda-b281bd5d46fd",
+                      "slug":  "inference-driven-software-design-with-copilot-pros-and-cons",
+                      "title":  "Inference-driven development with Copilot; pros and cons",
+                      "status":  "published",
+                      "isPublished":  true,
+                      "isDeleted":  false,
+                      "dateCreated":  "2026-04-23T11:58:00.000",
+                      "dateModified":  "2026-04-23T06:05:58.807",
+                      "folder":  "inference-driven-software-design-with-copilot-pros-and-cons",
+                      "linkCount":  0,
+                      "links":  [
+
+                                ]
+                  }
+              ],
+    "duplicateSlugs":  [
+
+                       ],
+    "ambiguousRecords":  [
+
+                         ]
+}

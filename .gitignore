@@ -463,6 +463,9 @@ VsMcpBridge.Vsix/obj/
 /docs
 !/docs/
 /docs/*
+!/docs/blogs/
+!/docs/blogs/source-of-truth/
+!/docs/blogs/source-of-truth/**
 !/docs/app-host-ping-trace-workflow.md
 !/docs/vsix-host-ping-trace-workflow.md
 !/docs/vsix-host-selected-text-trace-workflow.md

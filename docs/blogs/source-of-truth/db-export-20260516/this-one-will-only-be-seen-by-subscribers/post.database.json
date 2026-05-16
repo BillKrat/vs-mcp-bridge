@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  115,
+                   "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                   "postId":  "0226b556-2721-4f0d-b434-3eac79082048"
+               },
+    "title":  "This one will only be seen by subscribers",
+    "description":  "Hello world!\u0026nbsp; This is what\u0026nbsp;\nI have to share\n\nONe\nTwo\n\n\u0026nbsp;",
+    "author":  "Admin",
+    "slug":  "this-one-will-only-be-seen-by-subscribers",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2023-09-25T16:37:00.000",
+    "dateModified":  "2023-09-25T14:37:55.783",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "links":  [
+
+              ],
+    "export":  {
+                   "folder":  "this-one-will-only-be-seen-by-subscribers",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

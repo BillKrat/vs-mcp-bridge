@@ -1,0 +1,61 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  123,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "3a6db24e-a8aa-4598-88fa-58d21d4fff25"
+               },
+    "title":  "How to publish your own blog [SmarterAsp]",
+    "description":  "Six steps to deploying BlogEngine.NET to a SmarterASP hosting website",
+    "author":  "BillKrat",
+    "slug":  "how-to-publish-your-own-blog-smarterasp",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2025-02-13T02:04:00.000",
+    "dateModified":  "2025-07-19T08:44:22.827",
+    "categories":  [
+
+                   ],
+    "tags":  [
+                 "Blog"
+             ],
+    "links":  [
+                  {
+                      "url":  "https://github.com/BillKrat/BlogEngine.NET",
+                      "kind":  "external"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/001-create_site.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/002-ShowWebDeploy.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/003-GetWebDeployInfo.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/004-PublishDialog.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/005-SaveDeployInfo.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/image.axd?picture=/Host/PublishBlog/006-Publish.png",
+                      "kind":  "internal"
+                  }
+              ],
+    "export":  {
+                   "folder":  "how-to-publish-your-own-blog-smarterasp",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

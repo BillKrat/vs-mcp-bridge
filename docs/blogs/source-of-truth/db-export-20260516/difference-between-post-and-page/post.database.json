@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  111,
+                   "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                   "postId":  "6b807649-b0c3-4e9f-92aa-150cc42985ce"
+               },
+    "title":  "Difference between Post and Page",
+    "description":  "[Page:DifferenceBetweenPostAndPage]\nTo [CreateAPost]",
+    "author":  "admin",
+    "slug":  "difference-between-post-and-page",
+    "status":  "deleted",
+    "isPublished":  true,
+    "isDeleted":  true,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2023-09-01T01:08:00.000",
+    "dateModified":  "2025-02-08T15:16:25.447",
+    "categories":  [
+                       "Public"
+                   ],
+    "tags":  [
+
+             ],
+    "links":  [
+
+              ],
+    "export":  {
+                   "folder":  "difference-between-post-and-page",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

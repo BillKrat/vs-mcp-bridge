@@ -1,0 +1,45 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  110,
+                   "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                   "postId":  "7b58c1cf-f188-4286-9379-893620cdd186"
+               },
+    "title":  "Creating a Post",
+    "description":  "[Page:CreateAPost]\n\u0026nbsp;",
+    "author":  "admin",
+    "slug":  "creating-a-post",
+    "status":  "deleted",
+    "isPublished":  true,
+    "isDeleted":  true,
+    "allowComments":  false,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2023-09-01T01:06:00.000",
+    "dateModified":  "2025-02-08T15:16:30.103",
+    "categories":  [
+                       "Public"
+                   ],
+    "tags":  [
+                 "post"
+             ],
+    "links":  [
+                  {
+                      "url":  "/bloghelp/image.axd?picture=/Menus/CreateAPostR2.png",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/bloghelp/image.axd?picture=/Posts/Publish.gif",
+                      "kind":  "internal"
+                  },
+                  {
+                      "url":  "/videos/creatingapost.mp4",
+                      "kind":  "internal"
+                  }
+              ],
+    "export":  {
+                   "folder":  "creating-a-post",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}

@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  156,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "b3da6b1c-a955-4ec2-afda-b281bd5d46fd"
+               },
+    "title":  "Inference-driven development with Copilot; pros and cons",
+    "description":  "Copilot used by itself could leave a developer with a lack of confidence in AI ability to complete software development, this is not the case; you have to use the correct tool for the job.",
+    "author":  "BillKrat",
+    "slug":  "inference-driven-software-design-with-copilot-pros-and-cons",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-23T11:58:00.000",
+    "dateModified":  "2026-04-23T06:05:58.807",
+    "categories":  [
+
+                   ],
+    "tags":  [
+                 "Copilot"
+             ],
+    "links":  [
+
+              ],
+    "export":  {
+                   "folder":  "inference-driven-software-design-with-copilot-pros-and-cons",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html"
+               }
+}
