@@ -1,17 +1,39 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  143,
-    "title":  "VS MCP Bridge Blog Series: Part 1",
-    "description":  "This post is the first in a short developer ramp-up series for the VS MCP Bridge project. Its purpose is to make the bootstrap flow easier to understand, especially in a codebase that is intentionally decoupled.",
-    "author":  "AI Systems Author",
-    "slug":  "vs-mcp-bridge-blog-series-part-1",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ]
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "F0C7A958-F41A-4143-B601-82CE84FD4AF0",
+  "title": "VS MCP Bridge Blog Series: Part 1",
+  "description": "A developer ramp-up post explaining the current VS MCP Bridge startup path, stdio and named-pipe boundaries, tool-window role, approval behavior, diagnostics, and shared tool execution boundary.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-blog-series-part-1",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Visual Studio",
+    "VSIX",
+    "Named Pipes",
+    "Stdio",
+    "AI Tooling",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 143,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "f0c7a958-f41a-4143-b601-82ce84fd4af0",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-11T16:25:00.000",
+    "dateModified": "2026-05-12T17:56:50.340",
+    "exportFolder": "vs-mcp-bridge-blog-series-part-1",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
-

@@ -82,3 +82,18 @@ Re-run the export from the repository root:
 
 The export writes the exact raw `Settings` field from `dbo.be_DataStoreSettings` for `ExtensionId = 'GwnWikiExtension'` plus a best-effort parsed inspection artifact.
 Do not mutate plugin settings from this repo path.
+
+## Future Direction
+
+Consider an `Adventures.Blog` project or library to own reusable blog synchronization tooling across projects that use the BlogAI blogging application.
+That library could:
+
+- export DB/runtime blog content into repo source-of-truth
+- preserve onsite edits before overwrites
+- compare DB/runtime/canonical repo content
+- publish canonical content back to BlogAI safely
+- preserve plugin/token/link mappings
+- support multiple applications using BlogAI with minimal setup
+- keep project blogs synchronized with source code and architecture docs
+
+This should stay separate from content cleanup unless the cleanup work starts duplicating synchronization logic across repositories.
