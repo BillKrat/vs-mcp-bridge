@@ -2,6 +2,7 @@
 
 `Publish-BlogPostDraft.ps1` publishes one canonical repo-backed post to BlogEngine as a draft and refreshes BlogEngine visibility through the BlogAI reload endpoint.
 `Compare-BlogPostBeforePublish.ps1` is the read-only safety check to run before publishing.
+`Compare-ReadyBlogPostsBeforePublish.ps1` batches that safety check across the ready-post publishing list.
 
 ## Script
 
@@ -10,6 +11,7 @@
 - [Export-GwnWikiExtensionSettings.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-GwnWikiExtensionSettings.ps1)
 - [Export-DataStoreSettingRow.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-DataStoreSettingRow.ps1)
 - [Compare-BlogPostBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-BlogPostBeforePublish.ps1)
+- [Compare-ReadyBlogPostsBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-ReadyBlogPostsBeforePublish.ps1)
 
 ## Read-Only Export
 
@@ -39,6 +41,16 @@ It is read-only and does not publish, reload, update, or delete database records
 
 By default the script writes a dated markdown report under `docs/blogs/`.
 It performs a parameterized `SELECT` only and does not publish, reload, update, or delete database records.
+
+`Compare-ReadyBlogPostsBeforePublish.ps1` runs the same read-only compare for every slug listed in `docs/blogs/blog-publishing-review-plan-20260516.md` as ready for publishing review.
+
+```powershell
+.\scripts\blog-publishing\Compare-ReadyBlogPostsBeforePublish.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS
+```
+
+By default the script writes `docs/blogs/prepublish-compare-ready-posts-20260516.md`.
+It performs parameterized `SELECT` calls only and does not publish, reload, update, or delete database records.
 
 `Export-GwnWikiExtensionSettings.ps1` preserves hyperlink-token plugin settings before canonical blog link cleanup.
 
