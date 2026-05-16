@@ -79,6 +79,7 @@ Use those artifacts when reconstructing or triaging the compiled bridge tool exe
 For the security-aware compiled tool boundary, also read `docs/session-handoffs/2026-05-09-tool-security-validation.md`.
 For the MEF discovery-only boundary, also read `docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`.
 For the approval-aware tool execution boundary, also read `docs/session-handoffs/2026-05-16-tool-approval-validation.md`.
+For the current foundational security architecture seams and deferred scope, also read `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 
 ## Current Working Guidance
 

@@ -473,6 +473,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-09-tool-security-validation.md
 !/docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md
 !/docs/session-handoffs/2026-05-16-tool-approval-validation.md
+!/docs/session-handoffs/2026-05-16-security-architecture-foundation.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd

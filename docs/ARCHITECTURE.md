@@ -122,6 +122,7 @@ Approval-aware execution is now part of the same executor boundary: a descriptor
 This seam does not redesign the proposal approval workflow; it is a tool-execution policy checkpoint for future selected tools.
 The durable approval-aware evidence is `docs/diagrams/tool-approval-trace-20260516.mmd` with correlated logs and metadata under `artifacts/logs/tool-approval-trace-20260516.*`.
 That trace uses a shared-test fake approval-required tool and proves approved and denied decisions without adding a runtime tool, UI prompt, proposal approval redesign, or MCP transport change.
+The consolidated security architecture resume point is `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 Capability metadata is declarative only in the current system. It is visible to policy and audit, and the optional `CapabilityToolExecutionPolicy` can evaluate static allowed/denied capability names.
 It does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, persistent policy storage, remote authorization, or production authorization by itself.
 Secret references are also contract-only. They provide structured indirection and safe observability metadata, but they do not implement real secret storage, encryption, Azure Key Vault, external providers, authentication, persistence, or raw secret injection into tools.
