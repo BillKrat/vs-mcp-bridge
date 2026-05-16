@@ -82,6 +82,30 @@ Security-aware reference artifacts:
 
 This run intentionally used secret-like `apiKey`, `token`, `password`, and bearer authorization inputs. Durable artifacts store only redacted payload evidence and must not contain raw secret values.
 
+## Observed MEF Discovery Boundary Run
+
+After the minimal MEF discovery seam was added, the discovery boundary was validated separately from the compiled execution baseline:
+
+- run name: `mef-discovery-trace-20260516`
+- branch: `main`
+- commit: `8777929`
+- catalog: `CompiledBridgeToolCatalog`
+- discovery providers: `CompiledBridgeToolDiscovery`, `MefBridgeToolDiscovery`
+- executor: `BridgeToolExecutor`
+- audit sink: `InMemoryAuditSink`
+- MEF test tool id: `fake.mef`
+- request id: `mef-discovery-trace-20260516-req-001`
+- operation id: `mef-discovery-trace-20260516-op-001`
+
+MEF discovery reference artifacts:
+
+- sequence diagram: [`docs/diagrams/mef-discovery-trace-20260516.mmd`](diagrams/mef-discovery-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mef-discovery-trace-20260516.log`](../artifacts/logs/mef-discovery-trace-20260516.log)
+- run metadata: [`artifacts/logs/mef-discovery-trace-20260516.metadata.json`](../artifacts/logs/mef-discovery-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`](session-handoffs/2026-05-16-mef-discovery-trace-validation.md)
+
+This trace covers MEF discovery start, configured directories, missing-directory behavior, invalid assembly load behavior, discovery completion, catalog composition, and the preserved executor boundary. It deliberately uses the existing shared-test `MefFakeBridgeTool` export and does not add a production tool.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`
@@ -257,6 +281,16 @@ Confirm:
 MEF is discovery only. It may add exported `IBridgeTool` instances to the shared catalog when explicitly configured, but it does not execute tools during discovery and does not replace `BridgeToolExecutor`.
 All discovered tools must still flow through executor policy evaluation, redacted payload logging, terminal audit envelope emission, and request/operation correlation preservation.
 Directory-loaded tools are not production sandboxing; plugin/tool authors do not own core audit, redaction, policy, or correlation behavior.
+
+When validating MEF discovery, keep the artifact separate from the compiled execution baseline and capture these boundaries:
+
+- discovery start with `EnableMefDirectoryDiscovery`, directory count, and search pattern
+- each configured directory outcome, including missing directories
+- assembly-load warnings for invalid candidate DLLs
+- discovery completion with assembly count and tool count
+- composed catalog descriptors showing compiled and MEF sources
+- proof that MEF-discovered tools remain unexecuted during discovery
+- one executor call proving `BridgeToolExecutor` still owns policy, redaction, audit, and correlation
 
 ## Reuse Guidance For Future Sessions
 

@@ -1,0 +1,72 @@
+{
+  "runName": "mef-discovery-trace-20260516",
+  "artifactCreatedUtc": "2026-05-16T00:00:00Z",
+  "repositoryRoot": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "commit": "8777929",
+  "catalog": "CompiledBridgeToolCatalog",
+  "discoveries": [
+    "CompiledBridgeToolDiscovery",
+    "MefBridgeToolDiscovery"
+  ],
+  "executor": "BridgeToolExecutor",
+  "policy": "AllowToolExecutionPolicy",
+  "redactor": "BridgeSecurityRedactor",
+  "auditSink": "InMemoryAuditSink",
+  "requestId": "mef-discovery-trace-20260516-req-001",
+  "operationId": "mef-discovery-trace-20260516-op-001",
+  "observedScenarios": {
+    "missingDirectory": {
+      "enabled": true,
+      "configuredDirectoryCount": 1,
+      "searchPattern": "*.dll",
+      "observedLogBoundaries": [
+        "MEF bridge tool discovery started",
+        "MEF bridge tool discovery directory missing",
+        "MEF bridge tool discovery completed"
+      ],
+      "catalogOutcome": "Compiled bridge.regexTextSearch descriptor remained available; no MEF tools were added.",
+      "startupFailed": false
+    },
+    "invalidAssembly": {
+      "enabled": true,
+      "configuredDirectoryCount": 1,
+      "searchPattern": "*.dll",
+      "observedLogBoundaries": [
+        "MEF bridge tool discovery started",
+        "MEF bridge tool discovery failed to load assembly",
+        "MEF bridge tool discovery completed"
+      ],
+      "toolCount": 0,
+      "failureSilent": false
+    },
+    "catalogComposition": {
+      "enabled": true,
+      "configuredDirectoryCount": 1,
+      "searchPattern": "VsMcpBridge.Shared.Tests.dll",
+      "observedDescriptors": [
+        {
+          "id": "bridge.regexTextSearch",
+          "source": "Compiled",
+          "host": "Shared"
+        },
+        {
+          "id": "fake.mef",
+          "source": "MEF",
+          "host": "SharedTests"
+        }
+      ],
+      "mefToolExecutedDuringDiscovery": false
+    },
+    "executorBoundary": {
+      "toolId": "fake.mef",
+      "resultSuccess": true,
+      "auditEnvelopeCount": 1,
+      "correlationPreserved": true,
+      "executionCountBeforeExecutorCall": 0,
+      "executionCountAfterExecutorCall": 1
+    }
+  },
+  "captureMethod": "Temporary console harness outside the repository using AddBridgeToolServices, RecordingBridgeLogger, InMemoryAuditSink, the existing MefFakeBridgeTool test export, IBridgeToolCatalog, and IBridgeToolExecutor.",
+  "validationScope": "Discovery-only MEF boundary evidence plus one executor-boundary proof. No BM25, new tools, MCP transport, proposal behavior, sandboxing, hot reload, unload, Visual Studio host behavior, or production plugin isolation was exercised."
+}

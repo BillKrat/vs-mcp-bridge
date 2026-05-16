@@ -1,0 +1,53 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Caller
+    participant DI as Shared DI Composition
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Compiled as CompiledBridgeToolDiscovery
+    participant MEF as MefBridgeToolDiscovery
+    participant Log as RecordingBridgeLogger
+    participant Executor as BridgeToolExecutor
+    participant Policy as IToolExecutionPolicy
+    participant Tool as MEF Exported IBridgeTool
+    participant Audit as IAuditSink
+
+    Caller->>DI: AddBridgeToolServices(EnableMefDirectoryDiscovery=True)
+    DI-->>Caller: IBridgeToolCatalog + IBridgeToolExecutor
+    Caller->>Catalog: GetTools()
+    Catalog->>Compiled: DiscoverTools()
+    Compiled-->>Catalog: bridge.regexTextSearch
+    Catalog->>MEF: DiscoverTools(missing directory)
+    MEF->>Log: Information "MEF bridge tool discovery started"
+    MEF->>Log: Warning "MEF bridge tool discovery directory missing"
+    MEF->>Log: Information "MEF bridge tool discovery completed ToolCount=0"
+    MEF-->>Catalog: no MEF tools
+    Catalog-->>Caller: compiled descriptor remains available
+
+    Caller->>MEF: DiscoverTools(directory with invalid DLL)
+    MEF->>Log: Information "MEF bridge tool discovery started"
+    MEF->>Log: Warning "MEF bridge tool discovery failed to load assembly"
+    MEF->>Log: Information "MEF bridge tool discovery completed ToolCount=0"
+    MEF-->>Caller: empty tool list
+
+    Caller->>DI: AddBridgeToolServices(test assembly directory)
+    DI-->>Caller: IBridgeToolCatalog + IBridgeToolExecutor
+    Caller->>Catalog: GetTools()
+    Catalog->>Compiled: DiscoverTools()
+    Compiled-->>Catalog: bridge.regexTextSearch
+    Catalog->>MEF: DiscoverTools(VsMcpBridge.Shared.Tests.dll)
+    MEF->>Log: Information "MEF bridge tool discovery started"
+    MEF->>Log: Information "MEF bridge tool discovery completed ToolCount=1"
+    MEF-->>Catalog: fake.mef descriptor and instance
+    Catalog-->>Caller: bridge.regexTextSearch + fake.mef descriptors
+    Caller->>Tool: Inspect execution count
+    Tool-->>Caller: 0
+    Caller->>Executor: ExecuteAsync(fake.mef requestId, operationId)
+    Executor->>Log: Information "Bridge tool execution started"
+    Executor->>Catalog: TryGetTool("fake.mef")
+    Catalog-->>Executor: MEF exported IBridgeTool
+    Executor->>Policy: EvaluateAsync(ToolExecutionSecurityContext)
+    Policy-->>Executor: Allow
+    Executor->>Tool: ExecuteAsync(BridgeToolRequest)
+    Tool-->>Executor: BridgeToolResult Success
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor->>Log: Information "Bridge tool execution completed"
+    Executor-->>Caller: BridgeToolResult with preserved requestId and operationId

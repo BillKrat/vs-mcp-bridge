@@ -1,0 +1,35 @@
+Observed branch: main
+Observed commit: 8777929
+Trace scope: MEF discovery boundary plus executor-boundary proof; no new runtime behavior.
+
+Scenario: missing MEF directory remains optional and safe.
+Configured MEF directories: C:\Users\billkratochvil\AppData\Local\Temp\VsMcpBridgeMissingMefTools\trace-missing-20260516
+Catalog composition after discovery:
+- Id=bridge.regexTextSearch; Source=Compiled; Host=Shared; Name=Regex Text Search
+[Information] [VsMcpBridge] MEF bridge tool discovery started [Enabled=True] [DirectoryCount=1] [SearchPattern=*.dll].
+[Information] [VsMcpBridge] MEF bridge tool discovery completed [Enabled=True] [AssemblyCount=0] [ToolCount=0].
+[Warning] [VsMcpBridge] MEF bridge tool discovery directory missing [Directory=C:\Users\billkratochvil\AppData\Local\Temp\VsMcpBridgeMissingMefTools\trace-missing-20260516].
+
+Scenario: invalid assembly load failure is logged and discovery completes with zero MEF tools.
+Configured MEF directories: C:\Users\billkratochvil\AppData\Local\Temp\VsMcpBridgeBadMefTools\trace-bad-20260516
+Discovered tool count: 0
+[Information] [VsMcpBridge] MEF bridge tool discovery started [Enabled=True] [DirectoryCount=1] [SearchPattern=*.dll].
+[Information] [VsMcpBridge] MEF bridge tool discovery completed [Enabled=True] [AssemblyCount=0] [ToolCount=0].
+[Warning] [VsMcpBridge] MEF bridge tool discovery failed to load assembly [AssemblyPath=C:\Users\billkratochvil\AppData\Local\Temp\VsMcpBridgeBadMefTools\trace-bad-20260516\not-an-assembly.dll].
+
+Scenario: compiled and MEF discovery compose into the shared catalog.
+Configured MEF directories: C:\Users\billkratochvil\AppData\Local\Temp\vs-mcp-bridge-mef-trace-f48874752c9c4c44a37ef2f0327e634e\bin\Debug\net10.0\
+Catalog composition after discovery:
+- Id=bridge.regexTextSearch; Source=Compiled; Host=Shared; Name=Regex Text Search
+- Id=fake.mef; Source=MEF; Host=SharedTests; Name=Fake MEF Tool
+MEF fake execution count before executor call: 0
+MEF fake execution count after executor call: 1
+BridgeToolResult: Success=True; ToolId=fake.mef; RequestId=mef-discovery-trace-20260516-req-001; OperationId=mef-discovery-trace-20260516-op-001; ErrorCode=; Message=MEF completed.
+Audit envelope count: 1
+Audit envelope: EventName=BridgeToolExecution; ToolId=fake.mef; RequestId=mef-discovery-trace-20260516-req-001; OperationId=mef-discovery-trace-20260516-op-001; Allowed=True; Success=True; ErrorCode=; Metadata.policyReason=Allowed
+[Information] [VsMcpBridge] MEF bridge tool discovery started [Enabled=True] [DirectoryCount=1] [SearchPattern=VsMcpBridge.Shared.Tests.dll].
+[Information] [VsMcpBridge] MEF bridge tool discovery completed [Enabled=True] [AssemblyCount=1] [ToolCount=1].
+[Information] [VsMcpBridge] Bridge tool execution started [ToolId=fake.mef] [RequestId=mef-discovery-trace-20260516-req-001] [OperationId=mef-discovery-trace-20260516-op-001].
+[Information] [VsMcpBridge] Bridge tool execution completed [ToolId=fake.mef] [RequestId=mef-discovery-trace-20260516-req-001] [OperationId=mef-discovery-trace-20260516-op-001] [Success=True] [ElapsedMs=25].
+
+Boundary conclusion: MEF discovery added descriptors only. Tool execution, policy, redaction, audit, and correlation remained inside BridgeToolExecutor.
