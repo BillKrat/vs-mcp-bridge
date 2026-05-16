@@ -71,6 +71,7 @@ Use `docs/tool-execution-trace-workflow.md` when you need a durable AI-runnable 
 The current baseline validates:
 
 - compiled catalog discovery for `bridge.regexTextSearch`
+- default discovery through `CompiledBridgeToolDiscovery`
 - `BridgeToolExecutor` start/completion logging
 - request id and operation id preservation
 - structured `BridgeToolResult` output
@@ -85,7 +86,16 @@ Security-aware compiled-tool artifacts:
 - `docs/diagrams/tool-security-trace-20260509.mmd`
 - `docs/session-handoffs/2026-05-09-tool-security-validation.md`
 
-This workflow intentionally does not validate MEF, directory-loaded plugins, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
+This workflow intentionally does not validate enabled MEF directory discovery, directory-loaded plugins as a production plugin model, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
+
+When validating the optional MEF discovery seam separately, capture these boundaries:
+
+- `MEF bridge tool discovery started`
+- missing-directory warnings when configured directories do not exist
+- assembly-load warnings for invalid or unloadable files
+- `MEF bridge tool discovery completed`
+
+MEF discovery logs must remain discovery-only evidence. Tool execution, policy enforcement, payload redaction, audit emission, and correlation preservation still belong to `BridgeToolExecutor`.
 
 ## 4) End-to-end automation and Mermaid evidence
 

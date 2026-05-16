@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Composition;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +32,8 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
+        Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
     }
 
     [Fact]
@@ -57,6 +62,129 @@ public sealed class BridgeToolInfrastructureTests
 
         Assert.Empty(descriptors);
         Assert.False(catalog.TryGetTool("missing.tool", out _));
+    }
+
+    [Fact]
+    public void Compiled_catalog_returns_clear_failure_for_duplicate_tool_ids()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => new CompiledBridgeToolCatalog(new IBridgeTool[]
+        {
+            new FakeBridgeTool(),
+            new DuplicateFakeBridgeTool()
+        }));
+
+        Assert.Contains("Duplicate bridge tool id 'fake.echo' discovered.", ex.Message);
+        Assert.Contains(nameof(FakeBridgeTool), ex.Message);
+        Assert.Contains(nameof(DuplicateFakeBridgeTool), ex.Message);
+    }
+
+    [Fact]
+    public void Missing_mef_directory_does_not_fail_discovery_or_startup()
+    {
+        var logger = new RecordingBridgeLogger();
+        var missingDirectory = Path.Combine(Path.GetTempPath(), "VsMcpBridgeMissingMefTools", Guid.NewGuid().ToString("N"));
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddBridgeToolServices(options =>
+        {
+            options.EnableMefDirectoryDiscovery = true;
+            options.MefDirectories.Add(missingDirectory);
+        });
+        using var provider = services.BuildServiceProvider();
+
+        var catalog = provider.GetRequiredService<IBridgeToolCatalog>();
+
+        Assert.Contains(catalog.GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery started")
+            && message.Contains("[Enabled=True]"));
+        Assert.Contains(logger.WarningMessages, message => message.Contains("MEF bridge tool discovery directory missing")
+            && message.Contains(missingDirectory));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery completed")
+            && message.Contains("[ToolCount=0]"));
+    }
+
+    [Fact]
+    public void Mef_discovery_can_discover_exported_bridge_tool_when_enabled()
+    {
+        MefFakeBridgeTool.ExecutionCount = 0;
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddBridgeToolServices(options =>
+        {
+            options.EnableMefDirectoryDiscovery = true;
+            options.MefDirectories.Add(AppContext.BaseDirectory);
+            options.MefSearchPattern = "VsMcpBridge.Shared.Tests.dll";
+        });
+        using var provider = services.BuildServiceProvider();
+
+        var catalog = provider.GetRequiredService<IBridgeToolCatalog>();
+
+        Assert.Contains(catalog.GetTools(), tool => tool.Id == MefFakeBridgeTool.ToolId);
+        Assert.True(catalog.TryGetTool(MefFakeBridgeTool.ToolId, out _));
+        Assert.Equal(0, MefFakeBridgeTool.ExecutionCount);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery completed")
+            && message.Contains("[ToolCount=1]"));
+    }
+
+    [Fact]
+    public void Mef_discovery_load_failures_are_logged_and_not_silent()
+    {
+        var logger = new RecordingBridgeLogger();
+        var directory = Path.Combine(Path.GetTempPath(), "VsMcpBridgeBadMefTools", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "not-an-assembly.dll"), "not a managed assembly");
+            var options = new BridgeToolDiscoveryOptions
+            {
+                EnableMefDirectoryDiscovery = true
+            };
+            options.MefDirectories.Add(directory);
+
+            var tools = new MefBridgeToolDiscovery(options, logger).DiscoverTools();
+
+            Assert.Empty(tools);
+            Assert.Contains(logger.WarningMessages, message => message.Contains("MEF bridge tool discovery failed to load assembly")
+                && message.Contains("not-an-assembly.dll"));
+            Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery completed")
+                && message.Contains("[ToolCount=0]"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Mef_discovered_tool_still_runs_through_executor_security_and_audit_boundary()
+    {
+        MefFakeBridgeTool.ExecutionCount = 0;
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddSingleton<IAuditSink>(auditSink);
+        services.AddSingleton<IToolExecutionPolicy>(new DenyToolExecutionPolicy("blocked token=mef-secret"));
+        services.AddBridgeToolServices(options =>
+        {
+            options.EnableMefDirectoryDiscovery = true;
+            options.MefDirectories.Add(AppContext.BaseDirectory);
+            options.MefSearchPattern = "VsMcpBridge.Shared.Tests.dll";
+        });
+        using var provider = services.BuildServiceProvider();
+        var executor = provider.GetRequiredService<IBridgeToolExecutor>();
+
+        var result = await executor.ExecuteAsync(CreateRequest(MefFakeBridgeTool.ToolId), CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Equal(0, MefFakeBridgeTool.ExecutionCount);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.Equal(MefFakeBridgeTool.ToolId, auditEvent.ToolId);
+        Assert.Equal("blocked token=[REDACTED]", auditEvent.Metadata["policyReason"]);
+        Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("mef-secret"));
     }
 
     [Fact]
@@ -474,5 +602,42 @@ public sealed class BridgeToolInfrastructureTests
 
         public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
             => Task.FromResult(ToolExecutionPolicyDecision.Deny(_reason));
+    }
+
+    private sealed class DuplicateFakeBridgeTool : IBridgeTool
+    {
+        public BridgeToolDescriptor Descriptor { get; } = new BridgeToolDescriptor
+        {
+            Id = "fake.echo",
+            Name = "Duplicate Fake Echo",
+            Description = "Duplicate fake test tool."
+        };
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+            => Task.FromResult(BridgeToolResult.Succeeded(request, "Duplicate completed."));
+    }
+}
+
+[Export(typeof(IBridgeTool))]
+public sealed class MefFakeBridgeTool : IBridgeTool
+{
+    public const string ToolId = "fake.mef";
+
+    public static int ExecutionCount { get; set; }
+
+    public BridgeToolDescriptor Descriptor { get; } = new BridgeToolDescriptor
+    {
+        Id = ToolId,
+        Name = "Fake MEF Tool",
+        Description = "Fake MEF-discovered test tool.",
+        Category = "Tests",
+        Source = "MEF",
+        Host = "SharedTests"
+    };
+
+    public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+    {
+        ExecutionCount++;
+        return Task.FromResult(BridgeToolResult.Succeeded(request, "MEF completed."));
     }
 }

@@ -7,21 +7,22 @@ Use this workflow to repeat the observed bridge tool execution validation, captu
 Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
-- proving catalog discovery through `CompiledBridgeToolCatalog`
+- proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
 - proving the minimal policy/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
 - generating a Mermaid sequence diagram from observed behavior
-- producing durable artifacts future sessions can use for triage before expanding into MEF, plugin loading, or search ranking
+- producing durable artifacts future sessions can use for triage before expanding into plugin loading or search ranking
 
 ## Scope
 
 This workflow documents the shared compiled bridge tool path only.
+The catalog may now be fed by discovery providers, but this baseline keeps MEF directory discovery disabled and validates the default compiled tool path.
 
 It does not validate:
 
-- MEF discovery
-- directory-loaded plugins
+- MEF directory discovery
+- directory-loaded plugins as a production plugin model
 - BM25 or ranked search
 - MCP stdio transport
 - named-pipe transport
@@ -92,6 +93,7 @@ dotnet test .\VsMcpBridge.Shared.Tests\VsMcpBridge.Shared.Tests.csproj
 ```
 
 - tool execution should use `AddBridgeToolServices()` so the catalog/executor path matches shared composition
+- leave `BridgeToolDiscoveryOptions.EnableMefDirectoryDiscovery` disabled for this compiled-tool baseline unless creating a separate MEF discovery trace
 - the harness may override `IAuditSink` with `InMemoryAuditSink` when audit envelope assertions are part of the run
 - use a deterministic request id and operation id in the trace harness
 
@@ -112,7 +114,7 @@ The harness should:
 
 1. create a `RecordingBridgeLogger`
 2. register it as `ILogger`
-3. call `services.AddBridgeToolServices()`
+3. call `services.AddBridgeToolServices()` without enabling MEF directory discovery
 4. resolve `IBridgeToolCatalog`
 5. resolve `IBridgeToolExecutor`
 6. optionally resolve `ISecurityRedactor`, `IAuditSink`, and `IToolExecutionPolicy` to confirm the security seams are present
@@ -239,6 +241,7 @@ After generating the sequence, compare it to current code.
 Confirm:
 
 - `AddBridgeToolServices` registers `RegexTextSearchTool` as compiled `IBridgeTool`
+- `AddBridgeToolServices` registers `CompiledBridgeToolDiscovery` and optional `MefBridgeToolDiscovery`
 - `AddBridgeToolServices` registers default security seams through `AddBridgeSecurityServices`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
@@ -247,7 +250,13 @@ Confirm:
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex
-- no MEF, plugin directory, BM25, MCP transport, presenter, or proposal code is involved in this workflow
+- MEF directory discovery is not enabled, and no plugin directory, BM25, MCP transport, presenter, or proposal code is involved in this workflow
+
+## MEF Discovery Boundary Note
+
+MEF is discovery only. It may add exported `IBridgeTool` instances to the shared catalog when explicitly configured, but it does not execute tools during discovery and does not replace `BridgeToolExecutor`.
+All discovered tools must still flow through executor policy evaluation, redacted payload logging, terminal audit envelope emission, and request/operation correlation preservation.
+Directory-loaded tools are not production sandboxing; plugin/tool authors do not own core audit, redaction, policy, or correlation behavior.
 
 ## Reuse Guidance For Future Sessions
 

@@ -61,8 +61,17 @@ The bridge is intentionally conservative at this stage:
 ## Bridge Tool Boundary
 
 Shared bridge tools execute through a catalog/executor boundary in `VsMcpBridge.Shared.Tools`.
-The initial catalog is compiled and in-memory only; the first compiled regex text-search tool proves the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
-MEF discovery, directory-loaded tools, BM25 search, and host-specific tool packs are future extensions of this boundary, not part of the initial runtime path.
+The default tool path is still compiled and in-memory; `RegexTextSearchTool` proves the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
+A minimal MEF seam now exists for discovery only:
+
+- `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.
+- `MefBridgeToolDiscovery` can scan explicitly configured directories for exported `IBridgeTool` implementations.
+- MEF directory discovery is disabled/empty by default and missing directories are tolerated.
+- discovery logs start, completion, missing-directory, and assembly-load failure boundaries.
+
+MEF does not execute bridge tools, authorize tool calls, change MCP transport, move Visual Studio commands into tools, add hot reload, add dynamic unloading, or provide production sandboxing.
+Directory-loaded tools are future hardening territory.
+BM25 search and host-specific production tool packs remain outside this slice.
 
 The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.
@@ -99,6 +108,7 @@ That trace uses `RegexTextSearchTool` only and proves policy evaluation, payload
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.
+Discovered tools, including future directory-loaded tools, must still run through `BridgeToolExecutor`; plugin/tool authors do not own core audit, redaction, policy, or correlation behavior.
 
 Deferred security work remains explicit:
 

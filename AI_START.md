@@ -87,6 +87,7 @@ Keep these repo-specific themes in mind:
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices
+- treat MEF bridge tool support as a discovery-only seam: compiled tools remain the default path, directory discovery must be explicitly configured, and all discovered tools still execute through `BridgeToolExecutor`
 
 ## When Ending A Session
 
