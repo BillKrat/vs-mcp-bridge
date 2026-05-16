@@ -18,7 +18,7 @@ The solution is split into host-specific runtimes plus shared infrastructure:
 - `VsMcpBridge.McpServer`: a local MCP server that speaks stdio to an AI client
 - `VsMcpBridge.Vsix`: a Visual Studio extension that runs inside the IDE
 - `VsMcpBridge.App`: a standalone WPF host that demonstrates non-VSIX reuse of the bridge
-- `VsMcpBridge.Shared`: shared contracts, abstractions, diagnostics, pipe dispatch, and tool-window orchestration
+- `VsMcpBridge.Shared`: shared contracts, abstractions, diagnostics, pipe dispatch, compiled in-memory bridge tools, and tool-window orchestration
 - `VsMcpBridge.Shared.Wpf`: reusable WPF views for the tool window UI
 - `VsMcpBridge.Shared.Tests`: unit tests for the shared layer
 - `VsMcpBridge.Vsix.Tests`: unit tests for VSIX-specific composition and service logic
@@ -35,6 +35,7 @@ Current supported capabilities:
 - propose multi-file text edits through MCP as one approval-gated proposal
 - route proposed edits into the tool window for approval or rejection
 - apply approved edits inside Visual Studio through the VSIX host
+- execute compiled in-memory bridge tools through the shared catalog/executor boundary, including regex text search and minimal BM25-style ranked text search over caller-supplied documents
 
 The bridge is intentionally conservative at this stage:
 

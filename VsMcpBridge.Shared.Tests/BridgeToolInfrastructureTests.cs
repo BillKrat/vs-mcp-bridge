@@ -32,6 +32,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
     }
@@ -51,6 +52,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
     }
 
     [Fact]
@@ -95,6 +97,7 @@ public sealed class BridgeToolInfrastructureTests
         var catalog = provider.GetRequiredService<IBridgeToolCatalog>();
 
         Assert.Contains(catalog.GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Contains(catalog.GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery started")
             && message.Contains("[Enabled=True]"));
         Assert.Contains(logger.WarningMessages, message => message.Contains("MEF bridge tool discovery directory missing")
@@ -482,6 +485,155 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains("Invalid regular expression", result.Message);
     }
 
+    [Fact]
+    public async Task Executor_invokes_compiled_bm25_search_tool_by_tool_id()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var executor = provider.GetRequiredService<IBridgeToolExecutor>();
+        var request = CreateBm25Request("build error", new[]
+        {
+            new Bm25TextSearchDocument { Id = "compiler", Text = "build error error compiler" },
+            new Bm25TextSearchDocument { Id = "docs", Text = "documentation update" }
+        });
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(Bm25TextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        var match = Assert.Single(GetBm25Results(result));
+        Assert.Equal("compiler", match.DocumentId);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution started")
+            && message.Contains($"[ToolId={Bm25TextSearchTool.ToolId}]")
+            && message.Contains("[RequestId=request-123]")
+            && message.Contains("[OperationId=operation-456]"));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed")
+            && message.Contains($"[ToolId={Bm25TextSearchTool.ToolId}]")
+            && message.Contains("[Success=True]")
+            && message.Contains("[RequestId=request-123]")
+            && message.Contains("[OperationId=operation-456]"));
+    }
+
+    [Fact]
+    public async Task Bm25_search_ranks_more_relevant_documents_first()
+    {
+        var result = await ExecuteBm25SearchAsync("compile error", new[]
+        {
+            new Bm25TextSearchDocument { Id = "general", Text = "compile warning" },
+            new Bm25TextSearchDocument { Id = "best", Text = "compile error error failure" },
+            new Bm25TextSearchDocument { Id = "none", Text = "window layout" }
+        });
+
+        Assert.True(result.Success);
+        var results = GetBm25Results(result);
+        Assert.Equal(2, results.Count);
+        Assert.Equal("best", results[0].DocumentId);
+        Assert.Equal("general", results[1].DocumentId);
+        Assert.True(results[0].Score > results[1].Score);
+        Assert.Equal(2, result.Data["resultCount"]);
+        Assert.Equal(2, result.Data["totalResultCount"]);
+        Assert.Equal(false, result.Data["limited"]);
+    }
+
+    [Fact]
+    public async Task Bm25_search_limits_returned_results()
+    {
+        var result = await ExecuteBm25SearchAsync("error", new[]
+        {
+            new Bm25TextSearchDocument { Id = "one", Text = "error error" },
+            new Bm25TextSearchDocument { Id = "two", Text = "error" },
+            new Bm25TextSearchDocument { Id = "three", Text = "another error" }
+        }, maxResults: 2);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, GetBm25Results(result).Count);
+        Assert.Equal(2, result.Data["resultCount"]);
+        Assert.Equal(3, result.Data["totalResultCount"]);
+        Assert.Equal(true, result.Data["limited"]);
+    }
+
+    [Fact]
+    public async Task Bm25_search_returns_structured_failure_for_empty_query()
+    {
+        var result = await ExecuteBm25SearchAsync(" ", new[]
+        {
+            new Bm25TextSearchDocument { Id = "one", Text = "searchable text" }
+        });
+
+        Assert.False(result.Success);
+        Assert.Equal("InvalidRequest", result.ErrorCode);
+        Assert.Equal(Bm25TextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.Contains("non-empty 'query'", result.Message);
+    }
+
+    [Fact]
+    public async Task Bm25_search_returns_structured_failure_for_empty_documents()
+    {
+        var result = await ExecuteBm25SearchAsync("query", Array.Empty<Bm25TextSearchDocument>());
+
+        Assert.False(result.Success);
+        Assert.Equal("InvalidRequest", result.ErrorCode);
+        Assert.Equal(Bm25TextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.Contains("non-empty 'documents' or 'entries'", result.Message);
+    }
+
+    [Fact]
+    public async Task Bm25_search_preserves_correlation_metadata_through_executor()
+    {
+        var result = await ExecuteBm25SearchAsync("error", new[]
+        {
+            new Bm25TextSearchDocument { Id = "one", Text = "error" }
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(Bm25TextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+    }
+
+    [Fact]
+    public async Task Bm25_search_uses_executor_policy_redaction_and_audit_boundary()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new Bm25TextSearchTool() }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new DenyToolExecutionPolicy("blocked token=raw-bm25-secret"));
+        var request = CreateBm25Request("secret", new[]
+        {
+            new Bm25TextSearchDocument { Id = "one", Text = "secret text" }
+        });
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Equal(Bm25TextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("raw-bm25-secret"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("PolicyDenied", auditEvent.ErrorCode);
+        Assert.Equal(Bm25TextSearchTool.ToolId, auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("blocked token=[REDACTED]", auditEvent.Metadata["policyReason"]);
+    }
+
     private static BridgeToolRequest CreateRequest(string toolId)
         => new BridgeToolRequest
         {
@@ -512,6 +664,27 @@ public sealed class BridgeToolInfrastructureTests
         };
     }
 
+    private static BridgeToolRequest CreateBm25Request(string query, IReadOnlyList<Bm25TextSearchDocument> documents, bool caseSensitive = false, int? maxResults = null)
+    {
+        var arguments = new Dictionary<string, object?>
+        {
+            ["query"] = query,
+            ["documents"] = documents,
+            ["caseSensitive"] = caseSensitive
+        };
+
+        if (maxResults.HasValue)
+            arguments["maxResults"] = maxResults.Value;
+
+        return new BridgeToolRequest
+        {
+            ToolId = Bm25TextSearchTool.ToolId,
+            RequestId = "request-123",
+            OperationId = "operation-456",
+            Arguments = arguments
+        };
+    }
+
     private static async Task<BridgeToolResult> ExecuteRegexSearchAsync(string pattern, IReadOnlyList<string> entries, bool caseSensitive = false, int? maxResults = null)
     {
         var logger = new RecordingBridgeLogger();
@@ -522,8 +695,21 @@ public sealed class BridgeToolInfrastructureTests
         return await executor.ExecuteAsync(CreateRegexRequest(pattern, entries, caseSensitive, maxResults), CancellationToken.None);
     }
 
+    private static async Task<BridgeToolResult> ExecuteBm25SearchAsync(string query, IReadOnlyList<Bm25TextSearchDocument> documents, bool caseSensitive = false, int? maxResults = null)
+    {
+        var logger = new RecordingBridgeLogger();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new Bm25TextSearchTool() }),
+            logger);
+
+        return await executor.ExecuteAsync(CreateBm25Request(query, documents, caseSensitive, maxResults), CancellationToken.None);
+    }
+
     private static IReadOnlyList<RegexTextSearchMatch> GetMatches(BridgeToolResult result)
         => Assert.IsAssignableFrom<IReadOnlyList<RegexTextSearchMatch>>(result.Data["matches"]);
+
+    private static IReadOnlyList<Bm25TextSearchResult> GetBm25Results(BridgeToolResult result)
+        => Assert.IsAssignableFrom<IReadOnlyList<Bm25TextSearchResult>>(result.Data["results"]);
 
     private sealed class FakeBridgeTool : IBridgeTool
     {

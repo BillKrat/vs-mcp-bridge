@@ -61,7 +61,8 @@ The bridge is intentionally conservative at this stage:
 ## Bridge Tool Boundary
 
 Shared bridge tools execute through a catalog/executor boundary in `VsMcpBridge.Shared.Tools`.
-The default tool path is still compiled and in-memory; `RegexTextSearchTool` proves the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
+The default tool path is still compiled and in-memory; `RegexTextSearchTool` and `Bm25TextSearchTool` prove the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
+`Bm25TextSearchTool` is intentionally minimal: callers provide the query and document collection per request, scoring happens in memory, and no persistent index, file crawler, background service, external search service, or directory-loaded search plugin is introduced.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.
@@ -71,7 +72,7 @@ A minimal MEF seam now exists for discovery only:
 
 MEF does not execute bridge tools, authorize tool calls, change MCP transport, move Visual Studio commands into tools, add hot reload, add dynamic unloading, or provide production sandboxing.
 Directory-loaded tools are future hardening territory.
-BM25 search and host-specific production tool packs remain outside this slice.
+Host-specific production tool packs remain outside this slice.
 
 The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.

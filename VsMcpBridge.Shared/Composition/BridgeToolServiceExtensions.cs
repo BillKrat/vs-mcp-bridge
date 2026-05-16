@@ -16,6 +16,7 @@ namespace VsMcpBridge.Shared.Composition
             configureDiscovery?.Invoke(discoveryOptions);
             services.TryAddSingleton(discoveryOptions);
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, RegexTextSearchTool>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, Bm25TextSearchTool>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeToolDiscovery, CompiledBridgeToolDiscovery>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeToolDiscovery, MefBridgeToolDiscovery>());
             services.TryAddSingleton<IBridgeToolCatalog>(provider =>

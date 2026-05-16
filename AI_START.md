@@ -91,6 +91,7 @@ Keep these repo-specific themes in mind:
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices
 - treat MEF bridge tool support as a discovery-only seam: compiled tools remain the default path, directory discovery must be explicitly configured, and all discovered tools still execute through `BridgeToolExecutor`
+- treat `Bm25TextSearchTool` as a compiled, request-scoped, in-memory ranking tool only; it is not a persistent index, crawler, external search integration, or directory-loaded plugin model
 
 ## When Ending A Session
 

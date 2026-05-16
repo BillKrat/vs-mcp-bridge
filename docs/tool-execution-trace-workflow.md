@@ -23,7 +23,7 @@ It does not validate:
 
 - MEF directory discovery
 - directory-loaded plugins as a production plugin model
-- BM25 or ranked search
+- BM25 trace artifact generation; BM25 remains a compiled in-memory bridge tool covered by unit tests
 - MCP stdio transport
 - named-pipe transport
 - presenter, proposal, or Visual Studio service behavior
@@ -265,6 +265,7 @@ After generating the sequence, compare it to current code.
 Confirm:
 
 - `AddBridgeToolServices` registers `RegexTextSearchTool` as compiled `IBridgeTool`
+- `AddBridgeToolServices` registers `Bm25TextSearchTool` as a compiled in-memory `IBridgeTool`
 - `AddBridgeToolServices` registers `CompiledBridgeToolDiscovery` and optional `MefBridgeToolDiscovery`
 - `AddBridgeToolServices` registers default security seams through `AddBridgeSecurityServices`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
@@ -274,7 +275,8 @@ Confirm:
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex
-- MEF directory discovery is not enabled, and no plugin directory, BM25, MCP transport, presenter, or proposal code is involved in this workflow
+- `Bm25TextSearchTool.ExecuteAsync` remains request-scoped and in-memory with no persistent index or crawler
+- MEF directory discovery is not enabled, and no plugin directory, MCP transport, presenter, or proposal code is involved in this workflow
 
 ## MEF Discovery Boundary Note
 
