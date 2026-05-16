@@ -60,9 +60,9 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`
+- `docs/session-handoffs/2026-05-16-end-of-day-architecture-handoff.md`
 
-That handoff captures the completed MEF discovery-only trace validation. The related compiled tool execution path now has durable observed artifacts:
+That handoff summarizes the completed architecture/security/diagnostic phase. The related compiled tool execution and activation paths now have durable observed artifacts:
 
 - `docs/tool-execution-trace-workflow.md`
 - `artifacts/logs/tool-regex-search-trace-20260509.log`
@@ -84,6 +84,7 @@ For the approval-aware tool execution boundary, also read `docs/session-handoffs
 For the current foundational security architecture seams and deferred scope, also read `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 For the latest full validation checkpoint, also read `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`.
 For inactive VSIX named-pipe activation diagnostics, also read `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`.
+For the end-of-day architecture/security summary, also read `docs/session-handoffs/2026-05-16-end-of-day-architecture-handoff.md`.
 
 ## Current Working Guidance
 
