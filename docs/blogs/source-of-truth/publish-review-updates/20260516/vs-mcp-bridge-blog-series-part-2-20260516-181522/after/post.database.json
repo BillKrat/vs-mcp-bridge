@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  144,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "cad63f28-5739-40be-b8f6-0288a1e3da20"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 2",
+    "description":  "How VS MCP Bridge turns prompts into observable AI-assisted tool workflows with approval boundaries, durable traces, logs, and Mermaid diagrams.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-2",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T17:35:00.000",
+    "dateModified":  "2026-05-16T16:15:23.530",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "cedc5284071d13b5bddd6fb2883e0a9b15f097d406fc1fa6f50cfee0aaa54afb",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:15:23.601Z"
+               }
+}

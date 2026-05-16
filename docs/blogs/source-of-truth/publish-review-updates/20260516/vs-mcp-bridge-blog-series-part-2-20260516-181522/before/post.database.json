@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  144,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "cad63f28-5739-40be-b8f6-0288a1e3da20"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 2",
+    "description":  "How Prompts Become MCP Tool Workflows\nThis post continues the developer ramp-up series for VS MCP Br",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-2",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T17:35:00.000",
+    "dateModified":  "2026-05-12T17:58:49.887",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "7effbddd7778908a94f710cf8579a06bf23787f015e60a7274a394dcc1ad0656",
+    "export":  {
+                   "phase":  "before-review-update",
+                   "folder":  "before",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:15:23.290Z"
+               }
+}
