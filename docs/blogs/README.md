@@ -26,6 +26,7 @@ Current migration note:
 
 - `blog-alignment-inventory-20260516.md` records the initial comparison between the preserved database export, canonical repo posts, and rendered `https://www.global-webnet.com` pages.
 - `blog-source-reconciliation-20260516.md` records the follow-up source-coverage reconciliation. It materializes the active BlogAI candidate posts that were missing from `docs/blogs/posts/`, separates the live Part 4 post from the repo trial draft, and documents that rendered `adventuresontheedge.net` links come from BlogEngine token expansion rather than explicit old-domain URLs in canonical article HTML.
+- `blog-cleanup-status-20260516.md` records the current aligned/partially reviewed/untouched blog status, architecture narrative coverage, Mermaid references, intentional BlogEngine tokens, and remaining publishing gaps.
 - `gwn-wiki-extension-link-mapping-20260516.md` records the preserved `GwnWikiExtension` plugin settings export from `dbo.be_DataStoreSettings` and explains how bracket-style tokens resolve to production-domain links.
 
 Current Part 4 mapping:
