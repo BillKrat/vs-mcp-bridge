@@ -1,0 +1,37 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  145,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "78dbd347-397e-4185-b6d5-d67558cc06be"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 3",
+    "description":  "How VS MCP Bridge keeps AI-assisted workflows host-correct through Visual Studio threading discipline, UI state ownership, IProposalManager, approval callbacks, completed previews, and reset/new-chat cleanup.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-3",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T17:48:00.000",
+    "dateModified":  "2026-05-16T16:54:42.453",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "6ee4125b9c1ed9630a910786442c3b2fe2092e05028b129425d0a9bde492458e",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:54:42.537Z"
+               }
+}

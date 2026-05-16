@@ -1,0 +1,186 @@
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post continues the core series from observable workflows into host correctness, UI state, and proposal lifecycle ownership.</p>
+
+<h1>VS MCP Bridge Blog Series: Part 3</h1>
+<h2>Host Correctness, Proposal State, and UI Thread Safety</h2>
+
+<p>Part 2 explained that useful AI-assisted development is not a single prompt turning into a single command. It is a workflow: the AI may read context, propose an edit, wait for approval, and then report a result.</p>
+
+<p>Part 3 focuses on what keeps that workflow correct inside Visual Studio.</p>
+
+<p>The short version is that transport can be asynchronous, but Visual Studio access, UI state, and proposal lifecycle state must be owned deliberately. The bridge became easier to test and reason about when proposal state stopped being incidental UI behavior and became an explicit lifecycle managed through <code>IProposalManager</code>.</p>
+
+<h3>Transport Work Is Not UI Work</h3>
+
+<p>The local bridge has background work by design. The MCP server receives requests over stdio. VS-backed requests cross the named-pipe boundary. The pipe server accepts and dispatches requests without requiring the UI thread to wait for transport input.</p>
+
+<p>That part is healthy:</p>
+
+<pre><code>MCP request arrives
+  -&gt; named-pipe request is dispatched
+  -&gt; host service handles the operation
+  -&gt; result returns through the bridge</code></pre>
+
+<p>But Visual Studio API access is different. DTE, editor state, tool window state, and view-model updates have host threading rules. The bridge has to separate background request handling from UI-thread-sensitive work.</p>
+
+<h3>Visual Studio Host Correctness</h3>
+
+<p>The VSIX is the Visual Studio host. It owns Visual Studio APIs, editor state, proposal application, and tool-window interaction. The MCP server must not bypass that host boundary.</p>
+
+<p>That gives the system a practical rule:</p>
+
+<pre><code>background transport can be asynchronous
+Visual Studio work must happen through the host boundary
+UI state must be updated through the UI orchestration path</code></pre>
+
+<p>This keeps the bridge from turning an AI tool call into arbitrary background mutation of Visual Studio state.</p>
+
+<h3>The Tool Window Is State, Not Just Display</h3>
+
+<p>The VS MCP Bridge tool window is not only a place to print logs. It is also the human review surface for proposal entry, pending approval, completed proposal previews, status messages, and reset/new-chat behavior.</p>
+
+<p>That means the view model has meaningful workflow state:</p>
+
+<ul>
+  <li><code>ProposalFilePath</code> for the current target file,</li>
+  <li>selected proposal files for multi-file proposals,</li>
+  <li>pending approval description and reviewed changes,</li>
+  <li>included files for pending and completed proposal review,</li>
+  <li>last completed proposal preview data,</li>
+  <li>terminal status messages,</li>
+  <li>reset and new-chat command state.</li>
+</ul>
+
+<p>If that state is updated from the wrong place, the UI becomes hard to reason about. Worse, approval callbacks can outlive the proposal they were meant to control.</p>
+
+<h3>Why IProposalManager Matters</h3>
+
+<p><code>IProposalManager</code> is the seam that keeps proposal lifecycle ownership out of the general presenter path.</p>
+
+<p>The presenter still orchestrates the tool window, logs, and host-facing interaction. But proposal-specific lifecycle behavior belongs in the proposal manager:</p>
+
+<ul>
+  <li>showing an approval prompt,</li>
+  <li>recording pending approval state,</li>
+  <li>capturing completed proposal preview state,</li>
+  <li>clearing stale approval callbacks,</li>
+  <li>resetting current request state,</li>
+  <li>starting a new chat/session cleanup path,</li>
+  <li>reacting to <code>ProposalFilePath</code> changes.</li>
+</ul>
+
+<p>That separation matters because proposal lifecycle is not just UI decoration. It defines when a human can approve, what proposal is being approved, what preview remains after completion, and what state must be cleared before a new request.</p>
+
+<h3>Approval Prompt State and Callbacks</h3>
+
+<p>An approval prompt carries more than a yes/no question. It carries the proposal description, original and updated content, reviewed ranges, included files, and callbacks for approve or reject.</p>
+
+<p>The dangerous case is stale state. If an old callback remains available after a proposal completes, the UI can look idle while old approval behavior is still reachable. The current lifecycle avoids that by making terminal outcomes drive cleanup:</p>
+
+<ol>
+  <li>A proposal reaches pending review.</li>
+  <li>The view model shows the pending approval surface.</li>
+  <li>The operator approves or rejects.</li>
+  <li>The proposal manager captures the completed preview state.</li>
+  <li>Pending approval state and callbacks are cleared.</li>
+  <li>The proposal entry state is refreshed from the current file path when appropriate.</li>
+</ol>
+
+<p>That is host correctness at the UI boundary. It prevents one proposal's approval surface from silently leaking into the next one.</p>
+
+<h3>Drafts, File Selection, and Manual Submission</h3>
+
+<p>The proposal entry path also has to support ordinary operator behavior. The user may type a file path manually, use a host-specific picker, load a file into the proposal panes, edit proposed text, and then submit.</p>
+
+<p>The key design point is that there is a single authoritative load path for proposal entry. Picker selection flows through <code>ProposalFilePath</code> rather than creating a second hidden workflow. That keeps manual entry and picker-driven entry aligned.</p>
+
+<p>When <code>ProposalFilePath</code> is valid, the proposal panes can populate. The original pane remains read-only. The proposed pane remains editable until submission. After submission, the review surface owns the pending decision.</p>
+
+<h3>Completed Proposal Preview Capture</h3>
+
+<p>Completed proposal preview state is intentionally retained after terminal outcomes. The operator should be able to see what just happened, even after approval, rejection, skip, drift failure, ambiguity failure, or generic failure.</p>
+
+<p>That completed preview is separate from pending approval state. Pending approval answers &ldquo;what can I approve now?&rdquo; Completed preview answers &ldquo;what just happened?&rdquo;</p>
+
+<p>Keeping those separate made the tool window easier to reason about. It also made terminal outcomes more diagnosable because the UI does not collapse all context at the moment the workflow completes.</p>
+
+<h3>Reset and New-Chat Cleanup</h3>
+
+<p>The reset and new-chat paths are part of proposal correctness.</p>
+
+<p>A reset should clear current proposal/request state without pretending the whole application restarted. A new-chat cleanup should clear session-shaped state so the next interaction is not contaminated by stale prompt, approval, or preview context.</p>
+
+<p>That is why reset/new-chat handlers are wired through the view model into the proposal manager. The UI can expose commands, but proposal lifecycle ownership stays centralized.</p>
+
+<h3>How This Improved Testability</h3>
+
+<p>Before the proposal manager seam, proposal behavior was easier to treat as presenter side effect. That made the workflow harder to test because UI orchestration, approval state, and lifecycle cleanup were tightly blended.</p>
+
+<p>Moving proposal lifecycle behavior behind <code>IProposalManager</code> made tests more focused:</p>
+
+<ul>
+  <li>pending approval state can be checked directly,</li>
+  <li>completed preview capture can be verified separately,</li>
+  <li>reset behavior can be exercised without re-running transport setup,</li>
+  <li>file-path changes can be tested as proposal lifecycle events,</li>
+  <li>callbacks can be checked for terminal cleanup.</li>
+</ul>
+
+<p>That is the same anti-black-box theme from Part 2, applied to UI state. If a workflow is important enough to approve or apply code, it should be testable without guessing what the UI happened to remember.</p>
+
+<h3>Relationship to Approval-Aware Execution</h3>
+
+<p>There are now two approval concepts in the architecture, and they should stay distinct.</p>
+
+<ul>
+  <li>The <strong>proposal approval workflow</strong> is the Visual Studio host workflow for reviewing and applying editor changes.</li>
+  <li>The <strong>approval-aware tool execution seam</strong> is part of <code>BridgeToolExecutor</code> for shared compiled tools whose descriptors require approval before execution.</li>
+</ul>
+
+<p>They share a philosophy: selected actions should stop at an explicit decision boundary. But they are not the same implementation. Part 3 is primarily about the host/UI proposal lifecycle. The compiled-tool approval seam belongs to the shared executor boundary.</p>
+
+<h3>Logs and Traces Still Matter</h3>
+
+<p>Thread correctness and proposal lifecycle correctness are hard to validate from screenshots alone. Logs and trace artifacts help show where the workflow crossed from transport to host service to UI state.</p>
+
+<p>For proposal work, the useful evidence is not just &ldquo;the button was clicked.&rdquo; It is the chain:</p>
+
+<pre><code>proposal request received
+proposal loaded into review state
+approval or rejection invoked
+completed preview captured
+pending callbacks cleared
+terminal status recorded</code></pre>
+
+<p>That chain is what makes async UI behavior observable instead of mysterious.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The repo already has Mermaid sources that help explain the surrounding workflows:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> shows a VSIX-host read workflow crossing UI, presenter, service, and editor boundaries.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows the separate approval-aware compiled tool execution seam.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows the named-pipe activation path that must succeed before VS-backed proposal tools can reach the host.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
+
+<h3>Takeaway</h3>
+
+<p>For the current bridge, host correctness means more than switching to the UI thread at the right time. It means keeping transport, Visual Studio access, UI orchestration, and proposal lifecycle ownership separate.</p>
+
+<p>The working model is:</p>
+
+<pre><code>transport can run asynchronously
+host access stays behind the VSIX/service boundary
+UI state changes through presenter/viewmodel orchestration
+proposal lifecycle belongs to IProposalManager
+approval callbacks are cleared at terminal outcomes
+completed previews preserve what just happened</code></pre>
+
+<p>That separation reduced black-box behavior. It made proposal workflows easier to test, easier to reset, and easier to explain when an AI-assisted edit crosses from suggestion into human-reviewed action.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is runtime validation: how to prove MCP tool calls, named-pipe dispatch, proposal creation, approval flow, and diagnostics work end to end in the real host environment.</p>
