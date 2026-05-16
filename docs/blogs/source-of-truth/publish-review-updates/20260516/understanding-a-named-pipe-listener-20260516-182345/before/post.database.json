@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  151,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "6484fa94-5d8b-429a-99c6-779b300bc336"
+               },
+    "title":  "Understanding a Named Pipe Listener",
+    "description":  "[Page:NamedPipeListener]\nSource of Truth: Derived / Educational\nUnderstanding a Named Pipe Listener",
+    "author":  "AI Systems Author",
+    "slug":  "understanding-a-named-pipe-listener",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-17T22:36:00.000",
+    "dateModified":  "2026-04-27T10:30:04.773",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "4ffa8737bc86ca440f45b3ba6de2b15defbdc836f658b82196828217ccc25bd7",
+    "export":  {
+                   "phase":  "before-review-update",
+                   "folder":  "before",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:23:45.572Z"
+               }
+}
