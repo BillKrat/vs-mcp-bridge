@@ -3,6 +3,7 @@
 `Publish-BlogPostDraft.ps1` publishes one canonical repo-backed post to BlogEngine as a draft and refreshes BlogEngine visibility through the BlogAI reload endpoint.
 `Compare-BlogPostBeforePublish.ps1` is the read-only safety check to run before publishing.
 `Compare-ReadyBlogPostsBeforePublish.ps1` batches that safety check across the ready-post publishing list.
+`Compare-BlockedBlogRowsBeforePublish.ps1` inspects blocked live-vs-export differences without publishing.
 
 ## Script
 
@@ -12,6 +13,7 @@
 - [Export-DataStoreSettingRow.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-DataStoreSettingRow.ps1)
 - [Compare-BlogPostBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-BlogPostBeforePublish.ps1)
 - [Compare-ReadyBlogPostsBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-ReadyBlogPostsBeforePublish.ps1)
+- [Compare-BlockedBlogRowsBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-BlockedBlogRowsBeforePublish.ps1)
 
 ## Read-Only Export
 
@@ -50,6 +52,16 @@ It performs a parameterized `SELECT` only and does not publish, reload, update, 
 ```
 
 By default the script writes `docs/blogs/prepublish-compare-ready-posts-20260516.md`.
+It performs parameterized `SELECT` calls only and does not publish, reload, update, or delete database records.
+
+`Compare-BlockedBlogRowsBeforePublish.ps1` inspects rows blocked by the ready-post batch compare and classifies whether the drift is body content, identity metadata, taxonomy/description metadata, or timestamp-only.
+
+```powershell
+.\scripts\blog-publishing\Compare-BlockedBlogRowsBeforePublish.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS
+```
+
+By default the script writes `docs/blogs/prepublish-blocked-row-diff-20260516.md`.
 It performs parameterized `SELECT` calls only and does not publish, reload, update, or delete database records.
 
 `Export-GwnWikiExtensionSettings.ps1` preserves hyperlink-token plugin settings before canonical blog link cleanup.
