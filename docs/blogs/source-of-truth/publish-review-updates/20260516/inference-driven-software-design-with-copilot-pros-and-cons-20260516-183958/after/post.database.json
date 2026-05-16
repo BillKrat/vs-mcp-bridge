@@ -1,0 +1,36 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  156,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "b3da6b1c-a955-4ec2-afda-b281bd5d46fd"
+               },
+    "title":  "Inference-driven development with Copilot; pros and cons",
+    "description":  "A practical look at inference-driven software design, where Copilot and AI-assisted coding help most, where they create risk, and why observable workflows, approvals, logs, diagrams, and source-of-truth docs keep BlogAI development grounded.",
+    "author":  "BillKrat",
+    "slug":  "inference-driven-software-design-with-copilot-pros-and-cons",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-23T11:58:00.000",
+    "dateModified":  "2026-05-16T16:39:59.677",
+    "categories":  [
+
+                   ],
+    "tags":  [
+                 [
+                     "Copilot"
+                 ]
+             ],
+    "contentHashSha256":  "37d3c11e745b78997fb758f2c0848491a4f8693f3ce47775b9ce758dea3d4fd4",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:39:59.751Z"
+               }
+}
