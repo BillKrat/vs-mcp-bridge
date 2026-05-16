@@ -1,0 +1,15 @@
+{
+  "inputs": [],
+  "servers": {
+    "vs-mcp-bridge": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "Y:\\\\vs-mcp-bridge\\\\VsMcpBridge.McpServer\\\\VsMcpBridge.McpServer.csproj"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -503,10 +503,14 @@ What is verified:
   - `vs_get_error_list`
 - `vs_propose_text_edit` works through proposal, approval, and apply
 - post-apply connectivity was verified with a successful follow-up `vs_get_active_document` call
+- Visual Studio Insiders Copilot Agent can activate the repo-local `vs-mcp-bridge` MCP server from the Experimental Instance after the `VS MCP Bridge` tool window initializes the VSIX side
+- direct MCP stdio validation succeeds with 16 tools listed and `chat_engine_ping` returning `pong`
 
 Observed runtime note:
 
 - `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` was observed after apply, but it did not block the bridge or subsequent tool calls
+- `scripts\validate-mcp.ps1` may hang while building its temporary helper before MCP initialization; direct MCP stdio validation and live VS-backed calls should be used to distinguish helper-build issues from server activation failures
+- a failed Copilot activation can leave an orphaned `VsMcpBridge.McpServer.exe` process that locks Debug output files; stop that process before rebuilding
 
 ## Next Steps
 

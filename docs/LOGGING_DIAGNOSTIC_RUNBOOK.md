@@ -124,6 +124,28 @@ Important scope note:
 - `chat_engine_ping` validates the MCP host chat-engine path but does not traverse the named-pipe bridge into the VSIX host
 - when you need to prove MCP -> pipe -> VSIX transport, use a pipe-backed tool such as `vs_get_active_document`, `vs_get_selected_text`, `vs_list_solution_projects`, `vs_get_error_list`, or a proposal tool
 
+### Visual Studio Copilot MCP activation
+
+For Visual Studio Insiders Copilot Agent validation, activate the bridge from the Experimental Instance that hosts the VSIX:
+
+1. start the Experimental Instance for `Y:\vs-mcp-bridge`
+2. open `View -> Other Windows -> VS MCP Bridge` to initialize the VSIX and named-pipe server
+3. open a real editor document
+4. open GitHub Copilot Chat in the same Experimental Instance
+5. enable/select the `vs-mcp-bridge` tools in Agent mode
+6. allow the bridge tools for the current session when prompted
+7. invoke `vs_get_active_document` and then `vs_list_solution_projects`
+
+Visual Studio 2026 Insiders may show MCP trust/tool confirmation dialogs. Session-only approval is sufficient for triage. If activation fails once and then builds start failing with locked files under `VsMcpBridge.McpServer\bin\Debug\net10.0`, check for an orphaned server:
+
+```powershell
+Get-Process VsMcpBridge.McpServer -ErrorAction SilentlyContinue
+```
+
+Stop only the orphaned `VsMcpBridge.McpServer` process, then rebuild the MCP server project.
+
+As of the 2026-05-16 triage run, `scripts\validate-mcp.ps1` can hang while building its temporary helper before MCP initialization. A direct MCP stdio validation still succeeded: initialize returned `VsMcpBridge.McpServer 1.0.0.0`, `tools/list` returned 16 tools, and `chat_engine_ping` returned `pong`. Treat that script hang as a validation-helper issue unless direct MCP activation also fails.
+
 When reproducing ping/pong or chat startup hangs, capture the last observed stage:
 
 1. `McpServer` request entry
