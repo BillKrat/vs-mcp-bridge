@@ -80,6 +80,7 @@ For the security-aware compiled tool boundary, also read `docs/session-handoffs/
 For the MEF discovery-only boundary, also read `docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`.
 For the approval-aware tool execution boundary, also read `docs/session-handoffs/2026-05-16-tool-approval-validation.md`.
 For the current foundational security architecture seams and deferred scope, also read `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
+For the latest full validation checkpoint, also read `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`.
 
 ## Current Working Guidance
 
