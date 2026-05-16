@@ -1,31 +1,40 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  "43BF6AAE-15C9-4C90-B3B2-66AC51C4A7C8",
-    "title":  "Understanding a Local MCP Server Over Stdio and Local-Only Communication Over a Named Pipe",
-    "description":  "When integrating systems inside Visual Studio, two communication patterns often appear early in the ",
-    "author":  "AI Systems Author",
-    "slug":  "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-                       "AI Systems Author"
-                   ],
-    "tags":  [
-
-             ],
-    "sourceDatabase":  {
-                           "exportName":  "db-export-20260516",
-                           "databaseTable":  "dbo.be_Posts",
-                           "postRowId":  142,
-                           "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
-                           "postId":  "43bf6aae-15c9-4c90-b3b2-66ac51c4a7c8",
-                           "status":  "published",
-                           "isPublished":  true,
-                           "isDeleted":  false,
-                           "dateCreated":  "2026-04-01T17:04:00.000",
-                           "dateModified":  "2026-04-12T10:31:23.680",
-                           "exportFolder":  "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
-                           "metadataFile":  "post.database.json",
-                           "contentFile":  "content.html"
-                       }
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "43BF6AAE-15C9-4C90-B3B2-66AC51C4A7C8",
+  "title": "Understanding a Local MCP Server Over Stdio and Local-Only Communication Over a Named Pipe",
+  "description": "A concise explanation of how VS MCP Bridge combines MCP over stdio with local named-pipe communication to keep AI protocol handling, Visual Studio integration, diagnostics, and tool execution boundaries separate.",
+  "author": "AI Systems Author",
+  "slug": "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "stdio",
+    "Named Pipes",
+    "Visual Studio",
+    "VSIX",
+    "AI Tooling",
+    "Diagnostics",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 142,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "43bf6aae-15c9-4c90-b3b2-66ac51c4a7c8",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-01T17:04:00.000",
+    "dateModified": "2026-04-12T10:31:23.680",
+    "exportFolder": "understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }

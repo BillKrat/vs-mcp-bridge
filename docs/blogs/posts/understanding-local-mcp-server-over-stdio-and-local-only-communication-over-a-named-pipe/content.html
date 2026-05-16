@@ -1,116 +1,164 @@
-<p id="hdr1"><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md" target="_blank">/docs/ARCHITECTURE.md </a>(or relevant doc)<br /> <strong>Status:</strong> Derived / Educational</p>
-<p>When integrating systems inside Visual Studio, two communication patterns often appear early in the design:</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post summarizes how stdio and named pipes fit together; the focused stdio and named-pipe posts cover each transport in more detail.</p>
+
+<h1>Understanding a Local MCP Server Over Stdio and Local-Only Communication Over a Named Pipe</h1>
+
+<p><strong>VS MCP Bridge</strong> uses two local communication boundaries together:</p>
+
 <ol>
-<li>A local MCP server running over <strong>stdio</strong></li>
-<li>Local-only communication over a <strong>named pipe</strong></li>
+  <li>An AI client talks to the local MCP server over <strong>stdio</strong>.</li>
+  <li>The local MCP server talks to the Visual Studio extension over a <strong>named pipe</strong>.</li>
 </ol>
-<p>At first glance, these can seem interchangeable. In practice, they solve different problems and are often used together in a layered architecture.</p>
-<h2>Local MCP Server Over stdio</h2>
-<p>A process running &ldquo;over stdio&rdquo; communicates through its standard input and output streams. In .NET, this is typically done by launching a child process and redirecting its input and output streams.</p>
-<p>Microsoft documents this capability through <code>System.Diagnostics.Process</code>, where standard input and output can be redirected and used programmatically: <a href="https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.standardinput?view=net-10.0" target="_blank"> Process.StandardInput documentation </a>.</p>
-<p>This allows a host process to send requests and receive responses without opening network ports or configuring external communication channels.</p>
-<h3>Conceptual model</h3>
-<pre><code>[ Host / Bridge Process ]  &lt;-- stdin/stdout --&gt;  [ MCP Server Process ]</code></pre>
-<p>In this model:</p>
+
+<p>Those two transports are easy to blur together, but they solve different problems. Stdio is the AI-facing MCP protocol boundary. The named pipe is the Visual Studio host boundary.</p>
+
+<h2>The Current Runtime Shape</h2>
+
+<p>The current VS-backed path is:</p>
+
+<pre><code>AI client
+  -&gt; MCP over stdio
+VsMcpBridge.McpServer
+  -&gt; JSON request/response over local named pipe "VsMcpBridge"
+VsMcpBridge.Vsix
+  -&gt; Visual Studio SDK / DTE / editor state</code></pre>
+
+<p>The MCP server does not load inside Visual Studio. The VSIX does not speak MCP over stdout. Each side owns the work that belongs in its process.</p>
+
+<h2>Why stdio Exists</h2>
+
+<p>stdio gives the AI client a simple local way to launch and communicate with the MCP server. The client writes MCP messages to standard input and reads MCP responses from standard output. Microsoft documents the underlying .NET stream support through <a href="https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.standardinput?view=net-10.0" target="_blank">Process.StandardInput</a>.</p>
+
+<p>For MCP, the important rule is stricter than ordinary process communication: <strong>stdout is protocol output</strong>. It must stay clean. Random log lines, status messages, or troubleshooting text on stdout can corrupt the MCP conversation.</p>
+
+<p>That is why diagnostics belong in transport-safe places: stderr where appropriate, local app-data logs, Visual Studio logs, UI logging, and durable trace artifacts. The MCP response stream should remain parseable protocol traffic.</p>
+
+<h2>Why the Named Pipe Exists</h2>
+
+<p>The named pipe exists because Visual Studio work belongs behind the VSIX boundary. The VSIX runs inside Visual Studio and can access DTE, editor state, solution state, the Error List, proposal review surfaces, and approved apply behavior.</p>
+
+<p>The MCP server stays outside Visual Studio. For VS-backed tools, it uses a local named pipe to send a structured request to the VSIX. Microsoft documents the .NET named-pipe server primitive through <a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeserverstream?view=net-10.0" target="_blank">NamedPipeServerStream</a>.</p>
+
+<p>This keeps Visual Studio concerns behind a local-only host boundary. The MCP server does not need DTE access, and the VSIX does not need to become an MCP stdio host.</p>
+
+<h2>The Two Boundaries Together</h2>
+
+<p>A normal VS-backed MCP call crosses the boundaries in order:</p>
+
+<ol>
+  <li>The AI client sends an MCP tool request over stdio.</li>
+  <li><code>VsMcpBridge.McpServer</code> resolves the registered MCP tool.</li>
+  <li>The VS-backed tool method sends a request through <code>PipeClient</code>.</li>
+  <li><code>PipeClient</code> connects to the local <code>VsMcpBridge</code> named pipe.</li>
+  <li><code>PipeServer</code> in the VSIX accepts and parses the request envelope.</li>
+  <li>The pipe server dispatches only a known command to the host service layer.</li>
+  <li><code>VsService</code> performs the Visual Studio operation.</li>
+  <li>The response returns through the pipe.</li>
+  <li>The MCP server returns the tool result over stdout.</li>
+</ol>
+
+<p>The result is a local bridge, not a remote service and not one process doing everything.</p>
+
+<h2>Request Envelopes and Correlation</h2>
+
+<p>The named-pipe hop sends structured request/response envelopes, not free-form chat text. The envelope includes command and correlation metadata such as request IDs. Those IDs are how logs and trace artifacts reconnect a tool request to the pipe command and the host operation.</p>
+
+<p>This matters because the useful troubleshooting question is rarely &ldquo;did the bridge fail?&rdquo; The useful question is more specific:</p>
+
 <ul>
-<li>The host launches the MCP server as a child process.</li>
-<li>Requests are written to the server&rsquo;s standard input.</li>
-<li>Responses are read from standard output.</li>
+  <li>Did the MCP request arrive over stdio?</li>
+  <li>Did the MCP server resolve the expected tool?</li>
+  <li>Did <code>PipeClient</code> attempt the expected command?</li>
+  <li>Did the named pipe connect?</li>
+  <li>Did <code>PipeServer</code> dispatch a known command?</li>
+  <li>Did the Visual Studio-side operation complete?</li>
+  <li>Did the response return through the same correlation chain?</li>
 </ul>
-<p>This approach is simple and predictable. It works well when one process owns the lifecycle of another and needs a direct communication channel.</p>
-<h3>Example</h3>
-<pre><code>var startInfo = new ProcessStartInfo
-{
-    FileName = "VsMcpBridge.McpServer.exe",
-    RedirectStandardInput = true,
-    RedirectStandardOutput = true,
-    UseShellExecute = false
-};
 
-using var process = Process.Start(startInfo);
-using var writer = process.StandardInput;
-using var reader = process.StandardOutput;
+<p>That is the anti-black-box point of correlation metadata: the first missing boundary should be visible.</p>
 
-await writer.WriteLineAsync("{\"method\":\"ping\"}");
-var response = await reader.ReadLineAsync();</code></pre>
-<p>On the server side, communication is equally direct:</p>
-<pre><code>while (true)
-{
-    var line = Console.ReadLine();
-    if (line == null)
-    {
-        break;
-    }
+<h2>Startup and Activation Diagnostics</h2>
 
-    Console.WriteLine("{\"result\":\"pong\"}");
-}</code></pre>
-<p>The key idea is that <strong>stdio is tightly coupled to a parent/child process relationship</strong>.</p>
-<h2>Local-Only Communication Over a Named Pipe</h2>
-<p>A named pipe is an operating system&ndash;managed communication channel designed for interprocess communication. In .NET, this is implemented using <code>NamedPipeServerStream</code> and <code>NamedPipeClientStream</code>.</p>
-<p>Microsoft describes named pipes as a mechanism for communication between processes, where a server can support one or more clients: <a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeserverstream?view=net-10.0" target="_blank"> NamedPipeServerStream documentation </a>.</p>
-<p>Unlike stdio, named pipes are not tied to a parent/child relationship. Any authorized process on the same machine can connect to the pipe.</p>
-<h3>Conceptual model</h3>
-<pre><code>[ Visual Studio Extension ]  &lt;-- named pipe --&gt;  [ Local Bridge / Service ]</code></pre>
-<p>In this model:</p>
+<p>The VSIX side has to be active before VS-backed tools can succeed. In current live validation, the operator path is:</p>
+
+<ol>
+  <li>Launch the Visual Studio Experimental Instance.</li>
+  <li>Open <strong>View -&gt; Other Windows -&gt; VS MCP Bridge</strong>.</li>
+  <li>Let the tool-window path initialize the VSIX/named-pipe side.</li>
+  <li>Retry the VS-backed MCP tool.</li>
+</ol>
+
+<p>If the MCP server cannot connect to the pipe, the current diagnostic path returns a structured activation message instead of an opaque timeout. That failure is still a tool result. It does not change the MCP transport, add retry loops, or write troubleshooting text outside the MCP response stream.</p>
+
+<p>That distinction is useful: an inactive named pipe is not a stdio failure. It means the local MCP server could not reach the VSIX side.</p>
+
+<h2>Approval and Tool Execution Boundaries</h2>
+
+<p>The transports move requests. They do not authorize arbitrary behavior by themselves.</p>
+
+<p>For Visual Studio edit operations, the named-pipe path reaches the VSIX proposal workflow. MCP can create proposals, but apply still requires explicit approval in the host UI.</p>
+
+<p>For shared compiled bridge tools, execution flows through <code>BridgeToolExecutor</code>. That executor is the policy, approval, execution, audit, redaction, and correlation boundary for compiled tools. It owns the approval-aware tool execution seam, capability metadata evaluation hooks, secret-reference awareness, redacted audit envelopes, and classification metadata.</p>
+
+<p>That means the full architecture has three different concerns, each with a different job:</p>
+
 <ul>
-<li>The server creates a named pipe.</li>
-<li>Clients connect to that pipe by name.</li>
-<li>Both sides exchange messages over a bidirectional channel.</li>
+  <li><strong>stdio</strong> moves MCP protocol messages between the AI client and local MCP server.</li>
+  <li><strong>named pipes</strong> move structured VS-backed requests between the MCP server and VSIX.</li>
+  <li><strong>BridgeToolExecutor</strong> governs shared compiled tool execution behind policy, approval, audit, and redaction seams.</li>
 </ul>
-<h3>Server example</h3>
-<pre><code>using var server = new NamedPipeServerStream("VsMcpBridge");
 
-server.WaitForConnection();
+<h2>Trace-Only Failure Evidence</h2>
 
-using var reader = new StreamReader(server);
-using var writer = new StreamWriter(server) { AutoFlush = true };
+<p>Because stdout must stay clean, failure evidence lives in trace-safe places. The current repo keeps durable logs, metadata, and Mermaid sources for important paths, including inactive VSIX pipe diagnostics and shared tool execution.</p>
 
-var request = reader.ReadLine();
-writer.WriteLine("ack");</code></pre>
-<h3>Client example</h3>
-<pre><code>using var client = new NamedPipeClientStream(".", "VsMcpBridge");
+<p>A good inactive-pipe trace can be reconstructed as:</p>
 
-client.Connect();
+<pre><code>MCP tool request received
+PipeClient attempted named-pipe connection
+named pipe was unavailable
+activation diagnostic returned
+request/correlation metadata preserved
+no raw payload or secret-like values disclosed</code></pre>
 
-using var reader = new StreamReader(client);
-using var writer = new StreamWriter(client) { AutoFlush = true };
+<p>That is more useful than a raw timeout because it tells the operator what boundary failed and what to do next.</p>
 
-writer.WriteLine("hello");
-var response = reader.ReadLine();</code></pre>
-<p>By default, the pipe direction supports bidirectional communication, making it well-suited for request/response interactions.</p>
-<h2>Key Differences</h2>
+<h2>Related Mermaid Trace Sources</h2>
+
+<p>The repo already has Mermaid sources that support this article:</p>
+
 <ul>
-<li><strong>stdio</strong>: Direct communication between a parent process and the child process it launches.</li>
-<li><strong>named pipe</strong>: A reusable, OS-managed channel for communication between local processes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/diagrams/vs-mcp-bridge-bootstrap-sequence.mmd" target="_blank">vs-mcp-bridge-bootstrap-sequence.mmd</a> shows the full startup and request path across stdio and the named pipe.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows the inactive-pipe diagnostic path and successful activation retry path.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-aware compiled tool execution through <code>BridgeToolExecutor</code>.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-security-trace-20260509.mmd" target="_blank">tool-security-trace-20260509.mmd</a> shows policy, redaction, audit, and correlation in the compiled tool path.</li>
 </ul>
-<p>Each has a clear role depending on how processes relate to each other.</p>
-<h2>Combining Both Patterns</h2>
-<p>These two approaches are often used together in a layered design:</p>
-<pre><code>[ Visual Studio Extension ]
-          |
-     named pipe
-          |
-   [ Local Bridge ]
-          |
-        stdio
-          |
-   [ MCP Server Process ]</code></pre>
-<p>In this structure:</p>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly instead of embedding generated images.</p>
+
+<h2>Why This Design Is Deliberate</h2>
+
+<p>The two transports keep the bridge small and local while preserving clear responsibilities:</p>
+
 <ul>
-<li>The extension communicates locally with a bridge using a named pipe.</li>
-<li>The bridge manages the MCP server process using stdio.</li>
+  <li>The AI client gets a standard MCP stdio process.</li>
+  <li>The MCP server stays outside Visual Studio.</li>
+  <li>Visual Studio APIs stay inside the VSIX.</li>
+  <li>VS-backed operations cross a local named-pipe request boundary.</li>
+  <li>Shared compiled tools have a separate execution/security boundary.</li>
+  <li>Diagnostics stay reconstructable without polluting MCP stdout.</li>
 </ul>
-<p>This separation keeps responsibilities clear:</p>
-<ul>
-<li>The extension focuses on integration with Visual Studio.</li>
-<li>The bridge handles process management and protocol translation.</li>
-<li>The MCP server focuses on domain-specific behavior.</li>
-</ul>
+
+<p>That separation is what lets the project add approval-aware execution, capability metadata, secret references, audit classification, and trace artifacts without turning transport code into a security policy engine.</p>
+
 <h2>Takeaway</h2>
-<p>The distinction can be summarized simply:</p>
-<ul>
-<li><strong>stdio</strong> is ideal for controlling and communicating with a launched child process.</li>
-<li><strong>named pipes</strong> are ideal for structured communication between local processes.</li>
-</ul>
-<p>Understanding how and when to use each makes system design more deliberate and significantly easier to reason about.</p>
+
+<p>The shortest accurate model is:</p>
+
+<pre><code>stdio gets into the MCP server
+named pipes get into Visual Studio
+BridgeToolExecutor governs shared compiled tool execution</code></pre>
+
+<p>Once that model is clear, the bridge becomes easier to reason about. Each boundary has a narrow job, and each important failure mode has somewhere observable to land.</p>
+
 <p><em>&mdash; AI Systems Author</em></p>
