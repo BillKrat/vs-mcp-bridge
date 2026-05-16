@@ -16,14 +16,22 @@ namespace VsMcpBridge.McpServer.Pipe;
 public sealed class PipeClient(ILogger logger) : IPipeClient
 {
     private const string DefaultPipeName = BridgeRuntimeConstants.PipeName;
+    private const int DefaultConnectTimeoutMilliseconds = 1500;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private readonly ILogger _logger = logger;
     private readonly string _pipeName = DefaultPipeName;
+    private readonly int _connectTimeoutMilliseconds = DefaultConnectTimeoutMilliseconds;
 
     public PipeClient(ILogger logger, string pipeName)
         : this(logger)
     {
         _pipeName = pipeName;
+    }
+
+    public PipeClient(ILogger logger, string pipeName, int connectTimeoutMilliseconds)
+        : this(logger, pipeName)
+    {
+        _connectTimeoutMilliseconds = connectTimeoutMilliseconds;
     }
 
     private async Task<TResponse> SendAsync<TRequest, TResponse>(
@@ -41,7 +49,7 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
         try
         {
             using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            await pipe.ConnectAsync(timeout: 5000, cancellationToken);
+            await pipe.ConnectAsync(timeout: _connectTimeoutMilliseconds, cancellationToken);
             _logger.LogTrace($"Pipe connection established to '{_pipeName}' [Command={command}] [RequestId={requestId}].");
 
             var envelope = new PipeMessage
@@ -95,6 +103,18 @@ public sealed class PipeClient(ILogger logger) : IPipeClient
             stopwatch.Stop();
             _logger.LogWarning($"Pipe request canceled [Command={command}] [RequestId={requestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}].");
             throw;
+        }
+        catch (TimeoutException ex)
+        {
+            stopwatch.Stop();
+            _logger.LogTrace($"Pipe activation preflight failed [Command={command}] [RequestId={requestId}] [Error={ex.GetType().Name}: {ex.Message}]");
+            _logger.LogWarning($"Pipe activation preflight failed [Command={command}] [RequestId={requestId}] [ElapsedMs={stopwatch.ElapsedMilliseconds}]. {PipeActivationDiagnostics.ActivationRequiredMessage}");
+            return new TResponse
+            {
+                RequestId = requestId,
+                Success = false,
+                ErrorMessage = $"{PipeActivationDiagnostics.ActivationRequiredMessage} [RequestId={requestId}]"
+            };
         }
         catch (Exception ex)
         {

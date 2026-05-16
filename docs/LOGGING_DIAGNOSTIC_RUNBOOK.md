@@ -153,6 +153,8 @@ For Visual Studio Insiders Copilot Agent validation, activate the bridge from th
 6. allow the bridge tools for the current session when prompted
 7. invoke `vs_get_active_document` and then `vs_list_solution_projects`
 
+If a pipe-backed MCP tool reports that `VS MCP Bridge is not active`, treat it as a VSIX activation preflight failure rather than a generic MCP transport failure. Open `View -> Other Windows -> VS MCP Bridge` in the Experimental Instance that hosts the VSIX, wait for the tool window to initialize the named-pipe side, then retry the VS-backed tool.
+
 Visual Studio 2026 Insiders may show MCP trust/tool confirmation dialogs. Session-only approval is sufficient for triage. If activation fails once and then builds start failing with locked files under `VsMcpBridge.McpServer\bin\Debug\net10.0`, check for an orphaned server:
 
 ```powershell
