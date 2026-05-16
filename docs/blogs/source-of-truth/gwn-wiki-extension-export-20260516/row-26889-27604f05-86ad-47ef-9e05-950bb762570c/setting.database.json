@@ -1,0 +1,18 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_DataStoreSettings",
+                   "dataStoreSettingRowId":  26889,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "extensionType":  "0",
+                   "extensionId":  "GwnWikiExtension"
+               },
+    "settings":  {
+                     "rawFile":  "settings.raw.txt",
+                     "rawLength":  16247,
+                     "rawSha256":  "de8c29fa2bdcf740467189f96d4c79bd28d72bef7eb8acabef956795f7d74043",
+                     "parsedFile":  "settings.parsed.json",
+                     "parseable":  true,
+                     "format":  "xml",
+                     "mappingCount":  32
+                 }
+}

@@ -118,9 +118,11 @@ The sample comparison confirmed three independent views:
 
 ## Link Findings
 
-### Rendered links still pointing at `adventuresontheedge.net`
+### Rendered links resolved through `GwnWikiExtension`
 
 The DB export manifest does not list `adventuresontheedge.net` body links, but rendered pages include generated or runtime-resolved inter-post links pointing to the old HTTP domain.
+Follow-up export confirmed these links are resolved by the BlogEngine `GwnWikiExtension` plugin settings stored in `dbo.be_DataStoreSettings`, not by direct article-body URLs.
+`http://AdventuresOnTheEdge.net` is the production/original blog domain, while `https://www.global-webnet.com` is the development BlogAI site, so these production-domain settings are expected for now.
 
 | Rendered source post | Old-domain rendered links |
 | --- | --- |
@@ -129,7 +131,8 @@ The DB export manifest does not list `adventuresontheedge.net` body links, but r
 | `understanding-a-named-pipe-listener` | `http://adventuresontheedge.net/post.aspx?id=f0c7a958-f41a-4143-b601-82ce84fd4af0` |
 | `inference-driven-software-design-with-copilot-pros-and-cons` | `http://adventuresontheedge.net/post.aspx?id=5465cc54-65ab-4c4f-b6ac-4539de01c365` |
 
-These should be treated as public rendering/link-generation findings, not direct DB body evidence, until the BlogEngine link source is confirmed.
+These should be treated as plugin-resolved links, not direct DB body defects.
+The preserved plugin export is `docs/blogs/source-of-truth/gwn-wiki-extension-export-20260516/`, with interpretation notes in `docs/blogs/gwn-wiki-extension-link-mapping-20260516.md`.
 
 ### GitHub links still pointing at old feature branches
 
@@ -191,7 +194,7 @@ Likely supporting or out-of-scope content for BlogAI:
 
 - `vs-mcp-bridge-blog-series-part-4` is live in the DB, but the repo folder `docs/blogs/posts/vs-mcp-bridge-blog-series-part-4/` currently declares slug `vs-mcp-bridge-blog-series-part-4-repo-trial` and a different draft identity. This is the highest-risk overwrite ambiguity.
 - `vs-mcp-bridge-publish-create-trial` exists only in the repo and should remain a trial artifact unless intentionally promoted.
-- Rendered old-domain inter-post links appear to be generated outside the exported body HTML. Their source should be located before mechanically editing post bodies.
+- Rendered old-domain inter-post links are generated outside the exported body HTML by `GwnWikiExtension` settings. They should not be mechanically replaced in post bodies.
 - Six active DB posts returned 404 at the tested top-level `global-webnet.com/post/YYYY/MM/DD/<slug>` route. They may belong to older multi-blog paths, legacy routing, or hidden/subscriber contexts.
 - The large embedded data URI in `welcome-to-our-site` is preserved in the DB export body but represented only by hash/length in the manifest. Avoid reformatting that post until a rewrite plan explicitly handles embedded assets.
 
@@ -201,6 +204,6 @@ Before rewriting public content, reconcile canonical source coverage:
 
 1. Create canonical repo post folders for active DB posts that are BlogAI candidates but currently missing from `docs/blogs/posts/`.
 2. Resolve the Part 4 repo trial mismatch before any publish operation.
-3. Locate the source of rendered `adventuresontheedge.net` `post.aspx?id=...` links.
+3. Use the preserved `GwnWikiExtension` export before deciding whether bracket-style tokens should remain, be normalized in canonical content, or wait for a plugin-setting migration.
 4. Decide whether old feature-branch GitHub links should be updated directly to `main` or replaced with repo-relative documentation links in canonical content.
 5. Only after those decisions, begin small per-post rewrites aligned to `docs/ARCHITECTURE.md`.

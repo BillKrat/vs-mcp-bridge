@@ -1,0 +1,243 @@
+{
+    "parseable":  true,
+    "format":  "xml",
+    "parseAttempts":  [
+                          {
+                              "format":  "json",
+                              "success":  false,
+                              "error":  "Invalid JSON primitive: ."
+                          },
+                          {
+                              "format":  "xml",
+                              "success":  true,
+                              "error":  null
+                          }
+                      ],
+    "mappingCount":  32,
+    "mappings":  [
+                     {
+                         "token":  "TestTwo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  2
+                     },
+                     {
+                         "token":  "BlogEngineWiki",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  4
+                     },
+                     {
+                         "token":  "LiveWriter",
+                         "url":  "https://github.com/BillKrat/OpenLiveWriter",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  5
+                     },
+                     {
+                         "token":  "RootPassword",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  6
+                     },
+                     {
+                         "token":  "Raspbian",
+                         "url":  "https://raspbian.org/",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  7
+                     },
+                     {
+                         "token":  "Debian",
+                         "url":  "https://www.debian.org/",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  8
+                     },
+                     {
+                         "token":  "RaspberryPi",
+                         "url":  "https://www.raspberrypi.org/",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  9
+                     },
+                     {
+                         "token":  "sudo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  10
+                     },
+                     {
+                         "token":  "su",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  11
+                     },
+                     {
+                         "token":  "apt",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  12
+                     },
+                     {
+                         "token":  "\u003cbr clear=\"all\"\u003eSharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  13
+                     },
+                     {
+                         "token":  "SharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  14
+                     },
+                     {
+                         "token":  "WindowsShare",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  15
+                     },
+                     {
+                         "token":  "createEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  16
+                     },
+                     {
+                         "token":  "SharingEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  17
+                     },
+                     {
+                         "token":  "ShareEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  18
+                     },
+                     {
+                         "token":  "500 error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  19
+                     },
+                     {
+                         "token":  "https causes error when deployed",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  20
+                     },
+                     {
+                         "token":  "http causes error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  21
+                     },
+                     {
+                         "token":  "BillPage1",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=9c70d16c-ed16-4464-b4db-fa546c19a4ae",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  22
+                     },
+                     {
+                         "token":  "BillPage2",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=71aa1992-f687-4d4d-80da-c6b3281407c1",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  23
+                     },
+                     {
+                         "token":  "IOC",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5232e959-6845-4c32-9ba0-956980aebffc",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  3
+                     },
+                     {
+                         "token":  "NextJS101",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=1ecfb3fd-1c44-44f9-9be8-f516ff257d0f",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  4
+                     },
+                     {
+                         "token":  "SandboxTest",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=ebca48a8-7714-44a6-82ee-5cb9d8c8e7e0",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  5
+                     },
+                     {
+                         "token":  "Playbook",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=bd97e5de-4b4e-4660-98f1-465bd53eddec",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  6
+                     },
+                     {
+                         "token":  "Signalmap",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=5520e2d5-c597-492d-8b41-e467152364cd",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  7
+                     },
+                     {
+                         "token":  "Evidence",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=12db1be9-4143-476d-a12a-04c7ca045a71",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  8
+                     },
+                     {
+                         "token":  "NamedPipeListener",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=6484fa94-5d8b-429a-99c6-779b300bc336",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  9
+                     },
+                     {
+                         "token":  "InferenceDriven",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=b3da6b1c-a955-4ec2-afda-b281bd5d46fd",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  10
+                     },
+                     {
+                         "token":  "ChatSessionsModelsAndAgents",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=5465cc54-65ab-4c4f-b6ac-4539de01c365",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  11
+                     },
+                     {
+                         "token":  "stdio",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=d0541943-0de1-4c25-a7af-9950c55f1591",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  12
+                     },
+                     {
+                         "token":  "VsMcpBridge",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=f0c7a958-f41a-4143-b601-82ce84fd4af0",
+                         "source":  "xml-settings-parameter-row",
+                         "command":  "Page",
+                         "rowIndex":  13
+                     }
+                 ]
+}

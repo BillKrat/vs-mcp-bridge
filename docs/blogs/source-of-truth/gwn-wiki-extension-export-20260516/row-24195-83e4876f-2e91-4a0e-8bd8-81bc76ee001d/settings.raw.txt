@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ManagedExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="GwnWikiExtension">
+  <AdminPage />
+  <Author>&lt;a target='_blank' href='http://www.Global-webnet.com/Blog'&gt;BillKrat&lt;/a&gt;</Author>
+  <Description>&lt;a target='_blank' href='http://www.Global-webnet.com/Blog'&gt;Global Webnet Wiki&lt;/a&gt;</Description>
+  <Enabled>true</Enabled>
+  <Priority>0</Priority>
+  <SubBlogEnabled>false</SubBlogEnabled>
+  <Settings>
+    <Delimiter>44</Delimiter>
+    <Help />
+    <Hidden>false</Hidden>
+    <Index>0</Index>
+    <IsScalar>false</IsScalar>
+    <KeyField>CommandParameter</KeyField>
+    <Name>GwnWikiExtension</Name>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Id:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>Id</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>PermaLink:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>PermaLink</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>Not Assigned</Values>
+      <Values>Not Assigned</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Command:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>Command</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>Page</Values>
+      <Values>Display</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>true</KeyField>
+      <Label>Command Parameter:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>CommandParameter</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>PageDefault</Values>
+      <Values>DisplayDefault</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Display Template:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>DisplayTemplate</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>&lt;b&gt;&lt;i&gt;{0}&lt;/i&gt;&lt;/b&gt;</Values>
+      <Values>&lt;a target='_blank' href='[PermaLink]'&gt;{0}&lt;/a&gt;</Values>
+    </Parameters>
+    <ShowAdd>true</ShowAdd>
+    <ShowDelete>true</ShowDelete>
+    <ShowEdit>true</ShowEdit>
+    <BlogId>27604f05-86ad-47ef-9e05-950bb762570c</BlogId>
+  </Settings>
+  <ShowSettings>true</ShowSettings>
+  <Version>1.0</Version>
+</ManagedExtension>

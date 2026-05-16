@@ -6,6 +6,7 @@
 
 - [Publish-BlogPostDraft.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Publish-BlogPostDraft.ps1)
 - [Export-BlogPostsFromDatabase.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-BlogPostsFromDatabase.ps1)
+- [Export-GwnWikiExtensionSettings.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-GwnWikiExtensionSettings.ps1)
 
 ## Read-Only Export
 
@@ -24,6 +25,23 @@ docs/blogs/source-of-truth/db-export-20260516/
 
 The export writes `manifest.json`, `README.md`, and one folder per `dbo.be_Posts` row containing `post.database.json` plus exact `content.html`.
 It is read-only and does not publish, reload, update, or delete database records.
+
+`Export-GwnWikiExtensionSettings.ps1` preserves hyperlink-token plugin settings before canonical blog link cleanup.
+
+```powershell
+.\scripts\blog-publishing\Export-GwnWikiExtensionSettings.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS
+```
+
+Default output:
+
+```text
+docs/blogs/source-of-truth/gwn-wiki-extension-export-20260516/
+```
+
+The export reads `dbo.be_DataStoreSettings` where `ExtensionId = 'GwnWikiExtension'`.
+It writes the exact raw `Settings` field plus best-effort XML inspection artifacts for bracket-token mappings such as `[NamedPipeListener]`, `[Stdio]`, and `[Display:...]`.
+It is read-only and does not publish, reload, update, or delete plugin settings.
 
 ## Required Parameters
 

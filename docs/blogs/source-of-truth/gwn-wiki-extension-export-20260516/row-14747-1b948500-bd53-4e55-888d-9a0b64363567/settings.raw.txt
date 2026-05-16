@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ManagedExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="GwnWikiExtension">
+  <AdminPage />
+  <Author>&lt;a target='_blank' href='http://www.Global-webnet.com/Blog'&gt;BillKrat&lt;/a&gt;</Author>
+  <Description>&lt;a target='_blank' href='http://www.Global-webnet.com/Blog'&gt;Global Webnet Wiki&lt;/a&gt;</Description>
+  <Enabled>true</Enabled>
+  <Priority>0</Priority>
+  <SubBlogEnabled>true</SubBlogEnabled>
+  <Settings>
+    <Delimiter>44</Delimiter>
+    <Help />
+    <Hidden>false</Hidden>
+    <Index>0</Index>
+    <IsScalar>false</IsScalar>
+    <KeyField>CommandParameter</KeyField>
+    <Name>GwnWikiExtension</Name>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Id:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>Id</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values />
+      <Values>5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>1c711553-9d7e-4f07-8564-33469d4f10d8</Values>
+      <Values>0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>661e8920-7897-4673-b839-5b2842cdf074</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>PermaLink:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>PermaLink</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>Not Assigned</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>https://github.com/BillKrat/OpenLiveWriter</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>https://raspbian.org/</Values>
+      <Values>https://www.debian.org/</Values>
+      <Values>https://www.raspberrypi.org/</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=661e8920-7897-4673-b839-5b2842cdf074</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Command:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>Command</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>Page</Values>
+      <Values>Display</Values>
+      <Values>Page</Values>
+      <Values>Image</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>true</KeyField>
+      <Label>Command Parameter:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>CommandParameter</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>PageDefault</Values>
+      <Values>DisplayDefault</Values>
+      <Values>TestTwo</Values>
+      <Values>ImageDefault</Values>
+      <Values>BlogEngineWiki</Values>
+      <Values>LiveWriter</Values>
+      <Values>RootPassword</Values>
+      <Values>Raspbian</Values>
+      <Values>Debian</Values>
+      <Values>RaspberryPi</Values>
+      <Values>sudo</Values>
+      <Values>su</Values>
+      <Values>apt</Values>
+      <Values>&lt;br clear="all"&gt;SharingRaspberryPiFolder</Values>
+      <Values>SharingRaspberryPiFolder</Values>
+      <Values>WindowsShare</Values>
+      <Values>createEdmx</Values>
+      <Values>SharingEdmx</Values>
+      <Values>ShareEdmx</Values>
+      <Values>500 error when deployed</Values>
+      <Values>https causes error when deployed</Values>
+      <Values>http causes error when deployed</Values>
+      <Values>HelloWorld1</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Display Template:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>DisplayTemplate</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>&lt;b&gt;&lt;i&gt;{0}&lt;/i&gt;&lt;/b&gt;</Values>
+      <Values>&lt;a target='_blank' href='[PermaLink]'&gt;{0}&lt;/a&gt;</Values>
+      <Values>PageDefault</Values>
+      <Values>{{img src="/images/{0}"}}</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>Sharing an EDMX cross platform</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+    </Parameters>
+    <ShowAdd>true</ShowAdd>
+    <ShowDelete>true</ShowDelete>
+    <ShowEdit>true</ShowEdit>
+    <BlogId>27604f05-86ad-47ef-9e05-950bb762570c</BlogId>
+  </Settings>
+  <Settings>
+    <Delimiter>44</Delimiter>
+    <Help />
+    <Hidden>false</Hidden>
+    <Index>0</Index>
+    <IsScalar>false</IsScalar>
+    <KeyField>CommandParameter</KeyField>
+    <Name>GwnWikiExtension</Name>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Id:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>Id</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values />
+      <Values>5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>1c711553-9d7e-4f07-8564-33469d4f10d8</Values>
+      <Values>0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>9c70d16c-ed16-4464-b4db-fa546c19a4ae</Values>
+      <Values>71aa1992-f687-4d4d-80da-c6b3281407c1</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>PermaLink:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>PermaLink</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>Not Assigned</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>https://github.com/BillKrat/OpenLiveWriter</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>https://raspbian.org/</Values>
+      <Values>https://www.debian.org/</Values>
+      <Values>https://www.raspberrypi.org/</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://adventuresontheedge.net/wingflash/post.aspx?id=9c70d16c-ed16-4464-b4db-fa546c19a4ae</Values>
+      <Values>http://adventuresontheedge.net/wingflash/post.aspx?id=71aa1992-f687-4d4d-80da-c6b3281407c1</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Command:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>Command</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>Page</Values>
+      <Values>Display</Values>
+      <Values>Page</Values>
+      <Values>Image</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>true</KeyField>
+      <Label>Command Parameter:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>CommandParameter</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>PageDefault</Values>
+      <Values>DisplayDefault</Values>
+      <Values>TestTwo</Values>
+      <Values>ImageDefault</Values>
+      <Values>BlogEngineWiki</Values>
+      <Values>LiveWriter</Values>
+      <Values>RootPassword</Values>
+      <Values>Raspbian</Values>
+      <Values>Debian</Values>
+      <Values>RaspberryPi</Values>
+      <Values>sudo</Values>
+      <Values>su</Values>
+      <Values>apt</Values>
+      <Values>&lt;br clear="all"&gt;SharingRaspberryPiFolder</Values>
+      <Values>SharingRaspberryPiFolder</Values>
+      <Values>WindowsShare</Values>
+      <Values>createEdmx</Values>
+      <Values>SharingEdmx</Values>
+      <Values>ShareEdmx</Values>
+      <Values>500 error when deployed</Values>
+      <Values>https causes error when deployed</Values>
+      <Values>http causes error when deployed</Values>
+      <Values>BillPage1</Values>
+      <Values>BillPage2</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Display Template:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>DisplayTemplate</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>&lt;b&gt;&lt;i&gt;{0}&lt;/i&gt;&lt;/b&gt;</Values>
+      <Values>&lt;a target='_blank' href='[PermaLink]'&gt;{0}&lt;/a&gt;</Values>
+      <Values>PageDefault</Values>
+      <Values>{{img src="/images/{0}"}}</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>Sharing an EDMX cross platform</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+    </Parameters>
+    <ShowAdd>true</ShowAdd>
+    <ShowDelete>true</ShowDelete>
+    <ShowEdit>true</ShowEdit>
+    <BlogId>d6d42204-34e5-457c-a90c-4bc7d2fcc0cf</BlogId>
+  </Settings>
+  <Settings>
+    <Delimiter>44</Delimiter>
+    <Help />
+    <Hidden>false</Hidden>
+    <Index>0</Index>
+    <IsScalar>false</IsScalar>
+    <KeyField>CommandParameter</KeyField>
+    <Name>GwnWikiExtension</Name>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Id:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>Id</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values />
+      <Values>5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>1c711553-9d7e-4f07-8564-33469d4f10d8</Values>
+      <Values>0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>9b0fa828-dedf-4ee4-aacd-de4a2090c12f</Values>
+      <Values>ede9c482-9869-4646-8904-966a38eaf14d</Values>
+      <Values>f5b1f8e5-ae9b-4b42-b06c-9c250ef508af</Values>
+      <Values>56d43c08-0598-4574-be56-bc9d619f00e4</Values>
+      <Values>56d43c08-0598-4574-be56-bc9d619f00e4</Values>
+      <Values>7b58c1cf-f188-4286-9379-893620cdd186</Values>
+      <Values>DO NOT DELETE</Values>
+      <Values>DO NOT DELETE</Values>
+      <Values>6b807649-b0c3-4e9f-92aa-150cc42985ce</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>PermaLink:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>PermaLink</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>https://github.com/BillKrat/OpenLiveWriter</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>https://raspbian.org/</Values>
+      <Values>https://www.debian.org/</Values>
+      <Values>https://www.raspberrypi.org/</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/bloghelp/post.aspx?id=9b0fa828-dedf-4ee4-aacd-de4a2090c12f</Values>
+      <Values>http://www.adventuresontheedge.net/bloghelp/post.aspx?id=ede9c482-9869-4646-8904-966a38eaf14d</Values>
+      <Values>http://www.adventuresontheedge.net/bloghelp/post.aspx?id=f5b1f8e5-ae9b-4b42-b06c-9c250ef508af</Values>
+      <Values>http://www.adventuresontheedge.net/bloghelp/post.aspx?id=56d43c08-0598-4574-be56-bc9d619f00e4</Values>
+      <Values>http://www.adventuresontheedge.net/bloghelp/post.aspx?id=56d43c08-0598-4574-be56-bc9d619f00e4</Values>
+      <Values>http://adventuresontheedge.net/bloghelp/post.aspx?id=7b58c1cf-f188-4286-9379-893620cdd186</Values>
+      <Values>Not Assigned</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://adventuresontheedge.net/bloghelp/post.aspx?id=6b807649-b0c3-4e9f-92aa-150cc42985ce</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Command:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>Command</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>Image</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Display</Values>
+      <Values>Page</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>true</KeyField>
+      <Label>Command Parameter:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>CommandParameter</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>ImageDefault</Values>
+      <Values>BlogEngineWiki</Values>
+      <Values>LiveWriter</Values>
+      <Values>RootPassword</Values>
+      <Values>Raspbian</Values>
+      <Values>Debian</Values>
+      <Values>RaspberryPi</Values>
+      <Values>sudo</Values>
+      <Values>su</Values>
+      <Values>apt</Values>
+      <Values>&lt;br clear="all"&gt;SharingRaspberryPiFolder</Values>
+      <Values>SharingRaspberryPiFolder</Values>
+      <Values>WindowsShare</Values>
+      <Values>createEdmx</Values>
+      <Values>SharingEdmx</Values>
+      <Values>ShareEdmx</Values>
+      <Values>500 error when deployed</Values>
+      <Values>https causes error when deployed</Values>
+      <Values>http causes error when deployed</Values>
+      <Values>MainPage</Values>
+      <Values>HowToAddPost</Values>
+      <Values>CreatingNewPost</Values>
+      <Values>CreateNewPost</Values>
+      <Values>HelloWorld</Values>
+      <Values>CreateAPost</Values>
+      <Values>PageDefault</Values>
+      <Values>DisplayDefault</Values>
+      <Values>DifferenceBetweenPostAndPage</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Display Template:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>DisplayTemplate</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>{{img src="/images/{0}"}}</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>Sharing an EDMX cross platform</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>&lt;b&gt;&lt;i&gt;{0}&lt;/i&gt;&lt;/b&gt;</Values>
+      <Values>&lt;a target='_blank' href='[PermaLink]'&gt;{0}&lt;/a&gt;</Values>
+      <Values>PageDefault</Values>
+    </Parameters>
+    <ShowAdd>true</ShowAdd>
+    <ShowDelete>true</ShowDelete>
+    <ShowEdit>true</ShowEdit>
+    <BlogId>2053f694-70ce-46e6-9b4f-e861ed56399a</BlogId>
+  </Settings>
+  <Settings>
+    <Delimiter>44</Delimiter>
+    <Help />
+    <Hidden>false</Hidden>
+    <Index>0</Index>
+    <IsScalar>false</IsScalar>
+    <KeyField>CommandParameter</KeyField>
+    <Name>GwnWikiExtension</Name>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Id:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>Id</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>00000000-0000-0000-0000-000000000000</Values>
+      <Values>c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values />
+      <Values>5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>1c711553-9d7e-4f07-8564-33469d4f10d8</Values>
+      <Values>0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>4133eca2-29b5-4343-a033-324c3254cd33</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>661e8920-7897-4673-b839-5b2842cdf074</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>PermaLink:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>PermaLink</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>Not Assigned</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f</Values>
+      <Values>Not Assigned</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89</Values>
+      <Values>https://github.com/BillKrat/OpenLiveWriter</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514</Values>
+      <Values>https://raspbian.org/</Values>
+      <Values>https://www.debian.org/</Values>
+      <Values>https://www.raspberrypi.org/</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764</Values>
+      <Values>http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16</Values>
+      <Values>http://www.adventuresontheedge.net/post.aspx?id=661e8920-7897-4673-b839-5b2842cdf074</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Command:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>Command</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>Page</Values>
+      <Values>Display</Values>
+      <Values>Page</Values>
+      <Values>Image</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+      <Values>Page</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>true</KeyField>
+      <Label>Command Parameter:</Label>
+      <MaxLength>200</MaxLength>
+      <Name>CommandParameter</Name>
+      <ParamType>String</ParamType>
+      <Required>true</Required>
+      <SelectedValue />
+      <Values>PageDefault</Values>
+      <Values>DisplayDefault</Values>
+      <Values>TestTwo</Values>
+      <Values>ImageDefault</Values>
+      <Values>BlogEngineWiki</Values>
+      <Values>LiveWriter</Values>
+      <Values>RootPassword</Values>
+      <Values>Raspbian</Values>
+      <Values>Debian</Values>
+      <Values>RaspberryPi</Values>
+      <Values>sudo</Values>
+      <Values>su</Values>
+      <Values>apt</Values>
+      <Values>&lt;br clear="all"&gt;SharingRaspberryPiFolder</Values>
+      <Values>SharingRaspberryPiFolder</Values>
+      <Values>WindowsShare</Values>
+      <Values>createEdmx</Values>
+      <Values>SharingEdmx</Values>
+      <Values>ShareEdmx</Values>
+      <Values>500 error when deployed</Values>
+      <Values>https causes error when deployed</Values>
+      <Values>http causes error when deployed</Values>
+      <Values>HelloWorld1</Values>
+    </Parameters>
+    <Parameters>
+      <KeyField>false</KeyField>
+      <Label>Display Template:</Label>
+      <MaxLength>100</MaxLength>
+      <Name>DisplayTemplate</Name>
+      <ParamType>String</ParamType>
+      <Required>false</Required>
+      <SelectedValue />
+      <Values>&lt;b&gt;&lt;i&gt;{0}&lt;/i&gt;&lt;/b&gt;</Values>
+      <Values>&lt;a target='_blank' href='[PermaLink]'&gt;{0}&lt;/a&gt;</Values>
+      <Values>PageDefault</Values>
+      <Values>{{img src="/images/{0}"}}</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>Sharing an EDMX cross platform</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+      <Values>PageDefault</Values>
+    </Parameters>
+    <ShowAdd>true</ShowAdd>
+    <ShowDelete>true</ShowDelete>
+    <ShowEdit>true</ShowEdit>
+    <BlogId>1b948500-bd53-4e55-888d-9a0b64363567</BlogId>
+  </Settings>
+  <ShowSettings>true</ShowSettings>
+  <Version>1.0</Version>
+</ManagedExtension>

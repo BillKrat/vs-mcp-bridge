@@ -1,0 +1,703 @@
+{
+    "exportName":  "gwn-wiki-extension-export-20260516",
+    "exportedAt":  "2026-05-16T21:25:05.173Z",
+    "source":  {
+                   "databaseTable":  "dbo.be_DataStoreSettings",
+                   "extensionId":  "GwnWikiExtension",
+                   "query":  "SELECT DataStoreSettingRowId, BlogId, ExtensionType, ExtensionId, Settings FROM dbo.be_DataStoreSettings WHERE ExtensionId = \u0027GwnWikiExtension\u0027"
+               },
+    "counts":  {
+                   "rows":  4,
+                   "parseableRows":  4,
+                   "mappings":  91
+               },
+    "rows":  [
+                 {
+                     "dataStoreSettingRowId":  14747,
+                     "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                     "extensionType":  "0",
+                     "extensionId":  "GwnWikiExtension",
+                     "folder":  "row-14747-1b948500-bd53-4e55-888d-9a0b64363567",
+                     "rawSettingsLength":  32858,
+                     "rawSettingsSha256":  "ff2558e6fe59a5bbbf609e5b06a7e5191c5659ed360ba0f469c3379bac261f6a",
+                     "parseable":  true,
+                     "parsedFormat":  "xml",
+                     "mappingCount":  29
+                 },
+                 {
+                     "dataStoreSettingRowId":  17523,
+                     "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                     "extensionType":  "0",
+                     "extensionId":  "GwnWikiExtension",
+                     "folder":  "row-17523-2053f694-70ce-46e6-9b4f-e861ed56399a",
+                     "rawSettingsLength":  14084,
+                     "rawSettingsSha256":  "918623ca4e5424a0c6fb8417b6814dd4adeb67e0bf578c5872fe2cee151280e5",
+                     "parseable":  true,
+                     "parsedFormat":  "xml",
+                     "mappingCount":  24
+                 },
+                 {
+                     "dataStoreSettingRowId":  24195,
+                     "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                     "extensionType":  "0",
+                     "extensionId":  "GwnWikiExtension",
+                     "folder":  "row-24195-83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                     "rawSettingsLength":  2803,
+                     "rawSettingsSha256":  "61c6db9e5ff59630df0e4010b03b50532e4ede8dfba3a7597c114b8a7834cde4",
+                     "parseable":  true,
+                     "parsedFormat":  "xml",
+                     "mappingCount":  6
+                 },
+                 {
+                     "dataStoreSettingRowId":  26889,
+                     "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                     "extensionType":  "0",
+                     "extensionId":  "GwnWikiExtension",
+                     "folder":  "row-26889-27604f05-86ad-47ef-9e05-950bb762570c",
+                     "rawSettingsLength":  16247,
+                     "rawSettingsSha256":  "de8c29fa2bdcf740467189f96d4c79bd28d72bef7eb8acabef956795f7d74043",
+                     "parseable":  true,
+                     "parsedFormat":  "xml",
+                     "mappingCount":  32
+                 }
+             ],
+    "mappings":  [
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "TestTwo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "BlogEngineWiki",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "LiveWriter",
+                         "url":  "https://github.com/BillKrat/OpenLiveWriter",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "RootPassword",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "Raspbian",
+                         "url":  "https://raspbian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "Debian",
+                         "url":  "https://www.debian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "RaspberryPi",
+                         "url":  "https://www.raspberrypi.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "sudo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "su",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "apt",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "\u003cbr clear=\"all\"\u003eSharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "SharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "WindowsShare",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "createEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "SharingEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "ShareEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "500 error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "https causes error when deployed",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "http causes error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "HelloWorld1",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=661e8920-7897-4673-b839-5b2842cdf074",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "BillPage1",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=9c70d16c-ed16-4464-b4db-fa546c19a4ae",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "BillPage2",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=71aa1992-f687-4d4d-80da-c6b3281407c1",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "MainPage",
+                         "url":  "http://www.adventuresontheedge.net/bloghelp/post.aspx?id=9b0fa828-dedf-4ee4-aacd-de4a2090c12f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "HowToAddPost",
+                         "url":  "http://www.adventuresontheedge.net/bloghelp/post.aspx?id=ede9c482-9869-4646-8904-966a38eaf14d",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "CreatingNewPost",
+                         "url":  "http://www.adventuresontheedge.net/bloghelp/post.aspx?id=f5b1f8e5-ae9b-4b42-b06c-9c250ef508af",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "CreateNewPost",
+                         "url":  "http://www.adventuresontheedge.net/bloghelp/post.aspx?id=56d43c08-0598-4574-be56-bc9d619f00e4",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "HelloWorld",
+                         "url":  "http://www.adventuresontheedge.net/bloghelp/post.aspx?id=56d43c08-0598-4574-be56-bc9d619f00e4",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "CreateAPost",
+                         "url":  "http://adventuresontheedge.net/bloghelp/post.aspx?id=7b58c1cf-f188-4286-9379-893620cdd186",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  14747,
+                         "blogId":  "1b948500-bd53-4e55-888d-9a0b64363567",
+                         "token":  "DifferenceBetweenPostAndPage",
+                         "url":  "http://adventuresontheedge.net/bloghelp/post.aspx?id=6b807649-b0c3-4e9f-92aa-150cc42985ce",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "TestTwo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "BlogEngineWiki",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "LiveWriter",
+                         "url":  "https://github.com/BillKrat/OpenLiveWriter",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "RootPassword",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "Raspbian",
+                         "url":  "https://raspbian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "Debian",
+                         "url":  "https://www.debian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "RaspberryPi",
+                         "url":  "https://www.raspberrypi.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "sudo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "su",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "apt",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "\u003cbr clear=\"all\"\u003eSharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "SharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "WindowsShare",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "createEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "SharingEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "ShareEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "500 error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "https causes error when deployed",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "http causes error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "BillPage1",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=9c70d16c-ed16-4464-b4db-fa546c19a4ae",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "BillPage2",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=71aa1992-f687-4d4d-80da-c6b3281407c1",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "CreateAngularAppWithModule",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=8a060ba7-65cd-4bc8-847b-edbd56e22c2f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "CommandLineInterface",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=0a5c435d-87ce-4fa5-8937-533d1d2447f5",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  17523,
+                         "blogId":  "2053f694-70ce-46e6-9b4f-e861ed56399a",
+                         "token":  "AngularEnvironment",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=3ca572d6-ce93-4c2b-aa40-2063c3cc986a",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "xml version",
+                         "url":  "http://www.w3.org/2001/XMLSchema-instance",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "xmlns",
+                         "url":  "http://www.w3.org/2001/XMLSchema",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "Name",
+                         "url":  "http://www.Global-webnet.com/Blog",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "gt",
+                         "url":  "http://www.Global-webnet.com/Blog",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "xmlns",
+                         "url":  "http://www.w3.org/2001/XMLSchema-instance",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  24195,
+                         "blogId":  "83e4876f-2e91-4a0e-8bd8-81bc76ee001d",
+                         "token":  "Name",
+                         "url":  "http://www.w3.org/2001/XMLSchema",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "TestTwo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c79d5374-e38b-41b1-b098-3054784b1c9f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "BlogEngineWiki",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5e9d298b-3c64-4844-a73e-e781fa893a89",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "LiveWriter",
+                         "url":  "https://github.com/BillKrat/OpenLiveWriter",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "RootPassword",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=0a4d6666-c7e6-4288-a87c-dfea0afb0514",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "Raspbian",
+                         "url":  "https://raspbian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "Debian",
+                         "url":  "https://www.debian.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "RaspberryPi",
+                         "url":  "https://www.raspberrypi.org/",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "sudo",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "su",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "apt",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=eda95e2b-6f0a-492e-933e-ef373193684f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "\u003cbr clear=\"all\"\u003eSharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "SharingRaspberryPiFolder",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=a234c054-88f3-45c1-9b91-f0a8cef12f28",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "WindowsShare",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=d2ffb06e-0043-484b-a4f5-d8779e54d5eb",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "createEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=f7a55f7b-ca68-4742-8bfb-e427d089b682",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "SharingEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "ShareEdmx",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=4a736f3f-07de-49cd-9bd4-12df9b1f1289",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "500 error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=71fafb7e-980d-42b5-8559-c5e03e701764",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "https causes error when deployed",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "http causes error when deployed",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=c62b508e-0cbf-4c5c-96ac-1bcd3e4dee16",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "BillPage1",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=9c70d16c-ed16-4464-b4db-fa546c19a4ae",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "BillPage2",
+                         "url":  "http://adventuresontheedge.net/wingflash/post.aspx?id=71aa1992-f687-4d4d-80da-c6b3281407c1",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "IOC",
+                         "url":  "http://www.adventuresontheedge.net/post.aspx?id=5232e959-6845-4c32-9ba0-956980aebffc",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "NextJS101",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=1ecfb3fd-1c44-44f9-9be8-f516ff257d0f",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "SandboxTest",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=ebca48a8-7714-44a6-82ee-5cb9d8c8e7e0",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "Playbook",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=bd97e5de-4b4e-4660-98f1-465bd53eddec",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "Signalmap",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=5520e2d5-c597-492d-8b41-e467152364cd",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "Evidence",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=12db1be9-4143-476d-a12a-04c7ca045a71",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "NamedPipeListener",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=6484fa94-5d8b-429a-99c6-779b300bc336",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "InferenceDriven",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=b3da6b1c-a955-4ec2-afda-b281bd5d46fd",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "ChatSessionsModelsAndAgents",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=5465cc54-65ab-4c4f-b6ac-4539de01c365",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "stdio",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=d0541943-0de1-4c25-a7af-9950c55f1591",
+                         "source":  "xml-settings-parameter-row"
+                     },
+                     {
+                         "dataStoreSettingRowId":  26889,
+                         "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                         "token":  "VsMcpBridge",
+                         "url":  "http://adventuresontheedge.net/post.aspx?id=f0c7a958-f41a-4143-b601-82ce84fd4af0",
+                         "source":  "xml-settings-parameter-row"
+                     }
+                 ]
+}

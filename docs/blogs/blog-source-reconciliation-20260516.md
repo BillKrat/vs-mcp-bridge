@@ -51,6 +51,8 @@ The live Part 4 canonical folder now maps directly to DB row 146 and BlogEngine 
 ## Old-Domain Link Source Findings
 
 Rendered `adventuresontheedge.net` inter-post links are not stored as explicit old-domain URLs in the DB body export or canonical post bodies.
+Follow-up preservation confirmed the source is the custom BlogEngine.NET plugin `GwnWikiExtension`, with settings stored in `dbo.be_DataStoreSettings`.
+The exact raw plugin settings are preserved under `docs/blogs/source-of-truth/gwn-wiki-extension-export-20260516/`.
 
 Repo search found no `adventuresontheedge.net` or `post.aspx?id=...` references under:
 
@@ -69,8 +71,9 @@ The public renderer expands those tokens into links such as:
 - `http://adventuresontheedge.net/post.aspx?id=6484fa94-5d8b-429a-99c6-779b300bc336`
 - `http://adventuresontheedge.net/post.aspx?id=d0541943-0de1-4c25-a7af-9950c55f1591`
 
-The source of the old domain therefore appears to be BlogEngine token expansion or site configuration outside the canonical article HTML.
-This slice intentionally does not change those tokens or public rendering behavior.
+The source of the old domain is therefore plugin token expansion outside the canonical article HTML.
+`http://AdventuresOnTheEdge.net` is the production/original blog domain, and `https://www.global-webnet.com` is the development BlogAI site, so old-domain plugin settings are expected for now.
+This slice intentionally does not change those tokens, plugin settings, or public rendering behavior.
 
 ## Remaining Non-Canonical DB Rows
 
@@ -92,7 +95,7 @@ The deleted rows remain export-only:
 
 Start small per-post canonical cleanup without touching the database:
 
-1. Normalize bracket-style BlogEngine tokens in canonical source for one post, starting with `vs-mcp-bridge-blog-series-part-1`.
+1. Decide token handling for one canonical source post, starting with `vs-mcp-bridge-blog-series-part-1`, using the preserved `GwnWikiExtension` export as context.
 2. Replace old feature-branch GitHub links in canonical content with `main` or repo-relative documentation links.
 3. Keep the DB export unchanged as the preserved baseline.
 4. After canonical content is reviewed, publish only as draft through the existing draft-only publishing script.

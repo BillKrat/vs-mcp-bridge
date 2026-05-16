@@ -1,0 +1,49 @@
+{
+    "parseable":  true,
+    "format":  "xml",
+    "parseAttempts":  [
+                          {
+                              "format":  "json",
+                              "success":  false,
+                              "error":  "Invalid JSON primitive: ."
+                          },
+                          {
+                              "format":  "xml",
+                              "success":  true,
+                              "error":  null
+                          }
+                      ],
+    "mappingCount":  6,
+    "mappings":  [
+                     {
+                         "token":  "xml version",
+                         "url":  "http://www.w3.org/2001/XMLSchema-instance",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "token":  "xmlns",
+                         "url":  "http://www.w3.org/2001/XMLSchema",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "token":  "Name",
+                         "url":  "http://www.Global-webnet.com/Blog",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "token":  "gt",
+                         "url":  "http://www.Global-webnet.com/Blog",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "token":  "xmlns",
+                         "url":  "http://www.w3.org/2001/XMLSchema-instance",
+                         "source":  "regex-nearby-token-url"
+                     },
+                     {
+                         "token":  "Name",
+                         "url":  "http://www.w3.org/2001/XMLSchema",
+                         "source":  "regex-nearby-token-url"
+                     }
+                 ]
+}
