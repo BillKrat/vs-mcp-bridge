@@ -66,9 +66,13 @@ That handoff captures the completed compiled bridge tool execution validation. T
 
 - `docs/tool-execution-trace-workflow.md`
 - `artifacts/logs/tool-regex-search-trace-20260509.log`
+- `artifacts/logs/tool-security-trace-20260509.log`
 - `docs/diagrams/tool-regex-search-trace-20260509.mmd`
+- `docs/diagrams/tool-security-trace-20260509.mmd`
 
 Use those artifacts when reconstructing or triaging the compiled bridge tool execution path before relying on chat history. For VSIX selected-text work, use `docs/session-handoffs/2026-05-09-selected-text-validation.md`.
+
+For the security-aware compiled tool boundary, also read `docs/session-handoffs/2026-05-09-tool-security-validation.md`.
 
 ## Current Working Guidance
 

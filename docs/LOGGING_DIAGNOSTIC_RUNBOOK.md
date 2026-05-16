@@ -74,6 +74,16 @@ The current baseline validates:
 - `BridgeToolExecutor` start/completion logging
 - request id and operation id preservation
 - structured `BridgeToolResult` output
+- policy evaluation before tool invocation
+- redacted Trace-level request/result payload logging
+- terminal `BridgeAuditEnvelope` emission when an audit sink is registered
+
+Security-aware compiled-tool artifacts:
+
+- `artifacts/logs/tool-security-trace-20260509.log`
+- `artifacts/logs/tool-security-trace-20260509.metadata.json`
+- `docs/diagrams/tool-security-trace-20260509.mmd`
+- `docs/session-handoffs/2026-05-09-tool-security-validation.md`
 
 This workflow intentionally does not validate MEF, directory-loaded plugins, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
 

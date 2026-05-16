@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Caller
+    participant Executor as BridgeToolExecutor
+    participant Policy as IToolExecutionPolicy
+    participant Redactor as ISecurityRedactor
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Tool as RegexTextSearchTool
+    participant Audit as IAuditSink
+
+    Caller->>Catalog: GetTools()
+    Catalog-->>Caller: bridge.regexTextSearch descriptor
+    Caller->>Executor: ExecuteAsync(requestId, operationId, toolId, secret-like arguments)
+    Executor->>Redactor: Redact request payload for Trace log
+    Redactor-->>Executor: payload with apiKey/token/password/bearer values replaced
+    Executor->>Catalog: TryGetTool("bridge.regexTextSearch")
+    Catalog-->>Executor: RegexTextSearchTool
+    Executor->>Policy: EvaluateAsync(ToolExecutionSecurityContext)
+    Policy-->>Executor: Allow("Allowed by trace harness")
+    Executor->>Tool: ExecuteAsync(BridgeToolRequest)
+    Tool->>Tool: Compile regex "warning|error|authorization|password|token|apiKey"
+    Tool->>Tool: Search supplied entries
+    Tool-->>Executor: BridgeToolResult Success, 10 matches
+    Executor->>Redactor: Redact result payload for Trace log
+    Redactor-->>Executor: result payload with secret-like entry text masked
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Audit-->>Executor: stored event with requestId and operationId
+    Executor-->>Caller: BridgeToolResult with preserved requestId and operationId

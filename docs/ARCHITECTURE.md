@@ -94,6 +94,9 @@ Current safe defaults preserve existing runtime behavior:
 - `NoOpAuditSink` records nothing unless a host or test overrides it.
 - `BridgeSecurityRedactor` performs basic masking for obvious keys such as `apiKey`, `token`, `password`, `secret`, and bearer authorization values.
 
+The durable security-aware evidence for the current compiled tool path is `docs/diagrams/tool-security-trace-20260509.mmd` with correlated logs and metadata under `artifacts/logs/tool-security-trace-20260509.*`.
+That trace uses `RegexTextSearchTool` only and proves policy evaluation, payload redaction, tool execution, audit envelope emission, and request/operation correlation preservation without introducing MEF, plugin loading, OAuth/authentication, or real secret storage.
+
 Tool and plugin authors are not responsible for core redaction, policy evaluation, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.
 

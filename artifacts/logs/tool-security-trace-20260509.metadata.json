@@ -1,0 +1,57 @@
+{
+  "runName": "tool-security-trace-20260509",
+  "artifactCreatedUtc": "2026-05-16T00:00:00Z",
+  "observedRunLabelDate": "2026-05-09",
+  "repositoryRoot": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "commit": "aa9a849",
+  "toolId": "bridge.regexTextSearch",
+  "toolName": "Regex Text Search",
+  "catalog": "CompiledBridgeToolCatalog",
+  "executor": "BridgeToolExecutor",
+  "policy": "RecordingAllowPolicy",
+  "redactor": "BridgeSecurityRedactor",
+  "auditSink": "InMemoryAuditSink",
+  "requestId": "tool-security-trace-20260509-req-001",
+  "operationId": "tool-security-trace-20260509-op-001",
+  "inputSummary": {
+    "pattern": "warning|error|authorization|password|token|apiKey",
+    "caseSensitive": false,
+    "maxResults": 10,
+    "secretLikeFields": [
+      "apiKey",
+      "token",
+      "password",
+      "authorizationHeader",
+      "entries containing bearer, token, password, and apiKey markers"
+    ],
+    "secretValuesStoredInArtifact": false
+  },
+  "observedSecurityBoundaries": {
+    "policyEvaluation": "Observed before RegexTextSearchTool execution with request id, operation id, tool id, and descriptor id.",
+    "redactionBoundary": "Trace-level request and result payload logs contained [REDACTED] markers for apiKey, token, password, and bearer authorization values.",
+    "toolExecution": "RegexTextSearchTool returned success through BridgeToolExecutor.",
+    "auditEnvelopeEmission": "InMemoryAuditSink captured one BridgeAuditEnvelope after terminal success.",
+    "correlationPreservation": "RequestId and OperationId matched across policy evaluation, logs, audit envelope, and BridgeToolResult."
+  },
+  "observedResult": {
+    "success": true,
+    "matchCount": 10,
+    "totalMatchCount": 10,
+    "limited": false,
+    "auditEnvelopeCount": 1,
+    "policyDecision": "Allow"
+  },
+  "redactionVerification": {
+    "rawSecretValuesAbsentFromDurableArtifacts": true,
+    "expectedReplacement": "[REDACTED]",
+    "validatedFields": [
+      "apiKey",
+      "token",
+      "password",
+      "Authorization: Bearer"
+    ]
+  },
+  "captureMethod": "Temporary console harness outside the repository using AddBridgeToolServices, RecordingBridgeLogger, a trace-only RecordingAllowPolicy, InMemoryAuditSink, IBridgeToolExecutor, and RegexTextSearchTool.",
+  "validationScope": "Compiled shared bridge tool execution boundary only. No MEF, directory-loaded plugins, OAuth/authentication, real secret storage, MCP transport, presenter, proposal, or Visual Studio host behavior was exercised."
+}

@@ -54,6 +54,33 @@ Reference artifacts:
 - run metadata: [`artifacts/logs/tool-regex-search-trace-20260509.metadata.json`](../artifacts/logs/tool-regex-search-trace-20260509.metadata.json)
 - session handoff: [`docs/session-handoffs/2026-05-09-tool-execution-validation.md`](session-handoffs/2026-05-09-tool-execution-validation.md)
 
+## Observed Security-Aware Run
+
+After the foundational security seams were added, the compiled regex text-search path was revalidated with secret-like inputs and an in-memory audit sink:
+
+- run name: `tool-security-trace-20260509`
+- branch: `main`
+- commit: `aa9a849`
+- catalog: `CompiledBridgeToolCatalog`
+- executor: `BridgeToolExecutor`
+- policy: trace-only `RecordingAllowPolicy`
+- redactor: `BridgeSecurityRedactor`
+- audit sink: `InMemoryAuditSink`
+- tool: `bridge.regexTextSearch`
+- request id: `tool-security-trace-20260509-req-001`
+- operation id: `tool-security-trace-20260509-op-001`
+- pattern: `warning|error|authorization|password|token|apiKey`
+- observed result: success, 10 returned matches, 10 total matches
+
+Security-aware reference artifacts:
+
+- sequence diagram: [`docs/diagrams/tool-security-trace-20260509.mmd`](diagrams/tool-security-trace-20260509.mmd)
+- observed log transcript: [`artifacts/logs/tool-security-trace-20260509.log`](../artifacts/logs/tool-security-trace-20260509.log)
+- run metadata: [`artifacts/logs/tool-security-trace-20260509.metadata.json`](../artifacts/logs/tool-security-trace-20260509.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-09-tool-security-validation.md`](session-handoffs/2026-05-09-tool-security-validation.md)
+
+This run intentionally used secret-like `apiKey`, `token`, `password`, and bearer authorization inputs. Durable artifacts store only redacted payload evidence and must not contain raw secret values.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`
@@ -92,6 +119,8 @@ The harness should:
 7. create a `BridgeToolRequest` for `RegexTextSearchTool.ToolId`
 8. execute through `IBridgeToolExecutor.ExecuteAsync`
 9. print catalog descriptors, logger entries, audit envelope data when captured, result metadata, and returned matches
+
+For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use a trace-only policy wrapper when you need to print the observed policy evaluation without changing production defaults.
 
 ### 2. Use deterministic request input
 
