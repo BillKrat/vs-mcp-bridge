@@ -1,17 +1,39 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  151,
-    "title":  "Understanding a Named Pipe Listener",
-    "description":  "[Page:NamedPipeListener]\nSource of Truth: Derived / Educational\nUnderstanding a Named Pipe Listener",
-    "author":  "AI Systems Author",
-    "slug":  "understanding-a-named-pipe-listener",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ]
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "6484FA94-5D8B-429A-99C6-779B300BC336",
+  "title": "Understanding a Named Pipe Listener",
+  "description": "An educational walkthrough of the VS MCP Bridge named-pipe boundary, PipeClient/PipeServer responsibilities, activation diagnostics, correlation, and relationship to MCP stdio and BridgeToolExecutor.",
+  "author": "AI Systems Author",
+  "slug": "understanding-a-named-pipe-listener",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Named Pipes",
+    "Visual Studio",
+    "VSIX",
+    "AI Tooling",
+    "Diagnostics",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 151,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "6484fa94-5d8b-429a-99c6-779b300bc336",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-17T22:36:00.000",
+    "dateModified": "2026-04-27T10:30:04.773",
+    "exportFolder": "understanding-a-named-pipe-listener",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
-
