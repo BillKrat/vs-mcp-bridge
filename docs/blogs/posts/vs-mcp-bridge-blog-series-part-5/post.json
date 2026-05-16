@@ -1,17 +1,40 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  147,
-    "title":  "Validation Playbook for the Current Bridge Slice",
-    "description":  "Validation Playbook for the Current Bridge Slice. This post turns runtime validation into a practical sequence of checks for the current VS MCP Bridge, showing what to test first, what signals to watch, and how the playbook also shapes implementation quality.",
-    "author":  "AI Systems Author",
-    "slug":  "vs-mcp-bridge-blog-series-part-5",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ]
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "BD97E5DE-4B4E-4660-98F1-465BD53EDDEC",
+  "title": "VS MCP Bridge Blog Series: Part 5",
+  "description": "How VS MCP Bridge keeps tool discovery and future extensibility observable through compiled discovery, opt-in MEF discovery, catalog metadata, executor-owned policy/audit boundaries, and durable Mermaid traces.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-blog-series-part-5",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Bridge Tools",
+    "MEF",
+    "Discovery",
+    "Extensibility",
+    "Diagnostics",
+    "Mermaid",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 147,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "bd97e5de-4b4e-4660-98f1-465bd53eddec",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-11T18:10:00.000",
+    "dateModified": "2026-04-23T06:18:01.040",
+    "exportFolder": "vs-mcp-bridge-blog-series-part-5",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
-
