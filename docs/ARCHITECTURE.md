@@ -95,22 +95,27 @@ Trust boundaries are defined this way:
 The executor is the shared enforcement point for foundational tool security behavior:
 
 - `IToolExecutionPolicy` evaluates a `ToolExecutionSecurityContext` before a tool runs.
+- `IToolExecutionApprovalService` evaluates a `ToolExecutionApprovalContext` only when a tool descriptor marks `ApprovalRequirement = Required`.
 - `ISecurityRedactor` masks obvious secret-like values before payload-oriented logs or audit metadata are emitted.
-- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, denied, successful, failed, canceled, or unknown-tool outcomes.
+- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, successful, failed, canceled, or unknown-tool outcomes.
 - request id and operation id remain part of the policy, audit, logging, and result path.
 
 Current safe defaults preserve existing runtime behavior:
 
 - `AllowToolExecutionPolicy` allows all current compiled tools.
+- existing tool descriptors default to `ApprovalRequirement = NotRequired`, so they do not invoke approval before execution.
+- `AllowToolExecutionApprovalService` is the default approval service for hosts or tests that do not override the seam.
 - `NoOpAuditSink` records nothing unless a host or test overrides it.
 - `BridgeSecurityRedactor` performs basic masking for obvious keys such as `apiKey`, `token`, `password`, `secret`, and bearer authorization values.
 
 The durable security-aware evidence for the current compiled tool path is `docs/diagrams/tool-security-trace-20260509.mmd` with correlated logs and metadata under `artifacts/logs/tool-security-trace-20260509.*`.
 That trace uses `RegexTextSearchTool` only and proves policy evaluation, payload redaction, tool execution, audit envelope emission, and request/operation correlation preservation without introducing MEF, plugin loading, OAuth/authentication, or real secret storage.
+Approval-aware execution is now part of the same executor boundary: a descriptor can require approval, the approval service can allow or deny, denial returns a structured `ApprovalDenied` result, and audit metadata records the approval requirement, decision, and redacted reason.
+This seam does not redesign the proposal approval workflow; it is a tool-execution policy checkpoint for future selected tools.
 
-Tool and plugin authors are not responsible for core redaction, policy evaluation, or audit emission.
+Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.
-Discovered tools, including future directory-loaded tools, must still run through `BridgeToolExecutor`; plugin/tool authors do not own core audit, redaction, policy, or correlation behavior.
+Discovered tools, including future directory-loaded tools, must still run through `BridgeToolExecutor`; plugin/tool authors do not own core audit, redaction, policy, approval, or correlation behavior.
 
 Deferred security work remains explicit:
 

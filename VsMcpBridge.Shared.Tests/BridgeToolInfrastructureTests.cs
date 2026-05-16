@@ -31,6 +31,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
+        Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
@@ -51,6 +52,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
         Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
+        Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
     }
@@ -253,6 +255,117 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("fake.echo", auditEvent.ToolId);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_skips_approval_service_for_tools_without_approval_requirement()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var approvalService = new RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision.Deny("should not be called"));
+        var tool = new FakeBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new AllowToolExecutionPolicy(),
+            approvalService);
+        var request = CreateRequest("fake.echo");
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Same(request, tool.LastRequest);
+        Assert.Equal(0, approvalService.CallCount);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal("NotRequired", auditEvent.Metadata["approvalRequirement"]);
+        Assert.Equal("NotRequired", auditEvent.Metadata["approvalDecision"]);
+        Assert.Equal("Not required", auditEvent.Metadata["approvalReason"]);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_invokes_approval_service_for_approval_required_tool()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var approvalService = new RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision.Approve("operator approved token=approval-secret"));
+        var tool = new ApprovalRequiredBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new AllowToolExecutionPolicy(),
+            approvalService);
+        var request = CreateRequest(ApprovalRequiredBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Same(request, tool.LastRequest);
+        Assert.Equal(1, approvalService.CallCount);
+        Assert.NotNull(approvalService.LastContext);
+        Assert.Equal(ApprovalRequiredBridgeTool.ToolId, approvalService.LastContext!.ToolId);
+        Assert.Equal("request-123", approvalService.LastContext.RequestId);
+        Assert.Equal("operation-456", approvalService.LastContext.OperationId);
+        Assert.True(approvalService.LastContext.PolicyDecision.Allowed);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution approval required")
+            && message.Contains($"[ToolId={ApprovalRequiredBridgeTool.ToolId}]")
+            && message.Contains("[RequestId=request-123]")
+            && message.Contains("[OperationId=operation-456]"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal(ApprovalRequiredBridgeTool.ToolId, auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("Required", auditEvent.Metadata["approvalRequirement"]);
+        Assert.Equal("Approved", auditEvent.Metadata["approvalDecision"]);
+        Assert.Equal("operator approved token=[REDACTED]", auditEvent.Metadata["approvalReason"]);
+    }
+
+    [Fact]
+    public async Task Executor_denied_approval_prevents_tool_execution_and_emits_audit_event()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var approvalService = new RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision.Deny("operator denied token=approval-secret"));
+        var tool = new ApprovalRequiredBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new AllowToolExecutionPolicy(),
+            approvalService);
+        var request = CreateRequest(ApprovalRequiredBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("ApprovalDenied", result.ErrorCode);
+        Assert.Equal(ApprovalRequiredBridgeTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.Null(tool.LastRequest);
+        Assert.Equal(1, approvalService.CallCount);
+        Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("approval-secret"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("ApprovalDenied", auditEvent.ErrorCode);
+        Assert.Equal(ApprovalRequiredBridgeTool.ToolId, auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("Allowed", auditEvent.Metadata["policyReason"]);
+        Assert.Equal("Required", auditEvent.Metadata["approvalRequirement"]);
+        Assert.Equal("Denied", auditEvent.Metadata["approvalDecision"]);
+        Assert.Equal("operator denied token=[REDACTED]", auditEvent.Metadata["approvalReason"]);
     }
 
     [Fact]
@@ -777,6 +890,30 @@ public sealed class BridgeToolInfrastructureTests
             => throw new System.InvalidOperationException("secret=raw-exception-secret");
     }
 
+    private sealed class ApprovalRequiredBridgeTool : IBridgeTool
+    {
+        public const string ToolId = "fake.approvalRequired";
+
+        public BridgeToolDescriptor Descriptor { get; } = new BridgeToolDescriptor
+        {
+            Id = ToolId,
+            Name = "Fake Approval Required",
+            Description = "Fake approval-required test tool.",
+            Category = "Tests",
+            Source = "Compiled",
+            Host = "SharedTests",
+            ApprovalRequired = true
+        };
+
+        public BridgeToolRequest? LastRequest { get; private set; }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(BridgeToolResult.Succeeded(request, "Approval-required tool completed."));
+        }
+    }
+
     private sealed class DenyToolExecutionPolicy : IToolExecutionPolicy
     {
         private readonly string _reason;
@@ -788,6 +925,27 @@ public sealed class BridgeToolInfrastructureTests
 
         public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
             => Task.FromResult(ToolExecutionPolicyDecision.Deny(_reason));
+    }
+
+    private sealed class RecordingToolExecutionApprovalService : IToolExecutionApprovalService
+    {
+        private readonly ToolExecutionApprovalDecision _decision;
+
+        public RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision decision)
+        {
+            _decision = decision;
+        }
+
+        public int CallCount { get; private set; }
+
+        public ToolExecutionApprovalContext? LastContext { get; private set; }
+
+        public Task<ToolExecutionApprovalDecision> EvaluateAsync(ToolExecutionApprovalContext context, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastContext = context;
+            return Task.FromResult(_decision);
+        }
     }
 
     private sealed class DuplicateFakeBridgeTool : IBridgeTool

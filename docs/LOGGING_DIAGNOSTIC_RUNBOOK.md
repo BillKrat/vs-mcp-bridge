@@ -76,6 +76,7 @@ The current baseline validates:
 - request id and operation id preservation
 - structured `BridgeToolResult` output
 - policy evaluation before tool invocation
+- approval evaluation before tool invocation when a descriptor requires approval
 - redacted Trace-level request/result payload logging
 - terminal `BridgeAuditEnvelope` emission when an audit sink is registered
 
@@ -95,7 +96,7 @@ When validating the optional MEF discovery seam separately, capture these bounda
 - assembly-load warnings for invalid or unloadable files
 - `MEF bridge tool discovery completed`
 
-MEF discovery logs must remain discovery-only evidence. Tool execution, policy enforcement, payload redaction, audit emission, and correlation preservation still belong to `BridgeToolExecutor`.
+MEF discovery logs must remain discovery-only evidence. Tool execution, policy enforcement, approval enforcement when required, payload redaction, audit emission, and correlation preservation still belong to `BridgeToolExecutor`.
 
 ## 4) End-to-end automation and Mermaid evidence
 
@@ -114,6 +115,7 @@ New code should use the existing boundary logging pattern when applicable:
 - include operation name, request id, success/failure state, and elapsed timing where useful
 - keep MCP stdout clean and route diagnostics through UI log, file log, Debug, or StdErr as appropriate
 - send tool execution payload-oriented log fields through `ISecurityRedactor`; do not write raw secrets, tokens, passwords, bearer values, prompts containing secrets, exception dumps containing secrets, or trace artifacts containing secrets
+- for approval-required tool traces, record only redacted approval reason metadata and confirm denied approvals return `ApprovalDenied` without invoking the tool
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.
 

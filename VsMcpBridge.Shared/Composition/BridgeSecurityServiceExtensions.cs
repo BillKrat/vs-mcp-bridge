@@ -11,6 +11,7 @@ namespace VsMcpBridge.Shared.Composition
             services.TryAddSingleton<ISecurityRedactor, BridgeSecurityRedactor>();
             services.TryAddSingleton<IAuditSink, NoOpAuditSink>();
             services.TryAddSingleton<IToolExecutionPolicy, AllowToolExecutionPolicy>();
+            services.TryAddSingleton<IToolExecutionApprovalService, AllowToolExecutionApprovalService>();
 
             return services;
         }

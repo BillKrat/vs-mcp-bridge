@@ -8,7 +8,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
-- proving the minimal policy/redaction/audit seams around execution
+- proving the minimal policy/approval/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
 - generating a Mermaid sequence diagram from observed behavior
@@ -38,6 +38,7 @@ This workflow was validated with a temporary console harness that used the produ
 - catalog: `CompiledBridgeToolCatalog`
 - executor: `BridgeToolExecutor`
 - policy: `AllowToolExecutionPolicy`
+- approval service: `AllowToolExecutionApprovalService`, not invoked for descriptors with `ApprovalRequirement=NotRequired`
 - redactor: `BridgeSecurityRedactor`
 - audit sink: `NoOpAuditSink`
 - tool: `bridge.regexTextSearch`
@@ -65,6 +66,7 @@ After the foundational security seams were added, the compiled regex text-search
 - catalog: `CompiledBridgeToolCatalog`
 - executor: `BridgeToolExecutor`
 - policy: trace-only `RecordingAllowPolicy`
+- approval service: default approval service; `RegexTextSearchTool` does not require approval
 - redactor: `BridgeSecurityRedactor`
 - audit sink: `InMemoryAuditSink`
 - tool: `bridge.regexTextSearch`
@@ -141,12 +143,13 @@ The harness should:
 3. call `services.AddBridgeToolServices()` without enabling MEF directory discovery
 4. resolve `IBridgeToolCatalog`
 5. resolve `IBridgeToolExecutor`
-6. optionally resolve `ISecurityRedactor`, `IAuditSink`, and `IToolExecutionPolicy` to confirm the security seams are present
+6. optionally resolve `ISecurityRedactor`, `IAuditSink`, `IToolExecutionPolicy`, and `IToolExecutionApprovalService` to confirm the security seams are present
 7. create a `BridgeToolRequest` for `RegexTextSearchTool.ToolId`
 8. execute through `IBridgeToolExecutor.ExecuteAsync`
 9. print catalog descriptors, logger entries, audit envelope data when captured, result metadata, and returned matches
 
-For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use a trace-only policy wrapper when you need to print the observed policy evaluation without changing production defaults.
+For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use trace-only policy or approval wrappers when you need to print observed decisions without changing production defaults.
+Approval-aware traces should use a fake or test tool descriptor with `ApprovalRequirement=Required`; existing compiled tools remain approval-not-required by default.
 
 ### 2. Use deterministic request input
 
@@ -193,6 +196,7 @@ For failure-path traces, capture:
 - exception type if one was logged
 - whether the failure was structured by the tool or caught by `BridgeToolExecutor`
 - whether policy allowed or denied execution
+- whether tool approval was not required, approved, or denied
 - whether an audit envelope was emitted with request id and operation id
 
 ### 4. Preserve durable artifacts
@@ -230,6 +234,7 @@ sequenceDiagram
     participant DI as Shared DI Composition
     participant Executor as BridgeToolExecutor
     participant Policy as IToolExecutionPolicy
+    participant Approval as IToolExecutionApprovalService
     participant Catalog as CompiledBridgeToolCatalog
     participant Tool as RegexTextSearchTool
     participant Audit as IAuditSink
@@ -247,6 +252,7 @@ sequenceDiagram
     Catalog-->>Executor: RegexTextSearchTool
     Executor->>Policy: EvaluateAsync(ToolExecutionSecurityContext)
     Policy-->>Executor: Allow
+    Executor->>Executor: Approval not required by descriptor
     Executor->>Tool: ExecuteAsync(BridgeToolRequest)
     Tool->>Tool: Compile regex "error|warning"
     Tool->>Tool: Search supplied entries
@@ -268,10 +274,14 @@ Confirm:
 - `AddBridgeToolServices` registers `Bm25TextSearchTool` as a compiled in-memory `IBridgeTool`
 - `AddBridgeToolServices` registers `CompiledBridgeToolDiscovery` and optional `MefBridgeToolDiscovery`
 - `AddBridgeToolServices` registers default security seams through `AddBridgeSecurityServices`
+- `AddBridgeSecurityServices` registers `IToolExecutionApprovalService`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
+- `BridgeToolExecutor.ExecuteAsync` evaluates approval only when the descriptor requires it
+- approval-denied executions return structured `ApprovalDenied` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
+- audit metadata includes approval requirement, approval decision, and redacted approval reason
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex
@@ -281,8 +291,8 @@ Confirm:
 ## MEF Discovery Boundary Note
 
 MEF is discovery only. It may add exported `IBridgeTool` instances to the shared catalog when explicitly configured, but it does not execute tools during discovery and does not replace `BridgeToolExecutor`.
-All discovered tools must still flow through executor policy evaluation, redacted payload logging, terminal audit envelope emission, and request/operation correlation preservation.
-Directory-loaded tools are not production sandboxing; plugin/tool authors do not own core audit, redaction, policy, or correlation behavior.
+All discovered tools must still flow through executor policy evaluation, approval evaluation when required, redacted payload logging, terminal audit envelope emission, and request/operation correlation preservation.
+Directory-loaded tools are not production sandboxing; plugin/tool authors do not own core audit, redaction, policy, approval, or correlation behavior.
 
 When validating MEF discovery, keep the artifact separate from the compiled execution baseline and capture these boundaries:
 
@@ -302,6 +312,7 @@ When repeating this workflow:
 2. capture the catalog descriptor before execution
 3. capture executor boundary logs, audit data when enabled, and final result data
 4. confirm no raw secret-like values were written into logs, traces, prompts, exception dumps, or artifacts
-5. generate the Mermaid diagram from observed output
-6. compare the diagram against code before expanding the tool system
-7. keep future MEF/plugin/BM25 traces separate from this compiled-tool baseline
+5. include approval metadata when validating an approval-required test tool
+6. generate the Mermaid diagram from observed output
+7. compare the diagram against code before expanding the tool system
+8. keep future MEF/plugin/BM25 traces separate from this compiled-tool baseline
