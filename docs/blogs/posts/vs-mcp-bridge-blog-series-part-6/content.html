@@ -1,179 +1,128 @@
-﻿<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained how the bridge starts, how prompts become tool workflows, how runtime validation should be approached, and how to turn validation into a practical playbook. This post focuses on the next question: <strong>what evidence does the current bridge need so it does not become a black box when something fails?</strong></p>
+<p>[Page:Evidence]</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post continues the core series from discovery into the security, policy, approval, audit, and redaction seams around tool execution.</p>
 
-<p>The short answer is that validation only works if the system produces enough signal to explain what happened, where it happened, and whether the failure is still active or already cleared.</p>
+<h1>VS MCP Bridge Blog Series: Part 6</h1>
+<h2>Security Seams Around Tool Execution</h2>
 
-<h3>Why Evidence Matters</h3>
+<p>Part 5 described how VS MCP Bridge keeps tool discovery explicit. Compiled tools are the default, MEF is an opt-in discovery seam, and discovered tools are not allowed to become their own execution system.</p>
 
-<p>A bridge can have a clean architecture and still be painful to operate if it behaves like a black box at runtime.</p>
+<p>Part 6 looks at the next question: <strong>what happens after a tool is found?</strong></p>
 
-<p>Without enough evidence, every failure starts to look the same:</p>
+<p>The answer is the same for compiled tools, discovered tools, fake test tools, and future extension points: tool execution must flow through <code>BridgeToolExecutor</code>. That is the boundary where policy, approval, secret-reference checks, audit, redaction, correlation, and the actual tool call are kept together.</p>
 
-<ul>
-  <li>the tool did not work</li>
-  <li>the UI looks wrong</li>
-  <li>the host might be broken</li>
-  <li>the session might still be poisoned</li>
-</ul>
+<p>This is not a claim that VS MCP Bridge already has production authentication, OAuth, RBAC, vault-backed secrets, sandboxed plugins, or a compliance audit system. It does not. The current work is security architecture plumbing: narrow contracts and observable boundaries that make future hardening possible without scattering security decisions through every tool.</p>
 
-<p>That kind of uncertainty makes triage expensive. It also makes the system feel less trustworthy than it really is.</p>
+<h3>The Boundary Is The Security Feature</h3>
 
-<p>Evidence is what turns a vague failure into something localizable and explainable.</p>
+<p>The most important rule is simple: a tool should not be able to bypass the executor just because it was registered successfully.</p>
 
-<h3>What Evidence Should Answer</h3>
+<p>Discovery answers <em>what tools exist</em>. Execution answers <em>whether this request is allowed to run, whether approval is required, what metadata must be audited, what should be redacted, and what result is returned</em>.</p>
 
-<p>For the current bridge, the evidence model does not need to become a full observability platform. It just needs to answer a few practical questions:</p>
+<p>Keeping those responsibilities in one boundary matters because every new tool adds risk. A search tool, a Visual Studio-backed tool, a future file-writing tool, or a future extension-provided tool may all have different capabilities, but they should still be evaluated through the same execution path.</p>
 
-<ul>
-  <li>did startup complete correctly</li>
-  <li>did the request reach the bridge</li>
-  <li>which command or tool was running</li>
-  <li>did host execution begin</li>
-  <li>did UI state update</li>
-  <li>did the request succeed, fail, or stop at approval</li>
-  <li>is the failure still active, or has the system recovered</li>
-</ul>
+<h3>What The Executor Owns</h3>
 
-<p>If the current app can answer those questions, then the bridge is no longer a black box in practice.</p>
-
-<h3>The Four Evidence Sources</h3>
-
-<p>For the current bridge slice, the most useful evidence comes from four places:</p>
+<p>The current <code>BridgeToolExecutor</code> owns the security-sensitive execution sequence:</p>
 
 <ul>
-  <li>startup logs</li>
-  <li>request lifecycle logs</li>
-  <li>UI signals</li>
-  <li>outcome signals</li>
+  <li>resolve the requested tool from the catalog</li>
+  <li>build a security context with tool metadata, request metadata, correlation identifiers, capabilities, approval requirement, and secret references</li>
+  <li>evaluate the configured tool execution policy before running the tool</li>
+  <li>resolve required secret references through the broker seam without making raw secrets part of normal flow</li>
+  <li>ask the approval service when a descriptor requires approval</li>
+  <li>invoke the tool only after policy, secret-reference, and approval checks allow it</li>
+  <li>redact sensitive values before logging or audit output</li>
+  <li>emit an audit envelope with structured outcome, classification, policy, approval, capability, secret-reference, and correlation metadata</li>
 </ul>
 
-<p>That is enough for the current stage.</p>
+<p>That ordering is intentional. Policy denial stops execution before approval. Approval denial stops execution before the tool runs. Secret-reference failure stops execution before unresolved secret material can become accidental runtime behavior.</p>
 
-<h3>Startup Logs</h3>
+<h3>Policy Before Execution</h3>
 
-<p>Startup logs tell you whether the host came alive correctly.</p>
+<p>The policy seam is deliberately lightweight today. The default policy allows execution so existing behavior stays unchanged. A capability-aware policy can be configured to allow or deny tools based on declared required capabilities, but it is not a user identity system and it is not RBAC.</p>
 
-<p>At minimum, they should make it possible to see:</p>
+<p>That distinction is important. Capability metadata is declarative plumbing. It lets a tool say, for example, "this tool requires a Visual Studio document read capability" or "this tool will touch proposal state." A policy can inspect that metadata. The project has not yet attached those capabilities to authenticated users, accounts, roles, or external authorization decisions.</p>
+
+<p>Even so, the seam is valuable now because the executor and audit pipeline can already preserve the evidence needed to explain why a request was allowed or denied.</p>
+
+<h3>Approval-Aware Execution</h3>
+
+<p>Approval-aware execution follows the same pattern. A tool descriptor can declare that execution requires approval. The executor sees that requirement and calls <code>IToolExecutionApprovalService</code> before invoking the tool.</p>
+
+<p>The default service allows execution, so existing tools continue to run unless they explicitly opt into approval. Tests cover both paths: an approval-required tool can be allowed and executed, or denied and returned as a structured failure without running the tool.</p>
+
+<p>This is not the same thing as a finished user-facing prompt system. It is the execution seam that a prompt system can use later. The important architectural point is that approval is not implemented inside each tool. It lives at the execution boundary.</p>
+
+<h3>Secrets Flow By Reference</h3>
+
+<p>Secret handling follows the same conservative pattern. The current architecture has secret-reference contracts and a broker seam, not real secret storage.</p>
+
+<p>That means tools can describe required secrets as structured references instead of requiring raw values in tool descriptors, logs, prompts, or audit payloads. The default broker returns unresolved or not configured. That is intentionally boring behavior, but it is safer than pretending a real vault exists before one has been designed.</p>
+
+<p>The key rule for future tool authors is that secret values should flow by reference, not by payload. Logs and audit envelopes may record reference metadata and resolution outcome, but not raw secret values.</p>
+
+<h3>Redaction Is Part Of The Boundary</h3>
+
+<p>Redaction is not a final line of defense, and it should not be treated as a substitute for careful data flow. It is still an essential part of the boundary because diagnostics are only useful if operators can safely read them.</p>
+
+<p>The bridge redactor masks obvious secret-like keys and values before they enter logs and audit envelopes. That lets traces remain useful while reducing the chance that credentials, tokens, passwords, or synthetic test sentinels leak into developer-visible output.</p>
+
+<p>This matters for anti-black-box diagnostics. The project needs enough evidence to reconstruct what happened, but not so much raw payload detail that the diagnostic trail becomes a secret leak.</p>
+
+<h3>Audit Envelopes Carry The Explanation</h3>
+
+<p>Audit envelopes are the durable explanation layer around tool execution. They preserve the request and operation correlation metadata, the tool name, policy decision, approval decision, required capabilities, secret-reference metadata, redacted payload summaries, terminal outcome, and structured classification.</p>
+
+<p>The classification metadata is intentionally small: category, severity, risk, and outcome. A successful tool execution can be informational and low risk. A policy denial can be warning and medium risk. An unresolved secret can be warning and high risk. An exception path can be error and high risk.</p>
+
+<p>That is observability plumbing, not a SIEM integration or compliance framework. The value is that a future session can inspect an audit record and understand the shape of the decision without relying on chat history or a debugger session.</p>
+
+<h3>Compiled And Discovered Tools Follow The Same Path</h3>
+
+<p>This is where Part 5 and Part 6 connect. MEF discovery can find extension-provided tools, but discovery does not grant those tools a private execution lane. They still become catalog entries, and execution still flows through the same executor boundary.</p>
+
+<p>That keeps extensibility from erasing the security model. A discovered tool can have descriptor metadata, required capabilities, approval requirements, and secret references. The executor can then evaluate those declarations the same way it evaluates compiled tools.</p>
+
+<p>The current system is intentionally not a plugin sandbox. Future sandboxing, signed manifests, capability attestation, and remote authorization are deferred. The useful thing today is that the project has a place to attach those decisions later.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The repo already has Mermaid sources that support this topic:</p>
 
 <ul>
-  <li>package initialization started</li>
-  <li>dependency injection composition completed</li>
-  <li>pipe server started</li>
-  <li>package initialization completed</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-security-trace-20260509.mmd" target="_blank">tool-security-trace-20260509.mmd</a> shows catalog lookup, policy evaluation, redaction, audit, request identifiers, and operation identifiers around tool execution.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-required execution with explicit allow and deny outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows the compiled tool baseline path through DI, catalog lookup, executor, and structured results.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/mef-discovery-trace-20260516.mmd" target="_blank">mef-discovery-trace-20260516.mmd</a> shows that MEF discovery feeds the catalog but does not bypass executor-routed execution.</li>
 </ul>
 
-<p>Without these signals, host startup is mostly guesswork. That makes every later failure harder to interpret because you cannot be sure the bridge was really healthy to begin with.</p>
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
 
-<h3>Request Lifecycle Logs</h3>
+<h3>What Is Still Deferred</h3>
 
-<p>Request lifecycle logs tell you whether a tool call actually moved through the bridge.</p>
-
-<p>At minimum, a meaningful request should leave evidence for:</p>
+<p>The current bridge has security seams, not finished enterprise security. The following remain intentionally deferred:</p>
 
 <ul>
-  <li>request received</li>
-  <li>command or tool name</li>
-  <li>request identifier</li>
-  <li>dispatch started</li>
-  <li>dispatch completed or failed</li>
+  <li>OAuth and authentication</li>
+  <li>user identity, roles, and RBAC</li>
+  <li>real secret storage or vault integration</li>
+  <li>encrypted persistence</li>
+  <li>remote authorization</li>
+  <li>plugin sandboxing</li>
+  <li>signed plugin manifests</li>
+  <li>tamper-evident audit storage</li>
+  <li>SIEM export or compliance reporting</li>
 </ul>
 
-<p>This is the signal set that helps you distinguish one layer from another.</p>
-
-<p>For example, it helps answer questions like:</p>
-
-<ul>
-  <li>did the MCP tool call happen at all</li>
-  <li>did the pipe connection succeed</li>
-  <li>did the host service actually run</li>
-  <li>did the failure happen before or after dispatch</li>
-</ul>
-
-<p>Without this layer of evidence, most failures collapse into one generic �the bridge is broken� story.</p>
-
-<h3>UI Signals</h3>
-
-<p>UI signals matter because the bridge does not end at transport. It also has a visible approval workflow.</p>
-
-<p>For the current app, useful UI evidence includes:</p>
-
-<ul>
-  <li>the tool window opened</li>
-  <li>log text updated</li>
-  <li>an approval prompt appeared</li>
-  <li>the prompt cleared after approve or reject</li>
-</ul>
-
-<p>These are not merely presentation details. They are part of the evidence model because they tell you whether the host-side workflow became visible correctly.</p>
-
-<h3>Outcome Signals</h3>
-
-<p>The final evidence source is what the system says happened as a result.</p>
-
-<p>For the current bridge, useful outcomes include:</p>
-
-<ul>
-  <li>read tool returned data</li>
-  <li>proposal created</li>
-  <li>proposal approved</li>
-  <li>proposal rejected</li>
-  <li>edit applied</li>
-  <li>edit failed</li>
-</ul>
-
-<p>This matters because the bridge has more than one kind of successful behavior. A request can succeed by returning data, or it can succeed by producing a proposal that still awaits approval. Those are different outcomes, and the evidence should make that distinction obvious.</p>
-
-<h3>Evidence Keeps State Understandable</h3>
-
-<p>One of the most important jobs of evidence is to make state visible enough that developers can tell the difference between:</p>
-
-<ul>
-  <li>a request that is active</li>
-  <li>a request that completed</li>
-  <li>a proposal that is waiting for approval</li>
-  <li>a failure that already stopped</li>
-  <li>stale state that should no longer matter</li>
-</ul>
-
-<p>This is how evidence helps prevent the �poisoned session� feeling that some AI tools can create. If you cannot tell whether the system is actively failing or just displaying stale state, the tool feels unreliable even when the underlying issue may be small.</p>
-
-<h3>How Evidence Supports The Validation Playbook</h3>
-
-<p>The validation playbook from the previous post only works if each step has observable signals behind it.</p>
-
-<p>That mapping looks like this:</p>
-
-<ul>
-  <li>host startup depends on startup logs</li>
-  <li>listener readiness depends on pipe startup and waiting logs</li>
-  <li>MCP tool validation depends on request lifecycle logs</li>
-  <li>proposal validation depends on visible approval prompts and proposal state signals</li>
-  <li>recovery validation depends on evidence that old state is cleared and new requests are independent</li>
-</ul>
-
-<p>So the validation playbook and the evidence model are tightly connected. One defines the steps, and the other makes the steps interpretable.</p>
-
-<h3>Why This Also Shapes Implementation</h3>
-
-<p>That is why evidence is not just a logging preference. It influences design.</p>
-
-<p>If the app needs to be testable and triageable, then it needs:</p>
-
-<ul>
-  <li>clear startup boundaries</li>
-  <li>clear request identifiers</li>
-  <li>clear proposal lifecycle transitions</li>
-  <li>clear separation between active and stale state</li>
-</ul>
-
-<p>That means the evidence model quietly tells the implementation what it must expose in order to be supportable.</p>
+<p>Calling those items out is part of the architecture. It prevents the current plumbing from being oversold, and it gives future work a clear place to land.</p>
 
 <h3>Takeaway</h3>
 
-<p>For the current bridge, evidence is what prevents the system from becoming a black box.</p>
+<p>VS MCP Bridge does not make tool execution safer by hiding it. It makes execution safer by routing it through a visible boundary that owns policy, approval, secret-reference handling, redaction, audit, classification, correlation, and execution.</p>
 
-<p>It is what makes failures localizable, recoveries understandable, and runtime behavior explainable. Without it, validation becomes guesswork. With it, the bridge becomes something developers can trust, diagnose, and improve step by step.</p>
+<p>That boundary is what keeps compiled tools, discovered tools, and future tools from becoming black boxes. It also gives the project a practical path from today's lightweight seams toward stronger security without pretending that future hardening is already complete.</p>
 
 <h3>Next In The Series</h3>
 
-<p>The next useful topic is likely the concrete signal map for the current implementation: what the existing logs, request identifiers, and UI state already provide today, and what is still missing if the bridge is going to be easy to validate in practice.</p>
-
+<p>The next useful topic is how durable trace artifacts, logs, and validation handoffs turn these seams into operational evidence that another developer or AI session can reconstruct without relying on memory.</p>

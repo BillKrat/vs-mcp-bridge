@@ -1,17 +1,40 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  148,
-    "title":  "Evidence Model for the Current Bridge",
-    "description":  "Evidence Model for the Current Bridge. This post explains what signals the current VS MCP Bridge needs so validation is practical, failures are triageable, and the runtime does not behave like a black box.",
-    "author":  "AI Systems Author",
-    "slug":  "vs-mcp-bridge-blog-series-part-6",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ]
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "12DB1BE9-4143-476D-A12A-04C7CA045A71",
+  "title": "VS MCP Bridge Blog Series: Part 6",
+  "description": "How VS MCP Bridge keeps tool execution security explicit through policy checks, approval-aware execution, capability metadata, secret-reference seams, redaction, audit envelopes, and correlation without claiming production authentication or sandboxing.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-blog-series-part-6",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Security",
+    "Policy",
+    "Approval",
+    "Audit",
+    "Redaction",
+    "Secrets",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 148,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "12db1be9-4143-476d-a12a-04c7ca045a71",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-11T18:17:00.000",
+    "dateModified": "2026-04-23T06:18:44.137",
+    "exportFolder": "vs-mcp-bridge-blog-series-part-6",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
-
