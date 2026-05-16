@@ -8,6 +8,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog`
+- proving the minimal policy/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
 - generating a Mermaid sequence diagram from observed behavior
@@ -35,6 +36,9 @@ This workflow was validated with a temporary console harness that used the produ
 - commit: `85401fd`
 - catalog: `CompiledBridgeToolCatalog`
 - executor: `BridgeToolExecutor`
+- policy: `AllowToolExecutionPolicy`
+- redactor: `BridgeSecurityRedactor`
+- audit sink: `NoOpAuditSink`
 - tool: `bridge.regexTextSearch`
 - request id: `tool-trace-20260509-req-001`
 - operation id: `tool-regex-search-20260509-op-001`
@@ -61,6 +65,7 @@ dotnet test .\VsMcpBridge.Shared.Tests\VsMcpBridge.Shared.Tests.csproj
 ```
 
 - tool execution should use `AddBridgeToolServices()` so the catalog/executor path matches shared composition
+- the harness may override `IAuditSink` with `InMemoryAuditSink` when audit envelope assertions are part of the run
 - use a deterministic request id and operation id in the trace harness
 
 ## Run Procedure
@@ -83,9 +88,10 @@ The harness should:
 3. call `services.AddBridgeToolServices()`
 4. resolve `IBridgeToolCatalog`
 5. resolve `IBridgeToolExecutor`
-6. create a `BridgeToolRequest` for `RegexTextSearchTool.ToolId`
-7. execute through `IBridgeToolExecutor.ExecuteAsync`
-8. print catalog descriptors, logger entries, result metadata, and returned matches
+6. optionally resolve `ISecurityRedactor`, `IAuditSink`, and `IToolExecutionPolicy` to confirm the security seams are present
+7. create a `BridgeToolRequest` for `RegexTextSearchTool.ToolId`
+8. execute through `IBridgeToolExecutor.ExecuteAsync`
+9. print catalog descriptors, logger entries, audit envelope data when captured, result metadata, and returned matches
 
 ### 2. Use deterministic request input
 
@@ -123,6 +129,7 @@ Bridge tool execution completed [ToolId=bridge.regexTextSearch] [RequestId=tool-
 ```
 
 Every line in the observed execution boundary should preserve the same request id and operation id.
+Trace-level request/result payload logs, when captured, must be redacted before being stored as durable artifacts.
 
 For failure-path traces, capture:
 
@@ -130,6 +137,8 @@ For failure-path traces, capture:
 - failure message
 - exception type if one was logged
 - whether the failure was structured by the tool or caught by `BridgeToolExecutor`
+- whether policy allowed or denied execution
+- whether an audit envelope was emitted with request id and operation id
 
 ### 4. Preserve durable artifacts
 
@@ -165,8 +174,10 @@ sequenceDiagram
     participant Caller as Trace Harness / Caller
     participant DI as Shared DI Composition
     participant Executor as BridgeToolExecutor
+    participant Policy as IToolExecutionPolicy
     participant Catalog as CompiledBridgeToolCatalog
     participant Tool as RegexTextSearchTool
+    participant Audit as IAuditSink
     participant Result as BridgeToolResult
     participant Log as RecordingBridgeLogger
 
@@ -176,13 +187,18 @@ sequenceDiagram
     Catalog-->>Caller: bridge.regexTextSearch descriptor
     Caller->>Executor: ExecuteAsync(requestId, operationId, toolId)
     Executor->>Log: Information "Bridge tool execution started"
+    Executor->>Log: Trace redacted request payload when Trace is enabled
     Executor->>Catalog: TryGetTool("bridge.regexTextSearch")
     Catalog-->>Executor: RegexTextSearchTool
+    Executor->>Policy: EvaluateAsync(ToolExecutionSecurityContext)
+    Policy-->>Executor: Allow
     Executor->>Tool: ExecuteAsync(BridgeToolRequest)
     Tool->>Tool: Compile regex "error|warning"
     Tool->>Tool: Search supplied entries
     Tool-->>Executor: BridgeToolResult Success, 2 matches
     Executor->>Log: Information "Bridge tool execution completed"
+    Executor->>Log: Trace redacted result payload when Trace is enabled
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
     Executor-->>Caller: BridgeToolResult with preserved requestId and operationId
     Caller->>Result: Inspect matchCount, totalMatchCount, limited, matches
 ```
@@ -194,8 +210,12 @@ After generating the sequence, compare it to current code.
 Confirm:
 
 - `AddBridgeToolServices` registers `RegexTextSearchTool` as compiled `IBridgeTool`
+- `AddBridgeToolServices` registers default security seams through `AddBridgeSecurityServices`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
+- `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
+- `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
+- payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex
 - no MEF, plugin directory, BM25, MCP transport, presenter, or proposal code is involved in this workflow
@@ -206,7 +226,8 @@ When repeating this workflow:
 
 1. use deterministic request and operation IDs
 2. capture the catalog descriptor before execution
-3. capture executor boundary logs and final result data
-4. generate the Mermaid diagram from observed output
-5. compare the diagram against code before expanding the tool system
-6. keep future MEF/plugin/BM25 traces separate from this compiled-tool baseline
+3. capture executor boundary logs, audit data when enabled, and final result data
+4. confirm no raw secret-like values were written into logs, traces, prompts, exception dumps, or artifacts
+5. generate the Mermaid diagram from observed output
+6. compare the diagram against code before expanding the tool system
+7. keep future MEF/plugin/BM25 traces separate from this compiled-tool baseline

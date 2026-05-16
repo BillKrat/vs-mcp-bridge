@@ -68,6 +68,54 @@ The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.
 The durable baseline for this boundary is `docs/tool-execution-trace-workflow.md` with observed artifacts under `artifacts/logs/tool-regex-search-trace-20260509.*` and `docs/diagrams/tool-regex-search-trace-20260509.mmd`.
 
+## Tool Execution Security Seams
+
+Shared bridge tool execution now has minimal security contracts in `VsMcpBridge.Shared.Security`.
+These contracts are insertion points only; they do not implement authentication, OAuth, sandboxing, MEF loading, or production plugin authorization.
+
+Trust boundaries are defined this way:
+
+- Host boundary: VSIX and standalone App hosts own host-specific services and privileges.
+- Transport boundary: MCP stdio and the local named pipe move requests but do not authorize arbitrary behavior.
+- MCP runtime boundary: `VsMcpBridge.McpServer` exposes only registered MCP tools and should remain transport-isolated from shared tool internals.
+- Tool/plugin boundary: bridge tools execute behind `IBridgeToolExecutor`, not directly from callers.
+- Downstream boundary: external services, file systems, Visual Studio APIs, model providers, and future plugin dependencies are treated as separate trust zones.
+
+The executor is the shared enforcement point for foundational tool security behavior:
+
+- `IToolExecutionPolicy` evaluates a `ToolExecutionSecurityContext` before a tool runs.
+- `ISecurityRedactor` masks obvious secret-like values before payload-oriented logs or audit metadata are emitted.
+- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, denied, successful, failed, canceled, or unknown-tool outcomes.
+- request id and operation id remain part of the policy, audit, logging, and result path.
+
+Current safe defaults preserve existing runtime behavior:
+
+- `AllowToolExecutionPolicy` allows all current compiled tools.
+- `NoOpAuditSink` records nothing unless a host or test overrides it.
+- `BridgeSecurityRedactor` performs basic masking for obvious keys such as `apiKey`, `token`, `password`, `secret`, and bearer authorization values.
+
+Tool and plugin authors are not responsible for core redaction, policy evaluation, or audit emission.
+They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.
+
+Deferred security work remains explicit:
+
+- OAuth/authentication implementation
+- real secret broker
+- encrypted secret storage
+- signed plugin manifests
+- sandboxing
+- remote transport authorization
+- capability attestation
+- distributed provenance chain
+- tamper-evident audit store
+
+Hooks and contract models only:
+
+- secret references
+- capability token model
+- audit envelope model
+- policy decision model
+
 ## Logging and Diagnostics Flow
 
 Current logging behavior is intentionally boundary-focused for triage:

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Loggers;
+using VsMcpBridge.Shared.Security;
 using VsMcpBridge.Shared.Tools;
 using Xunit;
 
@@ -24,6 +25,9 @@ public sealed class BridgeToolInfrastructureTests
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
+        Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
+        Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
+        Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
     }
 
@@ -38,6 +42,9 @@ public sealed class BridgeToolInfrastructureTests
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
+        Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
+        Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
+        Assert.IsType<AllowToolExecutionPolicy>(provider.GetRequiredService<IToolExecutionPolicy>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
     }
 
@@ -81,8 +88,14 @@ public sealed class BridgeToolInfrastructureTests
     public async Task Executor_invokes_registered_tool_and_preserves_correlation_metadata()
     {
         var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
         var tool = new FakeBridgeTool();
-        var executor = new BridgeToolExecutor(new CompiledBridgeToolCatalog(new[] { tool }), logger);
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new AllowToolExecutionPolicy());
         var request = CreateRequest("fake.echo");
 
         var result = await executor.ExecuteAsync(request, CancellationToken.None);
@@ -102,15 +115,26 @@ public sealed class BridgeToolInfrastructureTests
             && message.Contains("[Success=True]")
             && message.Contains("[RequestId=request-123]")
             && message.Contains("[OperationId=operation-456]"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.Equal("BridgeToolExecution", auditEvent.EventName);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal("fake.echo", auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
     }
 
     [Fact]
     public async Task Executor_returns_structured_failure_and_logs_boundary_when_tool_throws()
     {
         var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
         var executor = new BridgeToolExecutor(
             new CompiledBridgeToolCatalog(new IBridgeTool[] { new ThrowingBridgeTool() }),
-            logger);
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new AllowToolExecutionPolicy());
         var request = CreateRequest("fake.throwing");
 
         var result = await executor.ExecuteAsync(request, CancellationToken.None);
@@ -126,6 +150,125 @@ public sealed class BridgeToolInfrastructureTests
             && error.Message.Contains("[RequestId=request-123]")
             && error.Message.Contains("[OperationId=operation-456]")
             && error.Exception is System.InvalidOperationException);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("ExecutionFailed", auditEvent.ErrorCode);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_default_policy_allows_compiled_regex_search_tool()
+    {
+        var logger = new RecordingBridgeLogger();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new RegexTextSearchTool() }),
+            logger,
+            new BridgeSecurityRedactor(),
+            new InMemoryAuditSink(),
+            new AllowToolExecutionPolicy());
+
+        var result = await executor.ExecuteAsync(CreateRegexRequest("error", new[] { "one error" }), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(RegexTextSearchTool.ToolId, result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_deny_policy_prevents_tool_execution_and_emits_audit_event()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var tool = new FakeBridgeTool();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            new DenyToolExecutionPolicy("test token=raw-deny-secret"));
+        var request = CreateRequest("fake.echo");
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Equal("fake.echo", result.ToolId);
+        Assert.Equal("request-123", result.RequestId);
+        Assert.Equal("operation-456", result.OperationId);
+        Assert.Null(tool.LastRequest);
+        Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("raw-deny-secret"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("PolicyDenied", auditEvent.ErrorCode);
+        Assert.Equal("fake.echo", auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("test token=[REDACTED]", auditEvent.Metadata["policyReason"]);
+    }
+
+    [Fact]
+    public void Security_redactor_masks_obvious_secret_values()
+    {
+        var redactor = new BridgeSecurityRedactor();
+
+        var result = redactor.Redact(
+            "apiKey=alpha token: beta password=\"gamma\" secret='delta' Authorization: Bearer epsilon");
+
+        Assert.True(result.WasRedacted);
+        Assert.DoesNotContain("alpha", result.Value);
+        Assert.DoesNotContain("beta", result.Value);
+        Assert.DoesNotContain("gamma", result.Value);
+        Assert.DoesNotContain("delta", result.Value);
+        Assert.DoesNotContain("epsilon", result.Value);
+        Assert.Contains("[REDACTED]", result.Value);
+    }
+
+    [Fact]
+    public async Task Executor_redacts_secret_like_values_from_tested_log_paths()
+    {
+        var logger = new RecordingBridgeLogger();
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new SecretReturningBridgeTool(), new SecretThrowingBridgeTool() }),
+            logger,
+            new BridgeSecurityRedactor(),
+            new InMemoryAuditSink(),
+            new AllowToolExecutionPolicy());
+        var request = new BridgeToolRequest
+        {
+            ToolId = "fake.secret",
+            RequestId = "request-123",
+            OperationId = "operation-456",
+            Arguments = new Dictionary<string, object?> { ["apiKey"] = "raw-request-secret" }
+        };
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+        var failed = await executor.ExecuteAsync(
+            new BridgeToolRequest
+            {
+                ToolId = "fake.secret.throw",
+                RequestId = "request-123",
+                OperationId = "operation-456",
+                Arguments = new Dictionary<string, object?> { ["authorization"] = "Bearer raw-bearer-secret" }
+            },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.False(failed.Success);
+        var logMessages = logger.VerboseMessages
+            .Concat(logger.InformationMessages)
+            .Concat(logger.WarningMessages)
+            .Concat(logger.Errors.Select(error => error.Message))
+            .Concat(logger.Errors.Select(error => error.Exception?.Message ?? string.Empty))
+            .ToList();
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-request-secret"));
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-result-secret"));
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-bearer-secret"));
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-exception-secret"));
+        Assert.Contains(logMessages, message => message.Contains("[REDACTED]"));
     }
 
     [Fact]
@@ -289,5 +432,47 @@ public sealed class BridgeToolInfrastructureTests
 
         public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
             => throw new System.InvalidOperationException("fake failure");
+    }
+
+    private sealed class SecretReturningBridgeTool : IBridgeTool
+    {
+        public BridgeToolDescriptor Descriptor { get; } = new BridgeToolDescriptor
+        {
+            Id = "fake.secret",
+            Name = "Fake Secret",
+            Description = "Fake secret-returning test tool."
+        };
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+            => Task.FromResult(BridgeToolResult.Succeeded(
+                request,
+                "Secret completed.",
+                new Dictionary<string, object?> { ["token"] = "raw-result-secret" }));
+    }
+
+    private sealed class SecretThrowingBridgeTool : IBridgeTool
+    {
+        public BridgeToolDescriptor Descriptor { get; } = new BridgeToolDescriptor
+        {
+            Id = "fake.secret.throw",
+            Name = "Fake Secret Throwing",
+            Description = "Fake secret-throwing test tool."
+        };
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+            => throw new System.InvalidOperationException("secret=raw-exception-secret");
+    }
+
+    private sealed class DenyToolExecutionPolicy : IToolExecutionPolicy
+    {
+        private readonly string _reason;
+
+        public DenyToolExecutionPolicy(string reason)
+        {
+            _reason = reason;
+        }
+
+        public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
+            => Task.FromResult(ToolExecutionPolicyDecision.Deny(_reason));
     }
 }

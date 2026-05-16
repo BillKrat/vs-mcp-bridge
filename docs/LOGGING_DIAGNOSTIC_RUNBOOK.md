@@ -93,6 +93,7 @@ New code should use the existing boundary logging pattern when applicable:
 - log operation start and completion/failure
 - include operation name, request id, success/failure state, and elapsed timing where useful
 - keep MCP stdout clean and route diagnostics through UI log, file log, Debug, or StdErr as appropriate
+- send tool execution payload-oriented log fields through `ISecurityRedactor`; do not write raw secrets, tokens, passwords, bearer values, prompts containing secrets, exception dumps containing secrets, or trace artifacts containing secrets
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.
 
@@ -143,6 +144,7 @@ Environment/config snapshot to capture with artifacts:
 - `Adventures:ChatEngine:Provider`
 - `Adventures:ChatEngine:OpenAI:UseRealApi`
 - whether `Adventures:ChatEngine:OpenAI:ApiKey` and `Adventures:ChatEngine:OpenAI:Model` are populated (do not paste secrets)
+- whether security redaction/policy/audit defaults were overridden for the run; do not paste policy inputs or audit metadata that contains unredacted sensitive values
 
 ## 7) Fast rollback
 
