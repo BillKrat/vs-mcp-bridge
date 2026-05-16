@@ -1,0 +1,87 @@
+{
+    "parseable":  true,
+    "format":  "xml",
+    "parseAttempts":  [
+                          {
+                              "format":  "json",
+                              "success":  false,
+                              "error":  "Invalid JSON primitive: ."
+                          },
+                          {
+                              "format":  "xml",
+                              "success":  true,
+                              "error":  null
+                          }
+                      ],
+    "linkCount":  17,
+    "links":  [
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/tree/main\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/BlogAI\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/tree/main/docs/blogs\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/vs-mcp-bridge-blog-series-part-1/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/vs-mcp-bridge-blog-series-part-2/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/vs-mcp-bridge-blog-series-part-3/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/vs-mcp-bridge-blog-series-part-4/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/how-stdio-works-in-vs-mcp-bridge/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/understanding-a-named-pipe-listener/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/posts/understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe/content.html\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/diagrams/vs-mcp-bridge-bootstrap-sequence.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-regex-search-trace-20260509.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-security-trace-20260509.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/mef-discovery-trace-20260516.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd\u0026quot;",
+                      "source":  "regex-url-scan"
+                  }
+              ]
+}

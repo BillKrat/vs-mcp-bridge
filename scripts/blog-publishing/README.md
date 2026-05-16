@@ -7,6 +7,7 @@
 - [Publish-BlogPostDraft.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Publish-BlogPostDraft.ps1)
 - [Export-BlogPostsFromDatabase.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-BlogPostsFromDatabase.ps1)
 - [Export-GwnWikiExtensionSettings.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-GwnWikiExtensionSettings.ps1)
+- [Export-DataStoreSettingRow.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-DataStoreSettingRow.ps1)
 
 ## Read-Only Export
 
@@ -42,6 +43,23 @@ docs/blogs/source-of-truth/gwn-wiki-extension-export-20260516/
 The export reads `dbo.be_DataStoreSettings` where `ExtensionId = 'GwnWikiExtension'`.
 It writes the exact raw `Settings` field plus best-effort XML inspection artifacts for bracket-token mappings such as `[NamedPipeListener]`, `[Stdio]`, and `[Display:...]`.
 It is read-only and does not publish, reload, update, or delete plugin settings.
+
+`Export-DataStoreSettingRow.ps1` preserves one `dbo.be_DataStoreSettings` row by row id. Use this for widget settings or other BlogEngine settings rows before any manual database edit.
+
+```powershell
+.\scripts\blog-publishing\Export-DataStoreSettingRow.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS `
+  -DataStoreSettingRowId 26512
+```
+
+Default output for row `26512`:
+
+```text
+docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516/
+```
+
+The export writes the exact raw `Settings` field plus best-effort JSON/XML/link inspection artifacts.
+It is read-only and does not update database settings.
 
 ## Required Parameters
 

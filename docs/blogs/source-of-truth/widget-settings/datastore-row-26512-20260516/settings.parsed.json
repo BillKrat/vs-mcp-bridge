@@ -1,0 +1,27 @@
+{
+    "parseable":  true,
+    "format":  "xml",
+    "parseAttempts":  [
+                          {
+                              "format":  "json",
+                              "success":  false,
+                              "error":  "Invalid JSON primitive: ."
+                          },
+                          {
+                              "format":  "xml",
+                              "success":  true,
+                              "error":  null
+                          }
+                      ],
+    "linkCount":  2,
+    "links":  [
+                  {
+                      "url":  "https://github.com/BillKrat/vs-mcp-bridge/tree/feature/approval-apply-ui-slice\u0026quot;",
+                      "source":  "regex-url-scan"
+                  },
+                  {
+                      "url":  "https://github.com/BillKrat/BlogAI\u0026quot;",
+                      "source":  "regex-url-scan"
+                  }
+              ]
+}

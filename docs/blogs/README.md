@@ -83,6 +83,23 @@ Re-run the export from the repository root:
 The export writes the exact raw `Settings` field from `dbo.be_DataStoreSettings` for `ExtensionId = 'GwnWikiExtension'` plus a best-effort parsed inspection artifact.
 Do not mutate plugin settings from this repo path.
 
+## Widget Settings Export
+
+BlogEngine widget settings rows can be preserved with:
+
+```powershell
+.\scripts\blog-publishing\Export-DataStoreSettingRow.ps1 `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS `
+  -DataStoreSettingRowId 26512
+```
+
+The TextBox widget update for row `26512` is documented in `widget-settings-row-26512-update-20260516.md`.
+The preserved before/after artifacts live under:
+
+```text
+docs/blogs/source-of-truth/widget-settings/
+```
+
 ## Future Direction
 
 Consider an `Adventures.Blog` project or library to own reusable blog synchronization tooling across projects that use the BlogAI blogging application.

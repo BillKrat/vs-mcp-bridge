@@ -1,0 +1,21 @@
+{
+    "exportName":  "datastore-row-26512-20260516",
+    "exportedAt":  "2026-05-16T21:59:45.764Z",
+    "source":  {
+                   "databaseTable":  "dbo.be_DataStoreSettings",
+                   "dataStoreSettingRowId":  26512,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "extensionType":  "1",
+                   "extensionId":  "a0bc6349-4f6c-4a87-addb-646a5c12565a",
+                   "query":  "SELECT DataStoreSettingRowId, BlogId, ExtensionType, ExtensionId, Settings FROM dbo.be_DataStoreSettings WHERE DataStoreSettingRowId = @DataStoreSettingRowId"
+               },
+    "settings":  {
+                     "rawFile":  "settings.raw.txt",
+                     "rawLength":  3124,
+                     "rawSha256":  "108c246aa26aba0d875bacba57ca10a414452db2382605fca993c6c8577491a8",
+                     "parsedFile":  "settings.parsed.json",
+                     "parseable":  true,
+                     "format":  "xml",
+                     "linkCount":  2
+                 }
+}
