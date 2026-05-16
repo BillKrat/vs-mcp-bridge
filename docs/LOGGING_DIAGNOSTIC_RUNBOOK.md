@@ -75,6 +75,7 @@ The current baseline validates:
 - `BridgeToolExecutor` start/completion logging
 - request id and operation id preservation
 - structured `BridgeToolResult` output
+- required capability metadata flowing from tool descriptor to policy context and audit metadata
 - policy evaluation before tool invocation
 - approval evaluation before tool invocation when a descriptor requires approval
 - redacted Trace-level request/result payload logging
@@ -122,6 +123,7 @@ New code should use the existing boundary logging pattern when applicable:
 - include operation name, request id, success/failure state, and elapsed timing where useful
 - keep MCP stdout clean and route diagnostics through UI log, file log, Debug, or StdErr as appropriate
 - send tool execution payload-oriented log fields through `ISecurityRedactor`; do not write raw secrets, tokens, passwords, bearer values, prompts containing secrets, exception dumps containing secrets, or trace artifacts containing secrets
+- when capturing capability metadata, treat it as declarative policy input; record the redacted required-capability list but do not infer that authentication, OAuth scopes, role/user identity, or sandboxing exists
 - for approval-required tool traces, record only redacted approval reason metadata and confirm denied approvals return `ApprovalDenied` without invoking the tool
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.

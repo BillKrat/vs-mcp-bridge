@@ -95,14 +95,16 @@ Trust boundaries are defined this way:
 The executor is the shared enforcement point for foundational tool security behavior:
 
 - `IToolExecutionPolicy` evaluates a `ToolExecutionSecurityContext` before a tool runs.
+- tool descriptors can declare required `BridgeCapability` metadata, and that metadata flows into `ToolExecutionSecurityContext` for future capability-aware policy decisions.
 - `IToolExecutionApprovalService` evaluates a `ToolExecutionApprovalContext` only when a tool descriptor marks `ApprovalRequirement = Required`.
 - `ISecurityRedactor` masks obvious secret-like values before payload-oriented logs or audit metadata are emitted.
-- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, successful, failed, canceled, or unknown-tool outcomes.
+- `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, successful, failed, canceled, or unknown-tool outcomes, including redacted required-capability metadata.
 - request id and operation id remain part of the policy, audit, logging, and result path.
 
 Current safe defaults preserve existing runtime behavior:
 
 - `AllowToolExecutionPolicy` allows all current compiled tools.
+- existing tool descriptors default to no required capabilities, so capability metadata does not change current authorization behavior.
 - existing tool descriptors default to `ApprovalRequirement = NotRequired`, so they do not invoke approval before execution.
 - `AllowToolExecutionApprovalService` is the default approval service for hosts or tests that do not override the seam.
 - `NoOpAuditSink` records nothing unless a host or test overrides it.
@@ -114,6 +116,7 @@ Approval-aware execution is now part of the same executor boundary: a descriptor
 This seam does not redesign the proposal approval workflow; it is a tool-execution policy checkpoint for future selected tools.
 The durable approval-aware evidence is `docs/diagrams/tool-approval-trace-20260516.mmd` with correlated logs and metadata under `artifacts/logs/tool-approval-trace-20260516.*`.
 That trace uses a shared-test fake approval-required tool and proves approved and denied decisions without adding a runtime tool, UI prompt, proposal approval redesign, or MCP transport change.
+Capability metadata is declarative only in the current system. It is visible to policy and audit, but it does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, or production authorization by itself.
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.

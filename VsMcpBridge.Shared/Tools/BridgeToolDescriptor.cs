@@ -1,5 +1,7 @@
 namespace VsMcpBridge.Shared.Tools
 {
+    using System;
+    using System.Collections.Generic;
     using VsMcpBridge.Shared.Security;
 
     public sealed class BridgeToolDescriptor
@@ -10,6 +12,7 @@ namespace VsMcpBridge.Shared.Tools
         public string Category { get; set; } = string.Empty;
         public string Source { get; set; } = string.Empty;
         public string Host { get; set; } = string.Empty;
+        public IReadOnlyList<BridgeCapability> RequiredCapabilities { get; set; } = Array.Empty<BridgeCapability>();
         public ToolExecutionApprovalRequirement ApprovalRequirement { get; set; } = ToolExecutionApprovalRequirement.NotRequired;
         public bool ApprovalRequired
         {

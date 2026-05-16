@@ -34,6 +34,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
+        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
     }
@@ -55,6 +56,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<AllowToolExecutionApprovalService>(provider.GetRequiredService<IToolExecutionApprovalService>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
+        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
     }
 
     [Fact]
@@ -253,6 +255,79 @@ public sealed class BridgeToolInfrastructureTests
         Assert.True(auditEvent.Allowed);
         Assert.True(auditEvent.Success);
         Assert.Equal("fake.echo", auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("None", auditEvent.Metadata["requiredCapabilities"]);
+    }
+
+    [Fact]
+    public async Task Executor_flows_required_capabilities_to_policy_and_audit_metadata()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingCapabilityPolicy(ToolExecutionPolicyDecision.Allow("capability policy allowed"));
+        var tool = new CapabilityBridgeTool(new[]
+        {
+            new BridgeCapability("workspace.read"),
+            new BridgeCapability("token=capability-secret")
+        });
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy);
+        var request = CreateRequest(CapabilityBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Same(request, tool.LastRequest);
+        Assert.Equal(1, policy.CallCount);
+        Assert.NotNull(policy.LastContext);
+        Assert.Equal(CapabilityBridgeTool.ToolId, policy.LastContext!.ToolId);
+        Assert.Equal("request-123", policy.LastContext.RequestId);
+        Assert.Equal("operation-456", policy.LastContext.OperationId);
+        Assert.Equal(new[] { "workspace.read", "token=capability-secret" }, policy.LastContext.RequiredCapabilities.Select(capability => capability.Name).ToArray());
+        Assert.Contains(logger.VerboseMessages, message => message.Contains("Bridge tool capability metadata")
+            && message.Contains("[RequiredCapabilities=workspace.read,token=[REDACTED]]"));
+        Assert.DoesNotContain(logger.VerboseMessages, message => message.Contains("capability-secret"));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal(CapabilityBridgeTool.ToolId, auditEvent.ToolId);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("capability policy allowed", auditEvent.Metadata["policyReason"]);
+        Assert.Equal("workspace.read,token=[REDACTED]", auditEvent.Metadata["requiredCapabilities"]);
+    }
+
+    [Fact]
+    public async Task Executor_preserves_capability_metadata_when_policy_denies()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingCapabilityPolicy(ToolExecutionPolicyDecision.Deny("missing capability"));
+        var tool = new CapabilityBridgeTool(new[] { new BridgeCapability("workspace.write") });
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy);
+        var request = CreateRequest(CapabilityBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Null(tool.LastRequest);
+        Assert.Equal(new[] { "workspace.write" }, policy.LastContext!.RequiredCapabilities.Select(capability => capability.Name).ToArray());
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("PolicyDenied", auditEvent.ErrorCode);
+        Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
     }
@@ -890,6 +965,35 @@ public sealed class BridgeToolInfrastructureTests
             => throw new System.InvalidOperationException("secret=raw-exception-secret");
     }
 
+    private sealed class CapabilityBridgeTool : IBridgeTool
+    {
+        public const string ToolId = "fake.capability";
+
+        public CapabilityBridgeTool(IReadOnlyList<BridgeCapability> capabilities)
+        {
+            Descriptor = new BridgeToolDescriptor
+            {
+                Id = ToolId,
+                Name = "Fake Capability",
+                Description = "Fake capability metadata test tool.",
+                Category = "Tests",
+                Source = "Compiled",
+                Host = "SharedTests",
+                RequiredCapabilities = capabilities
+            };
+        }
+
+        public BridgeToolDescriptor Descriptor { get; }
+
+        public BridgeToolRequest? LastRequest { get; private set; }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(BridgeToolResult.Succeeded(request, "Capability tool completed."));
+        }
+    }
+
     private sealed class ApprovalRequiredBridgeTool : IBridgeTool
     {
         public const string ToolId = "fake.approvalRequired";
@@ -925,6 +1029,27 @@ public sealed class BridgeToolInfrastructureTests
 
         public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
             => Task.FromResult(ToolExecutionPolicyDecision.Deny(_reason));
+    }
+
+    private sealed class RecordingCapabilityPolicy : IToolExecutionPolicy
+    {
+        private readonly ToolExecutionPolicyDecision _decision;
+
+        public RecordingCapabilityPolicy(ToolExecutionPolicyDecision decision)
+        {
+            _decision = decision;
+        }
+
+        public int CallCount { get; private set; }
+
+        public ToolExecutionSecurityContext? LastContext { get; private set; }
+
+        public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastContext = context;
+            return Task.FromResult(_decision);
+        }
     }
 
     private sealed class RecordingToolExecutionApprovalService : IToolExecutionApprovalService

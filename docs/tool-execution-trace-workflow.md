@@ -8,7 +8,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
-- proving the minimal policy/approval/redaction/audit seams around execution
+- proving the minimal policy/capability/approval/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
 - generating a Mermaid sequence diagram from observed behavior
@@ -176,6 +176,8 @@ The harness should:
 9. print catalog descriptors, logger entries, audit envelope data when captured, result metadata, and returned matches
 
 For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use trace-only policy or approval wrappers when you need to print observed decisions without changing production defaults.
+Capability-aware traces should use a fake or test tool descriptor with `RequiredCapabilities` populated; existing compiled tools declare no required capabilities by default.
+Capability metadata is policy input only in the current bridge. It is not authentication, OAuth scope enforcement, role/user identity, UI permission prompting, sandboxing, or production authorization.
 Approval-aware traces should use a fake or test tool descriptor with `ApprovalRequirement=Required`; existing compiled tools remain approval-not-required by default.
 The current durable approval trace uses the shared-test `ApprovalRequiredBridgeTool` fixture and `RecordingToolExecutionApprovalService`.
 
@@ -223,6 +225,7 @@ For failure-path traces, capture:
 - failure message
 - exception type if one was logged
 - whether the failure was structured by the tool or caught by `BridgeToolExecutor`
+- which required capabilities were declared by the descriptor
 - whether policy allowed or denied execution
 - whether tool approval was not required, approved, or denied
 - whether an audit envelope was emitted with request id and operation id
@@ -305,11 +308,13 @@ Confirm:
 - `AddBridgeSecurityServices` registers `IToolExecutionApprovalService`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
+- `BridgeToolExecutor.ExecuteAsync` logs redacted required-capability metadata after catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
+- `ToolExecutionSecurityContext.RequiredCapabilities` exposes descriptor-declared capabilities to policy
 - `BridgeToolExecutor.ExecuteAsync` evaluates approval only when the descriptor requires it
 - approval-denied executions return structured `ApprovalDenied` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
-- audit metadata includes approval requirement, approval decision, and redacted approval reason
+- audit metadata includes redacted required capabilities, approval requirement, approval decision, and redacted approval reason
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex

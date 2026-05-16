@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,6 +72,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: false,
                     policyReason: "Unknown tool",
+                    requiredCapabilities: "None",
                     approvalRequirement: ToolExecutionApprovalRequirement.NotRequired,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Unknown tool",
@@ -79,6 +81,9 @@ namespace VsMcpBridge.Shared.Tools
                 return result;
             }
 
+            var requiredCapabilities = FormatCapabilities(tool.Descriptor.RequiredCapabilities);
+            _logger.LogTrace(
+                $"Bridge tool capability metadata [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [RequiredCapabilities={RedactValue(requiredCapabilities)}].");
             var policyDecision = await _policy.EvaluateAsync(new ToolExecutionSecurityContext(request, tool.Descriptor), cancellationToken).ConfigureAwait(false)
                 ?? ToolExecutionPolicyDecision.Deny("Policy returned no decision");
             if (!policyDecision.Allowed)
@@ -92,6 +97,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: false,
                     policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Policy denied before approval",
@@ -112,6 +118,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: false,
                     policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "Denied",
                     approvalReason: approvalDecision.Reason,
@@ -136,6 +143,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: true,
                     policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -154,6 +162,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: true,
                     policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -173,6 +182,7 @@ namespace VsMcpBridge.Shared.Tools
                     result,
                     allowed: true,
                     policyReason: policyDecision.Reason,
+                    requiredCapabilities: requiredCapabilities,
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
@@ -204,6 +214,7 @@ namespace VsMcpBridge.Shared.Tools
             BridgeToolResult result,
             bool allowed,
             string policyReason,
+            string requiredCapabilities,
             ToolExecutionApprovalRequirement approvalRequirement,
             string approvalDecision,
             string approvalReason,
@@ -226,6 +237,7 @@ namespace VsMcpBridge.Shared.Tools
                         Metadata = new Dictionary<string, string>
                         {
                             ["policyReason"] = RedactValue(policyReason),
+                            ["requiredCapabilities"] = RedactValue(requiredCapabilities),
                             ["approvalRequirement"] = approvalRequirement.ToString(),
                             ["approvalDecision"] = approvalDecision,
                             ["approvalReason"] = RedactValue(approvalReason)
@@ -238,6 +250,19 @@ namespace VsMcpBridge.Shared.Tools
                 _logger.LogWarning(
                     $"Bridge tool audit sink failed [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [Error={RedactValue(ex.Message)}].");
             }
+        }
+
+        private static string FormatCapabilities(IReadOnlyList<BridgeCapability>? capabilities)
+        {
+            if (capabilities == null || capabilities.Count == 0)
+                return "None";
+
+            var names = capabilities
+                .Where(capability => capability != null && !string.IsNullOrWhiteSpace(capability.Name))
+                .Select(capability => capability.Name)
+                .ToArray();
+
+            return names.Length == 0 ? "None" : string.Join(",", names);
         }
 
         private static string GetApprovalDecisionName(BridgeToolDescriptor descriptor, ToolExecutionApprovalDecision decision)

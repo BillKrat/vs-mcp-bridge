@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using VsMcpBridge.Shared.Tools;
 
 namespace VsMcpBridge.Shared.Security
@@ -22,5 +23,7 @@ namespace VsMcpBridge.Shared.Security
         public string OperationId => Request.OperationId;
 
         public IReadOnlyDictionary<string, object?> Arguments => Request.Arguments;
+
+        public IReadOnlyList<BridgeCapability> RequiredCapabilities => Descriptor?.RequiredCapabilities ?? Array.Empty<BridgeCapability>();
     }
 }
