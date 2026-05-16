@@ -33,6 +33,7 @@ Current migration note:
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-7-20260516.md` records the read-only pre-publish compare for Part 7 before the single-post review update.
 - `prepublish-compare-understanding-a-named-pipe-listener-20260516.md` records the read-only pre-publish compare for the named-pipe listener post before the single-post review update.
 - `prepublish-compare-understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe-20260516.md` records the read-only pre-publish compare for the stdio/named-pipe overview post before the single-post review update.
+- `prepublish-compare-wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety-20260516.md` records the read-only pre-publish compare for the WPF/VSIX threading post before the single-post review update.
 - `prepublish-compare-ready-posts-20260516.md` records the batch read-only pre-publish compare for all 14 posts marked ready for publishing review.
 - `prepublish-blocked-row-diff-20260516.md` records the read-only inspection of the six rows whose current live DB state no longer matched the preserved export baseline.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first single-post review update, before/after exports, and rendered-cache behavior for Part 1.
@@ -40,6 +41,7 @@ Current migration note:
 - `publish-review-update-vs-mcp-bridge-blog-series-part-7-20260516.md` records the Part 7 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
 - `publish-review-update-understanding-a-named-pipe-listener-20260516.md` records the named-pipe listener single-post review update, before/after exports, BlogAI reload result, token preservation, and rendered-route verification.
 - `publish-review-update-understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe-20260516.md` records the stdio/named-pipe overview single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
+- `publish-review-update-wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety-20260516.md` records the WPF/VSIX threading single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
 - `blogai-cache-reload-inspection-20260516.md` records the BlogAI/BlogEngine post-cache reload inspection after the first Part 1 DB body update and documents the safe development reload verification path.
 - `gwn-wiki-extension-link-mapping-20260516.md` records the preserved `GwnWikiExtension` plugin settings export from `dbo.be_DataStoreSettings` and explains how bracket-style tokens resolve to production-domain links.
 
