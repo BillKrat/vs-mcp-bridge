@@ -1,121 +1,141 @@
-<p>When building a WPF-based Visual Studio extension (VSIX), threading issues are one of the most common sources of UI hangs and subtle bugs.</p>
-<p>The confusion usually starts with a simple question:</p>
-<blockquote>
-<p>Why do I need to switch to the UI thread more than once, and what causes execution to leave it?</p>
-</blockquote>
-<p>This post walks through the mechanics of async behavior, how Visual Studio threading works, and how to structure pipe-driven or background workflows safely.</p>
-<hr />
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current VS MCP Bridge and BlogAI narrative as of 2026-05-16.</p>
+
+<h1>WPF VSIX Threading: Understanding UI Switching, Async Behavior, and Pipe Safety</h1>
+<h2>Why Reliable AI Tooling Depends On Reliable Host Boundaries</h2>
+
+<p>AI-assisted workflows only feel trustworthy when the host runtime is trustworthy. In a Visual Studio extension, that means WPF state, Visual Studio APIs, async work, and pipe-backed requests must respect the UI thread instead of treating it as an implementation detail.</p>
+
+<p>VS MCP Bridge is a useful example because it has several boundaries active at the same time: MCP stdio, a local named pipe, Visual Studio APIs, a WPF tool window, proposal approval state, and shared tool execution. If those boundaries blur, the AI layer may look unreliable even when the real problem is host-thread misuse.</p>
+
 <h3>The Core Rule</h3>
-<p>The UI thread is a scarce resource. Treat it that way.</p>
+
+<p>The Visual Studio UI thread is a scarce resource. Treat it that way.</p>
+
 <ul>
-<li>Do background work off the UI thread</li>
-<li>Switch to the UI thread only when required</li>
-<li>Do the smallest possible amount of work there</li>
-<li>Return to background execution naturally</li>
+  <li>Do transport, parsing, validation, and file-independent computation off the UI thread.</li>
+  <li>Switch to the UI thread only for WPF state, Visual Studio shell access, editor access, or UI-bound services.</li>
+  <li>Do the smallest possible amount of work after switching.</li>
+  <li>Return to async background execution naturally after the UI-sensitive work is complete.</li>
 </ul>
-<p>The goal is not to eliminate switching. The goal is to make switching <strong>intentional and minimal</strong>.</p>
-<hr />
+
+<p>The goal is not to eliminate switching. The goal is to make every switch intentional, narrow, and easy to explain in logs or traces.</p>
+
 <h3>Why UI Locks Happen</h3>
-<p>UI thread issues are usually caused by patterns like:</p>
+
+<p>Most VSIX threading problems come from a few familiar patterns:</p>
+
 <ul>
-<li>Doing expensive work after switching to the UI thread</li>
-<li>Blocking on async calls (<code>.Result</code>, <code>.Wait()</code>)</li>
-<li>Switching too early and staying on the UI thread too long</li>
-<li>Mixing infrastructure logic with UI updates</li>
-<li>Calling UI-thread-bound APIs from background code without isolation</li>
+  <li>blocking on async work with <code>.Result</code> or <code>.Wait()</code></li>
+  <li>doing expensive work after switching to the UI thread</li>
+  <li>switching too early and carrying too much execution on the UI thread</li>
+  <li>letting pipe or transport code manipulate WPF state directly</li>
+  <li>calling Visual Studio APIs from background code without isolating the UI-thread requirement</li>
+  <li>assuming an <code>await</code> preserves thread affinity for the rest of the method</li>
 </ul>
-<hr />
-<h3>Understanding the &ldquo;Second Switch&rdquo; Problem</h3>
-<p>A common source of confusion is code like this:</p>
+
+<p>Those problems are not cosmetic. They can make tool calls hang, approval UI state appear stale, or diagnostics point at the wrong layer.</p>
+
+<h3>Every Await Is A Boundary</h3>
+
+<p>A common source of confusion is code shaped like this:</p>
+
 <pre><code>await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
 // UI work
 
 var data = await _service.GetDataAsync(ct);
 
-// UI work again
 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
 _viewModel.Apply(data);
 </code></pre>
-<p>Why is the second switch needed?</p>
-<p>Because <code>await</code> introduces a suspension point. After the awaited operation completes, the continuation may resume on a non-UI thread.</p>
-<p>Important:</p>
-<ul>
-<li><code>SwitchToMainThreadAsync</code> guarantees UI thread only for the immediate continuation</li>
-<li>It does not &ldquo;lock&rdquo; the method to the UI thread</li>
-<li>Every <code>await</code> is a potential thread boundary</li>
-</ul>
-<p>There is no explicit &ldquo;switch back to background thread.&rdquo; The continuation simply resumes wherever the async scheduler determines.</p>
-<p>Practical rule:</p>
+
+<p>The second switch is not redundant. The first switch makes the immediate continuation UI-thread-safe. The later <code>await</code> introduces another suspension point. After that awaited operation completes, code that touches WPF or Visual Studio state should re-establish the UI-thread requirement.</p>
+
 <blockquote>
-<p>If code after an <code>await</code> must touch UI, switch again.</p>
+<p>If code after an <code>await</code> must touch UI or Visual Studio state, switch intentionally at that point.</p>
 </blockquote>
-<hr />
-<h3>Mental Model: Every Await is a Boundary</h3>
-<p>Think of your method like this:</p>
-<pre><code>await A();   // thread may change
-DoWork();
 
-await B();   // thread may change again
-DoMoreWork();
+<h3>Pipe Safety Starts With Separation</h3>
+
+<p>The named pipe is not the UI. It is a local transport boundary.</p>
+
+<p>In VS MCP Bridge, pipe code should handle message reading, serialization, dispatch, validation, cancellation, and transport diagnostics. It should not update WPF controls, mutate viewmodel state directly, or treat Visual Studio APIs as if they were background-safe.</p>
+
+<p>The safe shape is:</p>
+
+<pre><code>MCP request
+  -> stdio-safe MCP server
+  -> local named-pipe client
+  -> pipe server dispatch
+  -> host service
+  -> minimal UI-thread switch only where host state requires it
+  -> structured response
 </code></pre>
-<p>So UI-safe code must always re-establish thread affinity:</p>
-<pre><code>await SwitchToUI();
-DoUiWork();
 
-await BackgroundWork();
+<p>That separation matters because MCP stdout must stay clean. Diagnostics belong in stderr, file logs, UI logs, trace artifacts, and structured failures, not stray stdout lines that corrupt protocol traffic.</p>
 
-await SwitchToUI();
-DoUiWorkAgain();
+<h3>Visual Studio Access Belongs Behind The Host Boundary</h3>
+
+<p>Visual Studio APIs are host-specific and often UI-thread-sensitive. The MCP server should not own that knowledge. Shared tool code should not own it either.</p>
+
+<p>The VSIX host is the correct place to isolate Visual Studio access:</p>
+
+<pre><code>public async Task&lt;string&gt; GetActiveDocumentPathAsync(CancellationToken ct)
+{
+    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
+    ThreadHelper.ThrowIfNotOnUIThread();
+
+    return _vsAdapter.GetActiveDocumentPath();
+}
 </code></pre>
-<hr />
-<h3>The Boundary That Keeps Code Healthy</h3>
-<p>A clean architecture separates responsibilities:</p>
+
+<p>Everything outside that narrow section can remain async and background-friendly. That keeps host correctness visible and stops UI-thread requirements from leaking through the whole codebase.</p>
+
+<h3>Transport, UI Orchestration, And Execution Are Different Boundaries</h3>
+
+<p>One of the architecture lessons from VS MCP Bridge is that not all boundaries are the same.</p>
+
 <ul>
-<li><strong>Background layer:</strong> pipes, I/O, JSON, parsing, computation, caching</li>
-<li><strong>UI layer:</strong> WPF controls, tool windows, view models, UI-bound VS APIs</li>
+  <li><strong>Transport boundary:</strong> MCP stdio and the local named pipe move requests and responses.</li>
+  <li><strong>Host boundary:</strong> the VSIX owns Visual Studio services, DTE access, editor state, and UI-thread switching.</li>
+  <li><strong>UI orchestration boundary:</strong> the presenter and viewmodel own visible tool-window state and proposal review surfaces.</li>
+  <li><strong>Execution boundary:</strong> <code>BridgeToolExecutor</code> owns shared tool policy, approval, redaction, audit, correlation, and structured results.</li>
 </ul>
-<p>This boundary prevents thread-affinity from spreading through your codebase.</p>
-<hr />
-<h3>Do Pipes Require the UI Thread?</h3>
-<p>No.</p>
-<p>Pipes and transport layers are inherently background operations. They should handle:</p>
+
+<p>Threading bugs often happen when these responsibilities collapse into one another. A pipe handler should not become a UI controller. A presenter should not become a transport layer. A discovered tool should not bypass the executor. A model suggestion should not silently decide any of that.</p>
+
+<h3>Proposal State Makes Threading Visible</h3>
+
+<p>The proposal workflow is where threading, UI state, and AI-assisted tooling meet.</p>
+
+<p>An MCP client can submit a proposed edit. The request crosses the named-pipe boundary. The VSIX host creates proposal state and displays it in the tool window. The user approves or rejects it. Apply happens only after approval, and terminal outcome state is shown back in the UI.</p>
+
+<p>That workflow depends on host correctness. If UI state is updated from the wrong thread, or if async callbacks are reused after a proposal completes, the user sees confusing behavior. It may look like the AI tool is unreliable, but the real defect is usually lifecycle or thread ownership.</p>
+
+<p>The current architecture separates proposal lifecycle ownership through <code>IProposalManager</code>, presenter orchestration, and viewmodel state. That makes the workflow easier to reason about and test.</p>
+
+<h3>Diagnostics Expose Hidden Execution Order</h3>
+
+<p>The project improved when logs and Mermaid traces made execution order visible.</p>
+
+<p>For host correctness, the important question is not only "did this call succeed?" It is also:</p>
+
 <ul>
-<li>Reading and writing messages</li>
-<li>Serialization</li>
-<li>Routing and dispatch</li>
-<li>Validation</li>
+  <li>Which request id was active?</li>
+  <li>Which layer received the request?</li>
+  <li>Did the request cross the pipe boundary?</li>
+  <li>Did the VS service operation start?</li>
+  <li>Did the code switch to the UI thread only where required?</li>
+  <li>Did visible UI state update after the host work completed?</li>
+  <li>Did terminal proposal state clear correctly?</li>
 </ul>
-<p>They should not:</p>
-<ul>
-<li>Update WPF controls</li>
-<li>Touch view models directly</li>
-<li>Switch to the UI thread unnecessarily</li>
-</ul>
-<p>Instead, pipe code should produce data.</p>
-<hr />
-<h3>Where UI Thread Access Enters</h3>
-<p>A pipe-triggered workflow may need UI-thread-bound data such as:</p>
-<ul>
-<li>Active document information</li>
-<li>Visual Studio shell state</li>
-<li>Tool window interaction</li>
-</ul>
-<p>That is where UI switching becomes necessary&mdash;but only briefly.</p>
-<hr />
-<h3>The Real Risk</h3>
-<p>The pipe itself is not dangerous. The risk comes from patterns like:</p>
-<ul>
-<li>Switching to the UI thread and doing too much work</li>
-<li>Holding UI-thread execution across multiple awaits</li>
-<li>Blocking the UI thread while waiting on async work</li>
-<li>Letting infrastructure code manipulate UI directly</li>
-</ul>
-<blockquote>
-<p>UI locks are caused by misuse of the UI thread, not by background systems like pipes.</p>
-</blockquote>
-<hr />
+
+<p>When those answers are visible, troubleshooting becomes a boundary-localization exercise instead of a guessing game.</p>
+
 <h3>Correct Pattern: Background First, UI Last</h3>
-<p>Preferred structure:</p>
+
+<p>A safe workflow keeps background work and UI work separate:</p>
+
 <pre><code>public async Task&lt;ResponseDto&gt; HandleRequestAsync(RequestDto request, CancellationToken ct)
 {
     var parsed = Parse(request);
@@ -123,55 +143,55 @@ DoUiWorkAgain();
     return result;
 }
 </code></pre>
-<p>Then in the UI layer:</p>
+
+<p>Then the UI layer applies the result intentionally:</p>
+
 <pre><code>public async Task RefreshAsync(CancellationToken ct)
 {
-    var result = await _pipeClient.HandleRequestAsync(_request, ct);
+    var result = await _service.HandleRequestAsync(_request, ct);
 
     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
     _viewModel.Apply(result);
 }
 </code></pre>
-<p>This keeps thread responsibility clear and contained.</p>
-<hr />
-<h3>Handling Required UI Access Safely</h3>
-<p>If a Visual Studio API requires the UI thread, isolate it:</p>
-<pre><code>public async Task&lt;string&gt; GetActiveDocumentPathAsync(CancellationToken ct)
-{
-    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
-    ThreadHelper.ThrowIfNotOnUIThread();
-    return _vsAdapter.GetActiveDocumentPath();
-}
-</code></pre>
-<p>Then use it from background-safe code:</p>
-<pre><code>public async Task&lt;ResponseDto&gt; HandleRequestAsync(RequestDto request, CancellationToken ct)
-{
-    var parsed = Parse(request);
-    var docPath = await _vsService.GetActiveDocumentPathAsync(ct);
-    return await _worker.BuildResponseAsync(parsed, docPath, ct);
-}
-</code></pre>
-<p>Only the minimal section runs on the UI thread.</p>
-<hr />
+
+<p>That pattern keeps transport logic, host work, and UI presentation from becoming a tangled blocking path.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The following diagram sources make these boundary rules concrete:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> shows a prompt-box request crossing presenter and Visual Studio service boundaries with observed logs.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows how inactive VSIX/named-pipe state becomes an actionable activation diagnostic.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-aware execution as an observable boundary rather than hidden tool behavior.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows the shared tool execution baseline separate from VSIX host concerns.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
+
 <h3>Practical Checklist</h3>
+
 <ul>
-<li>Assume background execution by default</li>
-<li>Switch to UI as late as possible</li>
-<li>Do minimal work on the UI thread</li>
-<li>Never block on async</li>
-<li>Keep infrastructure separate from presentation</li>
-<li>Treat every <code>await</code> as a potential thread change</li>
+  <li>Assume background execution by default.</li>
+  <li>Switch to the UI thread as late as possible.</li>
+  <li>Keep UI-thread sections small and explicit.</li>
+  <li>Never block on async work.</li>
+  <li>Keep pipe and transport code UI-agnostic.</li>
+  <li>Keep MCP stdout clean; send diagnostics through approved channels.</li>
+  <li>Keep proposal lifecycle state owned by the proposal/presenter/viewmodel boundary.</li>
+  <li>Log request ids, operation names, success or failure, and elapsed timing at meaningful boundaries.</li>
+  <li>Use durable traces when a workflow matters enough that a future session must reconstruct it.</li>
 </ul>
-<hr />
-<h3>Final Takeaway</h3>
-<p>In a WPF VSIX:</p>
-<ul>
-<li>UI thread usage is necessary&mdash;but should be rare and controlled</li>
-<li>Async does not preserve thread affinity across awaits</li>
-<li>Pipes and background systems should remain UI-agnostic</li>
-</ul>
-<p>The correct mindset is simple:</p>
+
+<h3>Takeaway</h3>
+
+<p>Reliable AI tooling depends on reliable host/runtime boundaries.</p>
+
+<p>In a WPF VSIX, that means switching to the UI thread only when the host actually requires it, keeping pipes and stdio transport-safe, separating UI orchestration from execution, and making important workflows observable through logs and diagrams.</p>
+
 <blockquote>
-<p>Switch late, do little, and leave quickly.</p>
+<p>Switch late, do little, leave quickly, and leave evidence.</p>
 </blockquote>
-<p>That pattern keeps your extension responsive and avoids the most common threading pitfalls.</p>
+
+<p>That pattern keeps the extension responsive and makes AI-assisted workflows easier to trust, diagnose, and evolve.</p>

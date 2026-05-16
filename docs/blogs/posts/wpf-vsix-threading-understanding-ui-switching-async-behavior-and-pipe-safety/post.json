@@ -1,31 +1,37 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  "46828793-1F3D-4031-906E-87C1C31DCE7E",
-    "title":  "WPF VSIX Threading: Understanding UI Switching, Async Behavior, and Pipe Safety",
-    "description":  "When building a WPF-based Visual Studio extension (VSIX), threading issues are one of the most commo",
-    "author":  "BillKrat",
-    "slug":  "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ],
-    "sourceDatabase":  {
-                           "exportName":  "db-export-20260516",
-                           "databaseTable":  "dbo.be_Posts",
-                           "postRowId":  135,
-                           "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
-                           "postId":  "46828793-1f3d-4031-906e-87c1c31dce7e",
-                           "status":  "published",
-                           "isPublished":  true,
-                           "isDeleted":  false,
-                           "dateCreated":  "2026-03-28T11:41:00.000",
-                           "dateModified":  "2026-03-28T04:46:13.027",
-                           "exportFolder":  "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
-                           "metadataFile":  "post.database.json",
-                           "contentFile":  "content.html"
-                       }
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "46828793-1F3D-4031-906E-87C1C31DCE7E",
+  "title": "WPF VSIX Threading: Understanding UI Switching, Async Behavior, and Pipe Safety",
+  "description": "How VS MCP Bridge uses intentional UI-thread switching, async boundaries, named-pipe safety, clean stdio, proposal lifecycle ownership, and observable diagnostics to keep AI-assisted Visual Studio tooling reliable.",
+  "author": "BillKrat",
+  "slug": "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [],
+  "tags": [
+    "VSIX",
+    "WPF",
+    "Threading",
+    "Visual Studio",
+    "Async",
+    "Named Pipes",
+    "VS MCP Bridge",
+    "Diagnostics",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 135,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "46828793-1f3d-4031-906e-87c1c31dce7e",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-03-28T11:41:00.000",
+    "dateModified": "2026-03-28T04:46:13.027",
+    "exportFolder": "wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
