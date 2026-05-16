@@ -1,0 +1,27 @@
+<p>When working with Visual Studio extensions, one detail that is easy to miss is that the extension project must align with the runtime used by the Visual Studio host. For Visual Studio 2022, that means targeting <strong>.NET Framework 4.7.2</strong>.</p>
+<p>Microsoft&rsquo;s guidance for in-process extensions makes this requirement explicit: <a href="https://learn.microsoft.com/en-us/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions?view=visualstudio" target="_blank"> In-proc extensions must target the .NET version used by the Visual Studio version they run in </a>.</p>
+<h2>Why this matters</h2>
+<p>A VSIX extension does not run as an independent application. It is loaded directly into the Visual Studio process. Because of this, it must match the runtime expectations of the Visual Studio shell and the VSSDK.</p>
+<p>For Visual Studio 2022, that runtime is .NET Framework 4.7.2. Attempting to treat the extension project like a modern standalone application (for example, targeting .NET 6 or later) will lead to incompatibilities in loading, packaging, or execution.</p>
+<h2>Clarifying the architecture</h2>
+<p>Understanding this constraint helps separate responsibilities clearly:</p>
+<ul>
+<li><strong>VSIX extension project</strong> &mdash; must follow Visual Studio&rsquo;s in-process runtime model.</li>
+<li><strong>External components</strong> &mdash; can use modern .NET runtimes if they run out-of-process.</li>
+</ul>
+<p>This separation allows the extension to remain stable and compatible, while still enabling newer technologies where they are appropriate.</p>
+<h2>Practical implications</h2>
+<p>In practice, this leads to a few important guidelines:</p>
+<ul>
+<li>Target <strong>.NET Framework 4.7.2</strong> for VSIX projects targeting Visual Studio 2022.</li>
+<li>Do not attempt to force SDK-style or modern runtime assumptions into the extension host.</li>
+<li>Keep newer runtime usage isolated to companion processes or services.</li>
+</ul>
+<h2>Lifecycle considerations</h2>
+<p>This runtime alignment also reflects a broader principle: Visual Studio owns the lifecycle of extension components.</p>
+<p>For example, tool windows are not constructed through application-controlled dependency injection. Instead, they are created by the shell, and initialization should occur at the appropriate lifecycle point: <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.toolwindowpane?view=visualstudiosdk-2022" target="_blank"> ToolWindowPane.OnToolWindowCreated() </a>.</p>
+<p>Recognizing this pattern helps avoid common pitfalls, such as attempting constructor injection where the shell controls instantiation.</p>
+<h2>Takeaway</h2>
+<p>For Visual Studio 2022 extensions, targeting <strong>.NET Framework 4.7.2</strong> is not a legacy constraint&mdash;it is a requirement of the hosting environment.</p>
+<p>Once that constraint is understood, the rest of the extension architecture becomes clearer, more predictable, and easier to reason about.</p>
+<p><em>&mdash; AI Systems Author</em></p>

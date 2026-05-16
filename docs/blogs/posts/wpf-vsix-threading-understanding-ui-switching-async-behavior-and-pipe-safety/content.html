@@ -1,0 +1,177 @@
+<p>When building a WPF-based Visual Studio extension (VSIX), threading issues are one of the most common sources of UI hangs and subtle bugs.</p>
+<p>The confusion usually starts with a simple question:</p>
+<blockquote>
+<p>Why do I need to switch to the UI thread more than once, and what causes execution to leave it?</p>
+</blockquote>
+<p>This post walks through the mechanics of async behavior, how Visual Studio threading works, and how to structure pipe-driven or background workflows safely.</p>
+<hr />
+<h3>The Core Rule</h3>
+<p>The UI thread is a scarce resource. Treat it that way.</p>
+<ul>
+<li>Do background work off the UI thread</li>
+<li>Switch to the UI thread only when required</li>
+<li>Do the smallest possible amount of work there</li>
+<li>Return to background execution naturally</li>
+</ul>
+<p>The goal is not to eliminate switching. The goal is to make switching <strong>intentional and minimal</strong>.</p>
+<hr />
+<h3>Why UI Locks Happen</h3>
+<p>UI thread issues are usually caused by patterns like:</p>
+<ul>
+<li>Doing expensive work after switching to the UI thread</li>
+<li>Blocking on async calls (<code>.Result</code>, <code>.Wait()</code>)</li>
+<li>Switching too early and staying on the UI thread too long</li>
+<li>Mixing infrastructure logic with UI updates</li>
+<li>Calling UI-thread-bound APIs from background code without isolation</li>
+</ul>
+<hr />
+<h3>Understanding the &ldquo;Second Switch&rdquo; Problem</h3>
+<p>A common source of confusion is code like this:</p>
+<pre><code>await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
+// UI work
+
+var data = await _service.GetDataAsync(ct);
+
+// UI work again
+await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
+_viewModel.Apply(data);
+</code></pre>
+<p>Why is the second switch needed?</p>
+<p>Because <code>await</code> introduces a suspension point. After the awaited operation completes, the continuation may resume on a non-UI thread.</p>
+<p>Important:</p>
+<ul>
+<li><code>SwitchToMainThreadAsync</code> guarantees UI thread only for the immediate continuation</li>
+<li>It does not &ldquo;lock&rdquo; the method to the UI thread</li>
+<li>Every <code>await</code> is a potential thread boundary</li>
+</ul>
+<p>There is no explicit &ldquo;switch back to background thread.&rdquo; The continuation simply resumes wherever the async scheduler determines.</p>
+<p>Practical rule:</p>
+<blockquote>
+<p>If code after an <code>await</code> must touch UI, switch again.</p>
+</blockquote>
+<hr />
+<h3>Mental Model: Every Await is a Boundary</h3>
+<p>Think of your method like this:</p>
+<pre><code>await A();   // thread may change
+DoWork();
+
+await B();   // thread may change again
+DoMoreWork();
+</code></pre>
+<p>So UI-safe code must always re-establish thread affinity:</p>
+<pre><code>await SwitchToUI();
+DoUiWork();
+
+await BackgroundWork();
+
+await SwitchToUI();
+DoUiWorkAgain();
+</code></pre>
+<hr />
+<h3>The Boundary That Keeps Code Healthy</h3>
+<p>A clean architecture separates responsibilities:</p>
+<ul>
+<li><strong>Background layer:</strong> pipes, I/O, JSON, parsing, computation, caching</li>
+<li><strong>UI layer:</strong> WPF controls, tool windows, view models, UI-bound VS APIs</li>
+</ul>
+<p>This boundary prevents thread-affinity from spreading through your codebase.</p>
+<hr />
+<h3>Do Pipes Require the UI Thread?</h3>
+<p>No.</p>
+<p>Pipes and transport layers are inherently background operations. They should handle:</p>
+<ul>
+<li>Reading and writing messages</li>
+<li>Serialization</li>
+<li>Routing and dispatch</li>
+<li>Validation</li>
+</ul>
+<p>They should not:</p>
+<ul>
+<li>Update WPF controls</li>
+<li>Touch view models directly</li>
+<li>Switch to the UI thread unnecessarily</li>
+</ul>
+<p>Instead, pipe code should produce data.</p>
+<hr />
+<h3>Where UI Thread Access Enters</h3>
+<p>A pipe-triggered workflow may need UI-thread-bound data such as:</p>
+<ul>
+<li>Active document information</li>
+<li>Visual Studio shell state</li>
+<li>Tool window interaction</li>
+</ul>
+<p>That is where UI switching becomes necessary&mdash;but only briefly.</p>
+<hr />
+<h3>The Real Risk</h3>
+<p>The pipe itself is not dangerous. The risk comes from patterns like:</p>
+<ul>
+<li>Switching to the UI thread and doing too much work</li>
+<li>Holding UI-thread execution across multiple awaits</li>
+<li>Blocking the UI thread while waiting on async work</li>
+<li>Letting infrastructure code manipulate UI directly</li>
+</ul>
+<blockquote>
+<p>UI locks are caused by misuse of the UI thread, not by background systems like pipes.</p>
+</blockquote>
+<hr />
+<h3>Correct Pattern: Background First, UI Last</h3>
+<p>Preferred structure:</p>
+<pre><code>public async Task&lt;ResponseDto&gt; HandleRequestAsync(RequestDto request, CancellationToken ct)
+{
+    var parsed = Parse(request);
+    var result = await _worker.ProcessAsync(parsed, ct);
+    return result;
+}
+</code></pre>
+<p>Then in the UI layer:</p>
+<pre><code>public async Task RefreshAsync(CancellationToken ct)
+{
+    var result = await _pipeClient.HandleRequestAsync(_request, ct);
+
+    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
+    _viewModel.Apply(result);
+}
+</code></pre>
+<p>This keeps thread responsibility clear and contained.</p>
+<hr />
+<h3>Handling Required UI Access Safely</h3>
+<p>If a Visual Studio API requires the UI thread, isolate it:</p>
+<pre><code>public async Task&lt;string&gt; GetActiveDocumentPathAsync(CancellationToken ct)
+{
+    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(ct);
+    ThreadHelper.ThrowIfNotOnUIThread();
+    return _vsAdapter.GetActiveDocumentPath();
+}
+</code></pre>
+<p>Then use it from background-safe code:</p>
+<pre><code>public async Task&lt;ResponseDto&gt; HandleRequestAsync(RequestDto request, CancellationToken ct)
+{
+    var parsed = Parse(request);
+    var docPath = await _vsService.GetActiveDocumentPathAsync(ct);
+    return await _worker.BuildResponseAsync(parsed, docPath, ct);
+}
+</code></pre>
+<p>Only the minimal section runs on the UI thread.</p>
+<hr />
+<h3>Practical Checklist</h3>
+<ul>
+<li>Assume background execution by default</li>
+<li>Switch to UI as late as possible</li>
+<li>Do minimal work on the UI thread</li>
+<li>Never block on async</li>
+<li>Keep infrastructure separate from presentation</li>
+<li>Treat every <code>await</code> as a potential thread change</li>
+</ul>
+<hr />
+<h3>Final Takeaway</h3>
+<p>In a WPF VSIX:</p>
+<ul>
+<li>UI thread usage is necessary&mdash;but should be rare and controlled</li>
+<li>Async does not preserve thread affinity across awaits</li>
+<li>Pipes and background systems should remain UI-agnostic</li>
+</ul>
+<p>The correct mindset is simple:</p>
+<blockquote>
+<p>Switch late, do little, and leave quickly.</p>
+</blockquote>
+<p>That pattern keeps your extension responsive and avoids the most common threading pitfalls.</p>

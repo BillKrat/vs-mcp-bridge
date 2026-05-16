@@ -1,0 +1,116 @@
+<p id="hdr1"><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/feature/approval-apply-ui-slice/docs/ARCHITECTURE.md" target="_blank">/docs/ARCHITECTURE.md </a>(or relevant doc)<br /> <strong>Status:</strong> Derived / Educational</p>
+<p>When integrating systems inside Visual Studio, two communication patterns often appear early in the design:</p>
+<ol>
+<li>A local MCP server running over <strong>stdio</strong></li>
+<li>Local-only communication over a <strong>named pipe</strong></li>
+</ol>
+<p>At first glance, these can seem interchangeable. In practice, they solve different problems and are often used together in a layered architecture.</p>
+<h2>Local MCP Server Over stdio</h2>
+<p>A process running &ldquo;over stdio&rdquo; communicates through its standard input and output streams. In .NET, this is typically done by launching a child process and redirecting its input and output streams.</p>
+<p>Microsoft documents this capability through <code>System.Diagnostics.Process</code>, where standard input and output can be redirected and used programmatically: <a href="https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.standardinput?view=net-10.0" target="_blank"> Process.StandardInput documentation </a>.</p>
+<p>This allows a host process to send requests and receive responses without opening network ports or configuring external communication channels.</p>
+<h3>Conceptual model</h3>
+<pre><code>[ Host / Bridge Process ]  &lt;-- stdin/stdout --&gt;  [ MCP Server Process ]</code></pre>
+<p>In this model:</p>
+<ul>
+<li>The host launches the MCP server as a child process.</li>
+<li>Requests are written to the server&rsquo;s standard input.</li>
+<li>Responses are read from standard output.</li>
+</ul>
+<p>This approach is simple and predictable. It works well when one process owns the lifecycle of another and needs a direct communication channel.</p>
+<h3>Example</h3>
+<pre><code>var startInfo = new ProcessStartInfo
+{
+    FileName = "VsMcpBridge.McpServer.exe",
+    RedirectStandardInput = true,
+    RedirectStandardOutput = true,
+    UseShellExecute = false
+};
+
+using var process = Process.Start(startInfo);
+using var writer = process.StandardInput;
+using var reader = process.StandardOutput;
+
+await writer.WriteLineAsync("{\"method\":\"ping\"}");
+var response = await reader.ReadLineAsync();</code></pre>
+<p>On the server side, communication is equally direct:</p>
+<pre><code>while (true)
+{
+    var line = Console.ReadLine();
+    if (line == null)
+    {
+        break;
+    }
+
+    Console.WriteLine("{\"result\":\"pong\"}");
+}</code></pre>
+<p>The key idea is that <strong>stdio is tightly coupled to a parent/child process relationship</strong>.</p>
+<h2>Local-Only Communication Over a Named Pipe</h2>
+<p>A named pipe is an operating system&ndash;managed communication channel designed for interprocess communication. In .NET, this is implemented using <code>NamedPipeServerStream</code> and <code>NamedPipeClientStream</code>.</p>
+<p>Microsoft describes named pipes as a mechanism for communication between processes, where a server can support one or more clients: <a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.pipes.namedpipeserverstream?view=net-10.0" target="_blank"> NamedPipeServerStream documentation </a>.</p>
+<p>Unlike stdio, named pipes are not tied to a parent/child relationship. Any authorized process on the same machine can connect to the pipe.</p>
+<h3>Conceptual model</h3>
+<pre><code>[ Visual Studio Extension ]  &lt;-- named pipe --&gt;  [ Local Bridge / Service ]</code></pre>
+<p>In this model:</p>
+<ul>
+<li>The server creates a named pipe.</li>
+<li>Clients connect to that pipe by name.</li>
+<li>Both sides exchange messages over a bidirectional channel.</li>
+</ul>
+<h3>Server example</h3>
+<pre><code>using var server = new NamedPipeServerStream("VsMcpBridge");
+
+server.WaitForConnection();
+
+using var reader = new StreamReader(server);
+using var writer = new StreamWriter(server) { AutoFlush = true };
+
+var request = reader.ReadLine();
+writer.WriteLine("ack");</code></pre>
+<h3>Client example</h3>
+<pre><code>using var client = new NamedPipeClientStream(".", "VsMcpBridge");
+
+client.Connect();
+
+using var reader = new StreamReader(client);
+using var writer = new StreamWriter(client) { AutoFlush = true };
+
+writer.WriteLine("hello");
+var response = reader.ReadLine();</code></pre>
+<p>By default, the pipe direction supports bidirectional communication, making it well-suited for request/response interactions.</p>
+<h2>Key Differences</h2>
+<ul>
+<li><strong>stdio</strong>: Direct communication between a parent process and the child process it launches.</li>
+<li><strong>named pipe</strong>: A reusable, OS-managed channel for communication between local processes.</li>
+</ul>
+<p>Each has a clear role depending on how processes relate to each other.</p>
+<h2>Combining Both Patterns</h2>
+<p>These two approaches are often used together in a layered design:</p>
+<pre><code>[ Visual Studio Extension ]
+          |
+     named pipe
+          |
+   [ Local Bridge ]
+          |
+        stdio
+          |
+   [ MCP Server Process ]</code></pre>
+<p>In this structure:</p>
+<ul>
+<li>The extension communicates locally with a bridge using a named pipe.</li>
+<li>The bridge manages the MCP server process using stdio.</li>
+</ul>
+<p>This separation keeps responsibilities clear:</p>
+<ul>
+<li>The extension focuses on integration with Visual Studio.</li>
+<li>The bridge handles process management and protocol translation.</li>
+<li>The MCP server focuses on domain-specific behavior.</li>
+</ul>
+<h2>Takeaway</h2>
+<p>The distinction can be summarized simply:</p>
+<ul>
+<li><strong>stdio</strong> is ideal for controlling and communicating with a launched child process.</li>
+<li><strong>named pipes</strong> are ideal for structured communication between local processes.</li>
+</ul>
+<p>Understanding how and when to use each makes system design more deliberate and significantly easier to reason about.</p>
+<p><em>&mdash; AI Systems Author</em></p>

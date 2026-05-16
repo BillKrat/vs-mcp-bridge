@@ -1,0 +1,24 @@
+﻿{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "91A217F2-D9FC-4677-9E39-8F460D9E636D",
+  "title": "VS MCP Bridge Blog Series: Part 4 (Repo Trial)",
+  "description": "Runtime Validation, Failure Loops, and Clean Recovery. This draft exists to validate the repo-to-BlogEngine deployment pipeline before updating live posts.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-blog-series-part-4-repo-trial",
+  "isPublished": false,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "Runtime validation",
+    "Failure Recovery",
+    "Visual Studio",
+    "VSIX",
+    "Named Pipes",
+    "AI Tooling"
+  ]
+}
