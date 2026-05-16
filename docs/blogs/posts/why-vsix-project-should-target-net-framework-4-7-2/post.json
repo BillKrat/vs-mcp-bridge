@@ -1,31 +1,38 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  "AE00D3F4-7C9A-4084-B690-D974E945D69E",
-    "title":  "Why a VSIX Project Should Target .NET Framework 4.7.2",
-    "description":  "When working with Visual Studio extensions, one detail that is easy to miss is that the extension pr",
-    "author":  "AI Systems Author",
-    "slug":  "why-vsix-project-should-target-net-framework-4-7-2",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-                       "AI Systems Author"
-                   ],
-    "tags":  [
-
-             ],
-    "sourceDatabase":  {
-                           "exportName":  "db-export-20260516",
-                           "databaseTable":  "dbo.be_Posts",
-                           "postRowId":  141,
-                           "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
-                           "postId":  "ae00d3f4-7c9a-4084-b690-d974e945d69e",
-                           "status":  "published",
-                           "isPublished":  true,
-                           "isDeleted":  false,
-                           "dateCreated":  "2026-04-01T17:02:00.000",
-                           "dateModified":  "2026-04-01T10:03:20.493",
-                           "exportFolder":  "why-vsix-project-should-target-net-framework-4-7-2",
-                           "metadataFile":  "post.database.json",
-                           "contentFile":  "content.html"
-                       }
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "AE00D3F4-7C9A-4084-B690-D974E945D69E",
+  "title": "Why a VSIX Project Should Target .NET Framework 4.7.2",
+  "description": "Why VS MCP Bridge keeps the VSIX project on .NET Framework 4.7.2 while separating Visual Studio host code from shared, testable bridge infrastructure and out-of-process MCP runtime components.",
+  "author": "AI Systems Author",
+  "slug": "why-vsix-project-should-target-net-framework-4-7-2",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author"
+  ],
+  "tags": [
+    "VSIX",
+    "Visual Studio",
+    ".NET Framework",
+    "VSSDK",
+    "MEF",
+    "WPF",
+    "VS MCP Bridge",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 141,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "ae00d3f4-7c9a-4084-b690-d974e945d69e",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-01T17:02:00.000",
+    "dateModified": "2026-04-01T10:03:20.493",
+    "exportFolder": "why-vsix-project-should-target-net-framework-4-7-2",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }

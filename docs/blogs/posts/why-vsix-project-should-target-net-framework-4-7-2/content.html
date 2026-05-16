@@ -1,27 +1,131 @@
-<p>When working with Visual Studio extensions, one detail that is easy to miss is that the extension project must align with the runtime used by the Visual Studio host. For Visual Studio 2022, that means targeting <strong>.NET Framework 4.7.2</strong>.</p>
-<p>Microsoft&rsquo;s guidance for in-process extensions makes this requirement explicit: <a href="https://learn.microsoft.com/en-us/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions?view=visualstudio" target="_blank"> In-proc extensions must target the .NET version used by the Visual Studio version they run in </a>.</p>
-<h2>Why this matters</h2>
-<p>A VSIX extension does not run as an independent application. It is loaded directly into the Visual Studio process. Because of this, it must match the runtime expectations of the Visual Studio shell and the VSSDK.</p>
-<p>For Visual Studio 2022, that runtime is .NET Framework 4.7.2. Attempting to treat the extension project like a modern standalone application (for example, targeting .NET 6 or later) will lead to incompatibilities in loading, packaging, or execution.</p>
-<h2>Clarifying the architecture</h2>
-<p>Understanding this constraint helps separate responsibilities clearly:</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current VS MCP Bridge and BlogAI narrative as of 2026-05-16.</p>
+
+<h1>Why A VSIX Project Should Target .NET Framework 4.7.2</h1>
+<h2>Host Constraints, Shared Code, And Stable Bridge Boundaries</h2>
+
+<p>When building a Visual Studio extension, one detail is easy to underestimate: an in-process VSIX is loaded by the Visual Studio shell. It is not a standalone desktop app, and it should not be treated like one.</p>
+
+<p>In VS MCP Bridge, that is why <code>VsMcpBridge.Vsix</code> targets <strong>.NET Framework 4.7.2</strong>. The VSIX must align with the Visual Studio SDK and in-process extension hosting model, while the rest of the solution can use other target frameworks where they make sense.</p>
+
+<p>Microsoft's in-process extension guidance summarizes the rule this way: in-process extensions must target the .NET version used by the Visual Studio version they run in. The relevant guidance is here: <a href="https://learn.microsoft.com/en-us/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions?view=visualstudio" target="_blank">VisualStudio.Extensibility in-process extensions</a>.</p>
+
+<h3>The VSIX Runs Inside Visual Studio</h3>
+
+<p>The VSIX host is different from the standalone app and different from the local MCP server.</p>
+
+<p>The VSIX is loaded into the Visual Studio process. It uses the Visual Studio SDK, shell services, tool window infrastructure, MEF composition expectations, DTE/editor APIs, package loading behavior, and WPF UI hosted by Visual Studio.</p>
+
+<p>That hosting model is the reason the extension project follows Visual Studio's in-process runtime constraints. Trying to force the VSIX itself to behave like a modern out-of-process .NET app would make loading, packaging, dependency resolution, and tool-window behavior harder to reason about.</p>
+
+<h3>The Current Solution Uses Targeting Deliberately</h3>
+
+<p>The target framework split is part of the architecture:</p>
+
 <ul>
-<li><strong>VSIX extension project</strong> &mdash; must follow Visual Studio&rsquo;s in-process runtime model.</li>
-<li><strong>External components</strong> &mdash; can use modern .NET runtimes if they run out-of-process.</li>
+  <li><code>VsMcpBridge.Vsix</code> targets .NET Framework 4.7.2 because it is the Visual Studio in-process extension host.</li>
+  <li><code>VsMcpBridge.Shared</code> targets <code>netstandard2.0</code> so shared contracts, tools, security seams, diagnostics, and orchestration logic can be reused across hosts.</li>
+  <li><code>VsMcpBridge.Shared.Wpf</code> multi-targets so the reusable WPF surface can support both VSIX and standalone app hosts.</li>
+  <li><code>VsMcpBridge.App</code> can target a modern Windows desktop runtime because it is not loaded into Visual Studio.</li>
+  <li><code>VsMcpBridge.McpServer</code> can target a modern runtime because it runs out of process and communicates over stdio plus the local named pipe.</li>
 </ul>
-<p>This separation allows the extension to remain stable and compatible, while still enabling newer technologies where they are appropriate.</p>
-<h2>Practical implications</h2>
-<p>In practice, this leads to a few important guidelines:</p>
+
+<p>This is not accidental legacy layering. It is how the bridge keeps Visual Studio-specific constraints from infecting every project.</p>
+
+<h3>Host Code And Shared Logic Stay Separate</h3>
+
+<p>The VSIX owns Visual Studio-specific behavior:</p>
+
 <ul>
-<li>Target <strong>.NET Framework 4.7.2</strong> for VSIX projects targeting Visual Studio 2022.</li>
-<li>Do not attempt to force SDK-style or modern runtime assumptions into the extension host.</li>
-<li>Keep newer runtime usage isolated to companion processes or services.</li>
+  <li>package initialization</li>
+  <li>tool window creation</li>
+  <li>Visual Studio service access</li>
+  <li>DTE and editor interactions</li>
+  <li>UI-thread switching</li>
+  <li>VSIX-host logging and diagnostics</li>
 </ul>
-<h2>Lifecycle considerations</h2>
-<p>This runtime alignment also reflects a broader principle: Visual Studio owns the lifecycle of extension components.</p>
-<p>For example, tool windows are not constructed through application-controlled dependency injection. Instead, they are created by the shell, and initialization should occur at the appropriate lifecycle point: <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.toolwindowpane?view=visualstudiosdk-2022" target="_blank"> ToolWindowPane.OnToolWindowCreated() </a>.</p>
-<p>Recognizing this pattern helps avoid common pitfalls, such as attempting constructor injection where the shell controls instantiation.</p>
-<h2>Takeaway</h2>
-<p>For Visual Studio 2022 extensions, targeting <strong>.NET Framework 4.7.2</strong> is not a legacy constraint&mdash;it is a requirement of the hosting environment.</p>
-<p>Once that constraint is understood, the rest of the extension architecture becomes clearer, more predictable, and easier to reason about.</p>
-<p><em>&mdash; AI Systems Author</em></p>
+
+<p>Shared infrastructure owns reusable bridge behavior:</p>
+
+<ul>
+  <li>pipe message contracts and dispatch abstractions</li>
+  <li>presenter/viewmodel orchestration</li>
+  <li>proposal lifecycle contracts</li>
+  <li>bridge tool descriptors, requests, results, catalog, and executor</li>
+  <li>policy, approval, redaction, audit, capability, and secret-reference seams</li>
+  <li>diagnostic patterns and correlation metadata</li>
+</ul>
+
+<p>That separation lets the shared layer be tested without loading Visual Studio. It also lets the standalone app reuse the same core presentation and bridge concepts without pretending to be a VSIX.</p>
+
+<h3>Tool Windows Follow Visual Studio Lifecycle Rules</h3>
+
+<p>Visual Studio owns the lifecycle of extension components. Tool windows are created by the shell, not by normal application startup code.</p>
+
+<p>That matters for dependency wiring and initialization. A VSIX should not assume that every object can be created with application-style constructor injection. Tool-window initialization belongs at the lifecycle points Visual Studio provides, including <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.toolwindowpane?view=visualstudiosdk-2022" target="_blank">ToolWindowPane.OnToolWindowCreated()</a> where appropriate.</p>
+
+<p>This lifecycle constraint connects directly to the threading post: the VSIX must respect both Visual Studio object creation and Visual Studio UI-thread requirements.</p>
+
+<h3>Stable Pipe Integration Depends On Host Isolation</h3>
+
+<p>The local MCP server does not run inside Visual Studio. It speaks MCP over stdio to the AI client and communicates with the host through the local named pipe.</p>
+
+<p>That boundary is important. The MCP server should not need to reference Visual Studio SDK assemblies, know about tool-window lifecycle rules, or switch to the Visual Studio UI thread. It should remain transport-focused and protocol-safe.</p>
+
+<p>The VSIX side can then own the named-pipe server and host behavior. When a pipe-backed tool needs active document state, selected text, solution projects, error list data, or proposal UI behavior, the request crosses into the VSIX host, where Visual Studio-specific services are available.</p>
+
+<p>This keeps the out-of-process server stable while letting the in-process extension follow Visual Studio's runtime rules.</p>
+
+<h3>Testing Benefits From The Split</h3>
+
+<p>Because shared infrastructure is not trapped inside the VSIX target framework, much of the bridge can be tested directly:</p>
+
+<ul>
+  <li>shared tool execution tests can validate catalog, executor, policy, approval, audit, redaction, and correlation behavior</li>
+  <li>proposal lifecycle tests can validate state transitions without starting Visual Studio</li>
+  <li>shared WPF and presenter behavior can be exercised outside the VSIX host where appropriate</li>
+  <li>VSIX-specific tests can focus on composition and host-specific service behavior</li>
+</ul>
+
+<p>That is one reason the project can evolve safely. The VSIX target framework is a host constraint, not a reason to put all behavior into untestable host code.</p>
+
+<h3>Transport And Tool Execution Should Not Depend On VSIX Runtime Behavior</h3>
+
+<p>The bridge architecture intentionally prevents shared transport and tool execution concepts from depending on VSIX-only runtime behavior.</p>
+
+<p>For example, <code>BridgeToolExecutor</code> owns shared tool policy, approval, redaction, audit, correlation, and structured results. It should not need to know whether the caller is the VSIX, the standalone app, or a test harness. Likewise, tool descriptors and request/result models should not depend on Visual Studio shell types.</p>
+
+<p>When a tool genuinely needs Visual Studio, that should be represented as host-provided behavior behind the proper boundary. The shared contract should remain portable and observable.</p>
+
+<h3>What This Does Not Claim</h3>
+
+<p>This post is not a promise that the VSIX will move to a different framework. It is also not a claim that every project in the solution must target .NET Framework.</p>
+
+<p>The practical rule is narrower:</p>
+
+<ul>
+  <li>respect the runtime constraints of the Visual Studio in-process extension host</li>
+  <li>keep Visual Studio-specific code in the VSIX host</li>
+  <li>keep reusable bridge contracts and logic outside the VSIX where possible</li>
+  <li>let out-of-process components use target frameworks appropriate to their own runtime</li>
+</ul>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The following diagram sources help explain the host/runtime split:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-host-ping-trace-20260508.mmd" target="_blank">vsix-host-ping-trace-20260508.mmd</a> shows the VSIX-host prompt path through the tool window and presenter.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> shows Visual Studio selected-text access staying behind the VSIX host boundary.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows why VSIX/tool-window activation is part of the live named-pipe path.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
+
+<h3>Takeaway</h3>
+
+<p>Targeting .NET Framework 4.7.2 in the VSIX project is not just an old default. It is part of respecting the Visual Studio in-process hosting environment.</p>
+
+<p>The maintainable design is to keep the VSIX host compatible with Visual Studio, keep shared logic portable and testable, keep the MCP server out of process, and let each boundary use the runtime model that fits its role.</p>
+
+<p>That is what makes the bridge easier to build, validate, troubleshoot, and eventually evolve without turning Visual Studio hosting constraints into system-wide coupling.</p>
