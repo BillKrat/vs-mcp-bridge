@@ -12,6 +12,7 @@ AI session entry point:
 - for the repeatable compiled bridge tool execution trace workflow and its durable artifacts, use [docs/tool-execution-trace-workflow.md](docs/tool-execution-trace-workflow.md)
 - for the security-aware compiled bridge tool trace artifacts, use [artifacts/logs/tool-security-trace-20260509.log](artifacts/logs/tool-security-trace-20260509.log) and [docs/diagrams/tool-security-trace-20260509.mmd](docs/diagrams/tool-security-trace-20260509.mmd)
 - for the MEF discovery boundary trace artifacts, use [artifacts/logs/mef-discovery-trace-20260516.log](artifacts/logs/mef-discovery-trace-20260516.log) and [docs/diagrams/mef-discovery-trace-20260516.mmd](docs/diagrams/mef-discovery-trace-20260516.mmd)
+- for the approval-aware tool execution boundary trace artifacts, use [artifacts/logs/tool-approval-trace-20260516.log](artifacts/logs/tool-approval-trace-20260516.log) and [docs/diagrams/tool-approval-trace-20260516.mmd](docs/diagrams/tool-approval-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
 

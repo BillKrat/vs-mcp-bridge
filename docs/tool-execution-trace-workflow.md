@@ -108,6 +108,33 @@ MEF discovery reference artifacts:
 
 This trace covers MEF discovery start, configured directories, missing-directory behavior, invalid assembly load behavior, discovery completion, catalog composition, and the preserved executor boundary. It deliberately uses the existing shared-test `MefFakeBridgeTool` export and does not add a production tool.
 
+## Observed Approval-Aware Boundary Run
+
+After approval-aware execution was added to `BridgeToolExecutor`, the approval boundary was documented with the existing shared-test fake approval-required tool path:
+
+- run name: `tool-approval-trace-20260516`
+- branch: `main`
+- commit: `1d2cfc7`
+- catalog: `CompiledBridgeToolCatalog`
+- executor: `BridgeToolExecutor`
+- policy: `AllowToolExecutionPolicy`
+- approval service: shared-test `RecordingToolExecutionApprovalService`
+- redactor: `BridgeSecurityRedactor`
+- audit sink: `InMemoryAuditSink`
+- test tool id: `fake.approvalRequired`
+- approved request id: `tool-approval-trace-20260516-allow-req-001`
+- denied request id: `tool-approval-trace-20260516-deny-req-001`
+
+Approval-aware reference artifacts:
+
+- sequence diagram: [`docs/diagrams/tool-approval-trace-20260516.mmd`](diagrams/tool-approval-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/tool-approval-trace-20260516.log`](../artifacts/logs/tool-approval-trace-20260516.log)
+- run metadata: [`artifacts/logs/tool-approval-trace-20260516.metadata.json`](../artifacts/logs/tool-approval-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-tool-approval-validation.md`](session-handoffs/2026-05-16-tool-approval-validation.md)
+
+This trace covers approved and denied approval decisions without adding a runtime user-facing tool, UI approval prompt, proposal approval redesign, or MCP transport change.
+It proves approval decisions are visible through executor logs, structured results, audit metadata, redaction, and request/operation correlation.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`
@@ -150,6 +177,7 @@ The harness should:
 
 For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use trace-only policy or approval wrappers when you need to print observed decisions without changing production defaults.
 Approval-aware traces should use a fake or test tool descriptor with `ApprovalRequirement=Required`; existing compiled tools remain approval-not-required by default.
+The current durable approval trace uses the shared-test `ApprovalRequiredBridgeTool` fixture and `RecordingToolExecutionApprovalService`.
 
 ### 2. Use deterministic request input
 

@@ -1,0 +1,68 @@
+{
+  "runName": "tool-approval-trace-20260516",
+  "artifactCreatedUtc": "2026-05-16T00:00:00Z",
+  "observedRunLabelDate": "2026-05-16",
+  "repositoryRoot": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "commit": "1d2cfc7",
+  "toolId": "fake.approvalRequired",
+  "toolName": "Fake Approval Required",
+  "toolAvailability": "Shared-test fake tool only; not a runtime user-facing tool.",
+  "catalog": "CompiledBridgeToolCatalog",
+  "executor": "BridgeToolExecutor",
+  "policy": "AllowToolExecutionPolicy",
+  "approvalService": "RecordingToolExecutionApprovalService",
+  "redactor": "BridgeSecurityRedactor",
+  "auditSink": "InMemoryAuditSink",
+  "requestIds": {
+    "approved": "tool-approval-trace-20260516-allow-req-001",
+    "denied": "tool-approval-trace-20260516-deny-req-001"
+  },
+  "operationIds": {
+    "approved": "tool-approval-trace-20260516-allow-op-001",
+    "denied": "tool-approval-trace-20260516-deny-op-001"
+  },
+  "inputSummary": {
+    "approvalRequirement": "Required",
+    "arguments": {
+      "input": "hello"
+    },
+    "approvalReasonSecretSentinelStoredInArtifact": false
+  },
+  "observedApprovalBoundaries": {
+    "policyEvaluation": "Observed before approval evaluation for both executions.",
+    "approvalRequirementCheck": "Descriptor ApprovalRequirement=Required caused BridgeToolExecutor to invoke IToolExecutionApprovalService.",
+    "approvedPath": "Approval decision Approved allowed ApprovalRequiredBridgeTool.ExecuteAsync to run.",
+    "deniedPath": "Approval decision Denied returned structured ApprovalDenied and did not invoke the tool.",
+    "auditEnvelopeEmission": "InMemoryAuditSink captured one BridgeAuditEnvelope for each terminal outcome.",
+    "redactionBoundary": "Approval reason metadata and warning logs were redacted through ISecurityRedactor.",
+    "correlationPreservation": "RequestId and OperationId matched across policy, approval, logs, audit, and result metadata."
+  },
+  "observedResults": {
+    "approved": {
+      "success": true,
+      "errorCode": "",
+      "approvalDecision": "Approved",
+      "toolExecutionCount": 1,
+      "auditEnvelopeCount": 1,
+      "auditAllowed": true
+    },
+    "denied": {
+      "success": false,
+      "errorCode": "ApprovalDenied",
+      "approvalDecision": "Denied",
+      "toolExecutionCount": 0,
+      "auditEnvelopeCount": 1,
+      "auditAllowed": false
+    }
+  },
+  "redactionVerification": {
+    "rawSecretValuesAbsentFromDurableArtifacts": true,
+    "expectedReplacement": "[REDACTED]",
+    "validatedFields": [
+      "approvalReason"
+    ]
+  },
+  "captureMethod": "Durable transcript reconstructed from the shared-test fake approval-required path in BridgeToolInfrastructureTests: Executor_invokes_approval_service_for_approval_required_tool and Executor_denied_approval_prevents_tool_execution_and_emits_audit_event.",
+  "validationScope": "Shared bridge tool execution boundary only. No runtime tool was added, no UI prompt was added, no proposal approval redesign was performed, and MCP transport was not exercised."
+}

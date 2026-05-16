@@ -68,14 +68,17 @@ That handoff captures the completed MEF discovery-only trace validation. The rel
 - `artifacts/logs/tool-regex-search-trace-20260509.log`
 - `artifacts/logs/tool-security-trace-20260509.log`
 - `artifacts/logs/mef-discovery-trace-20260516.log`
+- `artifacts/logs/tool-approval-trace-20260516.log`
 - `docs/diagrams/tool-regex-search-trace-20260509.mmd`
 - `docs/diagrams/tool-security-trace-20260509.mmd`
 - `docs/diagrams/mef-discovery-trace-20260516.mmd`
+- `docs/diagrams/tool-approval-trace-20260516.mmd`
 
 Use those artifacts when reconstructing or triaging the compiled bridge tool execution path before relying on chat history. For VSIX selected-text work, use `docs/session-handoffs/2026-05-09-selected-text-validation.md`.
 
 For the security-aware compiled tool boundary, also read `docs/session-handoffs/2026-05-09-tool-security-validation.md`.
 For the MEF discovery-only boundary, also read `docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`.
+For the approval-aware tool execution boundary, also read `docs/session-handoffs/2026-05-16-tool-approval-validation.md`.
 
 ## Current Working Guidance
 
@@ -89,7 +92,7 @@ Keep these repo-specific themes in mind:
 - keep MCP stdout clean and route diagnostics through approved channels
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
-- preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices
+- preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, approval evaluation when required, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices
 - treat MEF bridge tool support as a discovery-only seam: compiled tools remain the default path, directory discovery must be explicitly configured, and all discovered tools still execute through `BridgeToolExecutor`
 - treat `Bm25TextSearchTool` as a compiled, request-scoped, in-memory ranking tool only; it is not a persistent index, crawler, external search integration, or directory-loaded plugin model
 

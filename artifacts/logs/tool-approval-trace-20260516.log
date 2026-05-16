@@ -1,0 +1,38 @@
+Observed branch: main
+Observed commit: 1d2cfc7
+Capture method: shared-test approval-required fake tool path in BridgeToolInfrastructureTests, reconstructed into a durable trace transcript from the executor logs, audit envelopes, and assertions.
+Catalog descriptor: Id=fake.approvalRequired; Name=Fake Approval Required; Category=Tests; Source=Compiled; Host=SharedTests; ApprovalRequirement=Required
+Resolved security seams: Policy=AllowToolExecutionPolicy; ApprovalService=RecordingToolExecutionApprovalService; Redactor=BridgeSecurityRedactor; AuditSink=InMemoryAuditSink
+
+=== Approval allowed path ===
+Request: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-allow-req-001; OperationId=tool-approval-trace-20260516-allow-op-001; Arguments={"input":"hello"}
+[Information] [VsMcpBridge] Bridge tool execution started [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-allow-req-001] [OperationId=tool-approval-trace-20260516-allow-op-001].
+[Trace] [VsMcpBridge] Bridge tool request payload [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-allow-req-001] [OperationId=tool-approval-trace-20260516-allow-op-001] [Arguments={"input":"hello"}].
+Catalog lookup: TryGetTool("fake.approvalRequired") -> ApprovalRequiredBridgeTool
+Policy evaluation: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-allow-req-001; OperationId=tool-approval-trace-20260516-allow-op-001; DescriptorId=fake.approvalRequired; Decision=Allow; Reason=Allowed
+Approval requirement: Required
+[Information] [VsMcpBridge] Bridge tool execution approval required [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-allow-req-001] [OperationId=tool-approval-trace-20260516-allow-op-001].
+Approval evaluation: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-allow-req-001; OperationId=tool-approval-trace-20260516-allow-op-001; Decision=Approved; Reason=operator approved token=[REDACTED]
+Tool execution: ApprovalRequiredBridgeTool.ExecuteAsync invoked once with the original BridgeToolRequest.
+[Information] [VsMcpBridge] Bridge tool execution completed [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-allow-req-001] [OperationId=tool-approval-trace-20260516-allow-op-001] [Success=True] [ElapsedMs=1].
+[Trace] [VsMcpBridge] Bridge tool result payload [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-allow-req-001] [OperationId=tool-approval-trace-20260516-allow-op-001] [Data={ }].
+Audit envelope: EventName=BridgeToolExecution; ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-allow-req-001; OperationId=tool-approval-trace-20260516-allow-op-001; Allowed=True; Success=True; ErrorCode=; Metadata.policyReason=Allowed; Metadata.approvalRequirement=Required; Metadata.approvalDecision=Approved; Metadata.approvalReason=operator approved token=[REDACTED]
+BridgeToolResult: Success=True; ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-allow-req-001; OperationId=tool-approval-trace-20260516-allow-op-001; ErrorCode=; Message=Approval-required tool completed.
+
+=== Approval denied path ===
+Request: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-deny-req-001; OperationId=tool-approval-trace-20260516-deny-op-001; Arguments={"input":"hello"}
+[Information] [VsMcpBridge] Bridge tool execution started [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-deny-req-001] [OperationId=tool-approval-trace-20260516-deny-op-001].
+[Trace] [VsMcpBridge] Bridge tool request payload [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-deny-req-001] [OperationId=tool-approval-trace-20260516-deny-op-001] [Arguments={"input":"hello"}].
+Catalog lookup: TryGetTool("fake.approvalRequired") -> ApprovalRequiredBridgeTool
+Policy evaluation: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-deny-req-001; OperationId=tool-approval-trace-20260516-deny-op-001; DescriptorId=fake.approvalRequired; Decision=Allow; Reason=Allowed
+Approval requirement: Required
+[Information] [VsMcpBridge] Bridge tool execution approval required [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-deny-req-001] [OperationId=tool-approval-trace-20260516-deny-op-001].
+Approval evaluation: ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-deny-req-001; OperationId=tool-approval-trace-20260516-deny-op-001; Decision=Denied; Reason=operator denied token=[REDACTED]
+[Warning] [VsMcpBridge] Bridge tool execution approval denied [ToolId=fake.approvalRequired] [RequestId=tool-approval-trace-20260516-deny-req-001] [OperationId=tool-approval-trace-20260516-deny-op-001] [Reason=operator denied token=[REDACTED]] [ElapsedMs=1].
+Tool execution: ApprovalRequiredBridgeTool.ExecuteAsync was not invoked.
+Audit envelope: EventName=BridgeToolExecution; ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-deny-req-001; OperationId=tool-approval-trace-20260516-deny-op-001; Allowed=False; Success=False; ErrorCode=ApprovalDenied; Metadata.policyReason=Allowed; Metadata.approvalRequirement=Required; Metadata.approvalDecision=Denied; Metadata.approvalReason=operator denied token=[REDACTED]
+BridgeToolResult: Success=False; ToolId=fake.approvalRequired; RequestId=tool-approval-trace-20260516-deny-req-001; OperationId=tool-approval-trace-20260516-deny-op-001; ErrorCode=ApprovalDenied; Message=operator denied token=[REDACTED]
+
+Redaction check: approval reason metadata and warning logs use the BridgeSecurityRedactor path; durable artifacts store [REDACTED] for secret-like approval reason values.
+Correlation check: both terminal outcomes preserve request id and operation id across policy evaluation, approval evaluation, executor logs, audit envelope, and BridgeToolResult.
+Boundary check: both outcomes flow through BridgeToolExecutor; approval-denied execution does not call the tool.

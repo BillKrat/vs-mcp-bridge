@@ -87,6 +87,13 @@ Security-aware compiled-tool artifacts:
 - `docs/diagrams/tool-security-trace-20260509.mmd`
 - `docs/session-handoffs/2026-05-09-tool-security-validation.md`
 
+Approval-aware compiled-tool boundary artifacts:
+
+- `artifacts/logs/tool-approval-trace-20260516.log`
+- `artifacts/logs/tool-approval-trace-20260516.metadata.json`
+- `docs/diagrams/tool-approval-trace-20260516.mmd`
+- `docs/session-handoffs/2026-05-16-tool-approval-validation.md`
+
 This workflow intentionally does not validate enabled MEF directory discovery, directory-loaded plugins as a production plugin model, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
 
 When validating the optional MEF discovery seam separately, capture these boundaries:

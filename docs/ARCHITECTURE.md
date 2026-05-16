@@ -112,6 +112,8 @@ The durable security-aware evidence for the current compiled tool path is `docs/
 That trace uses `RegexTextSearchTool` only and proves policy evaluation, payload redaction, tool execution, audit envelope emission, and request/operation correlation preservation without introducing MEF, plugin loading, OAuth/authentication, or real secret storage.
 Approval-aware execution is now part of the same executor boundary: a descriptor can require approval, the approval service can allow or deny, denial returns a structured `ApprovalDenied` result, and audit metadata records the approval requirement, decision, and redacted reason.
 This seam does not redesign the proposal approval workflow; it is a tool-execution policy checkpoint for future selected tools.
+The durable approval-aware evidence is `docs/diagrams/tool-approval-trace-20260516.mmd` with correlated logs and metadata under `artifacts/logs/tool-approval-trace-20260516.*`.
+That trace uses a shared-test fake approval-required tool and proves approved and denied decisions without adding a runtime tool, UI prompt, proposal approval redesign, or MCP transport change.
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.

@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Shared Test
+    participant Executor as BridgeToolExecutor
+    participant Catalog as IBridgeToolCatalog / discovery
+    participant Policy as IToolExecutionPolicy
+    participant Approval as IToolExecutionApprovalService
+    participant Tool as ApprovalRequiredBridgeTool
+    participant Redactor as ISecurityRedactor
+    participant Audit as IAuditSink
+
+    Caller->>Executor: ExecuteAsync(requestId, operationId, fake.approvalRequired)
+    Executor->>Redactor: Redact request payload for Trace log
+    Redactor-->>Executor: redacted request payload
+    Executor->>Catalog: TryGetTool("fake.approvalRequired")
+    Catalog-->>Executor: descriptor ApprovalRequirement=Required + tool
+    Executor->>Policy: EvaluateAsync(ToolExecutionSecurityContext)
+    Policy-->>Executor: Allow("Allowed")
+    Executor->>Executor: Check descriptor approval requirement
+    Executor->>Approval: EvaluateAsync(ToolExecutionApprovalContext)
+
+    alt Approval allowed
+        Approval-->>Executor: Approved("operator approved token=[REDACTED]")
+        Executor->>Tool: ExecuteAsync(BridgeToolRequest)
+        Tool-->>Executor: BridgeToolResult Success
+        Executor->>Redactor: Redact result payload for Trace log
+        Redactor-->>Executor: redacted result payload
+        Executor->>Audit: RecordAsync(BridgeAuditEnvelope approved)
+        Audit-->>Executor: stored event with requestId and operationId
+        Executor-->>Caller: Success result with preserved correlation
+    else Approval denied
+        Approval-->>Executor: Denied("operator denied token=[REDACTED]")
+        Executor->>Redactor: Redact denial reason for Warning log and audit metadata
+        Redactor-->>Executor: redacted approval reason
+        Executor->>Audit: RecordAsync(BridgeAuditEnvelope approval denied)
+        Audit-->>Executor: stored event with requestId and operationId
+        Executor-->>Caller: ApprovalDenied result with preserved correlation
+    end
