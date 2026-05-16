@@ -1,0 +1,49 @@
+﻿{
+    "slug":  "vs-mcp-bridge-blog-series-part-3",
+    "inspectionRoot":  "Y:\\vs-mcp-bridge\\docs\\blogs\\source-of-truth\\prepublish-inspections\\20260516\\vs-mcp-bridge-blog-series-part-3-20260516-185136",
+    "bodyChangedSinceExport":  false,
+    "titleChangedSinceExport":  false,
+    "slugChangedSinceExport":  false,
+    "statusChangedSinceExport":  false,
+    "dateModifiedChangedSinceExport":  false,
+    "categoriesChangedSinceExport":  false,
+    "tagsChangedSinceExport":  false,
+    "currentContentSha256":  "821ca8dbd244f37df6485abde8de6347a34bd6a08ea460c26e67a36952d7ee06",
+    "exportContentSha256":  "821ca8dbd244f37df6485abde8de6347a34bd6a08ea460c26e67a36952d7ee06",
+    "canonicalContentSha256":  "6ee4125b9c1ed9630a910786442c3b2fe2092e05028b129425d0a9bde492458e",
+    "currentCategories":  [
+                              "AI Systems Author",
+                              "MCP Bridge"
+                          ],
+    "exportCategories":  [
+                             "AI Systems Author",
+                             "MCP Bridge"
+                         ],
+    "canonicalCategories":  [
+                                "AI Systems Author",
+                                "MCP Bridge"
+                            ],
+    "currentTags":  [
+
+                    ],
+    "exportTags":  [
+
+                   ],
+    "canonicalTags":  [
+                          "VS MCP Bridge",
+                          "Visual Studio",
+                          "VSIX",
+                          "MCP",
+                          "Approval",
+                          "Proposal Lifecycle",
+                          "UI Threading",
+                          "Diagnostics",
+                          "Architecture"
+                      ],
+    "currentTokens":  [
+
+                      ],
+    "canonicalTokens":  [
+
+                        ]
+}

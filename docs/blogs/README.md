@@ -30,6 +30,7 @@ Current migration note:
 - `blog-publishing-review-plan-20260516.md` records the publishing-readiness plan for the cleaned canonical post set, including DB target identifiers, intentional tokens, Mermaid references, stale-link review, publish order, and post-publish verification checklist.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first read-only pre-publish compare for Part 1 against the live DB row, preserved DB export, and canonical repo source.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-2-20260516.md` records the read-only pre-publish compare for Part 2 before the single-post review update.
+- `prepublish-compare-vs-mcp-bridge-blog-series-part-3-20260516.md` records the fresh read-only pre-publish compare for Part 3 before targeted blocked-row inspection.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-7-20260516.md` records the read-only pre-publish compare for Part 7 before the single-post review update.
 - `prepublish-compare-understanding-a-named-pipe-listener-20260516.md` records the read-only pre-publish compare for the named-pipe listener post before the single-post review update.
 - `prepublish-compare-understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe-20260516.md` records the read-only pre-publish compare for the stdio/named-pipe overview post before the single-post review update.
@@ -39,6 +40,7 @@ Current migration note:
 - `prepublish-compare-understanding-ai-chat-sessions-models-and-agents-20260516.md` records the fresh read-only pre-publish compare for the AI chat sessions/models/agents post before targeted blocked-row inspection.
 - `prepublish-compare-ready-posts-20260516.md` records the batch read-only pre-publish compare for all 14 posts marked ready for publishing review.
 - `prepublish-blocked-row-diff-20260516.md` records the read-only inspection of the six rows whose current live DB state no longer matched the preserved export baseline.
+- `prepublish-inspection-vs-mcp-bridge-blog-series-part-3-20260516.md` records the targeted read-only inspection that cleared Part 3 for the next guarded single-post review update.
 - `prepublish-inspection-understanding-ai-chat-sessions-models-and-agents-20260516.md` records the targeted read-only inspection that cleared the AI chat sessions/models/agents row for the next guarded single-post review update.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first single-post review update, before/after exports, and rendered-cache behavior for Part 1.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-2-20260516.md` records the Part 2 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
