@@ -1,0 +1,57 @@
+﻿{
+    "slug":  "understanding-ai-chat-sessions-models-and-agents",
+    "inspectionRoot":  "Y:\\vs-mcp-bridge\\docs\\blogs\\source-of-truth\\prepublish-inspections\\20260516\\understanding-ai-chat-sessions-models-and-agents-20260516-184401",
+    "bodyChangedSinceExport":  false,
+    "titleChangedSinceExport":  false,
+    "slugChangedSinceExport":  false,
+    "statusChangedSinceExport":  false,
+    "dateModifiedChangedSinceExport":  false,
+    "categoriesChangedSinceExport":  false,
+    "tagsChangedSinceExport":  false,
+    "currentContentSha256":  "01ac45e9ad9ade1ec1c395888f85153b6c60ff4eaa7e3fba7b7f760db89c70d8",
+    "exportContentSha256":  "01ac45e9ad9ade1ec1c395888f85153b6c60ff4eaa7e3fba7b7f760db89c70d8",
+    "canonicalContentSha256":  "8bbfed2cadbb457da4be57f52fc1b01f473499611995bb3e0949fdfd7f9da8d2",
+    "currentCategories":  [
+                              "AI Systems Author",
+                              "MCP Bridge"
+                          ],
+    "exportCategories":  [
+                             "AI Systems Author",
+                             "MCP Bridge"
+                         ],
+    "canonicalCategories":  [
+                                "AI Systems Author",
+                                "MCP Bridge"
+                            ],
+    "currentTags":  [
+
+                    ],
+    "exportTags":  [
+
+                   ],
+    "canonicalTags":  [
+                          "AI Assisted Development",
+                          "Agents",
+                          "Chat Sessions",
+                          "Models",
+                          "MCP",
+                          "VS MCP Bridge",
+                          "BlogAI",
+                          "Observability",
+                          "Architecture"
+                      ],
+    "currentTokens":  [
+                          "[Application Layer]",
+                          "[Display:inference-driven|InferenceDriven]",
+                          "[Model]",
+                          "[Output]",
+                          "[Page:ChatSessionsModelsAndAgents]",
+                          "[Session Manager / Context Builder]",
+                          "[Stateless Model]",
+                          "[Temporary Context]"
+                      ],
+    "canonicalTokens":  [
+                            "[Display:inference-driven|InferenceDriven]",
+                            "[Page:ChatSessionsModelsAndAgents]"
+                        ]
+}
