@@ -1,6 +1,7 @@
 # Blog Publishing Scripts
 
 `Publish-BlogPostDraft.ps1` publishes one canonical repo-backed post to BlogEngine as a draft and refreshes BlogEngine visibility through the BlogAI reload endpoint.
+`Publish-BlogPostReviewUpdate.ps1` updates one existing BlogEngine post row from canonical repo source while preserving row identity, publication state, and taxonomy.
 `Compare-BlogPostBeforePublish.ps1` is the read-only safety check to run before publishing.
 `Compare-ReadyBlogPostsBeforePublish.ps1` batches that safety check across the ready-post publishing list.
 `Compare-BlockedBlogRowsBeforePublish.ps1` inspects blocked live-vs-export differences without publishing.
@@ -8,6 +9,7 @@
 ## Script
 
 - [Publish-BlogPostDraft.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Publish-BlogPostDraft.ps1)
+- [Publish-BlogPostReviewUpdate.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Publish-BlogPostReviewUpdate.ps1)
 - [Export-BlogPostsFromDatabase.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-BlogPostsFromDatabase.ps1)
 - [Export-GwnWikiExtensionSettings.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-GwnWikiExtensionSettings.ps1)
 - [Export-DataStoreSettingRow.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Export-DataStoreSettingRow.ps1)
@@ -63,6 +65,21 @@ It performs parameterized `SELECT` calls only and does not publish, reload, upda
 
 By default the script writes `docs/blogs/prepublish-blocked-row-diff-20260516.md`.
 It performs parameterized `SELECT` calls only and does not publish, reload, update, or delete database records.
+
+## Single-Post Review Update
+
+`Publish-BlogPostReviewUpdate.ps1` is the narrow first-write workflow for one existing BlogEngine post row.
+It preserves the live row immediately before writing, verifies the current body still matches the latest prepublish report hash, updates only `Description`, `PostContent`, and `DateModified`, then exports the row again and writes an after-update report.
+
+```powershell
+.\scripts\blog-publishing\Publish-BlogPostReviewUpdate.ps1 `
+  -Slug 'vs-mcp-bridge-blog-series-part-1' `
+  -SqlConnectionString $env:AdventuresOnTheEdgeCS `
+  -RenderedUrl 'https://www.global-webnet.com/post/2026/04/11/vs-mcp-bridge-blog-series-part-1'
+```
+
+This script does not call the reload endpoint, does not touch category/tag tables, does not change `IsPublished`, and does not create posts.
+Use it one post at a time after the read-only compare report says the current live row is safe for publishing review.
 
 `Export-GwnWikiExtensionSettings.ps1` preserves hyperlink-token plugin settings before canonical blog link cleanup.
 

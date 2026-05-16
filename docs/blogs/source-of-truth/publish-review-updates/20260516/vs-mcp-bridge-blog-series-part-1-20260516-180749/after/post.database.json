@@ -1,0 +1,34 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  143,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "f0c7a958-f41a-4143-b601-82ce84fd4af0"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 1",
+    "description":  "A developer ramp-up post explaining the current VS MCP Bridge startup path, stdio and named-pipe boundaries, tool-window role, approval behavior, diagnostics, and shared tool execution boundary.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-1",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T16:25:00.000",
+    "dateModified":  "2026-05-16T16:07:49.903",
+    "categories":  [
+
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "03c196c998e3819b27bf1dc6c2b43dd4f40a04e9fe1bb2057fbc4bbd918d1ab8",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:07:49.983Z"
+               }
+}

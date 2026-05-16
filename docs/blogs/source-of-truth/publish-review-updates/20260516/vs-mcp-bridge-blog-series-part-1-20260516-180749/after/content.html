@@ -1,0 +1,195 @@
+<p>[Page:VS MCP Bridge|VsMcpBridge]</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. Bracket-style tokens are intentional BlogEngine/GwnWikiExtension tokens.</p>
+
+<h1>VS MCP Bridge Blog Series: Part 1</h1>
+<h2>From VSIX Startup to the First MCP Tool Call</h2>
+
+<p>This post is the first in a short developer ramp-up series for the <strong>VS MCP Bridge</strong> project. Its job is to make the startup flow understandable before diving into individual tools, proposal approval, diagnostics, and security seams.</p>
+
+<p>The key question is simple: <strong>what actually happens from the moment Visual Studio loads the VSIX until an AI client can make a useful MCP tool call?</strong></p>
+
+<h3>The Short Version</h3>
+
+<p>The bridge has two local process boundaries, not one.</p>
+
+<ul>
+  <li>The <strong>VSIX</strong> runs inside Visual Studio and owns Visual Studio APIs, editor state, proposal approval, and the local [NamedPipeListener].</li>
+  <li>The <strong>MCP server</strong> runs as a separate local process and waits on [Stdio] for MCP protocol messages from an AI client.</li>
+  <li>The MCP server exposes a small explicit tool surface. For VS-backed tools, it forwards typed requests to the VSIX over the named pipe.</li>
+  <li>The VSIX dispatches only known bridge commands, performs the Visual Studio-side operation, and sends a structured response back.</li>
+</ul>
+
+<p>The important mental model is that the VSIX is <strong>not</strong> a chat endpoint. It waits for structured bridge requests. Natural-language reasoning happens in the AI client; bridge execution happens through explicit tool and command boundaries.</p>
+
+<h3>Step 1: Visual Studio Loads the VSIX Package</h3>
+
+<p>The Visual Studio entry point is the package class, <code>VsMcpBridgePackage</code>. It is an <code>AsyncPackage</code> that composes VSIX services and registers the command that opens the bridge tool window.</p>
+
+<p>At startup, the package path is responsible for four important things:</p>
+
+<ol>
+  <li>Registering the command that can open the bridge tool window.</li>
+  <li>Building the dependency injection container.</li>
+  <li>Composing shared and VSIX-specific services.</li>
+  <li>Starting the named-pipe side of the local bridge when the VSIX is initialized.</li>
+</ol>
+
+<p>This is the first major clarification for new developers: Visual Studio work stays in the VSIX. The MCP-facing process does not load inside Visual Studio and does not own DTE or editor access.</p>
+
+<h3>Step 2: Dependency Injection Assembles the Runtime</h3>
+
+<p>The package itself stays relatively thin. Most behavior is composed through dependency injection so the Visual Studio host and standalone app host can share the same infrastructure where that makes sense.</p>
+
+<p>During startup, the service collection registers components such as:</p>
+
+<ul>
+  <li>logging and unhandled exception capture</li>
+  <li>configuration-backed host services</li>
+  <li>proposal approval state</li>
+  <li>Visual Studio service access</li>
+  <li>edit proposal and apply services</li>
+  <li>tool window presenter and view model</li>
+  <li>named pipe server</li>
+</ul>
+
+<p>That means the startup path can feel indirect in the debugger unless you remember that the package is mainly a composition root.</p>
+
+<h3>Step 3: The VSIX Listens on a Named Pipe</h3>
+
+<p>Once the pipe server is available, it listens on the fixed local pipe name <code>VsMcpBridge</code>. That pipe is the handoff point between the external MCP server process and the Visual Studio host.</p>
+
+<p>The Visual Studio side is then alive but idle. In that idle state:</p>
+
+<ul>
+  <li>the VSIX package has loaded</li>
+  <li>services have been composed</li>
+  <li>the local pipe boundary is the intended VS-backed request entry point</li>
+  <li>no MCP request has arrived yet</li>
+</ul>
+
+<p>Operationally, live validation has shown one practical rule: if VS-backed tools cannot connect to the pipe, open the Visual Studio Experimental Instance and then open <strong>View -&gt; Other Windows -&gt; VS MCP Bridge</strong>. That activation path initializes the VSIX/tool-window side in the environment where manual validation has been proven.</p>
+
+<h3>Step 4: The Tool Window Is the Human Review Surface</h3>
+
+<p>The tool window is not a generic chat window. It is the operator-facing surface for logs, proposal entry, proposal review, approval, rejection, and outcome messages.</p>
+
+<p>When the tool window is created, it resolves the presenter and view model, binds the shared WPF control, and initializes the UI state. The initial UI is idle:</p>
+
+<ul>
+  <li>logs are ready for diagnostic output</li>
+  <li>proposal fields are empty</li>
+  <li>the approval surface is inactive until a proposal exists</li>
+</ul>
+
+<p>This distinction matters because bridge transport, tool execution, and human approval are related but separate concerns.</p>
+
+<h3>Step 5: The MCP Server Waits on Stdio</h3>
+
+<p>The project also contains a separate process, <code>VsMcpBridge.McpServer</code>. This process hosts the MCP server and uses <strong>stdio</strong> for protocol traffic.</p>
+
+<p>That means an AI client can launch the MCP server process, write MCP messages to standard input, and read MCP responses from standard output. The server does not need to expose an HTTP endpoint or a public network port for this local workflow.</p>
+
+<p>At this point the architecture has two different waiting states:</p>
+
+<ul>
+  <li>the <strong>VSIX</strong> waits for a named-pipe request</li>
+  <li>the <strong>MCP server</strong> waits for an MCP message over stdio</li>
+</ul>
+
+<p>Keeping those transports separate is one of the main reasons the project is understandable. Stdio gets the request into the local MCP process. The named pipe gets the VS-backed request into Visual Studio.</p>
+
+<h3>Step 6: The First Tool Call Arrives</h3>
+
+<p>When a user submits a prompt in an AI client, nothing special happens in the bridge unless the AI client chooses to call one of the registered MCP tools.</p>
+
+<p>For a VS-backed tool call, the flow looks like this:</p>
+
+<ol>
+  <li>The AI client sends an MCP tool request over stdio.</li>
+  <li><code>VsMcpBridge.McpServer</code> receives the request.</li>
+  <li>The selected MCP tool method forwards typed work through the pipe client.</li>
+  <li>The pipe client connects to the local <code>VsMcpBridge</code> named pipe.</li>
+  <li>The VSIX pipe server accepts the connection and reads the request envelope.</li>
+  <li>The pipe server dispatches only known commands to the Visual Studio service layer.</li>
+  <li>The VSIX performs the host-side operation and returns a response.</li>
+  <li>The MCP server returns the result over stdio to the AI client.</li>
+</ol>
+
+<p>This is where the bridge stops being idle and starts doing useful work.</p>
+
+<h3>Read-Only Calls vs. Edit Proposals</h3>
+
+<p>Read-only operations such as reading the active document, reading selected text, listing solution projects, or reading the Error List are straightforward. The VSIX performs the Visual Studio operation and returns data.</p>
+
+<p>Edit-oriented requests are different. MCP can create edit proposals, but apply still happens only after explicit approval in the host UI. The proposal path validates the target content before mutation and keeps Visual Studio control over file changes.</p>
+
+<p>That design is deliberate: the AI side can suggest changes, but the host side owns approval, apply, rollback behavior, and final outcome reporting.</p>
+
+<h3>Where Shared Tool Security Fits</h3>
+
+<p>The current architecture also has a shared compiled tool execution boundary for bridge tools outside the direct VS-backed pipe command path. Shared tools run through <code>BridgeToolExecutor</code>, which is the policy, approval, execution, audit, and redaction boundary for those tools.</p>
+
+<p>That boundary now carries several lightweight security and observability seams:</p>
+
+<ul>
+  <li>tool execution policy evaluation</li>
+  <li>optional approval-aware execution for tools that require it</li>
+  <li>declarative capability metadata</li>
+  <li>secret-reference indirection hooks</li>
+  <li>redaction before payload-oriented logs and audit metadata</li>
+  <li>structured audit envelopes with classification metadata</li>
+  <li>request and operation correlation metadata</li>
+</ul>
+
+<p>Those seams are not a full authentication, OAuth, vault, sandbox, or SIEM system. They are intentional architecture joints that make later hardening possible without turning tool execution into a black box.</p>
+
+<h3>Why Diagnostics Matter</h3>
+
+<p>Stdio is protocol traffic, so stdout must stay clean. Diagnostics need to go through safe channels such as app-data logs, stderr where appropriate, and host UI logging.</p>
+
+<p>The bridge also follows an anti-black-box rule: important workflows should leave enough evidence to reconstruct what happened. That is why recent architecture work records durable trace artifacts and Mermaid diagrams for tool execution, approval-aware execution, MEF discovery, and inactive VSIX named-pipe diagnostics.</p>
+
+<p>For example, if a VS-backed tool cannot connect to the named pipe, the current server returns an activation diagnostic instead of an opaque timeout. The operator action is concrete: launch the Visual Studio Experimental Instance, open the VS MCP Bridge tool window, and retry the VS-backed tool.</p>
+
+<h3>Why This Architecture Exists</h3>
+
+<p>At first glance, it can seem odd that both stdio and named pipes exist in the same design. The reason is that they solve different problems:</p>
+
+<ul>
+  <li><strong>stdio</strong> is the local protocol transport between an AI client and the MCP server process</li>
+  <li><strong>named pipes</strong> are the local host bridge between the MCP server process and Visual Studio</li>
+  <li><strong>the tool window</strong> is the human-facing review and diagnostics surface</li>
+  <li><strong>BridgeToolExecutor</strong> is the shared compiled-tool policy and audit boundary</li>
+</ul>
+
+<p>This split keeps Visual Studio API access inside the VSIX, keeps MCP protocol handling outside Visual Studio, and gives future tool work a clear place for policy, approval, redaction, audit, and correlation.</p>
+
+<h3>Takeaway</h3>
+
+<p>If you are trying to understand startup, the cleanest mental model is this:</p>
+
+<pre><code>Visual Studio starts VSIX
+  - package initializes
+  - services are composed
+  - named pipe side becomes the VS-backed request boundary
+  - tool window activation may be required for live validation
+
+AI client starts MCP server
+  - MCP server starts
+  - stdio transport waits for MCP protocol messages
+  - registered MCP tools become callable
+
+User submits a prompt
+  - AI may call an MCP tool
+  - MCP server handles protocol work
+  - VS-backed calls cross the named-pipe boundary
+  - shared compiled tools cross BridgeToolExecutor
+  - host-side results flow back to the AI client
+</code></pre>
+
+<p>In other words, VS MCP Bridge is not one big chat loop. It is a set of explicit local boundaries: MCP over stdio, Visual Studio work over a named pipe, user approval in the host UI, and shared tool execution behind a policy/audit executor.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next post should answer a natural follow-up question: <strong>why stdio is used at all, what it is good at, and why it should not be treated as a multi-client shared bus.</strong></p>
