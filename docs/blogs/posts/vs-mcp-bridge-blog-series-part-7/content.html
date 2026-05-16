@@ -1,137 +1,136 @@
-﻿<p>This post continues the developer ramp-up series for <strong>VS MCP Bridge</strong>. The earlier posts explained why runtime validation matters, how to turn it into a playbook, and why the bridge needs enough evidence to avoid becoming a black box. This post makes that more concrete by mapping the current implementation to the signals developers can already observe today and the signals that still need improvement.</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post continues the core series from tool execution security seams into durable traces, reconstructable evidence, operational validation, and AI-assisted troubleshooting workflows.</p>
 
-<p>The goal is simple: <strong>identify what the bridge already exposes, what is usable but still weak, and what is still missing if validation is going to stay practical.</strong></p>
+<h1>VS MCP Bridge Blog Series: Part 7</h1>
+<h2>Durable Evidence, Trace Workflows, and AI-Assisted Troubleshooting</h2>
 
-<h3>Why A Signal Map Matters</h3>
+<p>Part 6 explained why <code>BridgeToolExecutor</code> is the consistent execution boundary for policy, approval, secret-reference handling, redaction, audit, classification, correlation, and tool invocation.</p>
 
-<p>A validation playbook is only as useful as the signals behind it.</p>
+<p>Part 7 moves from the boundary to the evidence around it. The bridge is not just trying to execute tools. It is trying to make tool execution reconstructable later, by a developer or by an AI session that was not present when the behavior happened.</p>
 
-<p>If developers are told to validate host startup, request flow, proposal creation, approval handling, and recovery, the app needs to provide enough evidence for each of those steps to be interpreted. Otherwise the playbook becomes a checklist with no reliable feedback loop.</p>
+<p>That is the shift that changed this project: diagnostics stopped being an afterthought and became part of the architecture.</p>
 
-<p>That is why a signal map matters. It translates theory into current reality.</p>
+<h3>Why Durable Evidence Matters</h3>
 
-<h3>Bucket 1: Signals The Bridge Already Has</h3>
+<p>AI-assisted development can move quickly, but fast progress is fragile if the only record of a decision lives in chat history or a local debugging session.</p>
 
-<p>The current bridge already appears to expose a useful starting set of signals.</p>
-
-<p>From the current implementation and documentation, the bridge already has evidence in areas such as:</p>
-
-<ul>
-  <li>package and bootstrap logging</li>
-  <li>pipe server lifecycle logging</li>
-  <li>request identifiers in the pipe flow</li>
-  <li>proposal lifecycle state</li>
-  <li>visible approval UI</li>
-  <li>approve and reject actions</li>
-  <li>success and failure paths around edit application</li>
-</ul>
-
-<p>This matters because it means the app is not starting from a blank slate. The bridge already has the beginnings of a practical evidence model.</p>
-
-<h3>What These Existing Signals Help Prove</h3>
-
-<p>Those existing signals are already useful for a number of current questions:</p>
+<p>VS MCP Bridge now treats important validation runs as durable evidence. A useful run should leave behind enough material to answer:</p>
 
 <ul>
-  <li>did the package initialize</li>
-  <li>did the pipe server start</li>
-  <li>did a request receive an identifier</li>
-  <li>did a proposal get created</li>
-  <li>did the user see an approval prompt</li>
-  <li>did approve or reject happen</li>
-  <li>did edit application succeed or fail</li>
+  <li>what code version was observed</li>
+  <li>what workflow was exercised</li>
+  <li>which request id and operation id were used</li>
+  <li>which boundary handled the request</li>
+  <li>where the request succeeded, failed, or stopped</li>
+  <li>which logs support that conclusion</li>
+  <li>which Mermaid diagram matches the observed flow</li>
+  <li>what the next session should trust or revalidate</li>
 </ul>
 
-<p>That means the bridge can already support more operational reasoning than a true black box would allow.</p>
+<p>That evidence turns a one-time manual observation into something another person can replay, inspect, and challenge.</p>
 
-<h3>Bucket 2: Signals That Exist But May Need Tightening</h3>
+<h3>The Artifact Triad</h3>
 
-<p>This is probably the most important bucket for the current stage.</p>
-
-<p>In many systems, the real problem is not that signals are entirely absent. It is that the signals exist, but do not yet form a clear enough narrative to support easy diagnosis.</p>
-
-<p>In the current bridge, that likely applies to areas such as:</p>
+<p>The most useful pattern has become a small triad:</p>
 
 <ul>
-  <li>logs that exist but may not yet tell one clean end-to-end story</li>
-  <li>request identifiers that exist but may not appear at every important boundary</li>
-  <li>UI state that is visible but may not always make active versus stale state obvious</li>
-  <li>failure signals that exist but may not clearly indicate whether recovery has happened</li>
+  <li>a log file under <code>artifacts/logs/</code></li>
+  <li>a metadata file beside it, usually <code>.metadata.json</code></li>
+  <li>a Mermaid sequence diagram under <code>docs/diagrams/</code></li>
 </ul>
 
-<p>This is where a bridge often becomes either easy to validate or frustrating to debug.</p>
+<p>The log captures what happened. The metadata captures the run context: branch, commit, host, request id, operation id, input summary, observed result, and scope exclusions. The Mermaid diagram explains the sequence in a form that can be reviewed without rereading every log line.</p>
 
-<h3>Why Tightening Matters</h3>
+<p>None of those artifacts replaces the others. The log is the observed evidence. The metadata is the index card. The Mermaid diagram is the map.</p>
 
-<p>Signals do not need to be perfect to be useful, but they do need to be coherent.</p>
+<h3>Session Handoffs Complete The Record</h3>
 
-<p>If a request starts in one layer with an identifier but loses that identity later in the path, the signal weakens. If a proposal appears in the UI but the logs do not clearly show its lifecycle, the signal weakens. If failure is visible but recovery is not, the signal weakens.</p>
+<p>For larger slices, the repo also keeps session handoffs under <code>docs/session-handoffs/</code>. These are not essays. They are resume points.</p>
 
-<p>So the current bridge likely does not need a large new diagnostics subsystem. It more likely needs signal tightening at the boundaries that already exist.</p>
+<p>A good handoff records what was validated, what commit or branch was involved, what artifacts were produced, what constraints still apply, and what the next session should do first. That matters because future AI sessions should not reconstruct project state from memory or from a conversation transcript that may be incomplete.</p>
 
-<h3>Bucket 3: Signals That Are Still Missing</h3>
+<p>The architecture document remains the source of truth for current behavior. The handoffs explain how the project arrived there and what evidence supports particular claims.</p>
 
-<p>The final bucket is the one that will probably drive future implementation work.</p>
+<h3>Trace Workflows Are Reproducible Procedures</h3>
 
-<p>For the current bridge, the likely missing signals are not futuristic or academic. They are the ones that make day-to-day validation harder than it should be.</p>
-
-<p>Typical gaps in the current scope would be:</p>
+<p>The repo now has documented workflows for important validation paths:</p>
 
 <ul>
-  <li>not enough distinction between full startup success and partial startup failure</li>
-  <li>not enough correlation between MCP tool call, pipe request, proposal, and final outcome</li>
-  <li>not enough evidence that stale proposal state has been cleared after reject or restart</li>
-  <li>not enough explicit separation between proposal creation and actual edit application</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/tool-execution-trace-workflow.md" target="_blank">tool-execution-trace-workflow.md</a> explains how to validate the shared bridge tool catalog and executor path with correlated logs, audit metadata, redaction, policy, approval, and Mermaid output.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/vsix-host-selected-text-trace-workflow.md" target="_blank">vsix-host-selected-text-trace-workflow.md</a> explains how to validate the Visual Studio selected-text prompt path against a real editor selection.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md" target="_blank">LOGGING_DIAGNOSTIC_RUNBOOK.md</a> explains how to localize hangs, keep MCP stdout clean, and collect the right UI, stderr, file, and correlation evidence.</li>
 </ul>
 
-<p>These are the kinds of gaps that do not always prevent functionality, but do make triage slower and confidence lower.</p>
+<p>The important detail is that these workflows are not just documentation after the fact. They are part of the development method. When the system changes, the workflow can be rerun, the artifacts can be regenerated, and the diagram can be compared against the current code path.</p>
 
-<h3>How This Maps To The Validation Playbook</h3>
+<h3>Correlation Makes Replay Possible</h3>
 
-<p>The value of the signal map becomes clearer when it is paired with the validation playbook.</p>
+<p>Request and operation identifiers are what make trace replay practical.</p>
 
-<p>For example:</p>
+<p>Without correlation, logs become a loose pile of events. With correlation, a run can be reconstructed across layers: MCP request, pipe attempt, catalog lookup, policy decision, approval decision, tool execution, audit envelope, result, and visible host behavior.</p>
+
+<p>The point is not to add identifiers for decoration. The point is to let a future reader find the first missing or failing boundary. If a request id appears at the MCP layer but never reaches the pipe client, the failure is different from one that reaches the VSIX host and fails during service execution.</p>
+
+<h3>Diagnostics Must Stay Transport-Safe</h3>
+
+<p>Durable evidence only helps if it does not corrupt the transport it is trying to explain.</p>
+
+<p>For MCP stdio, stdout must remain clean for JSON protocol traffic. Diagnostics belong in approved channels such as stderr, UI logs, file logs, Debug output, audit envelopes, and durable artifacts. The bridge uses this rule because a single stray log line on stdout can make a valid MCP server look broken.</p>
+
+<p>This is why the activation diagnostics and pipe-failure diagnostics are trace-only or structured tool failures. They should help the operator understand what to do without polluting the MCP protocol stream.</p>
+
+<h3>Durable Evidence Improved The Architecture</h3>
+
+<p>The traces did more than prove that code worked. They changed the design.</p>
+
+<p>Sequence diagrams and logs made it easier to see where responsibilities were blurred. That led to clearer boundaries around proposal management, host correctness, tool descriptors, catalog registration, executor-owned policy, approval-aware execution, redaction, audit metadata, MEF discovery, and VSIX activation diagnostics.</p>
+
+<p>In other words, observability did not just describe the architecture. It shaped the architecture.</p>
+
+<h3>AI-Assisted Troubleshooting Uses Evidence First</h3>
+
+<p>This repo is being developed with AI assistance, so the evidence standard is practical: a future assistant should be able to inspect files in the repo and understand the current system without trusting prior chat history.</p>
+
+<p>That means a good troubleshooting loop starts with durable artifacts:</p>
 
 <ul>
-  <li>host startup validation depends on strong startup signals</li>
-  <li>listener readiness depends on pipe lifecycle signals</li>
-  <li>request validation depends on correlated request-flow signals</li>
-  <li>proposal validation depends on both logs and visible UI signals</li>
-  <li>recovery validation depends on explicit evidence that old state is no longer active</li>
+  <li>read <code>AI_START.md</code> for the current resume map</li>
+  <li>read <code>docs/ARCHITECTURE.md</code> for current behavior</li>
+  <li>read the relevant workflow document for the validation path</li>
+  <li>inspect the matching log, metadata, and Mermaid files</li>
+  <li>compare the observed diagram against current code</li>
+  <li>treat the first missing or failed boundary as the next actionable problem</li>
 </ul>
 
-<p>So each validation step needs a signal counterpart. If that counterpart is weak or missing, the step becomes harder to trust.</p>
+<p>That process keeps the assistant grounded in repository evidence instead of inventing a story that sounds plausible.</p>
 
-<h3>Why This Is A Good Stopping Point Before More Coding</h3>
+<h3>Related Mermaid Trace Sources</h3>
 
-<p>This topic is important because it creates a natural bridge back into implementation work.</p>
-
-<p>Once the team agrees on:</p>
+<p>The most useful diagram sources for this topic are:</p>
 
 <ul>
-  <li>what evidence already exists</li>
-  <li>what evidence is too weak</li>
-  <li>what evidence is missing</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> for the compiled tool execution baseline.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-security-trace-20260509.mmd" target="_blank">tool-security-trace-20260509.mmd</a> for policy, redaction, audit, and correlation around tool execution.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> for approved and denied approval-required execution outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/mef-discovery-trace-20260516.mmd" target="_blank">mef-discovery-trace-20260516.mmd</a> for discovery-only MEF behavior feeding executor-routed tools.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> for inactive VSIX/named-pipe diagnostics and the operator activation path.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> for the Visual Studio selected-text prompt workflow.</li>
 </ul>
 
-<p>the next coding work becomes easier to prioritize. Instead of �improve diagnostics� in the abstract, the work can become focused changes such as:</p>
+<p>Those <code>.mmd</code> files remain the diagram source of truth. Generated images can be useful later, but the source diagram should stay reviewable in the repo.</p>
 
-<ul>
-  <li>carry request identifiers further through the flow</li>
-  <li>make proposal state transitions more explicit</li>
-  <li>improve startup success and failure markers</li>
-  <li>make restart and recovery signals easier to interpret</li>
-</ul>
+<h3>What This Does Not Mean</h3>
 
-<p>That is a much better way to resume implementation.</p>
+<p>Durable traces are not a full observability platform. They are not telemetry ingestion, distributed tracing infrastructure, SIEM export, compliance storage, or production monitoring.</p>
+
+<p>They are smaller and more immediate: checked-in evidence that the architecture can be understood and validated. That is enough for the current stage of the bridge.</p>
 
 <h3>Takeaway</h3>
 
-<p>The current bridge already has useful signals, but practical validation depends on more than signal existence. It depends on signal quality, continuity, and clarity.</p>
+<p>VS MCP Bridge became easier to evolve when the team stopped treating diagnostics as cleanup work and started treating them as architecture.</p>
 
-<p>The current work is therefore not just about adding more logs. It is about strengthening the specific signals that make the current bridge understandable when it succeeds, when it fails, and when it recovers.</p>
+<p>The durable evidence pattern is simple: capture logs, preserve metadata, draw the observed sequence, and write a handoff when the result changes what future sessions should know. That pattern makes failures localizable, decisions reviewable, and AI-assisted troubleshooting much less dependent on memory.</p>
 
 <h3>Next In The Series</h3>
 
-<p>The next useful topic is likely the first evidence-hardening slice: choosing one concrete diagnostics gap in the current implementation and fixing it all the way through the flow.</p>
-
+<p>The next useful topic is how these evidence and architecture practices should shape the public BlogAI narrative: which posts should teach the transport boundary, which should teach tool execution, and which should teach the operational discipline that keeps AI-assisted systems explainable.</p>
