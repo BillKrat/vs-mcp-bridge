@@ -69,10 +69,12 @@ That handoff captures the completed MEF discovery-only trace validation. The rel
 - `artifacts/logs/tool-security-trace-20260509.log`
 - `artifacts/logs/mef-discovery-trace-20260516.log`
 - `artifacts/logs/tool-approval-trace-20260516.log`
+- `artifacts/logs/vsix-activation-diagnostic-trace-20260516.log`
 - `docs/diagrams/tool-regex-search-trace-20260509.mmd`
 - `docs/diagrams/tool-security-trace-20260509.mmd`
 - `docs/diagrams/mef-discovery-trace-20260516.mmd`
 - `docs/diagrams/tool-approval-trace-20260516.mmd`
+- `docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd`
 
 Use those artifacts when reconstructing or triaging the compiled bridge tool execution path before relying on chat history. For VSIX selected-text work, use `docs/session-handoffs/2026-05-09-selected-text-validation.md`.
 
@@ -81,6 +83,7 @@ For the MEF discovery-only boundary, also read `docs/session-handoffs/2026-05-16
 For the approval-aware tool execution boundary, also read `docs/session-handoffs/2026-05-16-tool-approval-validation.md`.
 For the current foundational security architecture seams and deferred scope, also read `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 For the latest full validation checkpoint, also read `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`.
+For inactive VSIX named-pipe activation diagnostics, also read `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`.
 
 ## Current Working Guidance
 

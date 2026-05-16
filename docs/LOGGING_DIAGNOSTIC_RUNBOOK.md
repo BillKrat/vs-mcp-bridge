@@ -99,6 +99,13 @@ Approval-aware compiled-tool boundary artifacts:
 - `docs/diagrams/tool-approval-trace-20260516.mmd`
 - `docs/session-handoffs/2026-05-16-tool-approval-validation.md`
 
+VSIX activation diagnostic artifacts:
+
+- `artifacts/logs/vsix-activation-diagnostic-trace-20260516.log`
+- `artifacts/logs/vsix-activation-diagnostic-trace-20260516.metadata.json`
+- `docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd`
+- `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`
+
 This workflow intentionally does not validate enabled MEF directory discovery, directory-loaded plugins as a production plugin model, BM25, MCP transport, presenter behavior, proposal behavior, or VSIX host behavior.
 
 When validating the optional MEF discovery seam separately, capture these boundaries:

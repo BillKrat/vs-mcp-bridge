@@ -1,0 +1,31 @@
+Run: vsix-activation-diagnostic-trace-20260516
+Observed commit: cb0bc6a Improve VSIX activation diagnostics for pipe-backed MCP tools
+Scenario: VS-backed MCP tool invoked while the VSIX named-pipe side is inactive.
+
+[setup] pipeName=VsMcpBridge-Test-[REDACTED]
+[setup] command=vs_propose_text_edit
+[setup] requestId=vsix-activation-diagnostic-trace-20260516-req-001
+[setup] payloadSentinelStatus=redacted
+
+[McpServer] VS-backed tool request received [Tool=vs_propose_text_edit] [RequestId=vsix-activation-diagnostic-trace-20260516-req-001].
+[PipeClient] Attempting pipe connection to 'VsMcpBridge-Test-[REDACTED]' [Command=vs_propose_text_edit] [RequestId=vsix-activation-diagnostic-trace-20260516-req-001].
+[PipeClient] Pipe request started [Command=vs_propose_text_edit] [RequestId=vsix-activation-diagnostic-trace-20260516-req-001].
+[PipeClient] Pipe activation preflight failed [Command=vs_propose_text_edit] [RequestId=vsix-activation-diagnostic-trace-20260516-req-001] [ElapsedMs=50].
+[PipeClient] Diagnostic returned: VS MCP Bridge is not active. Launch the Visual Studio Experimental Instance, open View -> Other Windows -> VS MCP Bridge, ensure the tool window initializes the VSIX named-pipe side, then retry the VS-backed MCP tool. [RequestId=vsix-activation-diagnostic-trace-20260516-req-001]
+[McpServer] VS-backed tool response returned as structured tool text [Success=False] [RequestId=vsix-activation-diagnostic-trace-20260516-req-001].
+
+[assert] raw pipe-name sentinel present: false
+[assert] raw file-path sentinel present: false
+[assert] raw original-text sentinel present: false
+[assert] raw proposed-text sentinel present: false
+[assert] requestId preserved in diagnostic: true
+[assert] MCP initialize/tools-list unaffected: true
+
+Expected successful retry path:
+
+[operator] Launch Visual Studio Experimental Instance for Y:\vs-mcp-bridge.
+[operator] Open View -> Other Windows -> VS MCP Bridge.
+[VSIX] VS MCP Bridge tool window initializes named-pipe side on 'VsMcpBridge'.
+[operator] Retry vs_get_active_document or vs_list_solution_projects.
+[PipeClient] Pipe connection established to 'VsMcpBridge' [Command=vs_get_active_document].
+[VSIX] Pipe command dispatched to VsService and response returned.

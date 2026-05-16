@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    participant Operator as Operator
+    participant Client as MCP Client
+    participant Server as VsMcpBridge.McpServer
+    participant Tool as VS-backed MCP Tool
+    participant PipeClient as PipeClient
+    participant Pipe as Named Pipe: VsMcpBridge
+    participant VSIX as VSIX Tool Window
+
+    Client->>Server: tools/call vs_propose_text_edit
+    Server->>Tool: Invoke VS-backed tool
+    Tool->>PipeClient: SendAsync(command, request)
+    PipeClient->>Pipe: ConnectAsync(timeout)
+    Pipe--xPipeClient: unavailable / timeout
+    PipeClient-->>Tool: Success=false activation diagnostic with RequestId
+    Tool-->>Server: Error text with activation instructions
+    Server-->>Client: Tool response: VS MCP Bridge is not active
+
+    Note over PipeClient,Tool: Diagnostic contains no raw payload or secret-like values.
+    Note over Client,Server: MCP initialize and tools/list remain unaffected.
+
+    Operator->>VSIX: Launch VS Experimental Instance
+    Operator->>VSIX: View -> Other Windows -> VS MCP Bridge
+    VSIX->>Pipe: Start named-pipe side
+    Client->>Server: Retry vs_get_active_document
+    Server->>Tool: Invoke VS-backed tool
+    Tool->>PipeClient: SendAsync(command, request)
+    PipeClient->>Pipe: ConnectAsync(timeout)
+    Pipe-->>PipeClient: connected
+    PipeClient->>VSIX: Write request envelope
+    VSIX-->>PipeClient: Return VS response
+    PipeClient-->>Tool: Success=true response
+    Tool-->>Server: Tool result
+    Server-->>Client: Successful VS-backed MCP response

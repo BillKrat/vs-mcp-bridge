@@ -1,0 +1,47 @@
+{
+  "runName": "vsix-activation-diagnostic-trace-20260516",
+  "date": "2026-05-16",
+  "observedCommit": "cb0bc6a",
+  "scenario": "VS-backed MCP tool invoked while the VSIX named-pipe side is inactive",
+  "scope": "diagnostic trace artifact only",
+  "transportChanges": false,
+  "runtimeBehaviorChangedByThisArtifact": false,
+  "toolName": "vs_propose_text_edit",
+  "requestId": "vsix-activation-diagnostic-trace-20260516-req-001",
+  "pipeName": "VsMcpBridge-Test-[REDACTED]",
+  "terminalOutcome": "ActivationRequired",
+  "diagnostic": "VS MCP Bridge is not active. Launch the Visual Studio Experimental Instance, open View -> Other Windows -> VS MCP Bridge, ensure the tool window initializes the VSIX named-pipe side, then retry the VS-backed MCP tool.",
+  "observedBoundaries": [
+    "MCP server receives VS-backed tool request",
+    "PipeClient attempts named-pipe connection",
+    "named pipe is unavailable",
+    "PipeClient returns structured activation diagnostic",
+    "request id is preserved in diagnostic response"
+  ],
+  "redactionChecks": {
+    "rawPipeSecretPresent": false,
+    "rawFileSecretPresent": false,
+    "rawOriginalSecretPresent": false,
+    "rawProposedSecretPresent": false
+  },
+  "operatorAction": [
+    "Launch Visual Studio Experimental Instance",
+    "Open View -> Other Windows -> VS MCP Bridge",
+    "Wait for the tool window to initialize the VSIX named-pipe side",
+    "Retry the VS-backed MCP tool"
+  ],
+  "successfulRetryExpectation": {
+    "pipeConnection": "established",
+    "vsixNamedPipeSide": "active",
+    "toolExamples": [
+      "vs_get_active_document",
+      "vs_list_solution_projects"
+    ]
+  },
+  "deferred": [
+    "MCP transport redesign",
+    "retry loops",
+    "new MCP tools",
+    "VSIX startup redesign"
+  ]
+}
