@@ -28,6 +28,7 @@ Current migration note:
 - `blog-source-reconciliation-20260516.md` records the follow-up source-coverage reconciliation. It materializes the active BlogAI candidate posts that were missing from `docs/blogs/posts/`, separates the live Part 4 post from the repo trial draft, and documents that rendered `adventuresontheedge.net` links come from BlogEngine token expansion rather than explicit old-domain URLs in canonical article HTML.
 - `blog-cleanup-status-20260516.md` records the current aligned/partially reviewed/untouched blog status, architecture narrative coverage, Mermaid references, intentional BlogEngine tokens, and remaining publishing gaps.
 - `blog-publishing-review-plan-20260516.md` records the publishing-readiness plan for the cleaned canonical post set, including DB target identifiers, intentional tokens, Mermaid references, stale-link review, publish order, and post-publish verification checklist.
+- `prepublish-compare-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first read-only pre-publish compare for Part 1 against the live DB row, preserved DB export, and canonical repo source.
 - `gwn-wiki-extension-link-mapping-20260516.md` records the preserved `GwnWikiExtension` plugin settings export from `dbo.be_DataStoreSettings` and explains how bracket-style tokens resolve to production-domain links.
 
 Current Part 4 mapping:
