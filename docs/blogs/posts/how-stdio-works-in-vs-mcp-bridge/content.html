@@ -159,6 +159,17 @@ no raw payload or secret values disclosed</code></pre>
 
 <p>That is the anti-black-box discipline used throughout the project. A failure should be explainable from durable logs, trace artifacts, and documented workflow boundaries, not from guessing which process happened to be awake.</p>
 
+<h2>Related Mermaid Trace Sources</h2>
+
+<p>The repo already has Mermaid sources that make this boundary easier to inspect:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/blogs/diagrams/vs-mcp-bridge-bootstrap-sequence.mmd" target="_blank">vs-mcp-bridge-bootstrap-sequence.mmd</a> shows the startup path from Visual Studio package load through the MCP stdio request and named-pipe handoff.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows the inactive-pipe diagnostic path and the successful activation retry path.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them instead of embedding a derived image so the article stays aligned with the durable trace artifacts.</p>
+
 <h2>How This Relates to BridgeToolExecutor</h2>
 
 <p>The stdio server exposes VS-backed tools directly through the MCP tool container, and those tools cross into the VSIX over the named pipe. Separately, the shared bridge tool architecture has compiled tools, descriptors, capability metadata, approval requirements, secret-reference awareness, redaction, audit envelopes, and classification metadata.</p>
