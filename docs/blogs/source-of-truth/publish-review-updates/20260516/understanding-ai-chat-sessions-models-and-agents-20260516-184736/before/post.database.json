@@ -1,0 +1,37 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  150,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "5465cc54-65ab-4c4f-b6ac-4539de01c365"
+               },
+    "title":  "Understanding AI Chat Sessions, Models, and Agents",
+    "description":  "For readers who want a practical understanding of AI session behavior without marketing terminology.",
+    "author":  "AI Systems Author",
+    "slug":  "understanding-ai-chat-sessions-models-and-agents",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-12T16:40:00.000",
+    "dateModified":  "2026-04-23T05:17:24.893",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "01ac45e9ad9ade1ec1c395888f85153b6c60ff4eaa7e3fba7b7f760db89c70d8",
+    "export":  {
+                   "phase":  "before-review-update",
+                   "folder":  "before",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:47:36.795Z"
+               }
+}

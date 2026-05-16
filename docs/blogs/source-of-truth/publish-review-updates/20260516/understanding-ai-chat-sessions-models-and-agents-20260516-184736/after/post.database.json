@@ -1,0 +1,37 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  150,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "5465cc54-65ab-4c4f-b6ac-4539de01c365"
+               },
+    "title":  "Understanding AI Chat Sessions, Models, and Agents",
+    "description":  "A practical explanation of AI chat sessions, models, agents, tools, orchestration, context loss, and why VS MCP Bridge and BlogAI use source-of-truth docs, durable traces, handoffs, and approval-aware boundaries.",
+    "author":  "AI Systems Author",
+    "slug":  "understanding-ai-chat-sessions-models-and-agents",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-12T16:40:00.000",
+    "dateModified":  "2026-05-16T16:47:37.010",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+
+             ],
+    "contentHashSha256":  "8bbfed2cadbb457da4be57f52fc1b01f473499611995bb3e0949fdfd7f9da8d2",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-16T23:47:37.100Z"
+               }
+}
