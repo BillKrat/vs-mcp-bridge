@@ -192,6 +192,12 @@ public sealed class BridgeToolInfrastructureTests
         var auditEvent = Assert.Single(auditSink.Events);
         Assert.False(auditEvent.Allowed);
         Assert.Equal(MefFakeBridgeTool.ToolId, auditEvent.ToolId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Policy,
+            AuditSeverity.Warning,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
         Assert.Equal("blocked token=[REDACTED]", auditEvent.Metadata["policyReason"]);
         Assert.DoesNotContain(logger.WarningMessages, message => message.Contains("mef-secret"));
     }
@@ -259,6 +265,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("fake.echo", auditEvent.ToolId);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.ToolExecution,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Low,
+            AuditOutcome.Succeeded);
         Assert.Equal("None", auditEvent.Metadata["requiredCapabilities"]);
     }
 
@@ -302,6 +314,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("operation-456", auditEvent.OperationId);
         Assert.Equal("capability policy allowed", auditEvent.Metadata["policyReason"]);
         Assert.Equal("workspace.read,token=[REDACTED]", auditEvent.Metadata["requiredCapabilities"]);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.ToolExecution,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Low,
+            AuditOutcome.Succeeded);
     }
 
     [Fact]
@@ -337,6 +355,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("Secret references resolved", auditEvent.Metadata["secretResolution"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.ToolExecution,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Low,
+            AuditOutcome.Succeeded);
     }
 
     [Fact]
@@ -378,6 +402,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.DoesNotContain(auditEvent.Metadata["secretResolution"], "raw-broker-secret");
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Secret,
+            AuditSeverity.Warning,
+            AuditRiskLevel.High,
+            AuditOutcome.Failed);
     }
 
     [Fact]
@@ -412,6 +442,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("Named:openai-api-key", auditEvent.Metadata["secretReferences"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Secret,
+            AuditSeverity.Warning,
+            AuditRiskLevel.High,
+            AuditOutcome.Failed);
     }
 
     [Fact]
@@ -534,6 +570,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Policy,
+            AuditSeverity.Warning,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
     }
 
     [Fact]
@@ -573,6 +615,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Policy,
+            AuditSeverity.Warning,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
     }
 
     [Fact]
@@ -603,6 +651,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Policy,
+            AuditSeverity.Warning,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
     }
 
     [Fact]
@@ -634,6 +688,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("Not required", auditEvent.Metadata["approvalReason"]);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.ToolExecution,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Low,
+            AuditOutcome.Succeeded);
     }
 
     [Fact]
@@ -675,6 +735,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("Required", auditEvent.Metadata["approvalRequirement"]);
         Assert.Equal("Approved", auditEvent.Metadata["approvalDecision"]);
         Assert.Equal("operator approved token=[REDACTED]", auditEvent.Metadata["approvalReason"]);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.ToolExecution,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Low,
+            AuditOutcome.Succeeded);
     }
 
     [Fact]
@@ -714,6 +780,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("Required", auditEvent.Metadata["approvalRequirement"]);
         Assert.Equal("Denied", auditEvent.Metadata["approvalDecision"]);
         Assert.Equal("operator denied token=[REDACTED]", auditEvent.Metadata["approvalReason"]);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Approval,
+            AuditSeverity.Informational,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
     }
 
     [Fact]
@@ -748,6 +820,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("ExecutionFailed", auditEvent.ErrorCode);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Execution,
+            AuditSeverity.Error,
+            AuditRiskLevel.High,
+            AuditOutcome.Failed);
     }
 
     [Fact]
@@ -800,6 +878,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
         Assert.Equal("test token=[REDACTED]", auditEvent.Metadata["policyReason"]);
+        AssertAuditClassification(
+            auditEvent,
+            AuditEventCategory.Policy,
+            AuditSeverity.Warning,
+            AuditRiskLevel.Medium,
+            AuditOutcome.Denied);
     }
 
     [Fact]
@@ -1103,6 +1187,23 @@ public sealed class BridgeToolInfrastructureTests
             OperationId = "operation-456",
             Arguments = new Dictionary<string, object?> { ["input"] = "hello" }
         };
+
+    private static void AssertAuditClassification(
+        BridgeAuditEnvelope auditEvent,
+        AuditEventCategory category,
+        AuditSeverity severity,
+        AuditRiskLevel riskLevel,
+        AuditOutcome outcome)
+    {
+        Assert.Equal(category, auditEvent.Category);
+        Assert.Equal(severity, auditEvent.Severity);
+        Assert.Equal(riskLevel, auditEvent.RiskLevel);
+        Assert.Equal(outcome, auditEvent.Outcome);
+        Assert.Equal(category.ToString(), auditEvent.Metadata["auditCategory"]);
+        Assert.Equal(severity.ToString(), auditEvent.Metadata["auditSeverity"]);
+        Assert.Equal(riskLevel.ToString(), auditEvent.Metadata["auditRiskLevel"]);
+        Assert.Equal(outcome.ToString(), auditEvent.Metadata["auditOutcome"]);
+    }
 
     private static BridgeToolRequest CreateRequestWithSecretReference(string toolId, ISecretReference secretReference)
         => new BridgeToolRequest

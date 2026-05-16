@@ -324,6 +324,7 @@ Confirm:
 - unresolved secret references return structured `SecretReferenceUnresolved` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
 - audit metadata includes redacted required capabilities, secret references, secret resolution status, approval requirement, approval decision, and redacted approval reason
+- audit classification metadata includes category, severity, risk level, and outcome for success, policy denial, approval denial, unresolved secret references, cancellation, and execution failure
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results
 - `RegexTextSearchTool.ExecuteAsync` returns structured failure for invalid regex

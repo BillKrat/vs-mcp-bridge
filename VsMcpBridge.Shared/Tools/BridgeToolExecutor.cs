@@ -97,6 +97,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: ToolExecutionApprovalRequirement.NotRequired,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Unknown tool",
+                    classification: ClassifyUnknownTool(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -125,6 +126,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Policy denied before approval",
+                    classification: ClassifyPolicyDenied(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -148,6 +150,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: "Denied",
                     approvalReason: approvalDecision.Reason,
+                    classification: ClassifyApprovalDenied(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -171,6 +174,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
+                    classification: ClassifySecretUnresolved(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -198,6 +202,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
+                    classification: result.Success ? ClassifySuccessfulExecution() : ClassifyExecutionFailed(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -219,6 +224,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
+                    classification: ClassifyCanceled(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -241,6 +247,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: tool.Descriptor.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
                     approvalReason: approvalDecision.Reason,
+                    classification: ClassifyExecutionFailed(),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -275,9 +282,13 @@ namespace VsMcpBridge.Shared.Tools
             ToolExecutionApprovalRequirement approvalRequirement,
             string approvalDecision,
             string approvalReason,
+            AuditClassificationMetadata classification,
             long elapsedMilliseconds,
             CancellationToken cancellationToken)
         {
+            if (classification == null)
+                classification = new AuditClassificationMetadata();
+
             try
             {
                 await _auditSink.RecordAsync(
@@ -291,8 +302,16 @@ namespace VsMcpBridge.Shared.Tools
                         Allowed = allowed,
                         ErrorCode = result.ErrorCode,
                         ElapsedMilliseconds = elapsedMilliseconds,
+                        Category = classification.Category,
+                        Severity = classification.Severity,
+                        RiskLevel = classification.RiskLevel,
+                        Outcome = classification.Outcome,
                         Metadata = new Dictionary<string, string>
                         {
+                            ["auditCategory"] = classification.Category.ToString(),
+                            ["auditSeverity"] = classification.Severity.ToString(),
+                            ["auditRiskLevel"] = classification.RiskLevel.ToString(),
+                            ["auditOutcome"] = classification.Outcome.ToString(),
                             ["policyReason"] = RedactValue(policyReason),
                             ["requiredCapabilities"] = RedactValue(requiredCapabilities),
                             ["secretReferences"] = RedactValue(secretReferences),
@@ -389,5 +408,54 @@ namespace VsMcpBridge.Shared.Tools
                 return $"<Unserializable payload: {ex.GetType().Name}>";
             }
         }
+
+        private static AuditClassificationMetadata ClassifyUnknownTool()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.ToolExecution,
+                AuditSeverity.Warning,
+                AuditRiskLevel.Medium,
+                AuditOutcome.Failed);
+
+        private static AuditClassificationMetadata ClassifyPolicyDenied()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.Policy,
+                AuditSeverity.Warning,
+                AuditRiskLevel.Medium,
+                AuditOutcome.Denied);
+
+        private static AuditClassificationMetadata ClassifyApprovalDenied()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.Approval,
+                AuditSeverity.Informational,
+                AuditRiskLevel.Medium,
+                AuditOutcome.Denied);
+
+        private static AuditClassificationMetadata ClassifySecretUnresolved()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.Secret,
+                AuditSeverity.Warning,
+                AuditRiskLevel.High,
+                AuditOutcome.Failed);
+
+        private static AuditClassificationMetadata ClassifySuccessfulExecution()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.ToolExecution,
+                AuditSeverity.Informational,
+                AuditRiskLevel.Low,
+                AuditOutcome.Succeeded);
+
+        private static AuditClassificationMetadata ClassifyCanceled()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.Execution,
+                AuditSeverity.Warning,
+                AuditRiskLevel.Medium,
+                AuditOutcome.Canceled);
+
+        private static AuditClassificationMetadata ClassifyExecutionFailed()
+            => new AuditClassificationMetadata(
+                AuditEventCategory.Execution,
+                AuditSeverity.Error,
+                AuditRiskLevel.High,
+                AuditOutcome.Failed);
     }
 }

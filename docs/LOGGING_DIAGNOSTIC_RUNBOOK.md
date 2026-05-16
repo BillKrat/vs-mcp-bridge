@@ -83,6 +83,7 @@ The current baseline validates:
 - safe `SecretReferenceUnresolved` failure before tool execution when the configured broker cannot resolve a reference
 - redacted Trace-level request/result payload logging
 - terminal `BridgeAuditEnvelope` emission when an audit sink is registered
+- structured audit classification metadata on terminal tool outcomes: category, severity, risk level, and outcome
 
 Security-aware compiled-tool artifacts:
 
@@ -129,6 +130,7 @@ New code should use the existing boundary logging pattern when applicable:
 - when capturing capability metadata or capability policy decisions, treat them as declarative policy input; record the redacted required-capability list but do not infer that authentication, OAuth scopes, role/user identity, UI prompts, persistent policy storage, remote authorization, or sandboxing exists
 - when capturing secret-reference metadata, record only reference kind/provider/id and redacted broker status; do not infer that production secret storage, encryption, key-vault integration, external providers, persistence, or raw secret injection exists
 - for approval-required tool traces, record only redacted approval reason metadata and confirm denied approvals return `ApprovalDenied` without invoking the tool
+- when capturing audit events, include classification fields as observability metadata only; do not infer SIEM integration, compliance mappings, persistence infrastructure, remote transport, or aggregation exists
 
 Do not add opaque workflow paths. If a future AI session cannot quickly answer "where did this request stop?", add the minimum logging or artifact capture needed before expanding that path.
 

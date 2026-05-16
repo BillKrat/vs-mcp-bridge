@@ -23,6 +23,14 @@ namespace VsMcpBridge.Shared.Security
 
         public long ElapsedMilliseconds { get; set; }
 
+        public AuditEventCategory Category { get; set; } = AuditEventCategory.ToolExecution;
+
+        public AuditSeverity Severity { get; set; } = AuditSeverity.Informational;
+
+        public AuditRiskLevel RiskLevel { get; set; } = AuditRiskLevel.Low;
+
+        public AuditOutcome Outcome { get; set; } = AuditOutcome.Unknown;
+
         public IReadOnlyDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
     }
 }

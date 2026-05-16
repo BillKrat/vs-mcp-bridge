@@ -101,6 +101,7 @@ The executor is the shared enforcement point for foundational tool security beha
 - `ISecretBroker` is the indirection seam for future secret resolution; the default `NoOpSecretBroker` returns unresolved.
 - `ISecurityRedactor` masks obvious secret-like values before payload-oriented logs or audit metadata are emitted.
 - `IAuditSink` receives a structured `BridgeAuditEnvelope` after allowed, policy-denied, approval-denied, secret-reference-unresolved, successful, failed, canceled, or unknown-tool outcomes, including redacted required-capability and secret-reference metadata.
+- `BridgeAuditEnvelope` includes lightweight classification fields for category, severity, risk level, and outcome so terminal tool events can be categorized without external telemetry or compliance infrastructure.
 - request id and operation id remain part of the policy, audit, logging, and result path.
 
 Current safe defaults preserve existing runtime behavior:
@@ -124,6 +125,8 @@ That trace uses a shared-test fake approval-required tool and proves approved an
 Capability metadata is declarative only in the current system. It is visible to policy and audit, and the optional `CapabilityToolExecutionPolicy` can evaluate static allowed/denied capability names.
 It does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, persistent policy storage, remote authorization, or production authorization by itself.
 Secret references are also contract-only. They provide structured indirection and safe observability metadata, but they do not implement real secret storage, encryption, Azure Key Vault, external providers, authentication, persistence, or raw secret injection into tools.
+Audit classification is observability plumbing only. `BridgeToolExecutor` assigns sensible defaults such as informational/low for successful execution, warning/medium for policy denial, informational/medium for approval denial, warning/high for unresolved secret references, and error/high for execution exceptions.
+It does not implement SIEM integration, compliance mappings, durable audit storage, remote audit transport, or aggregation by itself.
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.
@@ -140,6 +143,7 @@ Deferred security work remains explicit:
 - capability attestation
 - distributed provenance chain
 - tamper-evident audit store
+- audit export and aggregation
 
 Hooks and contract models only:
 
