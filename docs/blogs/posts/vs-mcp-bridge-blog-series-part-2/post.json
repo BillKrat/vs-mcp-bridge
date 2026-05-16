@@ -1,17 +1,39 @@
-﻿{
-    "blogId":  "27604F05-86AD-47EF-9E05-950BB762570C",
-    "postId":  144,
-    "title":  "VS MCP Bridge Blog Series: Part 2",
-    "description":  "How Prompts Become MCP Tool Workflows\nThis post continues the developer ramp-up series for VS MCP Br",
-    "author":  "AI Systems Author",
-    "slug":  "vs-mcp-bridge-blog-series-part-2",
-    "isPublished":  true,
-    "allowComments":  true,
-    "categories":  [
-
-                   ],
-    "tags":  [
-
-             ]
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "CAD63F28-5739-40BE-B8F6-0288A1E3DA20",
+  "title": "VS MCP Bridge Blog Series: Part 2",
+  "description": "How VS MCP Bridge turns prompts into observable AI-assisted tool workflows with approval boundaries, durable traces, logs, and Mermaid diagrams.",
+  "author": "AI Systems Author",
+  "slug": "vs-mcp-bridge-blog-series-part-2",
+  "isPublished": true,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "VS MCP Bridge",
+    "MCP",
+    "AI Tooling",
+    "Observable Workflows",
+    "Approval",
+    "Diagnostics",
+    "Mermaid",
+    "Architecture"
+  ],
+  "sourceDatabase": {
+    "exportName": "db-export-20260516",
+    "databaseTable": "dbo.be_Posts",
+    "postRowId": 144,
+    "blogId": "27604f05-86ad-47ef-9e05-950bb762570c",
+    "postId": "cad63f28-5739-40be-b8f6-0288a1e3da20",
+    "status": "published",
+    "isPublished": true,
+    "isDeleted": false,
+    "dateCreated": "2026-04-11T17:35:00.000",
+    "dateModified": "2026-05-12T17:58:49.887",
+    "exportFolder": "vs-mcp-bridge-blog-series-part-2",
+    "metadataFile": "post.database.json",
+    "contentFile": "content.html"
+  }
 }
-
