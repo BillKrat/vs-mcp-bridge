@@ -177,7 +177,8 @@ The harness should:
 
 For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use trace-only policy or approval wrappers when you need to print observed decisions without changing production defaults.
 Capability-aware traces should use a fake or test tool descriptor with `RequiredCapabilities` populated; existing compiled tools declare no required capabilities by default.
-Capability metadata is policy input only in the current bridge. It is not authentication, OAuth scope enforcement, role/user identity, UI permission prompting, sandboxing, or production authorization.
+Capability metadata is policy input only in the current bridge. `CapabilityToolExecutionPolicy` can be used explicitly in tests or harnesses to evaluate static allowed, denied, and unknown required capabilities.
+It is not authentication, OAuth scope enforcement, role/user identity, UI permission prompting, persistent policy storage, remote authorization, sandboxing, or production authorization.
 Approval-aware traces should use a fake or test tool descriptor with `ApprovalRequirement=Required`; existing compiled tools remain approval-not-required by default.
 The current durable approval trace uses the shared-test `ApprovalRequiredBridgeTool` fixture and `RecordingToolExecutionApprovalService`.
 
@@ -311,6 +312,8 @@ Confirm:
 - `BridgeToolExecutor.ExecuteAsync` logs redacted required-capability metadata after catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
 - `ToolExecutionSecurityContext.RequiredCapabilities` exposes descriptor-declared capabilities to policy
+- `CapabilityToolExecutionPolicy` is optional and is not the default DI policy
+- when `CapabilityToolExecutionPolicy` denies, `BridgeToolExecutor` returns a structured `PolicyDenied` result before approval or tool execution
 - `BridgeToolExecutor.ExecuteAsync` evaluates approval only when the descriptor requires it
 - approval-denied executions return structured `ApprovalDenied` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes

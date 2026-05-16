@@ -107,6 +107,8 @@ Current safe defaults preserve existing runtime behavior:
 - existing tool descriptors default to no required capabilities, so capability metadata does not change current authorization behavior.
 - existing tool descriptors default to `ApprovalRequirement = NotRequired`, so they do not invoke approval before execution.
 - `AllowToolExecutionApprovalService` is the default approval service for hosts or tests that do not override the seam.
+- `CapabilityToolExecutionPolicy` is available as an explicit opt-in policy that can allow or deny based on descriptor-declared capabilities.
+- the default DI policy remains `AllowToolExecutionPolicy`, so existing runtime behavior is unchanged unless a host or test deliberately replaces it.
 - `NoOpAuditSink` records nothing unless a host or test overrides it.
 - `BridgeSecurityRedactor` performs basic masking for obvious keys such as `apiKey`, `token`, `password`, `secret`, and bearer authorization values.
 
@@ -116,7 +118,8 @@ Approval-aware execution is now part of the same executor boundary: a descriptor
 This seam does not redesign the proposal approval workflow; it is a tool-execution policy checkpoint for future selected tools.
 The durable approval-aware evidence is `docs/diagrams/tool-approval-trace-20260516.mmd` with correlated logs and metadata under `artifacts/logs/tool-approval-trace-20260516.*`.
 That trace uses a shared-test fake approval-required tool and proves approved and denied decisions without adding a runtime tool, UI prompt, proposal approval redesign, or MCP transport change.
-Capability metadata is declarative only in the current system. It is visible to policy and audit, but it does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, or production authorization by itself.
+Capability metadata is declarative only in the current system. It is visible to policy and audit, and the optional `CapabilityToolExecutionPolicy` can evaluate static allowed/denied capability names.
+It does not implement authentication, user identity, role mapping, OAuth scopes, UI permission prompts, sandboxing, persistent policy storage, remote authorization, or production authorization by itself.
 
 Tool and plugin authors are not responsible for core redaction, policy evaluation, approval decision emission, or audit emission.
 They still own their tool-specific validation and structured result shape, but the bridge execution boundary must continue to provide the shared security seams.

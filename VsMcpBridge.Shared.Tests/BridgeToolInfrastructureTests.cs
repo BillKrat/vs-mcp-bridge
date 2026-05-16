@@ -303,6 +303,167 @@ public sealed class BridgeToolInfrastructureTests
     }
 
     [Fact]
+    public async Task Capability_policy_allows_tool_with_no_required_capabilities()
+    {
+        var policy = new CapabilityToolExecutionPolicy(new CapabilityToolExecutionPolicyOptions
+        {
+            DenyUnknownRequiredCapabilities = true
+        });
+        var request = CreateRequest("fake.echo");
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.echo",
+            Name = "Fake Echo"
+        };
+
+        var decision = await policy.EvaluateAsync(new ToolExecutionSecurityContext(request, descriptor), CancellationToken.None);
+
+        Assert.True(decision.Allowed);
+        Assert.Equal("No required capabilities", decision.Reason);
+    }
+
+    [Fact]
+    public async Task Capability_policy_allows_configured_required_capability()
+    {
+        var options = new CapabilityToolExecutionPolicyOptions
+        {
+            DenyUnknownRequiredCapabilities = true
+        };
+        options.AllowedCapabilities.Add("workspace.read");
+        var policy = new CapabilityToolExecutionPolicy(options);
+        var request = CreateRequest("fake.capability");
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.capability",
+            Name = "Fake Capability",
+            RequiredCapabilities = new[] { new BridgeCapability("workspace.read") }
+        };
+
+        var decision = await policy.EvaluateAsync(new ToolExecutionSecurityContext(request, descriptor), CancellationToken.None);
+
+        Assert.True(decision.Allowed);
+        Assert.Equal("Required capabilities allowed", decision.Reason);
+    }
+
+    [Fact]
+    public async Task Capability_policy_denies_configured_denied_capability()
+    {
+        var options = new CapabilityToolExecutionPolicyOptions();
+        options.AllowedCapabilities.Add("workspace.write");
+        options.DeniedCapabilities.Add("workspace.write");
+        var policy = new CapabilityToolExecutionPolicy(options);
+        var request = CreateRequest("fake.capability");
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.capability",
+            Name = "Fake Capability",
+            RequiredCapabilities = new[] { new BridgeCapability("workspace.write") }
+        };
+
+        var decision = await policy.EvaluateAsync(new ToolExecutionSecurityContext(request, descriptor), CancellationToken.None);
+
+        Assert.False(decision.Allowed);
+        Assert.Equal("Denied required capability 'workspace.write'.", decision.Reason);
+    }
+
+    [Fact]
+    public async Task Capability_policy_unknown_capability_behavior_is_configurable()
+    {
+        var request = CreateRequest("fake.capability");
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.capability",
+            Name = "Fake Capability",
+            RequiredCapabilities = new[] { new BridgeCapability("workspace.unknown") }
+        };
+        var allowUnknown = new CapabilityToolExecutionPolicy(new CapabilityToolExecutionPolicyOptions());
+        var denyUnknown = new CapabilityToolExecutionPolicy(new CapabilityToolExecutionPolicyOptions
+        {
+            DenyUnknownRequiredCapabilities = true
+        });
+
+        var allowed = await allowUnknown.EvaluateAsync(new ToolExecutionSecurityContext(request, descriptor), CancellationToken.None);
+        var denied = await denyUnknown.EvaluateAsync(new ToolExecutionSecurityContext(request, descriptor), CancellationToken.None);
+
+        Assert.True(allowed.Allowed);
+        Assert.Equal("Required capabilities allowed", allowed.Reason);
+        Assert.False(denied.Allowed);
+        Assert.Equal("Unknown required capability 'workspace.unknown'.", denied.Reason);
+    }
+
+    [Fact]
+    public async Task Executor_uses_capability_policy_to_deny_and_preserves_audit_metadata()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var options = new CapabilityToolExecutionPolicyOptions();
+        options.DeniedCapabilities.Add("workspace.write");
+        var policy = new CapabilityToolExecutionPolicy(options);
+        var tool = new CapabilityBridgeTool(new[] { new BridgeCapability("workspace.write") });
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy);
+        var request = CreateRequest(CapabilityBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Equal("Denied required capability 'workspace.write'.", result.Message);
+        Assert.Null(tool.LastRequest);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.False(auditEvent.Success);
+        Assert.Equal("PolicyDenied", auditEvent.ErrorCode);
+        Assert.Equal("Denied required capability 'workspace.write'.", auditEvent.Metadata["policyReason"]);
+        Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
+    public async Task Executor_does_not_invoke_approval_when_capability_policy_denies_first()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var approvalService = new RecordingToolExecutionApprovalService(ToolExecutionApprovalDecision.Approve("should not be called"));
+        var options = new CapabilityToolExecutionPolicyOptions();
+        options.DeniedCapabilities.Add("workspace.write");
+        var policy = new CapabilityToolExecutionPolicy(options);
+        var tool = new ApprovalRequiredBridgeTool
+        {
+            Descriptor =
+            {
+                RequiredCapabilities = new[] { new BridgeCapability("workspace.write") }
+            }
+        };
+        var executor = new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new[] { tool }),
+            logger,
+            new BridgeSecurityRedactor(),
+            auditSink,
+            policy,
+            approvalService);
+        var request = CreateRequest(ApprovalRequiredBridgeTool.ToolId);
+
+        var result = await executor.ExecuteAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("PolicyDenied", result.ErrorCode);
+        Assert.Null(tool.LastRequest);
+        Assert.Equal(0, approvalService.CallCount);
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.False(auditEvent.Allowed);
+        Assert.Equal("NotEvaluated", auditEvent.Metadata["approvalDecision"]);
+        Assert.Equal("workspace.write", auditEvent.Metadata["requiredCapabilities"]);
+        Assert.Equal("request-123", auditEvent.RequestId);
+        Assert.Equal("operation-456", auditEvent.OperationId);
+    }
+
+    [Fact]
     public async Task Executor_preserves_capability_metadata_when_policy_denies()
     {
         var logger = new RecordingBridgeLogger();
