@@ -32,6 +32,7 @@ Current migration note:
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-2-20260516.md` records the read-only pre-publish compare for Part 2 before the single-post review update.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-3-20260516.md` records the fresh read-only pre-publish compare for Part 3 before targeted blocked-row inspection.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-5-20260516.md` records the fresh read-only pre-publish compare for Part 5 before targeted blocked-row inspection.
+- `prepublish-compare-vs-mcp-bridge-blog-series-part-6-20260516.md` records the fresh read-only pre-publish compare for Part 6 before targeted blocked-row inspection.
 - `prepublish-compare-vs-mcp-bridge-blog-series-part-7-20260516.md` records the read-only pre-publish compare for Part 7 before the single-post review update.
 - `prepublish-compare-understanding-a-named-pipe-listener-20260516.md` records the read-only pre-publish compare for the named-pipe listener post before the single-post review update.
 - `prepublish-compare-understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe-20260516.md` records the read-only pre-publish compare for the stdio/named-pipe overview post before the single-post review update.
@@ -44,6 +45,7 @@ Current migration note:
 - `prepublish-inspection-vs-mcp-bridge-blog-series-part-3-20260516.md` records the targeted read-only inspection that cleared Part 3 for the next guarded single-post review update.
 - `prepublish-inspection-vs-mcp-bridge-blog-series-part-4-20260516.md` records the targeted read-only inspection that cleared the live Part 4 row for the next guarded single-post review update while leaving the repo-trial draft untouched.
 - `prepublish-inspection-vs-mcp-bridge-blog-series-part-5-20260516.md` records the targeted read-only inspection that cleared Part 5 for the next guarded single-post review update and documents the intentional `[Page:Playbook]` token.
+- `prepublish-inspection-vs-mcp-bridge-blog-series-part-6-20260516.md` records the targeted read-only inspection that cleared Part 6 for the next guarded single-post review update and documents the intentional `[Page:Evidence]` token.
 - `prepublish-inspection-understanding-ai-chat-sessions-models-and-agents-20260516.md` records the targeted read-only inspection that cleared the AI chat sessions/models/agents row for the next guarded single-post review update.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first single-post review update, before/after exports, and rendered-cache behavior for Part 1.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-2-20260516.md` records the Part 2 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
