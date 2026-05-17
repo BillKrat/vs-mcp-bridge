@@ -1,0 +1,45 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  155,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "d0541943-0de1-4c25-a7af-9950c55f1591"
+               },
+    "title":  "How stdio Works in VS MCP Bridge",
+    "description":  "A practical walkthrough of how VS MCP Bridge uses stdio as the MCP transport boundary, keeps stdout clean, and routes VS-backed work through the named-pipe activation boundary.",
+    "author":  "AI Systems Author",
+    "slug":  "how-stdio-works-in-vs-mcp-bridge",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-19T23:24:00.000",
+    "dateModified":  "2026-05-16T17:51:32.807",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+                 [
+                     "AI Tooling",
+                     "MCP",
+                     "Named Pipes",
+                     "stdio",
+                     "Visual Studio",
+                     "VS MCP Bridge",
+                     "VSIX"
+                 ]
+             ],
+    "contentHashSha256":  "29d6e0fb2554f601703e83becda8d577be5546dd1f97b142951853b696f84ea7",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-17T00:51:32.930Z"
+               }
+}
