@@ -5,6 +5,7 @@
 `Compare-BlogPostBeforePublish.ps1` is the read-only safety check to run before publishing.
 `Compare-ReadyBlogPostsBeforePublish.ps1` batches that safety check across the ready-post publishing list.
 `Compare-BlockedBlogRowsBeforePublish.ps1` inspects blocked live-vs-export differences without publishing.
+`Test-BlogRenderedRoutes.ps1` performs the read-only final rendered-route verification pass against the development BlogAI site.
 
 ## Script
 
@@ -16,6 +17,7 @@
 - [Compare-BlogPostBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-BlogPostBeforePublish.ps1)
 - [Compare-ReadyBlogPostsBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-ReadyBlogPostsBeforePublish.ps1)
 - [Compare-BlockedBlogRowsBeforePublish.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Compare-BlockedBlogRowsBeforePublish.ps1)
+- [Test-BlogRenderedRoutes.ps1](Y:/vs-mcp-bridge/scripts/blog-publishing/Test-BlogRenderedRoutes.ps1)
 
 ## Read-Only Export
 
@@ -65,6 +67,21 @@ It performs parameterized `SELECT` calls only and does not publish, reload, upda
 
 By default the script writes `docs/blogs/prepublish-blocked-row-diff-20260516.md`.
 It performs parameterized `SELECT` calls only and does not publish, reload, update, or delete database records.
+
+`Test-BlogRenderedRoutes.ps1` checks the 14 guarded publish-review routes on the development BlogAI site and writes the final rendered-route evidence report.
+
+```powershell
+.\scripts\blog-publishing\Test-BlogRenderedRoutes.ps1
+```
+
+Default output:
+
+```text
+docs/blogs/final-rendered-route-verification-20260516.md
+```
+
+The script performs HTTP GET requests only.
+It does not query the database, publish content, call the reload endpoint, or change public site behavior.
 
 ## Single-Post Review Update
 
