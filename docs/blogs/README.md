@@ -66,6 +66,7 @@ Current migration note:
 - `publish-review-status-20260516.md` reconciles the 14 ready posts against their publish-review reports, before/after exports, canonical body checks, reload/render verification, and remaining actions.
 - `final-rendered-route-verification-20260516.md` records the read-only final rendered-route verification pass across all 14 publish-review updated BlogAI routes.
 - `stale-shared-feature-branch-link-inspection-20260516.md` identifies the stale `feature/approval-apply-ui-slice` rendered marker as cached TextBox widget content from row `26512`, with the live DB row already updated to main-branch links.
+- `final-rendered-route-verification-after-cache-clear-20260516.md` records the controlled cache-clear attempt, its HTTP 500 result, and the follow-up route verification showing post bodies still pass while shared stale widget content remains.
 - `blogai-cache-reload-inspection-20260516.md` records the BlogAI/BlogEngine post-cache reload inspection after the first Part 1 DB body update and documents the safe development reload verification path.
 - `gwn-wiki-extension-link-mapping-20260516.md` records the preserved `GwnWikiExtension` plugin settings export from `dbo.be_DataStoreSettings` and explains how bracket-style tokens resolve to production-domain links.
 
