@@ -1,0 +1,46 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  146,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "f62f7756-269a-4d49-a87d-c0394c7627d9"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 4",
+    "description":  "How VS MCP Bridge turns compiled bridge tools into observable contracts through IBridgeTool, descriptors, requests, results, catalog discovery, BridgeToolExecutor, approval-aware execution, audit metadata, and correlation-preserving tests.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-4",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T18:01:00.000",
+    "dateModified":  "2026-05-16T17:20:26.250",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+                 [
+                     "AI Tooling",
+                     "Failure Recovery",
+                     "MCP",
+                     "Named Pipes",
+                     "Runtime validation",
+                     "Visual Studio",
+                     "VS MCP Bridge",
+                     "VSIX"
+                 ]
+             ],
+    "contentHashSha256":  "ca34e445f2dbc801f3584549f0c85b04f228b25410d3f9a22af32733db895ba4",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-17T00:20:26.358Z"
+               }
+}

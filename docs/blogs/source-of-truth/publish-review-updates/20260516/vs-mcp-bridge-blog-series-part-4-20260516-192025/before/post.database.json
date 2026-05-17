@@ -1,0 +1,46 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  146,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "f62f7756-269a-4d49-a87d-c0394c7627d9"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 4",
+    "description":  "Runtime Validation, Failure Loops, and Clean Recovery. This post explains how to validate the current VS MCP Bridge end to end, what evidence to look for during testing, and why clean failure and recovery behavior matter as much as success.\n\nThe next likely topic is the concrete validation playbook: exact order of checks, what to open, what to run, and what signals confirm each step.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-4",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T18:01:00.000",
+    "dateModified":  "2026-04-12T10:30:50.303",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+                 [
+                     "AI Tooling",
+                     "Failure Recovery",
+                     "MCP",
+                     "Named Pipes",
+                     "Runtime validation",
+                     "Visual Studio",
+                     "VS MCP Bridge",
+                     "VSIX"
+                 ]
+             ],
+    "contentHashSha256":  "7057316908f8d1b111d82eae0e82a2e96616e97113f8527ed1e0764e3eb55762",
+    "export":  {
+                   "phase":  "before-review-update",
+                   "folder":  "before",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-17T00:20:26.052Z"
+               }
+}

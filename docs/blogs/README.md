@@ -46,6 +46,7 @@ Current migration note:
 - `publish-review-update-vs-mcp-bridge-blog-series-part-1-20260516.md` records the first single-post review update, before/after exports, and rendered-cache behavior for Part 1.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-2-20260516.md` records the Part 2 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-3-20260516.md` records the Part 3 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
+- `publish-review-update-vs-mcp-bridge-blog-series-part-4-20260516.md` records the live Part 4 single-post review update, before/after exports, BlogAI reload result, rendered-route verification, and confirmation that the repo-trial draft remained untouched.
 - `publish-review-update-vs-mcp-bridge-blog-series-part-7-20260516.md` records the Part 7 single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
 - `publish-review-update-understanding-a-named-pipe-listener-20260516.md` records the named-pipe listener single-post review update, before/after exports, BlogAI reload result, token preservation, and rendered-route verification.
 - `publish-review-update-understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe-20260516.md` records the stdio/named-pipe overview single-post review update, before/after exports, BlogAI reload result, and rendered-route verification.
