@@ -1,0 +1,41 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  155,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "d0541943-0de1-4c25-a7af-9950c55f1591"
+               },
+    "title":  "How stdio Works in VS MCP Bridge",
+    "description":  "A practical walkthrough of how the VS MCP Bridge MCP server uses stdio, where that transport begins and ends, and how work then crosses into Visual Studio through the named-pipe boundary.",
+    "author":  "AI Systems Author",
+    "slug":  "how-stdio-works-in-vs-mcp-bridge",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-19T23:24:00.000",
+    "dateModified":  "2026-04-27T10:21:07.833",
+    "categories":  [
+                       "AI Systems Author",
+                       "MCP Bridge"
+                   ],
+    "tags":  [
+                 "AI Tooling",
+                 "MCP",
+                 "Named Pipes",
+                 "stdio",
+                 "Visual Studio",
+                 "VS MCP Bridge",
+                 "VSIX"
+             ],
+    "contentHashSha256":  "27874b495d02eb1a60865210b54837ac0f6359c33fe15430f4f99a130296ae81",
+    "export":  {
+                   "phase":  "targeted-prepublish-inspection",
+                   "folder":  "how-stdio-works-in-vs-mcp-bridge-20260516-194637",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-17T00:46:38.037Z"
+               }
+}
