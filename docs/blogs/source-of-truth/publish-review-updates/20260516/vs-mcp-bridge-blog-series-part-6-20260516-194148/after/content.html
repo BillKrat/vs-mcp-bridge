@@ -1,0 +1,128 @@
+<p>[Page:Evidence]</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/ARCHITECTURE.md" target="_blank">docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post continues the core series from discovery into the security, policy, approval, audit, and redaction seams around tool execution.</p>
+
+<h1>VS MCP Bridge Blog Series: Part 6</h1>
+<h2>Security Seams Around Tool Execution</h2>
+
+<p>Part 5 described how VS MCP Bridge keeps tool discovery explicit. Compiled tools are the default, MEF is an opt-in discovery seam, and discovered tools are not allowed to become their own execution system.</p>
+
+<p>Part 6 looks at the next question: <strong>what happens after a tool is found?</strong></p>
+
+<p>The answer is the same for compiled tools, discovered tools, fake test tools, and future extension points: tool execution must flow through <code>BridgeToolExecutor</code>. That is the boundary where policy, approval, secret-reference checks, audit, redaction, correlation, and the actual tool call are kept together.</p>
+
+<p>This is not a claim that VS MCP Bridge already has production authentication, OAuth, RBAC, vault-backed secrets, sandboxed plugins, or a compliance audit system. It does not. The current work is security architecture plumbing: narrow contracts and observable boundaries that make future hardening possible without scattering security decisions through every tool.</p>
+
+<h3>The Boundary Is The Security Feature</h3>
+
+<p>The most important rule is simple: a tool should not be able to bypass the executor just because it was registered successfully.</p>
+
+<p>Discovery answers <em>what tools exist</em>. Execution answers <em>whether this request is allowed to run, whether approval is required, what metadata must be audited, what should be redacted, and what result is returned</em>.</p>
+
+<p>Keeping those responsibilities in one boundary matters because every new tool adds risk. A search tool, a Visual Studio-backed tool, a future file-writing tool, or a future extension-provided tool may all have different capabilities, but they should still be evaluated through the same execution path.</p>
+
+<h3>What The Executor Owns</h3>
+
+<p>The current <code>BridgeToolExecutor</code> owns the security-sensitive execution sequence:</p>
+
+<ul>
+  <li>resolve the requested tool from the catalog</li>
+  <li>build a security context with tool metadata, request metadata, correlation identifiers, capabilities, approval requirement, and secret references</li>
+  <li>evaluate the configured tool execution policy before running the tool</li>
+  <li>resolve required secret references through the broker seam without making raw secrets part of normal flow</li>
+  <li>ask the approval service when a descriptor requires approval</li>
+  <li>invoke the tool only after policy, secret-reference, and approval checks allow it</li>
+  <li>redact sensitive values before logging or audit output</li>
+  <li>emit an audit envelope with structured outcome, classification, policy, approval, capability, secret-reference, and correlation metadata</li>
+</ul>
+
+<p>That ordering is intentional. Policy denial stops execution before approval. Approval denial stops execution before the tool runs. Secret-reference failure stops execution before unresolved secret material can become accidental runtime behavior.</p>
+
+<h3>Policy Before Execution</h3>
+
+<p>The policy seam is deliberately lightweight today. The default policy allows execution so existing behavior stays unchanged. A capability-aware policy can be configured to allow or deny tools based on declared required capabilities, but it is not a user identity system and it is not RBAC.</p>
+
+<p>That distinction is important. Capability metadata is declarative plumbing. It lets a tool say, for example, "this tool requires a Visual Studio document read capability" or "this tool will touch proposal state." A policy can inspect that metadata. The project has not yet attached those capabilities to authenticated users, accounts, roles, or external authorization decisions.</p>
+
+<p>Even so, the seam is valuable now because the executor and audit pipeline can already preserve the evidence needed to explain why a request was allowed or denied.</p>
+
+<h3>Approval-Aware Execution</h3>
+
+<p>Approval-aware execution follows the same pattern. A tool descriptor can declare that execution requires approval. The executor sees that requirement and calls <code>IToolExecutionApprovalService</code> before invoking the tool.</p>
+
+<p>The default service allows execution, so existing tools continue to run unless they explicitly opt into approval. Tests cover both paths: an approval-required tool can be allowed and executed, or denied and returned as a structured failure without running the tool.</p>
+
+<p>This is not the same thing as a finished user-facing prompt system. It is the execution seam that a prompt system can use later. The important architectural point is that approval is not implemented inside each tool. It lives at the execution boundary.</p>
+
+<h3>Secrets Flow By Reference</h3>
+
+<p>Secret handling follows the same conservative pattern. The current architecture has secret-reference contracts and a broker seam, not real secret storage.</p>
+
+<p>That means tools can describe required secrets as structured references instead of requiring raw values in tool descriptors, logs, prompts, or audit payloads. The default broker returns unresolved or not configured. That is intentionally boring behavior, but it is safer than pretending a real vault exists before one has been designed.</p>
+
+<p>The key rule for future tool authors is that secret values should flow by reference, not by payload. Logs and audit envelopes may record reference metadata and resolution outcome, but not raw secret values.</p>
+
+<h3>Redaction Is Part Of The Boundary</h3>
+
+<p>Redaction is not a final line of defense, and it should not be treated as a substitute for careful data flow. It is still an essential part of the boundary because diagnostics are only useful if operators can safely read them.</p>
+
+<p>The bridge redactor masks obvious secret-like keys and values before they enter logs and audit envelopes. That lets traces remain useful while reducing the chance that credentials, tokens, passwords, or synthetic test sentinels leak into developer-visible output.</p>
+
+<p>This matters for anti-black-box diagnostics. The project needs enough evidence to reconstruct what happened, but not so much raw payload detail that the diagnostic trail becomes a secret leak.</p>
+
+<h3>Audit Envelopes Carry The Explanation</h3>
+
+<p>Audit envelopes are the durable explanation layer around tool execution. They preserve the request and operation correlation metadata, the tool name, policy decision, approval decision, required capabilities, secret-reference metadata, redacted payload summaries, terminal outcome, and structured classification.</p>
+
+<p>The classification metadata is intentionally small: category, severity, risk, and outcome. A successful tool execution can be informational and low risk. A policy denial can be warning and medium risk. An unresolved secret can be warning and high risk. An exception path can be error and high risk.</p>
+
+<p>That is observability plumbing, not a SIEM integration or compliance framework. The value is that a future session can inspect an audit record and understand the shape of the decision without relying on chat history or a debugger session.</p>
+
+<h3>Compiled And Discovered Tools Follow The Same Path</h3>
+
+<p>This is where Part 5 and Part 6 connect. MEF discovery can find extension-provided tools, but discovery does not grant those tools a private execution lane. They still become catalog entries, and execution still flows through the same executor boundary.</p>
+
+<p>That keeps extensibility from erasing the security model. A discovered tool can have descriptor metadata, required capabilities, approval requirements, and secret references. The executor can then evaluate those declarations the same way it evaluates compiled tools.</p>
+
+<p>The current system is intentionally not a plugin sandbox. Future sandboxing, signed manifests, capability attestation, and remote authorization are deferred. The useful thing today is that the project has a place to attach those decisions later.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The repo already has Mermaid sources that support this topic:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-security-trace-20260509.mmd" target="_blank">tool-security-trace-20260509.mmd</a> shows catalog lookup, policy evaluation, redaction, audit, request identifiers, and operation identifiers around tool execution.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-required execution with explicit allow and deny outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows the compiled tool baseline path through DI, catalog lookup, executor, and structured results.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/docs/diagrams/mef-discovery-trace-20260516.mmd" target="_blank">mef-discovery-trace-20260516.mmd</a> shows that MEF discovery feeds the catalog but does not bypass executor-routed execution.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
+
+<h3>What Is Still Deferred</h3>
+
+<p>The current bridge has security seams, not finished enterprise security. The following remain intentionally deferred:</p>
+
+<ul>
+  <li>OAuth and authentication</li>
+  <li>user identity, roles, and RBAC</li>
+  <li>real secret storage or vault integration</li>
+  <li>encrypted persistence</li>
+  <li>remote authorization</li>
+  <li>plugin sandboxing</li>
+  <li>signed plugin manifests</li>
+  <li>tamper-evident audit storage</li>
+  <li>SIEM export or compliance reporting</li>
+</ul>
+
+<p>Calling those items out is part of the architecture. It prevents the current plumbing from being oversold, and it gives future work a clear place to land.</p>
+
+<h3>Takeaway</h3>
+
+<p>VS MCP Bridge does not make tool execution safer by hiding it. It makes execution safer by routing it through a visible boundary that owns policy, approval, secret-reference handling, redaction, audit, classification, correlation, and execution.</p>
+
+<p>That boundary is what keeps compiled tools, discovered tools, and future tools from becoming black boxes. It also gives the project a practical path from today's lightweight seams toward stronger security without pretending that future hardening is already complete.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is how durable trace artifacts, logs, and validation handoffs turn these seams into operational evidence that another developer or AI session can reconstruct without relying on memory.</p>

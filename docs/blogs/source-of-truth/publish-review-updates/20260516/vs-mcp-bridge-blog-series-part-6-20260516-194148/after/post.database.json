@@ -1,0 +1,47 @@
+{
+    "source":  {
+                   "databaseTable":  "dbo.be_Posts",
+                   "postRowId":  148,
+                   "blogId":  "27604f05-86ad-47ef-9e05-950bb762570c",
+                   "postId":  "12db1be9-4143-476d-a12a-04c7ca045a71"
+               },
+    "title":  "VS MCP Bridge Blog Series: Part 6",
+    "description":  "How VS MCP Bridge keeps tool execution security explicit through policy checks, approval-aware execution, capability metadata, secret-reference seams, redaction, audit envelopes, and correlation without claiming production authentication or sandboxing.",
+    "author":  "AI Systems Author",
+    "slug":  "vs-mcp-bridge-blog-series-part-6",
+    "status":  "published",
+    "isPublished":  true,
+    "isDeleted":  false,
+    "allowComments":  true,
+    "raters":  0,
+    "rating":  0,
+    "dateCreated":  "2026-04-11T18:17:00.000",
+    "dateModified":  "2026-05-16T17:41:49.410",
+    "categories":  [
+                       [
+                           "AI Systems Author",
+                           "MCP Bridge"
+                       ]
+                   ],
+    "tags":  [
+                 [
+                     "AI Tooling",
+                     "blog/vs-mcp-bridge-part-6",
+                     "Failure Recovery",
+                     "MCP",
+                     "Observability",
+                     "Runtime validation",
+                     "Visual Studio",
+                     "VS MCP Bridge",
+                     "VSIX"
+                 ]
+             ],
+    "contentHashSha256":  "820289bbea45c2e9508404259b172b5a8d5b07ab57ad15a707278cecfa79a2c3",
+    "export":  {
+                   "phase":  "after-review-update",
+                   "folder":  "after",
+                   "metadataFile":  "post.database.json",
+                   "contentFile":  "content.html",
+                   "exportedAt":  "2026-05-17T00:41:49.526Z"
+               }
+}
