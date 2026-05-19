@@ -6,6 +6,8 @@ If you are an AI assistant starting fresh, read this file first.
 
 For session closeout, use `AI_STOP.md`.
 
+For repository-level agent operating rules, use `AGENTS.md`. For task-specific progressive disclosure, use focused skills under `.agents/skills/` instead of expanding this file with workflow details.
+
 ## Purpose
 
 Use this document to quickly establish the minimum reliable context for a productive session without assuming `README.md` alone contains every current handoff detail.
@@ -25,16 +27,18 @@ This file does not replace the detailed docs. It tells you what to read next and
 Read these first in order:
 
 1. `README.md`
-2. `docs/ARCHITECTURE.md`
-3. `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
-4. `docs/CODING_STANDARDS.md`
-5. `docs/AI_WORKFLOW.md`
+2. `AGENTS.md`
+3. `docs/ARCHITECTURE.md`
+4. `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
+5. `docs/CODING_STANDARDS.md`
+6. `docs/AI_WORKFLOW.md`
 
 Use these as needed after that:
 
 - `docs/MVPVM_OVERVIEW.md` for UI/presenter/viewmodel boundaries
 - `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
+- `.agents/skills/` for focused task workflows such as MCP validation, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
 
 ## New Session vs Resume Session
 
