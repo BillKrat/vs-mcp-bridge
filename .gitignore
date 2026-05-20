@@ -473,6 +473,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/vsix-host-ping-trace-workflow.md
 !/docs/vsix-host-selected-text-trace-workflow.md
 !/docs/tool-execution-trace-workflow.md
+!/docs/tool-package-boundary-plan.md
 !/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md
 !/docs/session-handoffs/
 /docs/session-handoffs/*

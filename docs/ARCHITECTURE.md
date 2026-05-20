@@ -83,6 +83,7 @@ Manifest identity and classification metadata flow through executor trace/audit 
 The durable baseline for this boundary is `docs/tool-execution-trace-workflow.md` with observed artifacts under `artifacts/logs/tool-regex-search-trace-20260509.*` and `docs/diagrams/tool-regex-search-trace-20260509.mmd`.
 The durable MEF discovery boundary evidence is `artifacts/logs/mef-discovery-trace-20260516.*` and `docs/diagrams/mef-discovery-trace-20260516.mmd`; it proves optional directory discovery, missing-directory tolerance, load-failure logging, catalog composition, and preserved executor routing without changing runtime behavior.
 The durable manifest metadata evidence is `artifacts/logs/tool-manifest-trace-20260516.*`, `docs/diagrams/tool-manifest-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-tool-manifest-validation.md`; it proves descriptor-derived manifest metadata is observable in discovery/catalog, security context, approval context where required, executor trace logs, and audit metadata without introducing packaging, remote tools, or MEF behavior changes.
+The future package/namespace extraction direction is documented in `docs/tool-package-boundary-plan.md`; it is planning guidance only and does not move current code out of `VsMcpBridge.Shared/Tools` or `VsMcpBridge.Shared/Security`.
 
 ## Tool Execution Security Seams
 

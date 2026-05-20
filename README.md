@@ -135,6 +135,7 @@ host implementation
 ```
 
 For current system behavior and request flow, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+For future tool package and namespace boundary planning, see [docs/tool-package-boundary-plan.md](docs/tool-package-boundary-plan.md).
 For the detailed living technical reference and roadmap, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
 
 Blog series:
