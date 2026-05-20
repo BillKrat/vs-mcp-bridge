@@ -137,6 +137,36 @@ Approval-aware reference artifacts:
 This trace covers approved and denied approval decisions without adding a runtime user-facing tool, UI approval prompt, proposal approval redesign, or MCP transport change.
 It proves approval decisions are visible through executor logs, structured results, audit metadata, redaction, and request/operation correlation.
 
+## Observed Manifest Metadata Run
+
+After the lightweight manifest model was added to `BridgeToolDescriptor`, manifest metadata flow was validated with the compiled regex text-search path plus a harness-only approval-required probe:
+
+- run name: `tool-manifest-trace-20260516`
+- branch: `main`
+- commit: `5e9b71f`
+- capture date: `2026-05-20`
+- catalog: `CompiledBridgeToolCatalog`
+- executor: `BridgeToolExecutor`
+- policy: trace-only `RecordingPolicy`
+- approval service: default approval service for `RegexTextSearchTool`; harness-only `RecordingApprovalService` for approval-context observation
+- redactor: `BridgeSecurityRedactor`
+- audit sink: `InMemoryAuditSink`
+- compiled tool id: `bridge.regexTextSearch`
+- request id: `tool-manifest-trace-20260516-req-001`
+- operation id: `tool-manifest-trace-20260516-op-001`
+- observed result: success, 2 returned matches, 2 total matches
+
+Manifest metadata reference artifacts:
+
+- sequence diagram: [`docs/diagrams/tool-manifest-trace-20260516.mmd`](diagrams/tool-manifest-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/tool-manifest-trace-20260516.log`](../artifacts/logs/tool-manifest-trace-20260516.log)
+- run metadata: [`artifacts/logs/tool-manifest-trace-20260516.metadata.json`](../artifacts/logs/tool-manifest-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-tool-manifest-validation.md`](session-handoffs/2026-05-16-tool-manifest-validation.md)
+
+This trace proves descriptor-derived manifest metadata is visible through catalog descriptors, `ToolExecutionSecurityContext`, trace logging, and audit metadata.
+It also uses a temporary harness-only approval-required tool to observe `ToolExecutionApprovalContext.Manifest` without adding a production tool or changing runtime behavior.
+The MEF path is documented from existing shared-test evidence for `MefFakeBridgeTool`; this trace does not change MEF behavior.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`

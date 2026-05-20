@@ -1,0 +1,92 @@
+RunName=tool-manifest-trace-20260516
+Scope=Observed manifest metadata flow for compiled RegexTextSearchTool plus an approval-required harness-only probe.
+RuntimeBehaviorChanged=False
+ProductionToolsAdded=False
+MefBehaviorChanged=False
+
+[CompiledTool.Manifest]
+DescriptorId=bridge.regexTextSearch
+ManifestId=bridge.regexTextSearch
+ManifestName=Regex Text Search
+ManifestVersion=1.0.0
+Description=Searches supplied text entries with a regular expression.
+Category=Search
+Source=Compiled
+DiscoveryKind=Compiled
+HostAffinity=Shared
+ExecutesThroughBridgeToolExecutor=True
+RequiredCapabilities=None
+ApprovalRequirement=NotRequired
+RiskHint=ToolExecution/Informational/Low
+
+[CompiledTool.Execution]
+RequestId=tool-manifest-trace-20260516-req-001
+OperationId=tool-manifest-trace-20260516-op-001
+ResultSuccess=True
+ResultMessage=Regex text search completed with 2 matched result(s).
+MatchCount=2
+TotalMatchCount=2
+Limited=False
+
+[SecurityContext.Manifest]
+PolicyCallCount=1
+PolicyContextToolId=bridge.regexTextSearch
+PolicyContextManifestId=bridge.regexTextSearch
+PolicyContextManifestVersion=1.0.0
+PolicyContextCategory=Search
+PolicyContextDiscoveryKind=Compiled
+PolicyContextHostAffinity=Shared
+PolicyContextRequiredCapabilities=None
+PolicyContextApprovalRequirement=NotRequired
+
+[Audit.ManifestMetadata]
+AuditEventName=BridgeToolExecution
+AuditToolId=bridge.regexTextSearch
+AuditRequestId=tool-manifest-trace-20260516-req-001
+AuditOperationId=tool-manifest-trace-20260516-op-001
+AuditSuccess=True
+AuditAllowed=True
+AuditManifestToolId=bridge.regexTextSearch
+AuditManifestToolName=Regex Text Search
+AuditManifestVersion=1.0.0
+AuditManifestCategory=Search
+AuditManifestSource=Compiled
+AuditManifestDiscoveryKind=Compiled
+AuditManifestHost=Shared
+AuditManifestApprovalRequirement=NotRequired
+AuditManifestAuditCategoryHint=ToolExecution
+AuditManifestSeverityHint=Informational
+AuditManifestRiskLevel=Low
+AuditRequiredCapabilities=None
+AuditApprovalDecision=NotRequired
+
+[TraceLogging.ManifestMetadata]
+Bridge tool request payload [ToolId=bridge.regexTextSearch] [RequestId=tool-manifest-trace-20260516-req-001] [OperationId=tool-manifest-trace-20260516-op-001] [Arguments={"pattern":"error|warning","entries":["Info: startup complete","Warning: configuration fallback used","Error: sample failure marker","Trace: execution complete"],"caseSensitive":false,"maxResults":10,"apiKey":[REDACTED]}].
+Bridge tool manifest metadata [ToolId=bridge.regexTextSearch] [RequestId=tool-manifest-trace-20260516-req-001] [OperationId=tool-manifest-trace-20260516-op-001] [ManifestId=bridge.regexTextSearch] [ManifestName=Regex Text Search] [ManifestVersion=1.0.0] [Category=Search] [Source=Compiled] [DiscoveryKind=Compiled] [Host=Shared].
+Bridge tool execution started [ToolId=bridge.regexTextSearch] [RequestId=tool-manifest-trace-20260516-req-001] [OperationId=tool-manifest-trace-20260516-op-001].
+Bridge tool execution completed [ToolId=bridge.regexTextSearch] [RequestId=tool-manifest-trace-20260516-req-001] [OperationId=tool-manifest-trace-20260516-op-001] [Success=True] [ElapsedMs=37].
+RawSecretLeakDetected=False
+
+[ApprovalContext.Manifest]
+Tool=ApprovalManifestProbeTool (temporary harness-only IBridgeTool; not added to repository production tools)
+ApprovalResultSuccess=True
+ApprovalManifestId=trace.approvalManifestProbe
+ApprovalManifestVersion=1.0.0-trace
+ApprovalManifestCategory=Trace
+ApprovalManifestSource=Harness
+ApprovalManifestDiscoveryKind=Unspecified
+ApprovalManifestHostAffinity=SharedTests
+ApprovalManifestRequiredCapabilities=trace.approval
+ApprovalManifestApprovalRequirement=Required
+ApprovalPolicyContextManifestId=trace.approvalManifestProbe
+ApprovalServiceCallCount=1
+ApprovalContextManifestId=trace.approvalManifestProbe
+ApprovalContextManifestVersion=1.0.0-trace
+ApprovalContextRequiredCapabilities=trace.approval
+ApprovalAuditManifestToolId=trace.approvalManifestProbe
+ApprovalAuditDecision=Approved
+
+[MefDiscoveryPath.CodeEvidence]
+MefFakeBridgeTool remains a shared-test export only.
+BridgeToolInfrastructureTests.Mef_discovery_can_discover_exported_bridge_tool_when_enabled asserts fake.mef manifest Version=1.0.0, Category=Tests, Source=MEF, DiscoveryKind=Mef, HostAffinity=SharedTests.
+No production MEF behavior changed in this trace slice.

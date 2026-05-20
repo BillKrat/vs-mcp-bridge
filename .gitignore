@@ -91,6 +91,8 @@ artifacts/logs/*
 !artifacts/logs/mef-discovery-trace-20260516.metadata.json
 !artifacts/logs/tool-approval-trace-20260516.log
 !artifacts/logs/tool-approval-trace-20260516.metadata.json
+!artifacts/logs/tool-manifest-trace-20260516.log
+!artifacts/logs/tool-manifest-trace-20260516.metadata.json
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.log
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.metadata.json
 
@@ -132,6 +134,7 @@ StyleCopReport.xml
 !artifacts/logs/tool-security-trace-20260509.log
 !artifacts/logs/mef-discovery-trace-20260516.log
 !artifacts/logs/tool-approval-trace-20260516.log
+!artifacts/logs/tool-manifest-trace-20260516.log
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.log
 *.tlog
 *.vspscc
@@ -479,6 +482,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-09-tool-security-validation.md
 !/docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md
 !/docs/session-handoffs/2026-05-16-tool-approval-validation.md
+!/docs/session-handoffs/2026-05-16-tool-manifest-validation.md
 !/docs/session-handoffs/2026-05-16-security-architecture-foundation.md
 !/docs/session-handoffs/2026-05-16-full-validation-checkpoint.md
 !/docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md
@@ -492,6 +496,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/tool-security-trace-20260509.mmd
 !/docs/diagrams/mef-discovery-trace-20260516.mmd
 !/docs/diagrams/tool-approval-trace-20260516.mmd
+!/docs/diagrams/tool-manifest-trace-20260516.mmd
 !/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd
 !/docs/blog-drafts/
 /docs/blog-drafts/*

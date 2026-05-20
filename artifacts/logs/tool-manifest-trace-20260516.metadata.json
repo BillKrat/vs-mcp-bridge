@@ -1,0 +1,121 @@
+{
+  "runName": "tool-manifest-trace-20260516",
+  "branch": "main",
+  "commit": "5e9b71f Add bridge tool manifest metadata model",
+  "capturedAtUtc": "2026-05-20T23:28:24.4678501+00:00",
+  "captureMethod": "Temporary console harness outside the repository using VsMcpBridge.Shared production composition for RegexTextSearchTool and a harness-only approval probe for ToolExecutionApprovalContext observation.",
+  "scope": {
+    "primaryTool": "bridge.regexTextSearch",
+    "primaryRequestId": "tool-manifest-trace-20260516-req-001",
+    "primaryOperationId": "tool-manifest-trace-20260516-op-001",
+    "approvalProbeTool": "trace.approvalManifestProbe",
+    "approvalRequestId": "tool-manifest-trace-20260516-approval-req-001",
+    "approvalOperationId": "tool-manifest-trace-20260516-approval-op-001"
+  },
+  "observedCompiledManifest": {
+    "id": "bridge.regexTextSearch",
+    "name": "Regex Text Search",
+    "version": "1.0.0",
+    "description": "Searches supplied text entries with a regular expression.",
+    "category": "Search",
+    "source": "Compiled",
+    "discoveryKind": "Compiled",
+    "hostAffinity": "Shared",
+    "executesThroughBridgeToolExecutor": true,
+    "requiredCapabilities": [],
+    "approvalRequirement": "NotRequired",
+    "risk": {
+      "auditCategoryHint": "ToolExecution",
+      "severityHint": "Informational",
+      "riskLevelHint": "Low"
+    }
+  },
+  "observedResult": {
+    "success": true,
+    "message": "Regex text search completed with 2 matched result(s).",
+    "matchCount": 2,
+    "totalMatchCount": 2,
+    "limited": false
+  },
+  "observedSecurityContext": {
+    "policyCallCount": 1,
+    "manifestId": "bridge.regexTextSearch",
+    "manifestVersion": "1.0.0",
+    "requiredCapabilities": []
+  },
+  "observedAuditMetadata": {
+    "auditCategory": "ToolExecution",
+    "auditSeverity": "Informational",
+    "auditRiskLevel": "Low",
+    "auditOutcome": "Succeeded",
+    "manifestToolId": "bridge.regexTextSearch",
+    "manifestToolName": "Regex Text Search",
+    "manifestVersion": "1.0.0",
+    "manifestCategory": "Search",
+    "manifestSource": "Compiled",
+    "manifestDiscoveryKind": "Compiled",
+    "manifestHost": "Shared",
+    "manifestApprovalRequirement": "NotRequired",
+    "manifestAuditCategoryHint": "ToolExecution",
+    "manifestSeverityHint": "Informational",
+    "manifestRiskLevel": "Low",
+    "policyReason": "manifest trace policy allowed",
+    "requiredCapabilities": "None",
+    "secretReferences": "None",
+    "secretResolution": "No secret references",
+    "approvalRequirement": "NotRequired",
+    "approvalDecision": "NotRequired",
+    "approvalReason": "Not required"
+  },
+  "observedApprovalContext": {
+    "approvalProbeIsHarnessOnly": true,
+    "approvalServiceCallCount": 1,
+    "manifestId": "trace.approvalManifestProbe",
+    "manifestVersion": "1.0.0-trace",
+    "approvalRequirement": "Required",
+    "requiredCapabilities": [
+      "trace.approval"
+    ],
+    "auditMetadata": {
+      "auditCategory": "ToolExecution",
+      "auditSeverity": "Informational",
+      "auditRiskLevel": "Low",
+      "auditOutcome": "Succeeded",
+      "manifestToolId": "trace.approvalManifestProbe",
+      "manifestToolName": "Approval Manifest Probe",
+      "manifestVersion": "1.0.0-trace",
+      "manifestCategory": "Trace",
+      "manifestSource": "Harness",
+      "manifestDiscoveryKind": "Unspecified",
+      "manifestHost": "SharedTests",
+      "manifestApprovalRequirement": "Required",
+      "manifestAuditCategoryHint": "Approval",
+      "manifestSeverityHint": "Informational",
+      "manifestRiskLevel": "Medium",
+      "policyReason": "manifest trace policy allowed",
+      "requiredCapabilities": "trace.approval",
+      "secretReferences": "None",
+      "secretResolution": "No secret references",
+      "approvalRequirement": "Required",
+      "approvalDecision": "Approved",
+      "approvalReason": "manifest trace approval allowed"
+    }
+  },
+  "mefPath": {
+    "productionBehaviorChanged": false,
+    "evidence": "Existing shared tests assert MefFakeBridgeTool manifest metadata for fake.mef when MEF directory discovery is explicitly enabled."
+  },
+  "redaction": {
+    "rawSecretInputWasSynthetic": true,
+    "rawSecretLeakDetectedInCapturedLogs": false,
+    "durableArtifactsIntentionallyOmitRawSecret": true
+  },
+  "exclusions": [
+    "No runtime behavior change",
+    "No new production tool",
+    "No MEF behavior change",
+    "No packaging or publishing infrastructure",
+    "No MCP stdio or named-pipe transport validation",
+    "No VSIX host execution"
+  ]
+}

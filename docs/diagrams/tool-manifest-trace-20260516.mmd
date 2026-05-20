@@ -1,0 +1,42 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Caller
+    participant DI as Shared DI Composition
+    participant Descriptor as BridgeToolDescriptor
+    participant Manifest as BridgeToolManifest
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Executor as BridgeToolExecutor
+    participant SecurityContext as ToolExecutionSecurityContext
+    participant Policy as IToolExecutionPolicy
+    participant Approval as IToolExecutionApprovalService
+    participant Tool as RegexTextSearchTool
+    participant Audit as IAuditSink
+    participant Log as RecordingBridgeLogger
+
+    Caller->>DI: AddBridgeToolServices()
+    DI-->>Caller: IBridgeToolCatalog + IBridgeToolExecutor
+    Caller->>Catalog: GetTools()
+    Catalog->>Descriptor: RegexTextSearchTool.Descriptor
+    Descriptor->>Manifest: derive manifest
+    Manifest-->>Caller: id/name/version/category/source/discovery/host/risk/capabilities/approval
+    Caller->>Executor: ExecuteAsync(tool-manifest-trace-20260516-req-001)
+    Executor->>Log: Information execution started
+    Executor->>Log: Trace redacted request payload
+    Executor->>Catalog: TryGetTool("bridge.regexTextSearch")
+    Catalog-->>Executor: RegexTextSearchTool
+    Executor->>Descriptor: read descriptor manifest
+    Descriptor->>Manifest: derive manifest
+    Executor->>Log: Trace manifest metadata
+    Executor->>SecurityContext: new(request, descriptor)
+    SecurityContext->>Manifest: expose derived manifest
+    Executor->>Policy: EvaluateAsync(SecurityContext)
+    Policy-->>Executor: Allow, observed manifest id/version/category/source/host
+    Executor->>Approval: skipped because ApprovalRequirement=NotRequired
+    Executor->>Tool: ExecuteAsync(regex request)
+    Tool-->>Executor: Success, 2 matches
+    Executor->>Log: Information execution completed
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Audit-->>Executor: manifest metadata in envelope metadata
+    Executor-->>Caller: BridgeToolResult with request/operation correlation
+
+    Note over Approval: Harness-only approval probe separately observed ToolExecutionApprovalContext.Manifest for an approval-required descriptor without adding a production tool.
+    Note over Catalog: MEF path is described from existing MefFakeBridgeTool test evidence only; no MEF production behavior changed.
