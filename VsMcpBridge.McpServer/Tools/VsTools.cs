@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.Shared.Models;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Tools;
 
 namespace VsMcpBridge.McpServer.Tools;
 
@@ -46,14 +48,22 @@ public sealed class VsTools
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
+    private readonly IBridgeToolInventoryService _toolInventory;
     private readonly ILogger _logger;
 
-    public VsTools(IPipeClient pipe, IChatEngine chatEngine, ILogger logger)
+    public VsTools(IPipeClient pipe, IChatEngine chatEngine, ILogger logger, IBridgeToolInventoryService? toolInventory = null)
     {
         _pipe = pipe;
         _chatEngine = chatEngine;
+        _toolInventory = toolInventory ?? EmptyBridgeToolInventoryService.Instance;
         _logger = logger;
     }
+
+    private static readonly JsonSerializerOptions InventoryJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     private static string? NormalizeChatEngineChatField(string? value)
     {
@@ -105,6 +115,59 @@ public sealed class VsTools
             "chat_engine_suggest_error_fix" => "AI error fix suggestion",
             _ => "AI suggestion"
         };
+    }
+
+    [McpServerTool(Name = "bridge_get_tool_inventory")]
+    [Description("Returns deterministic read-only bridge tool manifest metadata for diagnostics. Does not execute tools or trigger approval.")]
+    public string GetToolInventory(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation("MCP bridge_get_tool_inventory started [RequestId={RequestId}].", requestId);
+
+        try
+        {
+            BridgeToolCatalogSnapshot snapshot = _toolInventory.GetSnapshot();
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP bridge_get_tool_inventory completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ToolCount={ToolCount}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                snapshot.Tools.Count);
+
+            return JsonSerializer.Serialize(
+                new BridgeToolInventoryDiagnosticResult
+                {
+                    Success = true,
+                    RequestId = requestId,
+                    ToolName = "bridge_get_tool_inventory",
+                    CapturedAtUtc = snapshot.CapturedAtUtc,
+                    ToolCount = snapshot.Tools.Count,
+                    Tools = snapshot.Tools
+                },
+                InventoryJsonOptions);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP bridge_get_tool_inventory canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP bridge_get_tool_inventory failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
     }
 
     private async Task<string> ExecuteChatEngineToolAsync(
@@ -644,5 +707,37 @@ public sealed class VsTools
         return string.IsNullOrEmpty(response.Diff)
             ? "(no changes)"
             : $"Proposed diff for {fileEdits.Count} files:\n\n{response.Diff}";
+    }
+
+    private sealed class BridgeToolInventoryDiagnosticResult
+    {
+        public bool Success { get; set; }
+
+        public string RequestId { get; set; } = string.Empty;
+
+        public string ToolName { get; set; } = string.Empty;
+
+        public DateTimeOffset CapturedAtUtc { get; set; }
+
+        public int ToolCount { get; set; }
+
+        public IReadOnlyList<BridgeToolInventoryItem> Tools { get; set; } = Array.Empty<BridgeToolInventoryItem>();
+    }
+
+    private sealed class EmptyBridgeToolInventoryService : IBridgeToolInventoryService
+    {
+        public static EmptyBridgeToolInventoryService Instance { get; } = new();
+
+        private EmptyBridgeToolInventoryService()
+        {
+        }
+
+        public BridgeToolCatalogSnapshot GetSnapshot()
+        {
+            return new BridgeToolCatalogSnapshot
+            {
+                Tools = Array.Empty<BridgeToolInventoryItem>()
+            };
+        }
     }
 }

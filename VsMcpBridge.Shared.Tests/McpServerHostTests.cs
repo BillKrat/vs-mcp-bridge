@@ -22,6 +22,7 @@ using VsMcpBridge.McpServer.Tools;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Shared.Tools;
 using Xunit;
 
 namespace VsMcpBridge.Shared.Tests;
@@ -47,6 +48,7 @@ public sealed class McpServerHostTests
         Assert.Equal(
             new[]
             {
+                "bridge_get_tool_inventory",
                 "chat_engine_chat",
                 "chat_engine_explain_code",
                 "chat_engine_explain_error",
@@ -110,6 +112,7 @@ public sealed class McpServerHostTests
 
         Assert.IsType<AppDataFolderLogger>(services.GetRequiredService<ILogger>());
         Assert.IsType<PipeClient>(services.GetRequiredService<IPipeClient>());
+        Assert.IsType<BridgeToolInventoryService>(services.GetRequiredService<IBridgeToolInventoryService>());
     }
 
     [Fact]

@@ -9,6 +9,7 @@ using VsMcpBridge.McpServer.ChatEngine;
 using VsMcpBridge.McpServer.Pipe;
 using VsMcpBridge.Shared.Constants;
 using VsMcpBridge.McpServer.Tools;
+using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
 using VsMcpBridge.Shared.Loggers;
 
@@ -27,6 +28,7 @@ public static class McpServerHost
             .AddSingleton<ILogger<ChatEngineService>>(serviceProvider =>
                 new BridgeLoggerAdapter<ChatEngineService>(serviceProvider.GetRequiredService<ILogger>()))
             .AddSingleton<IHostedService, ChatEngineVerificationHostedService>()
+            .AddBridgeToolServices()
             .AddChatEngine()
             .AddSingleton<IPipeClient, PipeClient>()
             .AddMcpServer()

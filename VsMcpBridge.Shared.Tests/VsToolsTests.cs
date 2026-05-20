@@ -7,16 +7,140 @@ using System.Threading.Tasks;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Events;
 using Adventures.ChatEngine.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using VsMcpBridge.McpServer.Tools;
+using VsMcpBridge.Shared.Composition;
 using VsMcpBridge.Shared.Interfaces;
+using VsMcpBridge.Shared.Loggers;
 using VsMcpBridge.Shared.Models;
+using VsMcpBridge.Shared.Security;
+using VsMcpBridge.Shared.Tools;
 using Xunit;
 
 namespace VsMcpBridge.Shared.Tests;
 
 public sealed class VsToolsTests
 {
+    [Fact]
+    public void GetToolInventory_returns_deterministic_manifest_metadata_without_executing_tools()
+    {
+        var alpha = new InventoryMcpProbeBridgeTool(
+            "fake.alpha",
+            category: "Diagnostics",
+            discoveryKind: BridgeToolDiscoveryKind.Compiled,
+            source: "Compiled",
+            host: "SharedTests",
+            requiredCapabilities: new[] { new BridgeCapability("workspace.read"), new BridgeCapability("diagnostics.read") },
+            approvalRequirement: ToolExecutionApprovalRequirement.Required);
+        var zeta = new InventoryMcpProbeBridgeTool(
+            "fake.zeta",
+            category: "Search",
+            discoveryKind: BridgeToolDiscoveryKind.Mef,
+            source: "MEF",
+            host: "ExternalTests",
+            requiredCapabilities: Array.Empty<BridgeCapability>(),
+            approvalRequirement: ToolExecutionApprovalRequirement.NotRequired);
+        var inventory = new BridgeToolInventoryService(new CompiledBridgeToolCatalog(new IBridgeTool[] { zeta, alpha }));
+        var pipeClient = new RecordingPipeClient();
+        var chatEngine = new StubChatEngine();
+        var logger = new RecordingBridgeLogger();
+        var tools = new VsTools(pipeClient, chatEngine, logger, inventory);
+
+        var responseJson = tools.GetToolInventory(CancellationToken.None);
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+        var toolItems = root.GetProperty("tools").EnumerateArray().ToArray();
+
+        Assert.True(root.GetProperty("success").GetBoolean());
+        Assert.Equal("bridge_get_tool_inventory", root.GetProperty("toolName").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("requestId").GetString()));
+        Assert.Equal(2, root.GetProperty("toolCount").GetInt32());
+        Assert.Equal(new[] { "fake.alpha", "fake.zeta" }, toolItems.Select(tool => tool.GetProperty("id").GetString()).ToArray());
+
+        var alphaItem = toolItems[0];
+        Assert.Equal("Fake fake.alpha", alphaItem.GetProperty("name").GetString());
+        Assert.Equal(BridgeToolManifest.DefaultVersion, alphaItem.GetProperty("version").GetString());
+        Assert.Equal("Diagnostics", alphaItem.GetProperty("category").GetString());
+        Assert.Equal("Compiled", alphaItem.GetProperty("discoveryKind").GetString());
+        Assert.Equal("Compiled", alphaItem.GetProperty("source").GetString());
+        Assert.Equal("SharedTests", alphaItem.GetProperty("hostAffinity").GetString());
+        Assert.True(alphaItem.GetProperty("isHostSpecific").GetBoolean());
+        Assert.Equal(new[] { "diagnostics.read", "workspace.read" }, alphaItem.GetProperty("requiredCapabilities").EnumerateArray().Select(value => value.GetString()).ToArray());
+        Assert.Equal("Required", alphaItem.GetProperty("approvalRequirement").GetString());
+        Assert.Equal("ToolExecution", alphaItem.GetProperty("auditCategoryHint").GetString());
+        Assert.Equal("Informational", alphaItem.GetProperty("severityHint").GetString());
+        Assert.Equal("Low", alphaItem.GetProperty("riskLevelHint").GetString());
+        Assert.True(alphaItem.GetProperty("executesThroughBridgeToolExecutor").GetBoolean());
+        Assert.Equal(0, alpha.ExecutionCount);
+        Assert.Equal(0, zeta.ExecutionCount);
+        Assert.Equal(0, pipeClient.ProposeTextEditCalls);
+        Assert.Null(chatEngine.LastRequest);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MCP bridge_get_tool_inventory started", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("ToolCount=2", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void GetToolInventory_includes_compiled_bridge_tools_from_mcp_host_services()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger, RecordingBridgeLogger>();
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = new VsTools(
+            new RecordingPipeClient(),
+            new StubChatEngine(),
+            NullLogger.Instance,
+            provider.GetRequiredService<IBridgeToolInventoryService>());
+
+        var responseJson = tools.GetToolInventory(CancellationToken.None);
+        using var document = JsonDocument.Parse(responseJson);
+        var toolItems = document.RootElement.GetProperty("tools").EnumerateArray().ToArray();
+
+        Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == RegexTextSearchTool.ToolId);
+        Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == Bm25TextSearchTool.ToolId);
+        Assert.Equal(toolItems.Select(tool => tool.GetProperty("id").GetString()).OrderBy(id => id, StringComparer.Ordinal), toolItems.Select(tool => tool.GetProperty("id").GetString()));
+    }
+
+    [Fact]
+    public void GetToolInventory_returns_empty_snapshot_safely_when_inventory_is_not_registered()
+    {
+        var tools = new VsTools(new RecordingPipeClient(), new StubChatEngine(), NullLogger.Instance);
+
+        var responseJson = tools.GetToolInventory(CancellationToken.None);
+        using var document = JsonDocument.Parse(responseJson);
+
+        Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal(0, document.RootElement.GetProperty("toolCount").GetInt32());
+        Assert.Empty(document.RootElement.GetProperty("tools").EnumerateArray());
+    }
+
+    [Fact]
+    public void GetToolInventory_handles_missing_mef_directory_without_failing()
+    {
+        var missingDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger, RecordingBridgeLogger>();
+        services.AddBridgeToolServices(options =>
+        {
+            options.EnableMefDirectoryDiscovery = true;
+            options.MefDirectories.Add(missingDirectory);
+        });
+        using var provider = services.BuildServiceProvider();
+        var tools = new VsTools(
+            new RecordingPipeClient(),
+            new StubChatEngine(),
+            NullLogger.Instance,
+            provider.GetRequiredService<IBridgeToolInventoryService>());
+
+        var responseJson = tools.GetToolInventory(CancellationToken.None);
+        using var document = JsonDocument.Parse(responseJson);
+        var toolIds = document.RootElement.GetProperty("tools").EnumerateArray().Select(tool => tool.GetProperty("id").GetString()).ToArray();
+
+        Assert.Contains(RegexTextSearchTool.ToolId, toolIds);
+        Assert.Contains(Bm25TextSearchTool.ToolId, toolIds);
+    }
+
     [Fact]
     public async Task ProposeTextEditAsync_preserves_backward_compatible_single_file_request_flow()
     {
@@ -1098,6 +1222,42 @@ public sealed class VsToolsTests
             StreamAsyncCalls++;
             await Task.CompletedTask;
             yield break;
+        }
+    }
+
+    private sealed class InventoryMcpProbeBridgeTool : IBridgeTool
+    {
+        public InventoryMcpProbeBridgeTool(
+            string id,
+            string category,
+            BridgeToolDiscoveryKind discoveryKind,
+            string source,
+            string host,
+            IReadOnlyList<BridgeCapability> requiredCapabilities,
+            ToolExecutionApprovalRequirement approvalRequirement)
+        {
+            Descriptor = new BridgeToolDescriptor
+            {
+                Id = id,
+                Name = $"Fake {id}",
+                Description = $"Fake inventory tool {id}.",
+                Category = category,
+                Source = source,
+                Host = host,
+                DiscoveryKind = discoveryKind,
+                RequiredCapabilities = requiredCapabilities,
+                ApprovalRequirement = approvalRequirement
+            };
+        }
+
+        public BridgeToolDescriptor Descriptor { get; }
+
+        public int ExecutionCount { get; private set; }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            ExecutionCount++;
+            return Task.FromResult(BridgeToolResult.Succeeded(request, "executed"));
         }
     }
 

@@ -192,7 +192,30 @@ Inventory reference artifacts:
 - session handoff: [`docs/session-handoffs/2026-05-16-tool-inventory-validation.md`](session-handoffs/2026-05-16-tool-inventory-validation.md)
 
 This trace proves inventory snapshots read descriptor-derived manifest metadata from the catalog and sort by tool id.
-It does not expose inventory over MCP, change transport behavior, add tools, move namespaces, or execute bridge tools.
+At the time of that trace, inventory was not exposed over MCP; the later MCP diagnostic below adds read-only transport visibility without changing bridge tool execution behavior.
+
+## Observed MCP Inventory Diagnostic Run
+
+The bridge tool catalog inventory is now visible through MCP as the diagnostic tool `bridge_get_tool_inventory`:
+
+- run name: `mcp-tool-inventory-trace-20260516`
+- branch: `main`
+- baseline commit: `644b17e`
+- capture date: `2026-05-20`
+- MCP tool: `bridge_get_tool_inventory`
+- inventory service: `IBridgeToolInventoryService`
+- compiled snapshot order: `bridge.bm25TextSearch`, `bridge.regexTextSearch`
+- observed result: metadata-only deterministic inventory returned through MCP without tool execution
+
+MCP inventory diagnostic artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-tool-inventory-trace-20260516.mmd`](diagrams/mcp-tool-inventory-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mcp-tool-inventory-trace-20260516.log`](../artifacts/logs/mcp-tool-inventory-trace-20260516.log)
+- session handoff: [`docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`](session-handoffs/2026-05-16-mcp-tool-inventory-validation.md)
+
+This diagnostic calls only `IBridgeToolInventoryService.GetSnapshot()`.
+It does not invoke `BridgeToolExecutor`, `IToolExecutionPolicy`, `IToolExecutionApprovalService`, `IAuditSink`, `IPipeClient`, `IChatEngine`, or bridge tool `ExecuteAsync`.
+It logs request id, elapsed time, and tool count without logging raw payloads or secrets.
 
 ## Preconditions
 

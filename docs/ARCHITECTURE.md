@@ -69,6 +69,9 @@ This is contract and observability metadata only; it is not package publishing, 
 `IBridgeToolInventoryService` provides a deterministic read-only catalog snapshot for diagnostics, documentation, and AI triage.
 The inventory snapshot is ordered by tool id and exposes descriptor-derived manifest metadata without executing tools, changing MCP transport behavior, or bypassing `BridgeToolExecutor`.
 The durable inventory evidence is `artifacts/logs/tool-inventory-trace-20260516.*`, `docs/diagrams/tool-inventory-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-tool-inventory-validation.md`; it proves compiled and MEF-discovered descriptors flow through the same read-only inventory path without tool execution.
+The MCP server exposes that same inventory seam as the read-only diagnostic tool `bridge_get_tool_inventory`.
+This diagnostic returns metadata-only JSON for AI triage and operational visibility; it does not execute tools, require capabilities by default, trigger approval, send VSIX pipe requests, call ChatEngine, expose payloads/secrets, or replace `BridgeToolExecutor` for executable bridge tools.
+The durable MCP diagnostic evidence is `artifacts/logs/mcp-tool-inventory-trace-20260516.log`, `docs/diagrams/mcp-tool-inventory-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

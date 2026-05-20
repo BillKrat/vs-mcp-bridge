@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant Caller as MCP client / AI session
+    participant Tool as VsTools.bridge_get_tool_inventory
+    participant Log as ILogger
+    participant Inventory as IBridgeToolInventoryService
+    participant Catalog as IBridgeToolCatalog
+    participant Compiled as CompiledBridgeToolDiscovery
+    participant MEF as MefBridgeToolDiscovery
+    participant Snapshot as BridgeToolCatalogSnapshot
+
+    Caller->>Tool: call bridge_get_tool_inventory
+    Tool->>Log: start log with request id
+    Tool->>Inventory: GetSnapshot()
+    Inventory->>Catalog: GetTools()
+    Catalog->>Compiled: DiscoverTools()
+    Compiled-->>Catalog: compiled descriptors
+    opt MEF directory discovery enabled by host configuration
+        Catalog->>MEF: DiscoverTools()
+        MEF-->>Catalog: MEF descriptors or empty result
+    end
+    Catalog-->>Inventory: descriptors only
+    Inventory->>Snapshot: map manifest metadata and sort by tool id
+    Snapshot-->>Tool: deterministic metadata snapshot
+    Tool->>Log: completion log with request id, elapsed ms, tool count
+    Tool-->>Caller: metadata-only JSON snapshot
+
+    Note over Tool,Snapshot: No bridge tool ExecuteAsync call occurs during inventory.
+    Note over Tool,Caller: The diagnostic does not send pipe requests, invoke ChatEngine, trigger approval, or expose raw payloads/secrets.
+    Note over Catalog,MEF: Empty or missing MEF discovery remains safe and produces an empty descriptor contribution.

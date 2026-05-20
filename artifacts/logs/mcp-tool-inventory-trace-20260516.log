@@ -1,0 +1,63 @@
+RunName=mcp-tool-inventory-trace-20260516
+Scope=Observed MCP read-only bridge tool inventory diagnostic.
+McpToolName=bridge_get_tool_inventory
+McpDiagnosticExposed=True
+ExistingRuntimeExecutionBehaviorChanged=False
+ExistingExecutionBehaviorChanged=False
+ProductionBridgeToolsAdded=False
+McpTransportChanged=False
+MutationOrAdminOperationAdded=False
+BridgeToolExecutorBypassedForExecutableTools=False
+
+[McpDiagnosticCall]
+Caller=MCP client / AI triage session
+Tool=bridge_get_tool_inventory
+RequestId=generated per call; returned in JSON and written to trace logs
+Operation=Read bridge tool catalog inventory metadata
+ApprovalFlowTriggered=False
+CapabilitiesRequiredByDiagnostic=None
+PipeRequestSent=False
+ChatEngineRequestSent=False
+ToolExecutionObserved=False
+BridgeToolExecutorInvoked=False
+SecretOrPayloadFieldsReturned=False
+
+[McpTraceLogging]
+StartLog=MCP bridge_get_tool_inventory started [RequestId=<request-id>].
+CompletionLog=MCP bridge_get_tool_inventory completed [RequestId=<request-id>] [ElapsedMs=<elapsed-ms>] [ToolCount=2].
+PayloadLogging=False
+SecretLogging=False
+ReturnedPayload=metadata-only deterministic inventory snapshot
+
+[InventoryServicePath]
+VsTools.bridge_get_tool_inventory -> IBridgeToolInventoryService.GetSnapshot()
+IBridgeToolInventoryService.GetSnapshot() -> IBridgeToolCatalog.GetTools()
+IBridgeToolCatalog.GetTools() -> CompiledBridgeToolDiscovery + optional MefBridgeToolDiscovery descriptors
+BridgeToolInventoryService maps descriptor.Manifest into BridgeToolInventoryItem and orders by tool id.
+
+[CompiledInventoryObserved]
+SnapshotOrder=bridge.bm25TextSearch,bridge.regexTextSearch
+DeterministicOrderByToolId=True
+ToolExecutionObserved=False
+
+[CompiledInventory.Fields]
+Id=bridge.bm25TextSearch | Name=BM25 Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+Id=bridge.regexTextSearch | Name=Regex Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+
+[MefEmptyOrMissingPath]
+MefDirectoryDiscoveryDefault=disabled/empty
+MissingMefDirectoryTolerance=preserved by MefBridgeToolDiscovery
+McpDiagnosticBehavior=returns whatever descriptors the inventory service reports; empty MEF discovery is not an error
+
+[ResponseShape]
+success=True
+requestId=<request-id>
+toolName=bridge_get_tool_inventory
+capturedAtUtc=<snapshot timestamp>
+toolCount=<count>
+tools[]=id,name,version,description,category,discoveryKind,source,hostAffinity,isHostSpecific,requiredCapabilities,approvalRequirement,auditCategoryHint,severityHint,riskLevelHint,executesThroughBridgeToolExecutor
+
+[BoundaryEvidence]
+The MCP diagnostic is registered as a normal VsTools MCP method but calls only IBridgeToolInventoryService.
+The executable bridge tool path remains BridgeToolExecutor.
+The inventory diagnostic does not invoke IToolExecutionPolicy, IToolExecutionApprovalService, IAuditSink, IPipeClient, IChatEngine, or any bridge tool ExecuteAsync method.
