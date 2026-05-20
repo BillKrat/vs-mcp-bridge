@@ -36,6 +36,7 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
+        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Equal(BridgeToolManifest.DefaultVersion, tool.Manifest.Identity.Version));
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
     }
@@ -59,6 +60,75 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
+        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.True(tool.Manifest.Execution.ExecutesThroughBridgeToolExecutor));
+    }
+
+    [Fact]
+    public void Descriptor_derives_stable_manifest_defaults()
+    {
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.default",
+            Name = "Fake Default"
+        };
+
+        var manifest = descriptor.Manifest;
+
+        Assert.Equal("fake.default", manifest.Identity.Id);
+        Assert.Equal("Fake Default", manifest.Identity.Name);
+        Assert.Equal(BridgeToolManifest.DefaultVersion, manifest.Identity.Version);
+        Assert.Equal(string.Empty, manifest.Description);
+        Assert.Equal(string.Empty, manifest.Category);
+        Assert.Equal(BridgeToolDiscoveryKind.Unspecified, manifest.Execution.DiscoveryKind);
+        Assert.Equal(string.Empty, manifest.Execution.Source);
+        Assert.True(manifest.Execution.ExecutesThroughBridgeToolExecutor);
+        Assert.Empty(manifest.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, manifest.ApprovalRequirement);
+        Assert.Equal(AuditEventCategory.ToolExecution, manifest.RiskProfile.AuditCategoryHint);
+        Assert.Equal(AuditSeverity.Informational, manifest.RiskProfile.SeverityHint);
+        Assert.Equal(AuditRiskLevel.Low, manifest.RiskProfile.RiskLevelHint);
+        Assert.False(manifest.HostAffinity.IsHostSpecific);
+    }
+
+    [Fact]
+    public void Descriptor_manifest_exposes_identity_capability_approval_risk_and_host_metadata()
+    {
+        var capabilities = new[] { new BridgeCapability("workspace.read") };
+        var descriptor = new BridgeToolDescriptor
+        {
+            Id = "fake.manifest",
+            Name = "Fake Manifest",
+            Version = "2.1.0",
+            Description = "Manifest metadata test.",
+            Category = "Tests",
+            Source = "MEF",
+            Host = "SharedTests",
+            RequiredCapabilities = capabilities,
+            ApprovalRequirement = ToolExecutionApprovalRequirement.Required,
+            RiskProfile = new BridgeToolRiskProfile
+            {
+                AuditCategoryHint = AuditEventCategory.Approval,
+                SeverityHint = AuditSeverity.Warning,
+                RiskLevelHint = AuditRiskLevel.Medium
+            }
+        };
+
+        var manifest = descriptor.Manifest;
+
+        Assert.Equal("fake.manifest", manifest.Identity.Id);
+        Assert.Equal("Fake Manifest", manifest.Identity.Name);
+        Assert.Equal("2.1.0", manifest.Identity.Version);
+        Assert.Equal("Manifest metadata test.", manifest.Description);
+        Assert.Equal("Tests", manifest.Category);
+        Assert.Equal("MEF", manifest.Execution.Source);
+        Assert.Equal(BridgeToolDiscoveryKind.Mef, manifest.Execution.DiscoveryKind);
+        Assert.Same(capabilities, manifest.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.Required, manifest.ApprovalRequirement);
+        Assert.Equal(AuditEventCategory.Approval, manifest.RiskProfile.AuditCategoryHint);
+        Assert.Equal(AuditSeverity.Warning, manifest.RiskProfile.SeverityHint);
+        Assert.Equal(AuditRiskLevel.Medium, manifest.RiskProfile.RiskLevelHint);
+        Assert.Equal("SharedTests", manifest.HostAffinity.Host);
+        Assert.True(manifest.HostAffinity.IsHostSpecific);
     }
 
     [Fact]
@@ -130,6 +200,12 @@ public sealed class BridgeToolInfrastructureTests
         var catalog = provider.GetRequiredService<IBridgeToolCatalog>();
 
         Assert.Contains(catalog.GetTools(), tool => tool.Id == MefFakeBridgeTool.ToolId);
+        var descriptor = Assert.Single(catalog.GetTools(), tool => tool.Id == MefFakeBridgeTool.ToolId);
+        Assert.Equal("1.0.0", descriptor.Manifest.Identity.Version);
+        Assert.Equal("Tests", descriptor.Manifest.Category);
+        Assert.Equal("MEF", descriptor.Manifest.Execution.Source);
+        Assert.Equal(BridgeToolDiscoveryKind.Mef, descriptor.Manifest.Execution.DiscoveryKind);
+        Assert.Equal("SharedTests", descriptor.Manifest.HostAffinity.Host);
         Assert.True(catalog.TryGetTool(MefFakeBridgeTool.ToolId, out _));
         Assert.Equal(0, MefFakeBridgeTool.ExecutionCount);
         Assert.Contains(logger.InformationMessages, message => message.Contains("MEF bridge tool discovery completed")
@@ -265,6 +341,17 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("fake.echo", auditEvent.ToolId);
         Assert.Equal("request-123", auditEvent.RequestId);
         Assert.Equal("operation-456", auditEvent.OperationId);
+        Assert.Equal("fake.echo", auditEvent.Metadata["manifestToolId"]);
+        Assert.Equal("Fake Echo", auditEvent.Metadata["manifestToolName"]);
+        Assert.Equal(BridgeToolManifest.DefaultVersion, auditEvent.Metadata["manifestVersion"]);
+        Assert.Equal("Tests", auditEvent.Metadata["manifestCategory"]);
+        Assert.Equal("Compiled", auditEvent.Metadata["manifestSource"]);
+        Assert.Equal("Compiled", auditEvent.Metadata["manifestDiscoveryKind"]);
+        Assert.Equal("SharedTests", auditEvent.Metadata["manifestHost"]);
+        Assert.Equal("NotRequired", auditEvent.Metadata["manifestApprovalRequirement"]);
+        Assert.Equal("ToolExecution", auditEvent.Metadata["manifestAuditCategoryHint"]);
+        Assert.Equal("Informational", auditEvent.Metadata["manifestSeverityHint"]);
+        Assert.Equal("Low", auditEvent.Metadata["manifestRiskLevel"]);
         AssertAuditClassification(
             auditEvent,
             AuditEventCategory.ToolExecution,

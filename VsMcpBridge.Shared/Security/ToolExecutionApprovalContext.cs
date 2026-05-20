@@ -16,6 +16,8 @@ namespace VsMcpBridge.Shared.Security
 
         public BridgeToolDescriptor Descriptor { get; }
 
+        public BridgeToolManifest Manifest => Descriptor.Manifest;
+
         public ToolExecutionPolicyDecision PolicyDecision { get; }
 
         public string ToolId => Request.ToolId;

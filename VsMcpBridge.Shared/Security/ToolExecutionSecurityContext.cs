@@ -18,6 +18,8 @@ namespace VsMcpBridge.Shared.Security
 
         public BridgeToolDescriptor? Descriptor { get; }
 
+        public BridgeToolManifest? Manifest => Descriptor?.Manifest;
+
         public string ToolId => Request.ToolId;
 
         public string RequestId => Request.RequestId;
@@ -26,7 +28,7 @@ namespace VsMcpBridge.Shared.Security
 
         public IReadOnlyDictionary<string, object?> Arguments => Request.Arguments;
 
-        public IReadOnlyList<BridgeCapability> RequiredCapabilities => Descriptor?.RequiredCapabilities ?? Array.Empty<BridgeCapability>();
+        public IReadOnlyList<BridgeCapability> RequiredCapabilities => Manifest?.RequiredCapabilities ?? Array.Empty<BridgeCapability>();
 
         public IReadOnlyList<ISecretReference> SecretReferences => ExtractSecretReferences(Request.Arguments);
 

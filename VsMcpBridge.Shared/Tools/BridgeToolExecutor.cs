@@ -94,6 +94,7 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: "None",
                     secretReferences: secretReferenceMetadata,
                     secretResolution: "NotEvaluated",
+                    manifest: null,
                     approvalRequirement: ToolExecutionApprovalRequirement.NotRequired,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Unknown tool",
@@ -103,7 +104,10 @@ namespace VsMcpBridge.Shared.Tools
                 return result;
             }
 
-            var requiredCapabilities = FormatCapabilities(tool.Descriptor.RequiredCapabilities);
+            var manifest = tool.Descriptor.Manifest;
+            var requiredCapabilities = FormatCapabilities(manifest.RequiredCapabilities);
+            _logger.LogTrace(
+                $"Bridge tool manifest metadata [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [ManifestId={RedactValue(manifest.Identity.Id)}] [ManifestName={RedactValue(manifest.Identity.Name)}] [ManifestVersion={RedactValue(manifest.Identity.Version)}] [Category={RedactValue(manifest.Category)}] [Source={RedactValue(manifest.Execution.Source)}] [DiscoveryKind={manifest.Execution.DiscoveryKind}] [Host={RedactValue(manifest.HostAffinity.Host)}].");
             _logger.LogTrace(
                 $"Bridge tool capability metadata [ToolId={request.ToolId}] [RequestId={request.RequestId}] [OperationId={request.OperationId}] [RequiredCapabilities={RedactValue(requiredCapabilities)}].");
             var securityContext = new ToolExecutionSecurityContext(request, tool.Descriptor);
@@ -123,7 +127,8 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: "NotEvaluated",
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
                     approvalDecision: "NotEvaluated",
                     approvalReason: "Policy denied before approval",
                     classification: ClassifyPolicyDenied(),
@@ -147,7 +152,8 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: "NotEvaluated",
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
                     approvalDecision: "Denied",
                     approvalReason: approvalDecision.Reason,
                     classification: ClassifyApprovalDenied(),
@@ -171,8 +177,9 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: secretResolution.Reason,
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
-                    approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
+                    approvalDecision: GetApprovalDecisionName(manifest, approvalDecision),
                     approvalReason: approvalDecision.Reason,
                     classification: ClassifySecretUnresolved(),
                     stopwatch.ElapsedMilliseconds,
@@ -199,8 +206,9 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: secretResolution.Reason,
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
-                    approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
+                    approvalDecision: GetApprovalDecisionName(manifest, approvalDecision),
                     approvalReason: approvalDecision.Reason,
                     classification: result.Success ? ClassifySuccessfulExecution() : ClassifyExecutionFailed(),
                     stopwatch.ElapsedMilliseconds,
@@ -221,8 +229,9 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: secretResolution.Reason,
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
-                    approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
+                    approvalDecision: GetApprovalDecisionName(manifest, approvalDecision),
                     approvalReason: approvalDecision.Reason,
                     classification: ClassifyCanceled(),
                     stopwatch.ElapsedMilliseconds,
@@ -244,8 +253,9 @@ namespace VsMcpBridge.Shared.Tools
                     requiredCapabilities: requiredCapabilities,
                     secretReferences: secretReferenceMetadata,
                     secretResolution: secretResolution.Reason,
-                    approvalRequirement: tool.Descriptor.ApprovalRequirement,
-                    approvalDecision: GetApprovalDecisionName(tool.Descriptor, approvalDecision),
+                    manifest: manifest,
+                    approvalRequirement: manifest.ApprovalRequirement,
+                    approvalDecision: GetApprovalDecisionName(manifest, approvalDecision),
                     approvalReason: approvalDecision.Reason,
                     classification: ClassifyExecutionFailed(),
                     stopwatch.ElapsedMilliseconds,
@@ -260,7 +270,7 @@ namespace VsMcpBridge.Shared.Tools
             ToolExecutionPolicyDecision policyDecision,
             CancellationToken cancellationToken)
         {
-            if (descriptor.ApprovalRequirement != ToolExecutionApprovalRequirement.Required)
+            if (descriptor.Manifest.ApprovalRequirement != ToolExecutionApprovalRequirement.Required)
                 return ToolExecutionApprovalDecision.Approve("Not required");
 
             _logger.LogInformation(
@@ -279,6 +289,7 @@ namespace VsMcpBridge.Shared.Tools
             string requiredCapabilities,
             string secretReferences,
             string secretResolution,
+            BridgeToolManifest? manifest,
             ToolExecutionApprovalRequirement approvalRequirement,
             string approvalDecision,
             string approvalReason,
@@ -312,6 +323,17 @@ namespace VsMcpBridge.Shared.Tools
                             ["auditSeverity"] = classification.Severity.ToString(),
                             ["auditRiskLevel"] = classification.RiskLevel.ToString(),
                             ["auditOutcome"] = classification.Outcome.ToString(),
+                            ["manifestToolId"] = RedactValue(manifest?.Identity.Id ?? request.ToolId),
+                            ["manifestToolName"] = RedactValue(manifest?.Identity.Name ?? string.Empty),
+                            ["manifestVersion"] = RedactValue(manifest?.Identity.Version ?? BridgeToolManifest.DefaultVersion),
+                            ["manifestCategory"] = RedactValue(manifest?.Category ?? string.Empty),
+                            ["manifestSource"] = RedactValue(manifest?.Execution.Source ?? string.Empty),
+                            ["manifestDiscoveryKind"] = (manifest?.Execution.DiscoveryKind ?? BridgeToolDiscoveryKind.Unspecified).ToString(),
+                            ["manifestHost"] = RedactValue(manifest?.HostAffinity.Host ?? string.Empty),
+                            ["manifestApprovalRequirement"] = approvalRequirement.ToString(),
+                            ["manifestAuditCategoryHint"] = (manifest?.RiskProfile.AuditCategoryHint ?? AuditEventCategory.ToolExecution).ToString(),
+                            ["manifestSeverityHint"] = (manifest?.RiskProfile.SeverityHint ?? AuditSeverity.Informational).ToString(),
+                            ["manifestRiskLevel"] = (manifest?.RiskProfile.RiskLevelHint ?? AuditRiskLevel.Low).ToString(),
                             ["policyReason"] = RedactValue(policyReason),
                             ["requiredCapabilities"] = RedactValue(requiredCapabilities),
                             ["secretReferences"] = RedactValue(secretReferences),
@@ -380,9 +402,9 @@ namespace VsMcpBridge.Shared.Tools
             return metadata.Length == 0 ? "None" : string.Join(",", metadata);
         }
 
-        private static string GetApprovalDecisionName(BridgeToolDescriptor descriptor, ToolExecutionApprovalDecision decision)
+        private static string GetApprovalDecisionName(BridgeToolManifest manifest, ToolExecutionApprovalDecision decision)
         {
-            if (descriptor.ApprovalRequirement != ToolExecutionApprovalRequirement.Required)
+            if (manifest.ApprovalRequirement != ToolExecutionApprovalRequirement.Required)
                 return "NotRequired";
 
             return decision.Approved ? "Approved" : "Denied";

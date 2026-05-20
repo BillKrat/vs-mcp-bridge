@@ -8,6 +8,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
+- proving bridge tool manifest metadata derived from descriptors
 - proving the minimal policy/capability/approval/secret-reference/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
@@ -18,6 +19,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 
 This workflow documents the shared compiled bridge tool path only.
 The catalog may now be fed by discovery providers, but this baseline keeps MEF directory discovery disabled and validates the default compiled tool path.
+Tool manifests are lightweight metadata derived from `BridgeToolDescriptor`; this workflow does not introduce persistent manifests, package publishing, remote tools, signed plugin metadata, OAuth/RBAC/user identity, or a MEF redesign.
 
 It does not validate:
 
@@ -173,7 +175,7 @@ The harness should:
 6. optionally resolve `ISecurityRedactor`, `IAuditSink`, `IToolExecutionPolicy`, and `IToolExecutionApprovalService` to confirm the security seams are present
 7. create a `BridgeToolRequest` for `RegexTextSearchTool.ToolId`
 8. execute through `IBridgeToolExecutor.ExecuteAsync`
-9. print catalog descriptors, logger entries, audit envelope data when captured, result metadata, and returned matches
+9. print catalog descriptors, derived manifest metadata, logger entries, audit envelope data when captured, result metadata, and returned matches
 
 For security-aware runs, override the default `NoOpAuditSink` with `InMemoryAuditSink` before calling `AddBridgeToolServices()`, and use trace-only policy or approval wrappers when you need to print observed decisions without changing production defaults.
 Capability-aware traces should use a fake or test tool descriptor with `RequiredCapabilities` populated; existing compiled tools declare no required capabilities by default.
@@ -227,6 +229,7 @@ For failure-path traces, capture:
 - `ErrorCode`
 - failure message
 - exception type if one was logged
+- manifest identity, version, category, source/discovery kind, and host affinity
 - whether the failure was structured by the tool or caught by `BridgeToolExecutor`
 - which required capabilities were declared by the descriptor
 - which secret references were declared in the request arguments
@@ -312,8 +315,11 @@ Confirm:
 - `AddBridgeToolServices` registers default security seams through `AddBridgeSecurityServices`
 - `AddBridgeSecurityServices` registers `IToolExecutionApprovalService`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
+- each descriptor derives a `BridgeToolManifest` with stable id, name, version, description, category, source/discovery kind, required capabilities, approval requirement, risk hint, and optional host affinity
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
+- `BridgeToolExecutor.ExecuteAsync` logs redacted manifest metadata after catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` logs redacted required-capability metadata after catalog lookup
+- `ToolExecutionSecurityContext` and `ToolExecutionApprovalContext` expose derived manifest metadata without changing policy or approval defaults
 - `BridgeToolExecutor.ExecuteAsync` evaluates `IToolExecutionPolicy` before invoking the tool
 - `ToolExecutionSecurityContext.RequiredCapabilities` exposes descriptor-declared capabilities to policy
 - `ToolExecutionSecurityContext.SecretReferences` exposes structured request secret references to policy
@@ -323,7 +329,7 @@ Confirm:
 - approval-denied executions return structured `ApprovalDenied` failures and do not invoke the tool
 - unresolved secret references return structured `SecretReferenceUnresolved` failures and do not invoke the tool
 - `BridgeToolExecutor.ExecuteAsync` emits a `BridgeAuditEnvelope` after terminal outcomes
-- audit metadata includes redacted required capabilities, secret references, secret resolution status, approval requirement, approval decision, and redacted approval reason
+- audit metadata includes manifest identity/version/category/source/discovery/host metadata, redacted required capabilities, secret references, secret resolution status, approval requirement, approval decision, and redacted approval reason
 - audit classification metadata includes category, severity, risk level, and outcome for success, policy denial, approval denial, unresolved secret references, cancellation, and execution failure
 - payload-oriented executor logs pass through `ISecurityRedactor`
 - `BridgeToolExecutor.ExecuteAsync` preserves request id and operation id in all returned results

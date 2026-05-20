@@ -63,6 +63,9 @@ The bridge is intentionally conservative at this stage:
 Shared bridge tools execute through a catalog/executor boundary in `VsMcpBridge.Shared.Tools`.
 The default tool path is still compiled and in-memory; `RegexTextSearchTool` and `Bm25TextSearchTool` prove the catalog/executor path without changing MCP transport, proposal flow, or host startup behavior.
 `Bm25TextSearchTool` is intentionally minimal: callers provide the query and document collection per request, scoring happens in memory, and no persistent index, file crawler, background service, external search service, or directory-loaded search plugin is introduced.
+Bridge tools are now self-describing through a lightweight `BridgeToolManifest` derived from `BridgeToolDescriptor`.
+The manifest records stable identity (`id`, `name`, `version`), description, category, discovery/source kind, required capabilities, approval requirement, risk/audit hints, execution characteristics, and optional host affinity.
+This is contract and observability metadata only; it is not package publishing, a persistent manifest store, remote tool loading, signed plugin provenance, OAuth/RBAC/user identity, or MEF redesign.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.
@@ -76,6 +79,7 @@ Host-specific production tool packs remain outside this slice.
 
 The executor owns the tool execution boundary logging contract.
 Every tool execution must preserve request/operation correlation, return structured success/failure results, and emit enough start/completion/failure evidence that tools do not become black boxes during triage.
+Manifest identity and classification metadata flow through executor trace/audit metadata, while tool execution still goes through `BridgeToolExecutor`.
 The durable baseline for this boundary is `docs/tool-execution-trace-workflow.md` with observed artifacts under `artifacts/logs/tool-regex-search-trace-20260509.*` and `docs/diagrams/tool-regex-search-trace-20260509.mmd`.
 The durable MEF discovery boundary evidence is `artifacts/logs/mef-discovery-trace-20260516.*` and `docs/diagrams/mef-discovery-trace-20260516.mmd`; it proves optional directory discovery, missing-directory tolerance, load-failure logging, catalog composition, and preserved executor routing without changing runtime behavior.
 
@@ -96,6 +100,7 @@ The executor is the shared enforcement point for foundational tool security beha
 
 - `IToolExecutionPolicy` evaluates a `ToolExecutionSecurityContext` before a tool runs.
 - tool descriptors can declare required `BridgeCapability` metadata, and that metadata flows into `ToolExecutionSecurityContext` for future capability-aware policy decisions.
+- tool descriptors derive a lightweight manifest, and manifest identity/version/category/source/host metadata flows into security context, approval context, executor trace logs, and audit metadata.
 - `IToolExecutionApprovalService` evaluates a `ToolExecutionApprovalContext` only when a tool descriptor marks `ApprovalRequirement = Required`.
 - request arguments can carry structured `ISecretReference` values so tools can point at named secrets without placing raw secret values in the normal execution path.
 - `ISecretBroker` is the indirection seam for future secret resolution; the default `NoOpSecretBroker` returns unresolved.
