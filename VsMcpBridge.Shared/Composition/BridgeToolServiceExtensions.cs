@@ -21,6 +21,7 @@ namespace VsMcpBridge.Shared.Composition
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeToolDiscovery, MefBridgeToolDiscovery>());
             services.TryAddSingleton<IBridgeToolCatalog>(provider =>
                 new CompiledBridgeToolCatalog(provider.GetRequiredService<System.Collections.Generic.IEnumerable<IBridgeToolDiscovery>>()));
+            services.TryAddSingleton<IBridgeToolInventoryService, BridgeToolInventoryService>();
             services.TryAddSingleton<IBridgeToolExecutor, BridgeToolExecutor>();
 
             return services;

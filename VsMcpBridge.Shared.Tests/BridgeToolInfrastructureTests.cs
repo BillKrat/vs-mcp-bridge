@@ -27,6 +27,7 @@ public sealed class BridgeToolInfrastructureTests
         using var provider = services.BuildServiceProvider();
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
+        Assert.IsType<BridgeToolInventoryService>(provider.GetRequiredService<IBridgeToolInventoryService>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
         Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
@@ -51,6 +52,7 @@ public sealed class BridgeToolInfrastructureTests
         using var provider = services.BuildServiceProvider();
 
         Assert.IsType<CompiledBridgeToolCatalog>(provider.GetRequiredService<IBridgeToolCatalog>());
+        Assert.IsType<BridgeToolInventoryService>(provider.GetRequiredService<IBridgeToolInventoryService>());
         Assert.IsType<BridgeToolExecutor>(provider.GetRequiredService<IBridgeToolExecutor>());
         Assert.IsType<BridgeSecurityRedactor>(provider.GetRequiredService<ISecurityRedactor>());
         Assert.IsType<NoOpAuditSink>(provider.GetRequiredService<IAuditSink>());
@@ -61,6 +63,98 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.True(tool.Manifest.Execution.ExecutesThroughBridgeToolExecutor));
+    }
+
+    [Fact]
+    public void Tool_inventory_exposes_compiled_tool_manifest_metadata()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger, RecordingBridgeLogger>();
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var inventory = provider.GetRequiredService<IBridgeToolInventoryService>();
+
+        var snapshot = inventory.GetSnapshot();
+
+        var regex = Assert.Single(snapshot.Tools, tool => tool.Id == RegexTextSearchTool.ToolId);
+        Assert.Equal("Regex Text Search", regex.Name);
+        Assert.Equal(BridgeToolManifest.DefaultVersion, regex.Version);
+        Assert.Equal("Searches supplied text entries with a regular expression.", regex.Description);
+        Assert.Equal("Search", regex.Category);
+        Assert.Equal("Compiled", regex.Source);
+        Assert.Equal(BridgeToolDiscoveryKind.Compiled, regex.DiscoveryKind);
+        Assert.Equal("Shared", regex.HostAffinity);
+        Assert.True(regex.IsHostSpecific);
+        Assert.Empty(regex.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, regex.ApprovalRequirement);
+        Assert.Equal(AuditEventCategory.ToolExecution, regex.AuditCategoryHint);
+        Assert.Equal(AuditSeverity.Informational, regex.SeverityHint);
+        Assert.Equal(AuditRiskLevel.Low, regex.RiskLevelHint);
+        Assert.True(regex.ExecutesThroughBridgeToolExecutor);
+        Assert.Contains(snapshot.Tools, tool => tool.Id == Bm25TextSearchTool.ToolId);
+    }
+
+    [Fact]
+    public void Tool_inventory_ordering_is_deterministic_by_tool_id()
+    {
+        var tools = new[]
+        {
+            new InventoryProbeBridgeTool("fake.zeta"),
+            new InventoryProbeBridgeTool("fake.alpha"),
+            new InventoryProbeBridgeTool("fake.middle")
+        };
+        var inventory = new BridgeToolInventoryService(new CompiledBridgeToolCatalog(tools));
+
+        var snapshot = inventory.GetSnapshot();
+
+        Assert.Equal(new[] { "fake.alpha", "fake.middle", "fake.zeta" }, snapshot.Tools.Select(tool => tool.Id).ToArray());
+    }
+
+    [Fact]
+    public void Tool_inventory_does_not_execute_tools()
+    {
+        var tool = new InventoryProbeBridgeTool(
+            "fake.inventory",
+            requiredCapabilities: new[] { new BridgeCapability("workspace.read"), new BridgeCapability("diagnostics.read") },
+            approvalRequirement: ToolExecutionApprovalRequirement.Required);
+        var inventory = new BridgeToolInventoryService(new CompiledBridgeToolCatalog(new IBridgeTool[] { tool }));
+
+        var snapshot = inventory.GetSnapshot();
+
+        Assert.Equal(0, tool.ExecutionCount);
+        var item = Assert.Single(snapshot.Tools);
+        Assert.Equal("fake.inventory", item.Id);
+        Assert.Equal(new[] { "diagnostics.read", "workspace.read" }, item.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.Required, item.ApprovalRequirement);
+    }
+
+    [Fact]
+    public void Tool_inventory_includes_mef_discovered_tool_metadata_when_enabled()
+    {
+        MefFakeBridgeTool.ExecutionCount = 0;
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger>(logger);
+        services.AddBridgeToolServices(options =>
+        {
+            options.EnableMefDirectoryDiscovery = true;
+            options.MefDirectories.Add(AppContext.BaseDirectory);
+            options.MefSearchPattern = "VsMcpBridge.Shared.Tests.dll";
+        });
+        using var provider = services.BuildServiceProvider();
+        var inventory = provider.GetRequiredService<IBridgeToolInventoryService>();
+
+        var snapshot = inventory.GetSnapshot();
+
+        var item = Assert.Single(snapshot.Tools, tool => tool.Id == MefFakeBridgeTool.ToolId);
+        Assert.Equal("Fake MEF Tool", item.Name);
+        Assert.Equal(BridgeToolManifest.DefaultVersion, item.Version);
+        Assert.Equal("Tests", item.Category);
+        Assert.Equal("MEF", item.Source);
+        Assert.Equal(BridgeToolDiscoveryKind.Mef, item.DiscoveryKind);
+        Assert.Equal("SharedTests", item.HostAffinity);
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, item.ApprovalRequirement);
+        Assert.Equal(0, MefFakeBridgeTool.ExecutionCount);
     }
 
     [Fact]
@@ -1394,6 +1488,44 @@ public sealed class BridgeToolInfrastructureTests
                 request,
                 "Echo completed.",
                 new Dictionary<string, object?> { ["echo"] = request.Arguments["input"] }));
+        }
+    }
+
+    private sealed class InventoryProbeBridgeTool : IBridgeTool
+    {
+        public InventoryProbeBridgeTool(
+            string toolId,
+            IReadOnlyList<BridgeCapability>? requiredCapabilities = null,
+            ToolExecutionApprovalRequirement approvalRequirement = ToolExecutionApprovalRequirement.NotRequired)
+        {
+            Descriptor = new BridgeToolDescriptor
+            {
+                Id = toolId,
+                Name = $"Inventory Probe {toolId}",
+                Version = "2.0.0-test",
+                Description = "Fake inventory metadata test tool.",
+                Category = "Tests",
+                Source = "Compiled",
+                Host = "SharedTests",
+                RequiredCapabilities = requiredCapabilities ?? Array.Empty<BridgeCapability>(),
+                ApprovalRequirement = approvalRequirement,
+                RiskProfile = new BridgeToolRiskProfile
+                {
+                    AuditCategoryHint = AuditEventCategory.ToolExecution,
+                    SeverityHint = AuditSeverity.Warning,
+                    RiskLevelHint = AuditRiskLevel.Medium
+                }
+            };
+        }
+
+        public BridgeToolDescriptor Descriptor { get; }
+
+        public int ExecutionCount { get; private set; }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            ExecutionCount++;
+            return Task.FromResult(BridgeToolResult.Succeeded(request, "Inventory probe completed."));
         }
     }
 

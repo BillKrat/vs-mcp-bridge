@@ -9,6 +9,7 @@ Provide a repeatable AI-friendly and developer-friendly process for:
 - invoking a compiled bridge tool through `IBridgeToolExecutor`
 - proving catalog discovery through `CompiledBridgeToolCatalog` and the default compiled discovery adapter
 - proving bridge tool manifest metadata derived from descriptors
+- proving read-only catalog inventory metadata without executing tools
 - proving the minimal policy/capability/approval/secret-reference/redaction/audit seams around execution
 - collecting correlated execution-boundary logs
 - preserving request and operation correlation IDs
@@ -346,6 +347,7 @@ Confirm:
 - `AddBridgeSecurityServices` registers `IToolExecutionApprovalService`
 - `CompiledBridgeToolCatalog.GetTools()` exposes the descriptor
 - each descriptor derives a `BridgeToolManifest` with stable id, name, version, description, category, source/discovery kind, required capabilities, approval requirement, risk hint, and optional host affinity
+- `IBridgeToolInventoryService.GetSnapshot()` exposes deterministic descriptor-derived manifest inventory metadata ordered by tool id without invoking tools
 - `BridgeToolExecutor.ExecuteAsync` logs start before catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` logs redacted manifest metadata after catalog lookup
 - `BridgeToolExecutor.ExecuteAsync` logs redacted required-capability metadata after catalog lookup

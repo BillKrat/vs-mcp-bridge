@@ -133,6 +133,7 @@ Refine the current repo-local contracts before moving them.
 Focus:
 
 - manifest defaults
+- deterministic read-only catalog inventory snapshots
 - capability declarations
 - approval requirement semantics
 - audit metadata shape

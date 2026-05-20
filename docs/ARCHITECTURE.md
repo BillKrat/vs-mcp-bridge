@@ -66,6 +66,8 @@ The default tool path is still compiled and in-memory; `RegexTextSearchTool` and
 Bridge tools are now self-describing through a lightweight `BridgeToolManifest` derived from `BridgeToolDescriptor`.
 The manifest records stable identity (`id`, `name`, `version`), description, category, discovery/source kind, required capabilities, approval requirement, risk/audit hints, execution characteristics, and optional host affinity.
 This is contract and observability metadata only; it is not package publishing, a persistent manifest store, remote tool loading, signed plugin provenance, OAuth/RBAC/user identity, or MEF redesign.
+`IBridgeToolInventoryService` provides a deterministic read-only catalog snapshot for diagnostics, documentation, and AI triage.
+The inventory snapshot is ordered by tool id and exposes descriptor-derived manifest metadata without executing tools, changing MCP transport behavior, or bypassing `BridgeToolExecutor`.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.
