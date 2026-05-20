@@ -68,6 +68,7 @@ The manifest records stable identity (`id`, `name`, `version`), description, cat
 This is contract and observability metadata only; it is not package publishing, a persistent manifest store, remote tool loading, signed plugin provenance, OAuth/RBAC/user identity, or MEF redesign.
 `IBridgeToolInventoryService` provides a deterministic read-only catalog snapshot for diagnostics, documentation, and AI triage.
 The inventory snapshot is ordered by tool id and exposes descriptor-derived manifest metadata without executing tools, changing MCP transport behavior, or bypassing `BridgeToolExecutor`.
+The durable inventory evidence is `artifacts/logs/tool-inventory-trace-20260516.*`, `docs/diagrams/tool-inventory-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-tool-inventory-validation.md`; it proves compiled and MEF-discovered descriptors flow through the same read-only inventory path without tool execution.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

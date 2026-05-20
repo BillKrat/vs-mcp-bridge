@@ -1,0 +1,43 @@
+RunName=tool-inventory-trace-20260516
+Scope=Observed read-only bridge tool catalog inventory snapshot.
+RuntimeBehaviorChanged=False
+ProductionToolsAdded=False
+McpTransportChanged=False
+InventoryExposedOverMcp=False
+
+[CompiledInventory]
+Call=IBridgeToolInventoryService.GetSnapshot()
+CatalogDescriptorIds=bridge.bm25TextSearch,bridge.regexTextSearch
+SnapshotToolCount=2
+SnapshotOrder=bridge.bm25TextSearch,bridge.regexTextSearch
+DeterministicOrderByToolId=True
+ToolExecutionObserved=False
+ExecutionBoundary=Not invoked; BridgeToolExecutor is not resolved or called by the inventory trace.
+
+[CompiledInventory.Tools]
+Id=bridge.bm25TextSearch | Name=BM25 Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+Id=bridge.regexTextSearch | Name=Regex Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+
+[MefInventory]
+MefDirectory=Y:/vs-mcp-bridge/VsMcpBridge.Shared.Tests/bin/Debug/net10.0
+MefSearchPattern=VsMcpBridge.Shared.Tests.dll
+Call=IBridgeToolInventoryService.GetSnapshot() with MEF directory discovery enabled
+SnapshotToolCount=3
+SnapshotOrder=bridge.bm25TextSearch,bridge.regexTextSearch,fake.mef
+DeterministicOrderByToolId=True
+MefFakeToolPresent=True
+ToolExecutionObserved=False
+
+[MefInventory.Tools]
+Id=bridge.bm25TextSearch | Name=BM25 Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+Id=bridge.regexTextSearch | Name=Regex Text Search | Version=1.0.0 | Category=Search | DiscoveryKind=Compiled | Source=Compiled | HostAffinity=Shared | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+Id=fake.mef | Name=Fake MEF Tool | Version=1.0.0 | Category=Tests | DiscoveryKind=Mef | Source=MEF | HostAffinity=SharedTests | RequiredCapabilities=None | ApprovalRequirement=NotRequired | RiskProfile=ToolExecution/Informational/Low | ExecutesThroughBridgeToolExecutor=True
+
+[MefDiscoveryLogs]
+MEF bridge tool discovery started [Enabled=True] [DirectoryCount=1] [SearchPattern=VsMcpBridge.Shared.Tests.dll].
+MEF bridge tool discovery completed [Enabled=True] [AssemblyCount=1] [ToolCount=1].
+
+[CodePathEvidence]
+BridgeToolInventoryService.GetSnapshot calls IBridgeToolCatalog.GetTools(), maps descriptor.Manifest into BridgeToolInventoryItem, sorts by Id, and returns BridgeToolCatalogSnapshot.
+CompiledBridgeToolDiscovery and MefBridgeToolDiscovery feed the same CompiledBridgeToolCatalog construction path before inventory reads descriptors.
+No tool ExecuteAsync method is called by BridgeToolInventoryService.

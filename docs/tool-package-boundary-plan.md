@@ -125,6 +125,7 @@ Exit criteria:
 - descriptor/manifest metadata remains stable
 - executor-owned policy, approval, redaction, audit, and correlation behavior is covered by tests
 - durable trace artifacts can reconstruct compiled, MEF discovery, approval, and manifest metadata flows
+- durable inventory artifacts can reconstruct deterministic read-only catalog snapshots
 
 ### Phase 1: Stabilize Manifests, Security, And Tool Execution
 

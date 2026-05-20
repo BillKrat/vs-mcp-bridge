@@ -168,6 +168,32 @@ This trace proves descriptor-derived manifest metadata is visible through catalo
 It also uses a temporary harness-only approval-required tool to observe `ToolExecutionApprovalContext.Manifest` without adding a production tool or changing runtime behavior.
 The MEF path is documented from existing shared-test evidence for `MefFakeBridgeTool`; this trace does not change MEF behavior.
 
+## Observed Inventory Snapshot Run
+
+After the read-only catalog inventory seam was added, inventory behavior was validated with compiled tools and an explicitly enabled MEF test-export path:
+
+- run name: `tool-inventory-trace-20260516`
+- branch: `main`
+- commit: `9708609`
+- capture date: `2026-05-20`
+- inventory service: `IBridgeToolInventoryService`
+- catalog: `CompiledBridgeToolCatalog`
+- compiled discovery: `CompiledBridgeToolDiscovery`
+- MEF discovery: `MefBridgeToolDiscovery` scanning the existing shared-test assembly
+- compiled snapshot order: `bridge.bm25TextSearch`, `bridge.regexTextSearch`
+- MEF-enabled snapshot order: `bridge.bm25TextSearch`, `bridge.regexTextSearch`, `fake.mef`
+- observed result: deterministic read-only snapshots with no tool execution
+
+Inventory reference artifacts:
+
+- sequence diagram: [`docs/diagrams/tool-inventory-trace-20260516.mmd`](diagrams/tool-inventory-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/tool-inventory-trace-20260516.log`](../artifacts/logs/tool-inventory-trace-20260516.log)
+- run metadata: [`artifacts/logs/tool-inventory-trace-20260516.metadata.json`](../artifacts/logs/tool-inventory-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-tool-inventory-validation.md`](session-handoffs/2026-05-16-tool-inventory-validation.md)
+
+This trace proves inventory snapshots read descriptor-derived manifest metadata from the catalog and sort by tool id.
+It does not expose inventory over MCP, change transport behavior, add tools, move namespaces, or execute bridge tools.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`

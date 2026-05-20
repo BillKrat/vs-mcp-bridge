@@ -15,6 +15,7 @@ AI session entry point:
 - for the MEF discovery boundary trace artifacts, use [artifacts/logs/mef-discovery-trace-20260516.log](artifacts/logs/mef-discovery-trace-20260516.log) and [docs/diagrams/mef-discovery-trace-20260516.mmd](docs/diagrams/mef-discovery-trace-20260516.mmd)
 - for the approval-aware tool execution boundary trace artifacts, use [artifacts/logs/tool-approval-trace-20260516.log](artifacts/logs/tool-approval-trace-20260516.log) and [docs/diagrams/tool-approval-trace-20260516.mmd](docs/diagrams/tool-approval-trace-20260516.mmd)
 - for the bridge tool manifest metadata trace artifacts, use [artifacts/logs/tool-manifest-trace-20260516.log](artifacts/logs/tool-manifest-trace-20260516.log) and [docs/diagrams/tool-manifest-trace-20260516.mmd](docs/diagrams/tool-manifest-trace-20260516.mmd)
+- for the bridge tool catalog inventory trace artifacts, use [artifacts/logs/tool-inventory-trace-20260516.log](artifacts/logs/tool-inventory-trace-20260516.log) and [docs/diagrams/tool-inventory-trace-20260516.mmd](docs/diagrams/tool-inventory-trace-20260516.mmd)
 - for inactive VSIX named-pipe activation diagnostic artifacts, use [artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:

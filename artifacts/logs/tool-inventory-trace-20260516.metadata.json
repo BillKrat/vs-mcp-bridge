@@ -1,0 +1,112 @@
+{
+  "runName": "tool-inventory-trace-20260516",
+  "branch": "main",
+  "commit": "9708609 Add bridge tool catalog inventory seam",
+  "capturedAtUtc": "2026-05-20T23:40:37.9949553+00:00",
+  "captureMethod": "Temporary console harness outside the repository using VsMcpBridge.Shared production composition. A second provider enabled MEF directory discovery against the existing shared-test assembly to prove discovered descriptors flow into the same inventory path.",
+  "compiledInventory": {
+    "toolCount": 2,
+    "descriptorIds": [
+      "bridge.bm25TextSearch",
+      "bridge.regexTextSearch"
+    ],
+    "order": [
+      "bridge.bm25TextSearch",
+      "bridge.regexTextSearch"
+    ],
+    "deterministicOrderByToolId": true,
+    "tools": [
+      {
+        "id": "bridge.bm25TextSearch",
+        "name": "BM25 Text Search",
+        "version": "1.0.0",
+        "description": "Ranks supplied in-memory text documents with a minimal BM25-style scorer.",
+        "category": "Search",
+        "discoveryKind": "Compiled",
+        "source": "Compiled",
+        "hostAffinity": "Shared",
+        "requiredCapabilities": [],
+        "approvalRequirement": "NotRequired",
+        "riskProfile": {
+          "auditCategoryHint": "ToolExecution",
+          "severityHint": "Informational",
+          "riskLevelHint": "Low"
+        },
+        "executionCharacteristics": {
+          "executesThroughBridgeToolExecutor": true
+        }
+      },
+      {
+        "id": "bridge.regexTextSearch",
+        "name": "Regex Text Search",
+        "version": "1.0.0",
+        "description": "Searches supplied text entries with a regular expression.",
+        "category": "Search",
+        "discoveryKind": "Compiled",
+        "source": "Compiled",
+        "hostAffinity": "Shared",
+        "requiredCapabilities": [],
+        "approvalRequirement": "NotRequired",
+        "riskProfile": {
+          "auditCategoryHint": "ToolExecution",
+          "severityHint": "Informational",
+          "riskLevelHint": "Low"
+        },
+        "executionCharacteristics": {
+          "executesThroughBridgeToolExecutor": true
+        }
+      }
+    ]
+  },
+  "mefInventory": {
+    "directory": "Y:/vs-mcp-bridge/VsMcpBridge.Shared.Tests/bin/Debug/net10.0",
+    "searchPattern": "VsMcpBridge.Shared.Tests.dll",
+    "toolCount": 3,
+    "order": [
+      "bridge.bm25TextSearch",
+      "bridge.regexTextSearch",
+      "fake.mef"
+    ],
+    "deterministicOrderByToolId": true,
+    "fakeMefToolPresent": true,
+    "fakeMefTool": {
+      "id": "fake.mef",
+      "name": "Fake MEF Tool",
+      "version": "1.0.0",
+      "description": "Fake MEF-discovered test tool.",
+      "category": "Tests",
+      "discoveryKind": "Mef",
+      "source": "MEF",
+      "hostAffinity": "SharedTests",
+      "requiredCapabilities": [],
+      "approvalRequirement": "NotRequired",
+      "riskProfile": {
+        "auditCategoryHint": "ToolExecution",
+        "severityHint": "Informational",
+        "riskLevelHint": "Low"
+      },
+      "executionCharacteristics": {
+        "executesThroughBridgeToolExecutor": true
+      }
+    },
+    "discoveryLogs": [
+      "MEF bridge tool discovery started [Enabled=True] [DirectoryCount=1] [SearchPattern=VsMcpBridge.Shared.Tests.dll].",
+      "MEF bridge tool discovery completed [Enabled=True] [AssemblyCount=1] [ToolCount=1]."
+    ]
+  },
+  "readOnlyEvidence": {
+    "bridgeToolExecutorResolvedOrCalled": false,
+    "toolExecutionObserved": false,
+    "inventoryExposedOverMcp": false,
+    "mcpTransportChanged": false,
+    "runtimeBehaviorChanged": false
+  },
+  "exclusions": [
+    "No runtime behavior change",
+    "No new production tools",
+    "No MCP transport behavior",
+    "No MCP catalog inventory exposure",
+    "No code or namespace movement",
+    "No package publishing"
+  ]
+}

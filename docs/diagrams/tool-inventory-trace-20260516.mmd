@@ -1,0 +1,40 @@
+sequenceDiagram
+    participant Caller as Trace Harness / Caller
+    participant Inventory as IBridgeToolInventoryService
+    participant Catalog as IBridgeToolCatalog
+    participant Compiled as CompiledBridgeToolDiscovery
+    participant MEF as MefBridgeToolDiscovery
+    participant Descriptor as BridgeToolDescriptor
+    participant Manifest as BridgeToolManifest
+    participant Snapshot as BridgeToolCatalogSnapshot
+
+    Caller->>Inventory: GetSnapshot()
+    Inventory->>Catalog: GetTools()
+    Catalog->>Compiled: DiscoverTools()
+    Compiled-->>Catalog: RegexTextSearchTool + Bm25TextSearchTool descriptors
+    Catalog-->>Inventory: descriptors
+    loop each descriptor
+        Inventory->>Descriptor: read Manifest
+        Descriptor->>Manifest: derive identity/version/category/discovery/host/risk/execution
+        Manifest-->>Inventory: read-only metadata
+    end
+    Inventory->>Snapshot: create items sorted by tool id
+    Snapshot-->>Caller: bridge.bm25TextSearch, bridge.regexTextSearch
+
+    Caller->>Inventory: GetSnapshot() with MEF directory discovery enabled
+    Inventory->>Catalog: GetTools()
+    Catalog->>Compiled: DiscoverTools()
+    Compiled-->>Catalog: compiled descriptors
+    Catalog->>MEF: DiscoverTools()
+    MEF-->>Catalog: fake.mef descriptor from shared-test export
+    Catalog-->>Inventory: compiled + MEF descriptors
+    loop each descriptor
+        Inventory->>Descriptor: read Manifest
+        Descriptor->>Manifest: derive manifest metadata
+        Manifest-->>Inventory: read-only inventory metadata
+    end
+    Inventory->>Snapshot: create items sorted by tool id
+    Snapshot-->>Caller: bridge.bm25TextSearch, bridge.regexTextSearch, fake.mef
+
+    Note over Inventory,Catalog: Inventory reads descriptor/manifests only; it does not call tool ExecuteAsync.
+    Note over Caller,Snapshot: No MCP transport behavior or tool execution boundary changes are part of this trace.
