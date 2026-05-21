@@ -65,9 +65,9 @@ After reading the core grounding set:
 
 If the user does not specify another handoff, start here first:
 
-- `docs/session-handoffs/2026-05-16-end-of-day-architecture-handoff.md`
+- `docs/session-handoffs/2026-05-16-platform-self-description-handoff.md`
 
-That handoff summarizes the completed architecture/security/diagnostic phase. The related compiled tool execution and activation paths now have durable observed artifacts:
+That handoff summarizes the current MCP/tool-platform self-description milestone. The related compiled tool execution and activation paths now have durable observed artifacts:
 
 - `docs/tool-execution-trace-workflow.md`
 - `artifacts/logs/tool-regex-search-trace-20260509.log`
@@ -102,6 +102,7 @@ For the current foundational security architecture seams and deferred scope, als
 For the latest full validation checkpoint, also read `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`.
 For inactive VSIX named-pipe activation diagnostics, also read `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`.
 For the end-of-day architecture/security summary, also read `docs/session-handoffs/2026-05-16-end-of-day-architecture-handoff.md`.
+For the current platform self-description milestone and next-step options, read `docs/session-handoffs/2026-05-16-platform-self-description-handoff.md`.
 
 ## Current Working Guidance
 
