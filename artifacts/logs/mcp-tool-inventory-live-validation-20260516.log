@@ -1,0 +1,82 @@
+RunName=mcp-tool-inventory-live-validation-20260516
+Scope=Live direct MCP stdio validation for bridge_get_tool_inventory.
+CaptureDate=2026-05-20
+Repository=Y:/vs-mcp-bridge
+Branch=main
+BaselineCommit=633db89 Add MCP tool inventory diagnostic
+ValidationMode=Direct MCP stdio helper using ModelContextProtocol.Client
+VisualStudioCopilotValidation=Not run; bridge_get_tool_inventory is MCP-only and does not require VSIX activation or named-pipe state.
+
+[DirectMcpInitialization]
+InitializePassed=True
+ServerInfo=VsMcpBridge.McpServer 1.0.0.0
+ChildStdErrLines=None
+
+[ToolsList]
+ToolCount=17
+IncludesBridgeGetToolInventory=True
+ToolNames=bridge_get_tool_inventory,chat_engine_chat,chat_engine_explain_code,chat_engine_explain_error,chat_engine_ping,chat_engine_rewrite,chat_engine_rewrite_with_target,chat_engine_suggest_error_fix,chat_engine_suggest_fixes,chat_engine_suggest_fixes_with_target,chat_engine_summarize,vs_get_active_document,vs_get_error_list,vs_get_selected_text,vs_list_solution_projects,vs_propose_text_edit,vs_propose_text_edits
+
+[ToolCall]
+ToolName=bridge_get_tool_inventory
+CallIsError=False
+RequestId=286de633c1754c8fb844c283be487d06
+ResponseSuccess=True
+ResponseToolName=bridge_get_tool_inventory
+ResponseToolCount=2
+InventoryToolIds=bridge.bm25TextSearch,bridge.regexTextSearch
+DeterministicOrderByToolId=True
+ContainsRegexTextSearch=True
+ContainsBm25TextSearch=True
+ManifestFieldsPresent=True
+RequiredCapabilities=empty for compiled inventory tools
+ApprovalRequirement=NotRequired for compiled inventory tools
+DiscoveryKind=Compiled for compiled inventory tools
+RiskProfile=ToolExecution/Informational/Low
+ExecutionCharacteristics=executesThroughBridgeToolExecutor=True
+SecretsOrPayloadMarkersPresent=False
+
+[ServerLogMarkers]
+LogFile=C:/Users/billkratochvil/AppData/Local/VsMcpBridge/Logs/McpServer/pipe-client.log
+StartMarker=[18:59:01] [Information] [AppDataFolderLogger] MCP bridge_get_tool_inventory started [RequestId=286de633c1754c8fb844c283be487d06].
+CompletionMarker=[18:59:01] [Information] [AppDataFolderLogger] MCP bridge_get_tool_inventory completed [RequestId=286de633c1754c8fb844c283be487d06] [ElapsedMs=3] [ToolCount=2].
+
+[BoundaryChecks]
+McpServerInitialized=True
+ToolsListIncludesDiagnostic=True
+InventoryReturnedViaMcp=True
+ToolExecutionObserved=False
+BridgeToolExecutorInvoked=False
+ApprovalFlowTriggered=False
+AuditPathTriggered=False
+VsixPipeRequestSent=False
+ChatEngineRequestSentForDiagnostic=False
+RawPayloadOrSecretValuesExposed=False
+McpTransportChanged=False
+
+[ClientResultExcerpt]
+success=True
+toolName=bridge_get_tool_inventory
+toolCount=2
+tools[0].id=bridge.bm25TextSearch
+tools[0].version=1.0.0
+tools[0].category=Search
+tools[0].discoveryKind=Compiled
+tools[0].hostAffinity=Shared
+tools[0].requiredCapabilities=[]
+tools[0].approvalRequirement=NotRequired
+tools[0].auditCategoryHint=ToolExecution
+tools[0].severityHint=Informational
+tools[0].riskLevelHint=Low
+tools[0].executesThroughBridgeToolExecutor=True
+tools[1].id=bridge.regexTextSearch
+tools[1].version=1.0.0
+tools[1].category=Search
+tools[1].discoveryKind=Compiled
+tools[1].hostAffinity=Shared
+tools[1].requiredCapabilities=[]
+tools[1].approvalRequirement=NotRequired
+tools[1].auditCategoryHint=ToolExecution
+tools[1].severityHint=Informational
+tools[1].riskLevelHint=Low
+tools[1].executesThroughBridgeToolExecutor=True

@@ -17,6 +17,7 @@ AI session entry point:
 - for the bridge tool manifest metadata trace artifacts, use [artifacts/logs/tool-manifest-trace-20260516.log](artifacts/logs/tool-manifest-trace-20260516.log) and [docs/diagrams/tool-manifest-trace-20260516.mmd](docs/diagrams/tool-manifest-trace-20260516.mmd)
 - for the bridge tool catalog inventory trace artifacts, use [artifacts/logs/tool-inventory-trace-20260516.log](artifacts/logs/tool-inventory-trace-20260516.log) and [docs/diagrams/tool-inventory-trace-20260516.mmd](docs/diagrams/tool-inventory-trace-20260516.mmd)
 - for the MCP-exposed bridge tool inventory diagnostic trace artifacts, use [artifacts/logs/mcp-tool-inventory-trace-20260516.log](artifacts/logs/mcp-tool-inventory-trace-20260516.log) and [docs/diagrams/mcp-tool-inventory-trace-20260516.mmd](docs/diagrams/mcp-tool-inventory-trace-20260516.mmd)
+- for live MCP stdio validation of the inventory diagnostic, use [artifacts/logs/mcp-tool-inventory-live-validation-20260516.log](artifacts/logs/mcp-tool-inventory-live-validation-20260516.log) and [docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd](docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
 - for inactive VSIX named-pipe activation diagnostic artifacts, use [artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:

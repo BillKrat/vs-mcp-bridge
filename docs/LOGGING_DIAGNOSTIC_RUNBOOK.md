@@ -172,6 +172,9 @@ Stop only the orphaned `VsMcpBridge.McpServer` process, then rebuild the MCP ser
 
 As of the 2026-05-16 triage run, `scripts\validate-mcp.ps1` can hang while building its temporary helper before MCP initialization. A direct MCP stdio validation still succeeded: initialize returned `VsMcpBridge.McpServer 1.0.0.0`, `tools/list` returned 16 tools, and `chat_engine_ping` returned `pong`. Treat that script hang as a validation-helper issue unless direct MCP activation also fails.
 
+For the read-only inventory diagnostic, direct MCP stdio validation is captured in `artifacts/logs/mcp-tool-inventory-live-validation-20260516.*` and `docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd`.
+That run initialized `VsMcpBridge.McpServer 1.0.0.0`, listed 17 MCP tools including `bridge_get_tool_inventory`, and invoked the diagnostic successfully with `ToolCount=2` without VSIX activation, pipe calls, approval, audit, ChatEngine, or bridge tool execution.
+
 When reproducing ping/pong or chat startup hangs, capture the last observed stage:
 
 1. `McpServer` request entry

@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant Client as Direct MCP stdio client
+    participant Server as VsMcpBridge.McpServer stdio
+    participant Tool as bridge_get_tool_inventory
+    participant Inventory as IBridgeToolInventoryService
+    participant Catalog as IBridgeToolCatalog
+    participant Snapshot as BridgeToolCatalogSnapshot
+    participant Response as MCP tool response
+
+    Client->>Server: initialize
+    Server-->>Client: VsMcpBridge.McpServer 1.0.0.0
+    Client->>Server: tools/list
+    Server-->>Client: 17 tools including bridge_get_tool_inventory
+    Client->>Server: tools/call bridge_get_tool_inventory
+    Server->>Tool: invoke diagnostic method
+    Tool->>Inventory: GetSnapshot()
+    Inventory->>Catalog: GetTools()
+    Catalog-->>Inventory: compiled descriptors
+    Inventory->>Snapshot: map manifest metadata sorted by tool id
+    Snapshot-->>Tool: bridge.bm25TextSearch, bridge.regexTextSearch
+    Tool-->>Response: metadata-only JSON
+    Response-->>Client: toolCount=2, callIsError=false
+
+    Note over Tool,Catalog: No bridge tool ExecuteAsync call occurs during inventory.
+    Note over Tool,Server: No approval, audit, pipe, ChatEngine, or payload/secret path was triggered by this diagnostic.

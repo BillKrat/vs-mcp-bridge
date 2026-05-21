@@ -72,6 +72,7 @@ The durable inventory evidence is `artifacts/logs/tool-inventory-trace-20260516.
 The MCP server exposes that same inventory seam as the read-only diagnostic tool `bridge_get_tool_inventory`.
 This diagnostic returns metadata-only JSON for AI triage and operational visibility; it does not execute tools, require capabilities by default, trigger approval, send VSIX pipe requests, call ChatEngine, expose payloads/secrets, or replace `BridgeToolExecutor` for executable bridge tools.
 The durable MCP diagnostic evidence is `artifacts/logs/mcp-tool-inventory-trace-20260516.log`, `docs/diagrams/mcp-tool-inventory-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`.
+Live direct MCP stdio validation for this diagnostic is captured in `artifacts/logs/mcp-tool-inventory-live-validation-20260516.*`, `docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

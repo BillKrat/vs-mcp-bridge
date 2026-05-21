@@ -217,6 +217,32 @@ This diagnostic calls only `IBridgeToolInventoryService.GetSnapshot()`.
 It does not invoke `BridgeToolExecutor`, `IToolExecutionPolicy`, `IToolExecutionApprovalService`, `IAuditSink`, `IPipeClient`, `IChatEngine`, or bridge tool `ExecuteAsync`.
 It logs request id, elapsed time, and tool count without logging raw payloads or secrets.
 
+## Live MCP Inventory Validation Run
+
+The MCP inventory diagnostic was validated through direct MCP stdio after it was added:
+
+- run name: `mcp-tool-inventory-live-validation-20260516`
+- branch: `main`
+- baseline commit: `633db89`
+- capture date: `2026-05-20`
+- validation mode: direct MCP stdio helper using `ModelContextProtocol.Client`
+- server info: `VsMcpBridge.McpServer 1.0.0.0`
+- `tools/list` count: `17`
+- MCP tool: `bridge_get_tool_inventory`
+- response request id: `286de633c1754c8fb844c283be487d06`
+- response tool count: `2`
+- response order: `bridge.bm25TextSearch`, `bridge.regexTextSearch`
+
+Live MCP validation artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd`](diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mcp-tool-inventory-live-validation-20260516.log`](../artifacts/logs/mcp-tool-inventory-live-validation-20260516.log)
+- run metadata: [`artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json`](../artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`](session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md)
+
+The server log for the live run contains the diagnostic start/completion markers with the same request id and `ToolCount=2`.
+No Visual Studio/Copilot validation was required for this slice because the diagnostic is MCP-only and does not depend on VSIX activation or named-pipe state.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`
