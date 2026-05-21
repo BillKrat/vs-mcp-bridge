@@ -33,6 +33,7 @@ Use targeted docs as needed:
 - Keep proposal mutation safety intact: AI tools suggest or propose; validated approval/apply flows mutate.
 - Preserve `BridgeToolExecutor` as the shared bridge tool execution, policy, approval, redaction, and audit boundary.
 - Treat MEF bridge tool support as discovery-only unless a future explicit design slice changes that.
+- During MCP/tooling triage, call `bridge_get_tool_inventory` early when available. It is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata, currently including compiled tools such as `bridge.bm25TextSearch` and `bridge.regexTextSearch`, without executing bridge tools.
 
 ## Validation Expectations
 

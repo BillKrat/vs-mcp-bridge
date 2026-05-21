@@ -11,6 +11,7 @@ description: Capture repeatable workflow evidence, correlated logs, metadata, an
 - Adding or validating an observable request path.
 - Creating durable logs, metadata, and Mermaid sequence diagrams.
 - Comparing observed runtime behavior with intended code flow.
+- Capturing or refreshing MCP inventory diagnostic evidence for `bridge_get_tool_inventory`.
 
 ## Workflow
 
@@ -24,6 +25,7 @@ description: Capture repeatable workflow evidence, correlated logs, metadata, an
 ## References
 
 - `docs/tool-execution-trace-workflow.md`
+- `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`
 - `docs/app-host-ping-trace-workflow.md`
 - `docs/vsix-host-ping-trace-workflow.md`
 - `docs/vsix-host-selected-text-trace-workflow.md`

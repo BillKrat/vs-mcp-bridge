@@ -113,6 +113,7 @@ Keep these repo-specific themes in mind:
 - do not remove problematic logging blindly; prefer disabling, suppressing, or relocating it until the correct surfacing is understood
 - keep MVP/VM boundaries intact in shared WPF UI work
 - keep MCP stdout clean and route diagnostics through approved channels
+- during MCP/tooling triage, use `bridge_get_tool_inventory` early when available; it is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata without executing bridge tools
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, approval evaluation when required, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices

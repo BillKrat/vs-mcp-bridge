@@ -48,3 +48,4 @@ The target diagnostic is MCP-only and does not depend on VSIX activation or name
 ## Next Use
 
 Future AI sessions can use this handoff plus the log and Mermaid diagram to prove that `bridge_get_tool_inventory` works through MCP without relying on chat history.
+When MCP is reachable, use `bridge_get_tool_inventory` early in tooling triage to inspect available bridge tool manifest metadata before investigating execution paths.
