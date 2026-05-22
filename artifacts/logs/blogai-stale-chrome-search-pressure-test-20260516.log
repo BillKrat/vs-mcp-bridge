@@ -1,0 +1,49 @@
+RunName=blogai-stale-chrome-search-pressure-test-20260516
+Repository=Y:/vs-mcp-bridge
+Branch=main
+StartingHead=e5ed588 Capture first BlogAI pressure-test findings
+Scope=Direct MCP inventory validation plus BlogAI stale shared chrome search workload.
+
+[DirectMcpInventoryValidation]
+ValidationMode=Temporary direct MCP stdio helper using ModelContextProtocol.Client outside the repo.
+RepoProjectAdded=False
+McpServerDll=VsMcpBridge.McpServer/bin/Debug/net10.0/VsMcpBridge.McpServer.dll
+InitializePassed=True
+ServerInfo=VsMcpBridge.McpServer 1.0.0.0
+ToolsListCount=17
+ToolsListIncludesBridgeGetToolInventory=True
+InventoryCallIsError=False
+InventorySuccess=True
+InventoryRequestId=9a77087a97d04782a4f79f5bf9bf40dc
+InventoryToolCount=2
+InventoryToolIds=bridge.bm25TextSearch,bridge.regexTextSearch
+DeterministicExpectedOrder=True
+ContainsBm25TextSearch=True
+ContainsRegexTextSearch=True
+ChildStdErrLines=None
+
+[BridgeSearchToolAvailability]
+bridge.bm25TextSearch=Visible in bridge_get_tool_inventory metadata.
+bridge.regexTextSearch=Visible in bridge_get_tool_inventory metadata.
+StandaloneMcpToolNames=False
+SearchWorkloadPath=deterministic rg fallback.
+
+[SearchWorkload]
+TargetMarker=feature/approval-apply-ui-slice
+CanonicalPostsSearch=rg -n "feature/approval-apply-ui-slice" docs/blogs/posts
+CanonicalPostsResult=No matches.
+RepoEvidenceSearch=rg -n "feature/approval-apply-ui-slice" docs/blogs docs/session-handoffs scripts -g "*.md" -g "*.ps1"
+RepoEvidenceResult=Matches remain in preserved reports, before-update/prepublish evidence, rendered-route failure reports, and older handoffs.
+SourceOfTruthSearch=rg -n "feature/approval-apply-ui-slice" docs/blogs/source-of-truth/widget-settings docs/blogs/source-of-truth/db-export-20260516 docs/blogs/source-of-truth/publish-review-updates -g "*.txt" -g "*.json" -g "*.html" -g "*.md"
+SourceOfTruthResult=Marker remains in preserved pre-update widget row 26512 evidence, preserved DB export baseline, and before-update publish-review artifacts. Post-update widget export is documented as main-branch content.
+LocalBlogAiMarkerSearch=rg -n "feature/approval-apply-ui-slice" Y:/BlogAI/BlogEngine -g "*.cs" -g "*.config" -g "*.xml" -g "*.cshtml" -g "*.aspx" -g "*.ascx" -g "*.html" -g "*.js" -g "*.css"
+LocalBlogAiMarkerResult=No matches.
+LocalBlogAiCacheAuthSearch=rg -n "be_widget_|clearCache|AccessAdminSettingsPages|posts/reload|BlogEngineReloadKey" Y:/BlogAI/BlogEngine -g "*.cs" -g "*.config" -g "*.xml" -g "*.cshtml" -g "*.aspx" -g "*.ascx"
+LocalBlogAiCacheAuthResult=Found be_widget cache usage, AccessAdminSettingsPages checks, and SettingsController clearCache path. Did not find posts/reload or BlogEngineReloadKey in local source search.
+
+[ObservedConclusion]
+StaleMarkerCurrentCanonicalPosts=False
+StaleMarkerLocalBlogAiSource=False
+StaleMarkerPreservedEvidence=True
+LikelyCurrentIssue=Shared rendered widget/page chrome cache, not canonical post bodies.
+LikelyNextAction=Inspect deployed logs/source for PUT /api/settings?action=clearCache HTTP 500 and use a known-good authenticated BlogEngine cache clear or explicitly approved recycle, then rerun rendered route verification.
