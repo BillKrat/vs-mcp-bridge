@@ -49,13 +49,20 @@ public sealed class VsTools
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
     private readonly IBridgeToolInventoryService _toolInventory;
+    private readonly IBridgeToolExecutor _bridgeToolExecutor;
     private readonly ILogger _logger;
 
-    public VsTools(IPipeClient pipe, IChatEngine chatEngine, ILogger logger, IBridgeToolInventoryService? toolInventory = null)
+    public VsTools(
+        IPipeClient pipe,
+        IChatEngine chatEngine,
+        ILogger logger,
+        IBridgeToolInventoryService? toolInventory = null,
+        IBridgeToolExecutor? bridgeToolExecutor = null)
     {
         _pipe = pipe;
         _chatEngine = chatEngine;
         _toolInventory = toolInventory ?? EmptyBridgeToolInventoryService.Instance;
+        _bridgeToolExecutor = bridgeToolExecutor ?? EmptyBridgeToolExecutor.Instance;
         _logger = logger;
     }
 
@@ -167,6 +174,89 @@ public sealed class VsTools
                 requestId,
                 stopwatch.ElapsedMilliseconds);
             throw;
+        }
+    }
+
+    [McpServerTool(Name = "bridge_regex_text_search")]
+    [Description("Executes the compiled bridge.regexTextSearch tool through BridgeToolExecutor against explicit input text or entries. Does not read files or mutate state.")]
+    public async Task<string> RegexTextSearchAsync(
+        [Description("Regular expression pattern to search for.")] string pattern,
+        [Description("Optional single text value to search. Ignored when entries are provided.")] string? inputText = null,
+        [Description("Optional explicit text entries to search. No file paths are read.")] string[]? entries = null,
+        [Description("Whether pattern matching is case-sensitive. Defaults to false.")] bool caseSensitive = false,
+        [Description("Maximum number of matches to return. Must be greater than zero when provided.")] int? maxResults = null,
+        CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP bridge_regex_text_search started [RequestId={RequestId}] [OperationId={OperationId}].",
+            requestId,
+            operationId);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["pattern"] = pattern,
+            ["caseSensitive"] = caseSensitive
+        };
+
+        if (entries is { Length: > 0 })
+            arguments["entries"] = entries;
+        else if (!string.IsNullOrWhiteSpace(inputText))
+            arguments["inputText"] = inputText;
+
+        if (maxResults.HasValue)
+            arguments["maxResults"] = maxResults.Value;
+
+        var request = new BridgeToolRequest
+        {
+            ToolId = RegexTextSearchTool.ToolId,
+            RequestId = requestId,
+            OperationId = operationId,
+            Arguments = arguments
+        };
+
+        try
+        {
+            var result = await _bridgeToolExecutor.ExecuteAsync(request, ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP bridge_regex_text_search completed [RequestId={RequestId}] [OperationId={OperationId}] [Success={Success}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                result.Success,
+                stopwatch.ElapsedMilliseconds);
+
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP bridge_regex_text_search canceled [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP bridge_regex_text_search failed [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+
+            var result = BridgeToolResult.Failed(
+                request,
+                "McpWrapperFailed",
+                "MCP regex text search failed before the bridge tool completed. Review the MCP log for details.");
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
         }
     }
 
@@ -738,6 +828,23 @@ public sealed class VsTools
             {
                 Tools = Array.Empty<BridgeToolInventoryItem>()
             };
+        }
+    }
+
+    private sealed class EmptyBridgeToolExecutor : IBridgeToolExecutor
+    {
+        public static EmptyBridgeToolExecutor Instance { get; } = new();
+
+        private EmptyBridgeToolExecutor()
+        {
+        }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(BridgeToolResult.Failed(
+                request,
+                "BridgeToolExecutorUnavailable",
+                "Bridge tool executor is not registered."));
         }
     }
 }

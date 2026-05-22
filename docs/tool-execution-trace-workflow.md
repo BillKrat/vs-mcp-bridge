@@ -243,6 +243,35 @@ Live MCP validation artifacts:
 The server log for the live run contains the diagnostic start/completion markers with the same request id and `ToolCount=2`.
 No Visual Studio/Copilot validation was required for this slice because the diagnostic is MCP-only and does not depend on VSIX activation or named-pipe state.
 
+## Live MCP Regex Search Validation Run
+
+The compiled regex search tool is now callable through MCP as `bridge_regex_text_search`:
+
+- run name: `mcp-regex-search-trace-20260516`
+- branch: `main`
+- baseline commit: `260a457`
+- capture date: `2026-05-22`
+- validation mode: direct MCP stdio helper using `ModelContextProtocol.Client`
+- server info: `VsMcpBridge.McpServer 1.0.0.0`
+- `tools/list` count: `18`
+- MCP tool: `bridge_regex_text_search`
+- bridge tool id: `bridge.regexTextSearch`
+- successful response request id: `1aaa4f65369b494eb4e77bd7a3970029`
+- successful response operation id: `c802106d919f4f95a09cf2578d8cb773`
+- successful response counts: `matchCount=1`, `totalMatchCount=2`, `limited=true`
+- invalid regex response: `success=false`, `errorCode=InvalidRegex`
+
+Live MCP regex search artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-regex-search-trace-20260516.mmd`](diagrams/mcp-regex-search-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mcp-regex-search-trace-20260516.log`](../artifacts/logs/mcp-regex-search-trace-20260516.log)
+- run metadata: [`artifacts/logs/mcp-regex-search-trace-20260516.metadata.json`](../artifacts/logs/mcp-regex-search-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`](session-handoffs/2026-05-16-mcp-regex-search-validation.md)
+
+This wrapper accepts only explicit `inputText` or `entries` supplied in the MCP request.
+It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
+The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`

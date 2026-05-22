@@ -1,0 +1,57 @@
+RunName=mcp-regex-search-trace-20260516
+Repository=Y:/vs-mcp-bridge
+Branch=main
+BaselineCommit=260a457 Capture BlogAI stale chrome search pressure test
+CaptureDate=2026-05-22
+Scope=Live direct MCP stdio validation for bridge_regex_text_search.
+ValidationMode=Temporary direct MCP stdio helper using ModelContextProtocol.Client outside the repo.
+RepoProjectAdded=False
+McpServerDll=VsMcpBridge.McpServer/bin/Debug/net10.0/VsMcpBridge.McpServer.dll
+
+[DirectMcpInitialization]
+InitializePassed=True
+ServerInfo=VsMcpBridge.McpServer 1.0.0.0
+ChildStdErrLines=None
+
+[ToolsList]
+ToolCount=18
+IncludesBridgeGetToolInventory=True
+IncludesBridgeRegexTextSearch=True
+ToolNames=bridge_get_tool_inventory,bridge_regex_text_search,chat_engine_chat,chat_engine_explain_code,chat_engine_explain_error,chat_engine_ping,chat_engine_rewrite,chat_engine_rewrite_with_target,chat_engine_suggest_error_fix,chat_engine_suggest_fixes,chat_engine_suggest_fixes_with_target,chat_engine_summarize,vs_get_active_document,vs_get_error_list,vs_get_selected_text,vs_list_solution_projects,vs_propose_text_edit,vs_propose_text_edits
+
+[RegexToolCall]
+McpToolName=bridge_regex_text_search
+BridgeToolId=bridge.regexTextSearch
+CallIsError=False
+RequestId=1aaa4f65369b494eb4e77bd7a3970029
+OperationId=c802106d919f4f95a09cf2578d8cb773
+Success=True
+Message=Regex text search completed with 1 matched result(s).
+Pattern=feature|cache
+Entries=feature marker;cache marker;nothing
+MaxResults=1
+MatchCount=1
+TotalMatchCount=2
+Limited=True
+FirstMatchEntryIndex=0
+FirstMatchValue=feature
+
+[InvalidRegexCall]
+McpToolName=bridge_regex_text_search
+BridgeToolId=bridge.regexTextSearch
+CallIsError=False
+Success=False
+ErrorCode=InvalidRegex
+StructuredFailure=True
+
+[BoundaryChecks]
+McpServerInitialized=True
+ToolsListIncludesDiagnostic=True
+RegexSearchReturnedViaMcp=True
+BridgeToolExecutorPath=True
+FilesystemReadPerformed=False
+PathArgumentsAccepted=False
+MutationPerformed=False
+VsixPipeRequestSent=False
+ChatEngineRequestSent=False
+Bm25ExposedAsMcpTool=False

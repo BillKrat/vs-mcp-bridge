@@ -132,6 +132,12 @@ Keep this as tooling validation only. Do not add BlogAI auth, deployment, packag
 
 After that, the next BlogAI operational slice should inspect deployed cache-clear failure evidence and choose one approved cache remediation path.
 
+## Follow-Up Note
+
+The next tooling slice exposed the compiled regex search capability through MCP as `bridge_regex_text_search`.
+That wrapper executes `bridge.regexTextSearch` through `BridgeToolExecutor` and accepts only explicit `inputText` or `entries` from the MCP request.
+See `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md` and `artifacts/logs/mcp-regex-search-trace-20260516.log`.
+
 ## Resume Guidance
 
 Start the next session with:

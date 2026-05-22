@@ -18,6 +18,7 @@ AI session entry point:
 - for the bridge tool catalog inventory trace artifacts, use [artifacts/logs/tool-inventory-trace-20260516.log](artifacts/logs/tool-inventory-trace-20260516.log) and [docs/diagrams/tool-inventory-trace-20260516.mmd](docs/diagrams/tool-inventory-trace-20260516.mmd)
 - for the MCP-exposed bridge tool inventory diagnostic trace artifacts, use [artifacts/logs/mcp-tool-inventory-trace-20260516.log](artifacts/logs/mcp-tool-inventory-trace-20260516.log) and [docs/diagrams/mcp-tool-inventory-trace-20260516.mmd](docs/diagrams/mcp-tool-inventory-trace-20260516.mmd)
 - for live MCP stdio validation of the inventory diagnostic, use [artifacts/logs/mcp-tool-inventory-live-validation-20260516.log](artifacts/logs/mcp-tool-inventory-live-validation-20260516.log) and [docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd](docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
+- for live MCP stdio validation of the regex search diagnostic, use [artifacts/logs/mcp-regex-search-trace-20260516.log](artifacts/logs/mcp-regex-search-trace-20260516.log) and [docs/diagrams/mcp-regex-search-trace-20260516.mmd](docs/diagrams/mcp-regex-search-trace-20260516.mmd)
 - for inactive VSIX named-pipe activation diagnostic artifacts, use [artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
@@ -353,6 +354,8 @@ No exceptions.
 
 Read-only tools:
 
+- `bridge_get_tool_inventory`
+- `bridge_regex_text_search`
 - `chat_engine_chat`
 - `chat_engine_summarize`
 - `chat_engine_rewrite`

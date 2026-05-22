@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    participant Helper as Direct MCP stdio helper
+    participant MCP as VsMcpBridge.McpServer
+    participant VsTools as VsTools.bridge_regex_text_search
+    participant Executor as BridgeToolExecutor
+    participant Catalog as IBridgeToolCatalog
+    participant Tool as RegexTextSearchTool
+    participant Audit as IAuditSink
+
+    Helper->>MCP: initialize
+    MCP-->>Helper: VsMcpBridge.McpServer 1.0.0.0
+    Helper->>MCP: tools/list
+    MCP-->>Helper: 18 tools including bridge_regex_text_search
+    Helper->>VsTools: tools/call bridge_regex_text_search(pattern, entries, maxResults)
+    VsTools->>Executor: ExecuteAsync(BridgeToolRequest: bridge.regexTextSearch)
+    Executor->>Catalog: TryGetTool("bridge.regexTextSearch")
+    Catalog-->>Executor: RegexTextSearchTool descriptor
+    Executor->>Executor: policy, approval, secret-reference checks
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: BridgeToolResult success with limited matches
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor-->>VsTools: BridgeToolResult with requestId and operationId
+    VsTools-->>Helper: JSON result
+
+    Helper->>VsTools: tools/call bridge_regex_text_search(invalid pattern)
+    VsTools->>Executor: ExecuteAsync(BridgeToolRequest: bridge.regexTextSearch)
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: BridgeToolResult InvalidRegex
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor-->>VsTools: structured failure
+    VsTools-->>Helper: JSON result with errorCode InvalidRegex

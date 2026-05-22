@@ -73,6 +73,10 @@ The MCP server exposes that same inventory seam as the read-only diagnostic tool
 This diagnostic returns metadata-only JSON for AI triage and operational visibility; it does not execute tools, require capabilities by default, trigger approval, send VSIX pipe requests, call ChatEngine, expose payloads/secrets, or replace `BridgeToolExecutor` for executable bridge tools.
 The durable MCP diagnostic evidence is `artifacts/logs/mcp-tool-inventory-trace-20260516.log`, `docs/diagrams/mcp-tool-inventory-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`.
 Live direct MCP stdio validation for this diagnostic is captured in `artifacts/logs/mcp-tool-inventory-live-validation-20260516.*`, `docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`.
+The MCP server also exposes `bridge_regex_text_search` as a safe diagnostic wrapper over the compiled `bridge.regexTextSearch` tool.
+Callers must provide explicit text input through the MCP request; the wrapper does not crawl files, accept paths, mutate state, call ChatEngine, or use the VSIX named pipe.
+Unlike `bridge_get_tool_inventory`, this wrapper executes a bridge tool and therefore routes through `BridgeToolExecutor` so policy, approval, secret-reference, redaction, audit, manifest, and correlation boundaries remain intact.
+The durable MCP regex-search evidence is `artifacts/logs/mcp-regex-search-trace-20260516.*`, `docs/diagrams/mcp-regex-search-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

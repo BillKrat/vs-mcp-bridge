@@ -1,0 +1,61 @@
+{
+  "runName": "mcp-regex-search-trace-20260516",
+  "repository": "Y:/vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "260a457 Capture BlogAI stale chrome search pressure test",
+  "captureDate": "2026-05-22",
+  "validationMode": "Temporary direct MCP stdio helper using ModelContextProtocol.Client outside the repo",
+  "serverInfo": "VsMcpBridge.McpServer 1.0.0.0",
+  "toolsList": {
+    "toolCount": 18,
+    "includesBridgeGetToolInventory": true,
+    "includesBridgeRegexTextSearch": true,
+    "includesBm25McpTool": false,
+    "toolNames": [
+      "bridge_get_tool_inventory",
+      "bridge_regex_text_search",
+      "chat_engine_chat",
+      "chat_engine_explain_code",
+      "chat_engine_explain_error",
+      "chat_engine_ping",
+      "chat_engine_rewrite",
+      "chat_engine_rewrite_with_target",
+      "chat_engine_suggest_error_fix",
+      "chat_engine_suggest_fixes",
+      "chat_engine_suggest_fixes_with_target",
+      "chat_engine_summarize",
+      "vs_get_active_document",
+      "vs_get_error_list",
+      "vs_get_selected_text",
+      "vs_list_solution_projects",
+      "vs_propose_text_edit",
+      "vs_propose_text_edits"
+    ]
+  },
+  "regexCall": {
+    "mcpToolName": "bridge_regex_text_search",
+    "bridgeToolId": "bridge.regexTextSearch",
+    "callIsError": false,
+    "requestId": "1aaa4f65369b494eb4e77bd7a3970029",
+    "operationId": "c802106d919f4f95a09cf2578d8cb773",
+    "success": true,
+    "matchCount": 1,
+    "totalMatchCount": 2,
+    "limited": true
+  },
+  "invalidRegexCall": {
+    "mcpToolName": "bridge_regex_text_search",
+    "bridgeToolId": "bridge.regexTextSearch",
+    "callIsError": false,
+    "success": false,
+    "errorCode": "InvalidRegex"
+  },
+  "safety": {
+    "filesystemReadPerformed": false,
+    "pathArgumentsAccepted": false,
+    "mutationPerformed": false,
+    "vsixPipeRequestSent": false,
+    "chatEngineRequestSent": false,
+    "executesThroughBridgeToolExecutor": true
+  }
+}

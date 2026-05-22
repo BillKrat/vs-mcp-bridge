@@ -142,6 +142,140 @@ public sealed class VsToolsTests
     }
 
     [Fact]
+    public async Task RegexTextSearchAsync_executes_compiled_regex_tool_through_executor()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingAllowPolicy();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddSingleton<IAuditSink>(auditSink);
+        services.AddSingleton<IToolExecutionPolicy>(policy);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateRegexMcpTools(provider, logger);
+
+        var responseJson = await tools.RegexTextSearchAsync(
+            pattern: "error",
+            entries: new[] { "one error", "two warnings" },
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+        var matches = root.GetProperty("data").GetProperty("matches").EnumerateArray().ToArray();
+
+        Assert.True(root.GetProperty("success").GetBoolean());
+        Assert.Equal(RegexTextSearchTool.ToolId, root.GetProperty("toolId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("requestId").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("operationId").GetString()));
+        var match = Assert.Single(matches);
+        Assert.Equal(0, match.GetProperty("entryIndex").GetInt32());
+        Assert.Equal("error", match.GetProperty("value").GetString());
+        Assert.Equal(1, policy.CallCount);
+        Assert.Equal(RegexTextSearchTool.ToolId, policy.LastContext!.ToolId);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MCP bridge_regex_text_search started", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution started", StringComparison.Ordinal)
+            && message.Contains($"[ToolId={RegexTextSearchTool.ToolId}]", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed", StringComparison.Ordinal)
+            && message.Contains("[Success=True]", StringComparison.Ordinal));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal(RegexTextSearchTool.ToolId, auditEvent.ToolId);
+        Assert.Equal(root.GetProperty("requestId").GetString(), auditEvent.RequestId);
+        Assert.Equal(root.GetProperty("operationId").GetString(), auditEvent.OperationId);
+        Assert.Equal("Regex Text Search", auditEvent.Metadata["manifestToolName"]);
+        Assert.Equal("policy observed", auditEvent.Metadata["policyReason"]);
+    }
+
+    [Fact]
+    public async Task RegexTextSearchAsync_returns_structured_failure_for_invalid_regex()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateRegexMcpTools(provider, logger);
+
+        var responseJson = await tools.RegexTextSearchAsync(
+            pattern: "[",
+            entries: new[] { "anything" },
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+
+        Assert.False(root.GetProperty("success").GetBoolean());
+        Assert.Equal(RegexTextSearchTool.ToolId, root.GetProperty("toolId").GetString());
+        Assert.Equal("InvalidRegex", root.GetProperty("errorCode").GetString());
+        Assert.Contains("Invalid regular expression", root.GetProperty("message").GetString(), StringComparison.Ordinal);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed", StringComparison.Ordinal)
+            && message.Contains("[Success=False]", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RegexTextSearchAsync_respects_max_results()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateRegexMcpTools(provider, logger);
+
+        var responseJson = await tools.RegexTextSearchAsync(
+            pattern: "hit",
+            entries: new[] { "hit hit", "hit" },
+            maxResults: 2,
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var data = document.RootElement.GetProperty("data");
+
+        Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal(2, data.GetProperty("matchCount").GetInt32());
+        Assert.Equal(3, data.GetProperty("totalMatchCount").GetInt32());
+        Assert.True(data.GetProperty("limited").GetBoolean());
+        Assert.Equal(2, data.GetProperty("matches").EnumerateArray().Count());
+    }
+
+    [Fact]
+    public async Task RegexTextSearchAsync_uses_executor_redaction_for_secret_like_payload_logs()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddSingleton<IAuditSink>(auditSink);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateRegexMcpTools(provider, logger);
+
+        var responseJson = await tools.RegexTextSearchAsync(
+            pattern: "token",
+            inputText: "token=raw-request-secret Authorization: Bearer raw-bearer-secret",
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+
+        var logMessages = logger.VerboseMessages
+            .Concat(logger.InformationMessages)
+            .Concat(logger.WarningMessages)
+            .Concat(logger.Errors.Select(error => error.Message))
+            .Concat(logger.Errors.Select(error => error.Exception?.Message ?? string.Empty))
+            .ToArray();
+
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-request-secret", StringComparison.Ordinal));
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-bearer-secret", StringComparison.Ordinal));
+        Assert.Contains(logMessages, message => message.Contains("[REDACTED]", StringComparison.Ordinal));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.Equal(RegexTextSearchTool.ToolId, auditEvent.ToolId);
+        Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-request-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task ProposeTextEditAsync_preserves_backward_compatible_single_file_request_flow()
     {
         var pipeClient = new RecordingPipeClient();
@@ -1110,6 +1244,14 @@ public sealed class VsToolsTests
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
     }
 
+    private static VsTools CreateRegexMcpTools(ServiceProvider provider, RecordingBridgeLogger logger)
+        => new(
+            new RecordingPipeClient(),
+            new StubChatEngine(),
+            logger,
+            provider.GetRequiredService<IBridgeToolInventoryService>(),
+            provider.GetRequiredService<IBridgeToolExecutor>());
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }
@@ -1258,6 +1400,20 @@ public sealed class VsToolsTests
         {
             ExecutionCount++;
             return Task.FromResult(BridgeToolResult.Succeeded(request, "executed"));
+        }
+    }
+
+    private sealed class RecordingAllowPolicy : IToolExecutionPolicy
+    {
+        public int CallCount { get; private set; }
+
+        public ToolExecutionSecurityContext? LastContext { get; private set; }
+
+        public Task<ToolExecutionPolicyDecision> EvaluateAsync(ToolExecutionSecurityContext context, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            LastContext = context;
+            return Task.FromResult(ToolExecutionPolicyDecision.Allow("policy observed"));
         }
     }
 

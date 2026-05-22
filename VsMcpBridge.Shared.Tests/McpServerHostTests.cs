@@ -49,6 +49,7 @@ public sealed class McpServerHostTests
             new[]
             {
                 "bridge_get_tool_inventory",
+                "bridge_regex_text_search",
                 "chat_engine_chat",
                 "chat_engine_explain_code",
                 "chat_engine_explain_error",
