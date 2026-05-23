@@ -119,6 +119,7 @@ For the final readiness gate before implementing the local-only `AdventuresAuth`
 For durable validation evidence of the local-only `AdventuresAuth` prototype skeleton, read `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`.
 For the BlogAI consumer boundary for `AdventuresAuth`, read `docs/blogai-adventures-auth-consumer-design.md`.
 For the minimal BlogAI-side `AdventuresAuth` consumer prototype plan, read `docs/blogai-minimal-auth-consumer-prototype-plan.md`.
+For the readiness gate before implementing the minimal BlogAI-side `AdventuresAuth` consumer prototype, read `docs/session-handoffs/2026-05-17-blogai-auth-consumer-readiness-review.md`.
 For the first practical BlogAI usage path that should pressure-test the MCP/tool platform without premature auth, API, deployment, or package work, read `docs/blogai-functional-pressure-test-plan.md`.
 For the concrete first-session checklist for applying current MCP/tools to BlogAI work, read `docs/blogai-first-pressure-test-session.md`.
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.
