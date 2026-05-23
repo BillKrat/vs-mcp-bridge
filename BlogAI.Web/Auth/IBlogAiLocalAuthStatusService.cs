@@ -2,5 +2,7 @@ namespace BlogAI.Web.Auth;
 
 public interface IBlogAiLocalAuthStatusService
 {
-    BlogAiLocalAuthStatus GetStatus();
+    Task<BlogAiLocalAuthStatus> GetStatusAsync(
+        string? authPath = null,
+        CancellationToken cancellationToken = default);
 }

@@ -163,7 +163,9 @@ Durable validation evidence for the route-level protected placeholder behavior i
 
 This client is injectable and can call the local `/auth/login`, `/auth/logout`, `/auth/me`, and `/auth/validate` endpoints. It uses display-safe response models and does not add production configuration, auth middleware, cookies/session topology, OAuth/OpenID/RBAC, persistence, real login UI, or BlogEngine.NET coupling.
 
-`/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path by default. The API client is boundary-only until a future slice explicitly wires it into a local/dev parity harness and captures trace evidence.
+`/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path by default.
+
+An explicit local/dev diagnostic selector can exercise the API client path with `/local-dev?authPath=api-client`. This mode is labeled as API-client diagnostic output, renders the same display-safe decision and correlation fields, and reports API-client failure as a diagnostic failure state without silently falling back to the in-process path.
 
 No focused client tests were added in the first client slice because the repo does not yet have a `BlogAI.Web` test project, and adding a new test project/package would be larger than this boundary-only change. Current validation is compile-time build validation plus sentinel scanning; a future parity slice should add tests or durable trace evidence when the client is exercised.
 

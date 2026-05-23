@@ -197,7 +197,7 @@ Durable trace artifacts for the local API host skeleton are captured in `docs/se
 
 `BlogAI.Web/Auth` now includes a local/dev-only `IBlogAiLocalAuthApiClient` boundary that can call the `Adventures.Auth.LocalApi` `/auth` endpoints.
 
-The client does not switch BlogAI UI behavior by default. `/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path until a future slice explicitly proves API-backed parity with equivalent allow/deny, correlation, redaction, and no-secret-rendering evidence.
+The client does not switch BlogAI UI behavior by default. `/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path. Explicit local/dev parity diagnostics can exercise the API-backed path with `/local-dev?authPath=api-client`, which must render display-safe output or an explicit diagnostic failure without silent fallback.
 
 Durable validation evidence for the client boundary is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-boundary-validation.md`.
 

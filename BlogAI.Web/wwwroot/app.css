@@ -132,6 +132,28 @@ code {
     margin: 0.75rem 0 1rem;
 }
 
+.diagnostic-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 0.75rem 0 1rem;
+}
+
+.diagnostic-switcher a {
+    border: 1px solid #cbd3cf;
+    border-radius: 6px;
+    color: #293632;
+    font-weight: 700;
+    padding: 0.45rem 0.65rem;
+    text-decoration: none;
+}
+
+.diagnostic-note {
+    color: #4d5b56;
+    line-height: 1.5;
+    margin: 1rem 0 0;
+}
+
 .protected-placeholder {
     border: 1px solid #d9ded9;
     border-radius: 8px;

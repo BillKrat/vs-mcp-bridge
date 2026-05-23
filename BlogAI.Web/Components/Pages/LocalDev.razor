@@ -1,6 +1,7 @@
 @page "/local-dev"
 @using BlogAI.Web.Auth
 @inject IBlogAiLocalAuthStatusService AuthStatusService
+@inject NavigationManager Navigation
 
 <PageTitle>BlogAI Local Dev</PageTitle>
 
@@ -12,10 +13,24 @@
 
 <section class="boundary-panel" aria-label="Local auth status">
     <h2>Protected Placeholder</h2>
+    <nav class="diagnostic-switcher" aria-label="Local auth diagnostic mode">
+        <a href="/local-dev">In-process baseline</a>
+        <a href="/local-dev?authPath=api-client">API client diagnostic</a>
+    </nav>
+    @if (Status is null)
+    {
+        <p class="diagnostic-note">Loading local/dev auth status.</p>
+    }
+    else
+    {
     <dl>
         <div>
             <dt>Resource</dt>
             <dd>@Status.ResourceName</dd>
+        </div>
+        <div>
+            <dt>Auth Path</dt>
+            <dd>@Status.AuthPathLabel</dd>
         </div>
         <div>
             <dt>Environment</dt>
@@ -26,8 +41,15 @@
             <dd>@Status.ClientApplication</dd>
         </div>
     </dl>
+    @if (!string.IsNullOrWhiteSpace(Status.DiagnosticMessage))
+    {
+        <p class="diagnostic-note">@Status.DiagnosticMessage</p>
+    }
+    }
 </section>
 
+@if (Status is not null)
+{
 <section class="status-grid" aria-label="Local auth decisions">
     @foreach (var decision in Status.Decisions)
     {
@@ -86,12 +108,32 @@
         </article>
     }
 </section>
+}
 
 @code {
-    private BlogAiLocalAuthStatus Status { get; set; } = default!;
+    private BlogAiLocalAuthStatus? Status { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        Status = AuthStatusService.GetStatus();
+        Status = await AuthStatusService.GetStatusAsync(GetAuthPath()).ConfigureAwait(false);
+    }
+
+    private string? GetAuthPath()
+    {
+        var query = new Uri(Navigation.Uri).Query;
+        if (string.IsNullOrWhiteSpace(query))
+            return null;
+
+        foreach (var part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            var name = Uri.UnescapeDataString(pieces[0]);
+            if (!string.Equals(name, "authPath", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return pieces.Length == 2 ? Uri.UnescapeDataString(pieces[1]) : string.Empty;
+        }
+
+        return null;
     }
 }
