@@ -1,8 +1,12 @@
 ﻿# Blog Post Source Of Truth
 
+Evidence Classification: Canonical/Current Source
+Intended Use: Index for repository-backed blog source-of-truth and publishing review workflows.
+Search Interpretation: Hits under `docs/blogs/posts/**` indicate current canonical source; hits in preserved exports or reports are supporting evidence, not publishable source.
+Currentness: Current as of the latest blog source-of-truth update.
+
 The canonical repository-backed blog format now lives under `docs/blogs/posts/`.
 
-Evidence category: canonical-current for `docs/blogs/posts/**`; preserved export and diagnostic folders are evidence, not publishable canonical source.
 See `../evidence-classification-guidance.md` before interpreting MCP search hits across canonical posts, preserved exports, rendered-route reports, and handoffs.
 
 Each post is stored as:

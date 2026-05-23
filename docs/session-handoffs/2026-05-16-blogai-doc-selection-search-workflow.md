@@ -1,5 +1,10 @@
 # BlogAI Document Selection Search Workflow
 
+Evidence Classification: Operational Handoff
+Intended Use: Resume context and findings from a BlogAI MCP search workflow.
+Search Interpretation: Treat matches as workflow evidence and conclusions, not canonical blog content.
+Currentness: Durable handoff for the 2026-05-22 MCP document-selection search run.
+
 ## Summary
 
 This session repeated the BlogAI stale shared chrome/cache investigation using the full MCP diagnostic workflow:

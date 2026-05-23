@@ -1,5 +1,10 @@
 # MCP Document Selection Validation
 
+Evidence Classification: Diagnostic Trace
+Intended Use: Validate the MCP document selection helper and preserve observed tool behavior.
+Search Interpretation: Treat matches as platform validation evidence, not BlogAI source content.
+Currentness: Durable validation handoff for the 2026-05-22 MCP diagnostic run.
+
 ## Summary
 
 `bridge_select_repo_documents` is now exposed through MCP as a safe read-only diagnostic helper for explicit repo document selection.

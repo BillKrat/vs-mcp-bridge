@@ -1,5 +1,10 @@
 # BlogEngine DataStore Settings Row Export
 
+Evidence Classification: Preserved Before-Update Artifact
+Intended Use: Preserve the widget settings row before later update/verification work.
+Search Interpretation: Stale marker hits here prove prior widget settings state, not current canonical blog source.
+Currentness: Point-in-time export from 2026-05-16.
+
 This folder is a read-only preservation export from BlogEngine database table `dbo.be_DataStoreSettings`.
 
 Row exported:

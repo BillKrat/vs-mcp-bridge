@@ -1,5 +1,10 @@
 ﻿# Final Rendered Route Verification After Cache Clear Attempt - 2026-05-16
 
+Evidence Classification: Rendered Failure Evidence
+Intended Use: Preserve observed rendered-site behavior after a controlled cache-clear attempt.
+Search Interpretation: Stale marker hits here prove rendered/runtime failure evidence, not canonical source content.
+Currentness: Point-in-time route verification from 2026-05-16.
+
 This report records the controlled BlogEngine cache-clear attempt and the rendered-route verification pass for the 14 BlogAI posts that received guarded publish-review updates.
 
 Scope constraints for this slice:

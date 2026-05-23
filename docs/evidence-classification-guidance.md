@@ -54,6 +54,13 @@ Source authority: diagnostic context, not canonical content
 
 Use only the fields that help the reader.
 Do not turn ordinary Markdown docs into complex manifests.
+Existing examples now include:
+
+- `docs/blogs/README.md` as `Canonical/Current Source`
+- `docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md` as `Operational Handoff`
+- `docs/blogs/final-rendered-route-verification-after-cache-clear-20260516.md` as `Rendered Failure Evidence`
+- `docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516/README.md` as `Preserved Before-Update Artifact`
+- `docs/session-handoffs/2026-05-16-document-selection-validation.md` as `Diagnostic Trace`
 
 Recommended fields:
 
