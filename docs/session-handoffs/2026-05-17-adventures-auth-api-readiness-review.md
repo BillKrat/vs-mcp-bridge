@@ -90,4 +90,4 @@ Stop and return to design if implementation requires:
 
 Future sessions can resume from this handoff to start the minimal local API host skeleton only if the user explicitly requests implementation.
 
-Until then, the API boundary remains designed and reviewed, but not implemented.
+Status update: the minimal local/dev Minimal API host skeleton was implemented after this readiness review. Start with `docs/adventures-auth-local-api-boundary-design.md` and `VsMcpBridge.Shared.Tests/AdventuresAuthLocalApiTests.cs` for current behavior.

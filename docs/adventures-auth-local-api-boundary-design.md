@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Design how the current local `AdventuresAuth` decision capability could later be hosted behind a minimal local/dev API boundary.
+Design how the current local `AdventuresAuth` decision capability is hosted behind a minimal local/dev API boundary.
 
-This is documentation only. It does not create an API project, add ASP.NET hosting code, add middleware, add endpoints, add persistence/database, add OAuth/OpenID/RBAC, change deployment, or couple to BlogEngine.NET.
+The first skeleton exists as `Adventures.Auth.LocalApi`. It is local/dev only. It does not add persistence/database, OAuth/OpenID/RBAC, deployment changes, or BlogEngine.NET coupling.
 
 The future local API boundary should prove:
 
@@ -28,9 +28,9 @@ The boundary should translate API requests into `AdventuresAuthRequest` values, 
 
 The boundary should not contain BlogAI-specific route authorization rules. BlogAI remains responsible for deciding which resources are public or protected and for mapping an auth decision to a BlogAI response.
 
-## Preferred Host Style
+## Host Style
 
-The future local/dev host should prefer ASP.NET Core Minimal APIs.
+The local/dev host uses ASP.NET Core Minimal APIs.
 
 Rationale:
 
@@ -42,7 +42,7 @@ Rationale:
 
 MVC controllers are deferred unless later endpoint complexity justifies that extra structure.
 
-Expected Minimal API shape:
+Minimal API shape:
 
 - `Program.cs` maps an `/auth` endpoint group
 - endpoint handlers remain thin transport adapters
@@ -53,14 +53,14 @@ Expected Minimal API shape:
 
 ## Conceptual Endpoints
 
-These endpoints are conceptual only. They are not implementation-approved by this document.
+The current local/dev skeleton maps:
 
 - `POST /auth/login`: evaluate a local development credential and return an allow/deny decision plus local principal/session placeholders when allowed.
 - `POST /auth/logout`: invalidate or clear a local session placeholder.
 - `GET /auth/me`: return a current local principal placeholder for a valid local session.
 - `POST /auth/validate`: validate a local session, token placeholder, or development auth signal and return an allow/deny decision.
 
-Each endpoint should preserve the same local/dev constraints as the in-process skeleton.
+Each endpoint preserves the same local/dev constraints as the in-process skeleton.
 
 ## Request Principles
 
@@ -102,7 +102,7 @@ The response should expose only what a consumer needs to make a local authorizat
 
 ## API Boundary Responsibilities
 
-The local API boundary should:
+The local API boundary does:
 
 - expose the local/dev host through ASP.NET Core Minimal APIs unless a later design changes that
 - translate HTTP request data into an `AdventuresAuthRequest`
@@ -116,7 +116,7 @@ The local API boundary should:
 - ensure redaction occurs before durable logs, traces, prompts, or artifacts
 - remain replaceable by a future production host without changing the BlogAI identity ownership model
 
-The local API boundary should not:
+The local API boundary does not:
 
 - put auth decision logic directly in endpoint lambdas
 - own BlogAI-specific route protection rules
@@ -176,19 +176,21 @@ Explicitly out of scope:
 - BlogEngine.NET auth bridge
 - MCP tunnel integration
 
-## First Future Implementation Slice
+## Initial Skeleton
 
-If approved later, the first implementation slice should be narrow:
+The first implementation slice added:
 
-- create a local ASP.NET Core Minimal API host skeleton
-- map `/auth` as a Minimal API endpoint group in `Program.cs`
-- use the existing `AdventuresAuthDecisionService`
-- keep endpoint handlers thin and delegate to shared `AdventuresAuth` services
-- keep in-memory/dev credential behavior only
-- expose only local/dev endpoint behavior needed for validation
-- include tests for unauthenticated denied, valid development auth allowed, and invalid auth denied
-- include redaction and correlation tests
-- capture durable trace evidence
-- avoid production deployment, OAuth/OpenID, RBAC, persistence, BlogEngine.NET coupling, and real cookie/session topology
+- `Adventures.Auth.LocalApi/Program.cs`
+- `Adventures.Auth.LocalApi/AdventuresAuthApiEndpointExtensions.cs`
+- thin endpoint handlers in `Adventures.Auth.LocalApi/AdventuresAuthEndpointHandlers.cs`
+- API DTOs and translation service under `Adventures.Auth.LocalApi`
+- shared `IAdventuresAuthDecisionService` abstraction in `VsMcpBridge.Shared/AdventuresAuth`
+- tests in `VsMcpBridge.Shared.Tests/AdventuresAuthLocalApiTests.cs`
 
-The implementation should stop if it needs production deployment, persistent identity storage, external identity providers, or BlogAI-specific authorization logic inside the API boundary.
+The skeleton remains local/dev only. It validates unauthenticated denied, valid development auth allowed, invalid credential/session denied, current principal placeholder, logout invalidation, correlation preservation/generation, redaction from response evidence, thin handler delegation, no persistence, and no BlogEngine.NET dependency.
+
+## Future Trace Slice
+
+The next useful slice should capture durable trace artifacts for the local API host skeleton.
+
+The implementation should still stop if it needs production deployment, persistent identity storage, external identity providers, or BlogAI-specific authorization logic inside the API boundary.

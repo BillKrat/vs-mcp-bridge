@@ -4,7 +4,7 @@ using VsMcpBridge.Shared.Security;
 
 namespace VsMcpBridge.Shared.AdventuresAuth
 {
-    public sealed class AdventuresAuthDecisionService
+    public sealed class AdventuresAuthDecisionService : IAdventuresAuthDecisionService
     {
         private const string ValidDevelopmentCredential = "local-dev-credential";
         private const string LocalSessionPrefix = "local-session-";

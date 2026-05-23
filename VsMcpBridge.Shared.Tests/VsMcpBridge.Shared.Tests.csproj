@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Adventures.Auth.LocalApi\Adventures.Auth.LocalApi.csproj" />
     <ProjectReference Include="..\VsMcpBridge.McpServer\VsMcpBridge.McpServer.csproj" />
     <ProjectReference Include="..\VsMcpBridge.Shared\VsMcpBridge.Shared.csproj" />
   </ItemGroup>
