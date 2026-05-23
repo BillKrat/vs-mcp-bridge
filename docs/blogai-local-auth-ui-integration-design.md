@@ -166,3 +166,5 @@ This client is injectable and can call the local `/auth/login`, `/auth/logout`, 
 `/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path by default. The API client is boundary-only until a future slice explicitly wires it into a local/dev parity harness and captures trace evidence.
 
 No focused client tests were added in the first client slice because the repo does not yet have a `BlogAI.Web` test project, and adding a new test project/package would be larger than this boundary-only change. Current validation is compile-time build validation plus sentinel scanning; a future parity slice should add tests or durable trace evidence when the client is exercised.
+
+Durable validation evidence for the local/dev API client boundary is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-boundary-validation.md`.

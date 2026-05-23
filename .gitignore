@@ -124,6 +124,8 @@ artifacts/logs/*
 !artifacts/logs/blogai-local-auth-ui-trace-20260517.metadata.json
 !artifacts/logs/blogai-route-protected-placeholder-trace-20260517.log
 !artifacts/logs/blogai-route-protected-placeholder-trace-20260517.metadata.json
+!artifacts/logs/blogai-local-auth-api-client-boundary-trace-20260517.log
+!artifacts/logs/blogai-local-auth-api-client-boundary-trace-20260517.metadata.json
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -181,6 +183,7 @@ StyleCopReport.xml
 !artifacts/logs/blogai-blazor-shell-trace-20260517.log
 !artifacts/logs/blogai-local-auth-ui-trace-20260517.log
 !artifacts/logs/blogai-route-protected-placeholder-trace-20260517.log
+!artifacts/logs/blogai-local-auth-api-client-boundary-trace-20260517.log
 *.tlog
 *.vspscc
 *.vssscc
@@ -564,6 +567,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-readiness-review.md
+!/docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-boundary-validation.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
@@ -590,6 +594,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/blogai-blazor-shell-trace-20260517.mmd
 !/docs/diagrams/blogai-local-auth-ui-trace-20260517.mmd
 !/docs/diagrams/blogai-route-protected-placeholder-trace-20260517.mmd
+!/docs/diagrams/blogai-local-auth-api-client-boundary-trace-20260517.mmd
 !/docs/blog-drafts/
 /docs/blog-drafts/*
 !/docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md

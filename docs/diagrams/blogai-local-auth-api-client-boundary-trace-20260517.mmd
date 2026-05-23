@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant Browser as "Local browser/test client"
+    participant Page as "BlogAI.Web /local-dev"
+    participant UiService as "IBlogAiLocalAuthStatusService"
+    participant Consumer as "IBlogAiAuthConsumerService"
+    participant ApiClient as "IBlogAiLocalAuthApiClient"
+    participant LocalApi as "Adventures.Auth.LocalApi /auth"
+    participant Rendered as "Rendered safe local/dev auth UI"
+
+    Browser->>Page: GET /local-dev
+    Page->>UiService: GetStatus()
+    UiService->>Consumer: Evaluate in-process local auth decisions
+    Consumer-->>UiService: Display-safe denied and allowed decisions
+    UiService-->>Page: Display model with placeholder state and correlation metadata
+    Page-->>Rendered: Hidden denied placeholder, shown allowed placeholder, CorrelationId, RequestId, AuthDecisionId
+    Rendered-->>Browser: 200 OK
+
+    Note over ApiClient,LocalApi: API client boundary exists and is injectable for future local/dev wiring
+    Note over Page,ApiClient: /local-dev does not use the API client by default in this slice
+    Note over Page,Rendered: Raw credential, token, secret, header, and password sentinels are not rendered
+    Note over Page,LocalApi: No production deployment, OAuth/OpenID/RBAC, persistence/database, BlogEngine.NET coupling, real login UI, cookies/session topology, auth middleware, or UI default-path switch
