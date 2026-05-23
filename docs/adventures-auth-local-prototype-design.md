@@ -4,7 +4,7 @@
 
 Design the first local-only authentication prototype for the reusable Global WebNet auth/API boundary.
 
-This is documentation only. It does not implement authentication, create projects or services, add database schema, change deployment, modify BlogEngine.NET, or add OAuth/OpenID, RBAC, tenant, or organization modeling.
+This document is design guidance. It does not approve production authentication, create projects or services, add database schema, change deployment, modify BlogEngine.NET, or add OAuth/OpenID, RBAC, tenant, or organization modeling.
 
 The prototype should validate:
 
@@ -132,3 +132,9 @@ Explicitly out of scope:
 No code is approved by this design.
 
 A later implementation slice must restate the local-only objective, name the exact local host and BlogAI consumer path, define the development credential or session simulation, and preserve the no-secret logging rule before any prototype code is added.
+
+## Initial Skeleton Location
+
+The first implementation slice placed the local-only skeleton under `VsMcpBridge.Shared/AdventuresAuth` with tests in `VsMcpBridge.Shared.Tests/AdventuresAuthTests.cs`.
+
+That location was chosen because the slice explicitly avoided creating new projects or services. The code remains an in-process local prototype surface, not a deployed API host, package extraction, production `api.global-webnet.com` service, or BlogEngine.NET integration.

@@ -61,3 +61,14 @@ Implementation should stop and return to documentation if it needs production de
 ## Remaining Risk
 
 The exact local host, project location, and consumer path are intentionally not chosen here. The implementation slice should pick the smallest repo-appropriate shape after inspecting the current solution layout.
+
+## Implementation Note
+
+The next slice chose the existing shared testable layer instead of a new project because the implementation constraints prohibited creating projects or services.
+
+Initial skeleton location:
+
+- `VsMcpBridge.Shared/AdventuresAuth`
+- `VsMcpBridge.Shared.Tests/AdventuresAuthTests.cs`
+
+This preserves the local-only prototype boundary and does not create production hosting, persistence, BlogEngine.NET auth coupling, OAuth/OpenID, RBAC, tenant modeling, or MCP tunnel integration.
