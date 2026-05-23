@@ -150,3 +150,5 @@ The first local/dev implementation uses:
 - `BlogAiLocalAuthDecisionDisplay`
 
 The service calls `IBlogAiAuthConsumerService` and maps the result into display-safe state for `/local-dev`. The Razor page renders the model and does not evaluate credentials, parse tokens, or make auth decisions.
+
+Durable validation evidence for the initial local/dev UI display is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md`.

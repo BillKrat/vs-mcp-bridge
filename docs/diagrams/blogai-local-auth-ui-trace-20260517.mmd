@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    participant Client as "Local browser/test client"
+    participant Page as "BlogAI.Web /local-dev"
+    participant UiService as "IBlogAiLocalAuthStatusService"
+    participant Consumer as "IBlogAiAuthConsumerService"
+    participant Auth as "AdventuresAuthDecisionService"
+    participant Rendered as "Rendered safe status/correlation metadata"
+
+    Client->>Page: GET /local-dev
+    Page->>UiService: GetStatus()
+    UiService->>Consumer: Evaluate protected placeholder without dev marker
+    Consumer->>Auth: Validate local session
+    Auth-->>Consumer: Denied decision with correlation metadata
+    Consumer-->>UiService: Display-safe denied decision
+    UiService->>Consumer: Evaluate protected placeholder with internal dev marker
+    Consumer->>Auth: Login local development request
+    Auth-->>Consumer: Allowed decision with safe principal placeholder
+    Consumer-->>UiService: Display-safe allowed decision
+    UiService-->>Page: Auth status display model
+    Page-->>Rendered: Allowed/denied state plus CorrelationId, RequestId, AuthDecisionId
+    Rendered-->>Client: 200 OK
+
+    Note over Page,Rendered: Raw dev credential, raw token, and secret sentinel values are not rendered
+    Note over Page,Auth: No production auth, login form, OAuth/OpenID/RBAC, persistence, deployment change, or BlogEngine.NET coupling

@@ -33,6 +33,8 @@ The Blazor-side local/dev display design for consuming this boundary later is ca
 
 The first Blazor-side local/dev display uses `BlogAI.Web/Auth` as a UI-facing service boundary over `IBlogAiAuthConsumerService`; `/local-dev` renders only display-safe decision and correlation metadata.
 
+Durable validation evidence for this Blazor-side display is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md`.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.
