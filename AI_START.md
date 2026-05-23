@@ -121,6 +121,7 @@ For the BlogAI consumer boundary for `AdventuresAuth`, read `docs/blogai-adventu
 For the minimal BlogAI-side `AdventuresAuth` consumer prototype plan, read `docs/blogai-minimal-auth-consumer-prototype-plan.md`.
 For the readiness gate before implementing the minimal BlogAI-side `AdventuresAuth` consumer prototype, read `docs/session-handoffs/2026-05-17-blogai-auth-consumer-readiness-review.md`.
 For the implemented local/dev-only BlogAI-side `AdventuresAuth` consumer adapter, inspect `VsMcpBridge.Shared/BlogAI/Auth`, `AddBlogAiAuthConsumerServices`, and `VsMcpBridge.Shared.Tests/BlogAiAuthConsumerTests.cs`.
+For durable validation evidence of the local/dev-only BlogAI-side `AdventuresAuth` consumer boundary, read `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
 For the first practical BlogAI usage path that should pressure-test the MCP/tool platform without premature auth, API, deployment, or package work, read `docs/blogai-functional-pressure-test-plan.md`.
 For the concrete first-session checklist for applying current MCP/tools to BlogAI work, read `docs/blogai-first-pressure-test-session.md`.
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.

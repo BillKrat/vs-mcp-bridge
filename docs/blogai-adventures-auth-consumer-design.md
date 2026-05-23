@@ -84,6 +84,8 @@ Consumers should depend on `IBlogAiAuthConsumerService`. The concrete `BlogAiAut
 
 This is not a web host, middleware layer, production auth path, BlogEngine.NET auth bridge, or deployment slice.
 
+Durable validation evidence for the interface-driven consumer flow is captured in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
+
 ## Non-Goals
 
 Explicitly out of scope:

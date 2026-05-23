@@ -1,0 +1,193 @@
+# BlogAI Auth Consumer Trace - 2026-05-17
+
+Run name: blogai-auth-consumer-trace-20260517
+Scope: local/dev-only BlogAI auth consumer boundary validation
+Commit under validation: f7a9aaf Add BlogAI auth consumer interface boundary
+Validation path: VsMcpBridge.Shared.Tests/BlogAiAuthConsumerTests.cs
+Implementation path: VsMcpBridge.Shared/BlogAI/Auth/
+Underlying auth boundary: VsMcpBridge.Shared/AdventuresAuth/
+
+## Boundary
+
+This trace validates the current in-process BlogAI consumer boundary only.
+
+BlogAI consumes the boundary through IBlogAiAuthConsumerService.
+BlogAiAuthConsumerService remains the local/dev-only implementation.
+AdventuresAuthDecisionService remains the auth decision authority.
+
+No web host or middleware was created.
+No production deployment was used.
+No persistence/database behavior was used.
+No OAuth/OpenID behavior was used.
+No RBAC, tenant, or organization model was used.
+No BlogEngine.NET auth dependency was introduced.
+
+## Observed Scenarios
+
+### protected BlogAI resource denied when unauthenticated
+
+Test: Protected_resource_denies_unauthenticated_request
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Concrete implementation: BlogAiAuthConsumerService
+Underlying auth method: AdventuresAuthDecisionService.ValidateSession
+Input summary:
+- ResourceName: /blogAi/protected
+- ResourceCategory: Protected
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+- development auth marker: absent
+- local session id: absent
+
+Observed result:
+- BlogAI AccessDecision: Denied
+- BlogAI Outcome: Denied
+- ReasonCode: LocalSessionRejected
+- Principal: null
+- AdventuresAuth decision present: true
+- AdventuresAuth events include:
+  - AdventuresAuth.RequestReceived
+  - AdventuresAuth.SessionValidated
+  - AdventuresAuth.AccessDenied
+
+### protected BlogAI resource allowed with valid local dev auth
+
+Test: Protected_resource_allows_valid_local_development_auth
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Concrete implementation: BlogAiAuthConsumerService
+Underlying auth method: AdventuresAuthDecisionService.Login
+Input summary:
+- ResourceName: /blogAi/protected
+- ResourceCategory: Protected
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+- development auth marker: valid local marker
+
+Observed result:
+- BlogAI AccessDecision: Allowed
+- BlogAI Outcome: Allowed
+- ReasonCode: DevCredentialAccepted
+- Principal.Subject: local-dev-user
+- LocalSessionId shape: local-session-{AuthDecisionId}
+- AdventuresAuth events include:
+  - AdventuresAuth.RequestReceived
+  - AdventuresAuth.LoginEvaluated
+  - AdventuresAuth.AccessAllowed
+
+### protected BlogAI resource denied with invalid marker
+
+Test: Protected_resource_denies_invalid_local_development_auth
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Concrete implementation: BlogAiAuthConsumerService
+Underlying auth method: AdventuresAuthDecisionService.Login
+Input summary:
+- ResourceName: /blogAi/protected
+- ResourceCategory: Protected
+- development auth marker: invalid local marker
+
+Observed result:
+- BlogAI AccessDecision: Denied
+- BlogAI Outcome: Denied
+- ReasonCode: DevCredentialRejected
+- Principal: null
+- LocalSessionId: null
+
+### protected BlogAI resource denied with invalid session
+
+Test: Protected_resource_denies_invalid_local_session
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Concrete implementation: BlogAiAuthConsumerService
+Underlying auth method: AdventuresAuthDecisionService.ValidateSession
+Input summary:
+- ResourceName: /blogAi/protected
+- ResourceCategory: Protected
+- local session id: invalid local marker
+
+Observed result:
+- BlogAI AccessDecision: Denied
+- ReasonCode: LocalSessionRejected
+- Principal: null
+- LocalSessionId: null
+- AdventuresAuth events include:
+  - AdventuresAuth.SessionValidated
+
+### public BlogAI resource allowed without auth
+
+Test: Public_resource_allows_without_auth
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Concrete implementation: BlogAiAuthConsumerService
+Underlying auth method: none for public resource
+Input summary:
+- ResourceName: /blogAi/public
+- ResourceCategory: Public
+- development auth marker: absent
+- local session id: absent
+
+Observed result:
+- BlogAI AccessDecision: Allowed
+- ReasonCode: PublicResource
+- AdventuresAuth decision present: false
+- Principal: null
+
+### correlation metadata preserved
+
+Test: Correlation_metadata_preserved_from_blogai_to_adventuresauth
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Input summary:
+- CorrelationId: corr-blogai-123
+- RequestId: request-blogai-456
+- AuthDecisionId: auth-blogai-789
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+
+Observed result:
+- BlogAI decision correlation preserves all five fields.
+- BlogAI decision metadata preserves all five fields.
+- AdventuresAuth decision correlation preserves all five fields.
+- Every AdventuresAuth audit event preserves all five fields.
+
+### redaction evidence
+
+Test: Decision_metadata_and_audit_evidence_redact_secret_like_values
+Consumer seam: IBlogAiAuthConsumerService.EvaluateAccess
+Underlying redaction boundary: AdventuresAuthDecisionService with BridgeSecurityRedactor
+Input summary:
+- development auth marker contains token-like, password-like, and bearer-like sentinel values
+- raw sentinel values are intentionally omitted from this durable trace
+
+Observed result:
+- BlogAI metadata SecretsRedacted: true
+- AdventuresAuth events include AdventuresAuth.SecretRedacted.
+- Combined BlogAI metadata and AdventuresAuth audit metadata include [REDACTED].
+- Raw token, password, and bearer sentinel values do not appear in decision metadata or audit metadata.
+
+### interface and DI seam
+
+Test: Composition_registers_consumer_interface_boundary
+Registration: AddBlogAiAuthConsumerServices
+Observed result:
+- IBlogAiAuthConsumerService resolves to BlogAiAuthConsumerService.
+- Resolved service evaluates valid local development auth as allowed.
+
+### no persistence/database or BlogEngine.NET coupling
+
+Test: Consumer_uses_no_persistence_or_blogengine_dependency
+Observed result:
+- BlogAiAuthConsumerService.UsesPersistence: false
+- BlogAiAuthConsumerService.StorageKind: None
+- BlogAiAuthConsumerService assembly references do not include BlogEngine.
+
+## Validation Commands
+
+Executed:
+- git diff --check
+- dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+- dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj
+
+Observed status before artifact commit:
+- Whitespace validation passed.
+- Shared test project passed.
+- Shared project build passed.
+
+Known warning context:
+- Existing nullable/analyzer warnings may appear in broader shared/MCP test/build paths.
+- No warning or error required changing BlogAI auth consumer behavior.

@@ -1,0 +1,81 @@
+{
+  "artifact": "blogai-auth-consumer-trace-20260517",
+  "date": "2026-05-17",
+  "validatedCommit": "f7a9aaf",
+  "scope": "local/dev-only BlogAI auth consumer boundary validation",
+  "implementationPaths": [
+    "VsMcpBridge.Shared/BlogAI/Auth/",
+    "VsMcpBridge.Shared/AdventuresAuth/",
+    "VsMcpBridge.Shared.Tests/BlogAiAuthConsumerTests.cs"
+  ],
+  "consumerSeam": {
+    "interface": "IBlogAiAuthConsumerService",
+    "implementation": "BlogAiAuthConsumerService",
+    "composition": "AddBlogAiAuthConsumerServices",
+    "operation": "EvaluateAccess"
+  },
+  "scenarioCoverage": {
+    "protectedUnauthenticatedDenied": true,
+    "protectedValidDevAuthAllowed": true,
+    "protectedInvalidMarkerDenied": true,
+    "protectedInvalidSessionDenied": true,
+    "publicResourceAllowed": true,
+    "correlationMetadataPreserved": true,
+    "clientApplicationPreserved": true,
+    "environmentPreserved": true,
+    "rawSecretValuesRedactedFromEvidence": true,
+    "interfaceResolutionValidated": true,
+    "noPersistenceOrDatabase": true,
+    "noBlogEngineDependency": true
+  },
+  "eventNamesObserved": [
+    "AdventuresAuth.RequestReceived",
+    "AdventuresAuth.LoginEvaluated",
+    "AdventuresAuth.SessionValidated",
+    "AdventuresAuth.AccessAllowed",
+    "AdventuresAuth.AccessDenied",
+    "AdventuresAuth.SecretRedacted"
+  ],
+  "blogAiDecisionMetadataFields": [
+    "ResourceName",
+    "ResourceCategory",
+    "Outcome",
+    "ReasonCode",
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId",
+    "ClientApplication",
+    "Environment",
+    "AuthenticationBoundary",
+    "StorageKind",
+    "AuthEventNames",
+    "SecretsRedacted"
+  ],
+  "correlationFields": [
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId",
+    "ClientApplication",
+    "Environment"
+  ],
+  "nonGoalsPreserved": {
+    "webHostOrMiddleware": false,
+    "productionDeployment": false,
+    "persistenceOrDatabase": false,
+    "oauthOrOpenId": false,
+    "rbac": false,
+    "tenantOrOrganizationModel": false,
+    "blogEngineAuthCoupling": false,
+    "realCookieOrSessionTopology": false
+  },
+  "validationCommands": [
+    "git diff --check",
+    "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj",
+    "dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj"
+  ],
+  "notes": [
+    "Raw secret-like sentinel values are intentionally not stored in this metadata artifact.",
+    "The consumer boundary remains an in-process local/dev-only shared project surface.",
+    "BlogAI maps AdventuresAuth decisions but does not own identity decisions."
+  ]
+}

@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    participant Harness as "BlogAI request / test harness"
+    participant Interface as "IBlogAiAuthConsumerService"
+    participant Consumer as "BlogAiAuthConsumerService"
+    participant Auth as "AdventuresAuthDecisionService"
+    participant Redaction as "Redaction / audit boundary"
+    participant Decision as "BlogAI access decision"
+
+    Harness->>Interface: "Evaluate protected /blogAi/protected<br/>no dev marker or session"
+    Interface->>Consumer: "EvaluateAccess(request)"
+    Consumer->>Auth: "ValidateSession<br/>CorrelationId / RequestId / AuthDecisionId"
+    Auth->>Redaction: "AdventuresAuth.RequestReceived<br/>AdventuresAuth.SessionValidated<br/>AdventuresAuth.AccessDenied"
+    Auth-->>Consumer: "Denied<br/>ReasonCode=LocalSessionRejected"
+    Consumer-->>Decision: "BlogAI Denied"
+
+    Harness->>Interface: "Evaluate protected resource<br/>valid local dev marker"
+    Interface->>Consumer: "EvaluateAccess(request)"
+    Consumer->>Auth: "Login"
+    Auth->>Redaction: "AdventuresAuth.RequestReceived<br/>AdventuresAuth.LoginEvaluated<br/>AdventuresAuth.AccessAllowed"
+    Auth-->>Consumer: "Allowed + local principal/session placeholder"
+    Consumer-->>Decision: "BlogAI Allowed"
+
+    Harness->>Interface: "Evaluate protected resource<br/>invalid marker or invalid session"
+    Interface->>Consumer: "EvaluateAccess(request)"
+    Consumer->>Auth: "Login or ValidateSession"
+    Auth->>Redaction: "Denied audit events"
+    Auth-->>Consumer: "Denied"
+    Consumer-->>Decision: "BlogAI Denied"
+
+    Harness->>Interface: "Evaluate public /blogAi/public"
+    Interface->>Consumer: "EvaluateAccess(request)"
+    Consumer-->>Decision: "BlogAI Allowed<br/>ReasonCode=PublicResource"
+
+    Harness->>Interface: "Evaluate secret-like marker"
+    Interface->>Consumer: "EvaluateAccess(request)"
+    Consumer->>Auth: "Login"
+    Auth->>Redaction: "Apply BridgeSecurityRedactor"
+    Redaction-->>Auth: "[REDACTED] metadata only"
+    Auth-->>Consumer: "Denied + AdventuresAuth.SecretRedacted"
+    Consumer-->>Decision: "Decision metadata<br/>SecretsRedacted=true"

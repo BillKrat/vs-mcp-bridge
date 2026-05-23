@@ -114,6 +114,8 @@ artifacts/logs/*
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.metadata.json
 !artifacts/logs/adventures-auth-local-prototype-trace-20260517.log
 !artifacts/logs/adventures-auth-local-prototype-trace-20260517.metadata.json
+!artifacts/logs/blogai-auth-consumer-trace-20260517.log
+!artifacts/logs/blogai-auth-consumer-trace-20260517.metadata.json
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -166,6 +168,7 @@ StyleCopReport.xml
 !artifacts/logs/blogai-doc-selection-search-workflow-20260516.log
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.log
 !artifacts/logs/adventures-auth-local-prototype-trace-20260517.log
+!artifacts/logs/blogai-auth-consumer-trace-20260517.log
 *.tlog
 *.vspscc
 *.vssscc
@@ -535,6 +538,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md
 !/docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md
 !/docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md
+!/docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
@@ -556,6 +560,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/blogai-doc-selection-search-workflow-20260516.mmd
 !/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd
 !/docs/diagrams/adventures-auth-local-prototype-trace-20260517.mmd
+!/docs/diagrams/blogai-auth-consumer-trace-20260517.mmd
 !/docs/blog-drafts/
 /docs/blog-drafts/*
 !/docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md

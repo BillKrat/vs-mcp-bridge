@@ -27,6 +27,8 @@ That location keeps the prototype in-process, small, and testable. It is not a w
 
 The consumer boundary is exposed through `IBlogAiAuthConsumerService` so future BlogAI/web/API integration can depend on a stable abstraction instead of the concrete local prototype service. Shared DI registration is available through `AddBlogAiAuthConsumerServices`.
 
+Durable trace evidence for the implemented interface-driven consumer flow is captured in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.
