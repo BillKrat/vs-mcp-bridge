@@ -509,6 +509,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/adventures-auth-local-api-boundary-design.md
 !/docs/adr/
 !/docs/adr/0002-blogai-ui-framework.md
+!/docs/adr/0003-blogai-globalization-localization.md
 !/docs/blogs/
 !/docs/blogs/source-of-truth/
 !/docs/blogs/source-of-truth/**

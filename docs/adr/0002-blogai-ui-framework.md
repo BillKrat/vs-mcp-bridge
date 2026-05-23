@@ -41,6 +41,7 @@ Blazor components must stay thin.
 Rules:
 
 - components render UI and handle interaction state
+- components should avoid hard-coded culture-specific date, number, or currency assumptions
 - auth, publishing, audit, workflow, and BlogAI business logic live in services/interfaces
 - UI consumes application and API client boundaries
 - UI does not own platform behavior
@@ -147,3 +148,5 @@ This keeps BlogAI as the first consumer of the platform and auth/API boundary wi
 The initial shell project is `BlogAI.Web`.
 
 It contains a basic Blazor Web App surface for local development only. Components are presentation-only placeholders. The project does not reference BlogEngine.NET, does not implement auth UI, and does not make identity decisions. Future protected behavior should consume service or API client boundaries rather than placing auth or business logic in Razor components.
+
+Globalization and localization direction is recorded in `docs/adr/0003-blogai-globalization-localization.md`: BlogAI remains English-first for now, but UI/API presentation should be globalization-ready while logs, audit events, traces, and developer docs remain invariant.
