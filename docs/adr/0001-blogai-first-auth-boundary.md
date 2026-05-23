@@ -18,6 +18,7 @@ Existing direction is captured in:
 
 - `docs/global-webnet-auth-boundary-direction.md`
 - `docs/adventures-auth-local-prototype-design.md`
+- `docs/blogai-adventures-auth-consumer-design.md`
 - `docs/blogai-auth-api-boundary-note.md`
 - `docs/blogai-auth-trust-boundary-flow.md`
 - `docs/session-handoffs/2026-05-17-platform-to-blogai-transition.md`
@@ -139,5 +140,6 @@ Before any auth implementation begins, a future slice should document:
 The implementation gate checklist is `docs/blogai-auth-implementation-gate.md`.
 The minimal local prototype objective is clarified in `docs/blogai-minimal-auth-prototype-clarification.md`.
 The local `AdventuresAuth` prototype design is `docs/adventures-auth-local-prototype-design.md`.
+The BlogAI consumer boundary design is `docs/blogai-adventures-auth-consumer-design.md`.
 
 No auth implementation is approved by this ADR alone.

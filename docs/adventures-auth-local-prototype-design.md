@@ -147,3 +147,9 @@ The first durable validation trace is captured in:
 - `artifacts/logs/adventures-auth-local-prototype-trace-20260517.metadata.json`
 - `docs/diagrams/adventures-auth-local-prototype-trace-20260517.mmd`
 - `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`
+
+## BlogAI Consumer Design
+
+The BlogAI consumer boundary is designed in `docs/blogai-adventures-auth-consumer-design.md`.
+
+That design keeps BlogAI as the first local consumer of `AdventuresAuth` while preserving the rule that BlogAI does not own identity decisions or rely on BlogEngine.NET auth.
