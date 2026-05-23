@@ -493,6 +493,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/mcp-search-workflow-ergonomics-gap-list.md
 !/docs/evidence-classification-guidance.md
 !/docs/mcp-controlled-mutation-threshold.md
+!/docs/preview-only-document-update-tool-design.md
 !/docs/blogs/
 !/docs/blogs/source-of-truth/
 !/docs/blogs/source-of-truth/**

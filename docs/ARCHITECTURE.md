@@ -85,6 +85,7 @@ MCP-assisted repository mutation remains future threshold work, not current beha
 Current MCP analysis/search diagnostics may select metadata, search explicit text, rank explicit documents, and return evidence, but they do not write repository files.
 Codex repository edits still happen through normal repository workflows.
 Before any MCP mutation tool is introduced, it must satisfy the architectural threshold in `docs/mcp-controlled-mutation-threshold.md`, including explicit manifests, capability metadata, approval requirement, audit classification, deterministic target selection, before/after preview, dry-run/preview mode, no silent writes, durable evidence, and recovery guidance where practical.
+The first designed mutation-adjacent step is preview-only: `bridge_preview_document_update` is documented in `docs/preview-only-document-update-tool-design.md` as a no-write diff generator, not an apply tool.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

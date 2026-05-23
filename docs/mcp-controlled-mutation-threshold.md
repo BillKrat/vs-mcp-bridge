@@ -148,6 +148,7 @@ The first future mutation-adjacent slice should be preview-only:
 - exercises manifest, capability, policy, approval metadata, audit classification, redaction, and correlation without changing files
 
 This slice should prove the safety and observability shape before any apply/write tool exists.
+The detailed design for that preview-only tool is `docs/preview-only-document-update-tool-design.md`.
 
 ## Deferred
 
