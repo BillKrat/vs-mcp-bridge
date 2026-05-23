@@ -100,6 +100,8 @@ public sealed class VsToolsTests
 
         Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == RegexTextSearchTool.ToolId);
         Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == Bm25TextSearchTool.ToolId);
+        Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == PreviewDocumentUpdateTool.ToolId);
+        Assert.Contains(toolItems, tool => tool.GetProperty("id").GetString() == GatedHandoffPreviewTool.ToolId);
         Assert.Equal(toolItems.Select(tool => tool.GetProperty("id").GetString()).OrderBy(id => id, StringComparer.Ordinal), toolItems.Select(tool => tool.GetProperty("id").GetString()));
     }
 
@@ -141,6 +143,7 @@ public sealed class VsToolsTests
         Assert.Contains(RegexTextSearchTool.ToolId, toolIds);
         Assert.Contains(Bm25TextSearchTool.ToolId, toolIds);
         Assert.Contains(PreviewDocumentUpdateTool.ToolId, toolIds);
+        Assert.Contains(GatedHandoffPreviewTool.ToolId, toolIds);
     }
 
     [Fact]

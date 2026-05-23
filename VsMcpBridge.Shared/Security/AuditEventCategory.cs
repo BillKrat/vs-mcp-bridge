@@ -8,6 +8,7 @@ namespace VsMcpBridge.Shared.Security
         Approval = 3,
         Secret = 4,
         Execution = 5,
-        DocumentPreview = 6
+        DocumentPreview = 6,
+        CodexHandoffPreview = 7
     }
 }

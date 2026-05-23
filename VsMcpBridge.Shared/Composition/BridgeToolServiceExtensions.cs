@@ -18,6 +18,7 @@ namespace VsMcpBridge.Shared.Composition
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, RegexTextSearchTool>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, Bm25TextSearchTool>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, PreviewDocumentUpdateTool>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeTool, GatedHandoffPreviewTool>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeToolDiscovery, CompiledBridgeToolDiscovery>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBridgeToolDiscovery, MefBridgeToolDiscovery>());
             services.TryAddSingleton<IBridgeToolCatalog>(provider =>

@@ -39,12 +39,17 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == GatedHandoffPreviewTool.ToolId);
         Assert.All(
-            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool => tool.Id != PreviewDocumentUpdateTool.ToolId),
+            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool =>
+                tool.Id != PreviewDocumentUpdateTool.ToolId && tool.Id != GatedHandoffPreviewTool.ToolId),
             tool => Assert.Empty(tool.RequiredCapabilities));
         var previewTool = Assert.Single(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
         Assert.Equal(new[] { "workspace.previewDocumentUpdate" }, previewTool.RequiredCapabilities.Select(capability => capability.Name).ToArray());
         Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, previewTool.ApprovalRequirement);
+        var handoffTool = Assert.Single(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == GatedHandoffPreviewTool.ToolId);
+        Assert.Equal(new[] { "codex.gatedHandoffPreview" }, handoffTool.RequiredCapabilities.Select(capability => capability.Name).ToArray());
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, handoffTool.ApprovalRequirement);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Equal(BridgeToolManifest.DefaultVersion, tool.Manifest.Identity.Version));
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
@@ -70,8 +75,10 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == GatedHandoffPreviewTool.ToolId);
         Assert.All(
-            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool => tool.Id != PreviewDocumentUpdateTool.ToolId),
+            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool =>
+                tool.Id != PreviewDocumentUpdateTool.ToolId && tool.Id != GatedHandoffPreviewTool.ToolId),
             tool => Assert.Empty(tool.RequiredCapabilities));
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.True(tool.Manifest.Execution.ExecutesThroughBridgeToolExecutor));
     }
@@ -109,6 +116,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal(new[] { "workspace.previewDocumentUpdate" }, preview.RequiredCapabilities);
         Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, preview.ApprovalRequirement);
         Assert.Equal(AuditEventCategory.DocumentPreview, preview.AuditCategoryHint);
+        var handoffPreview = Assert.Single(snapshot.Tools, tool => tool.Id == GatedHandoffPreviewTool.ToolId);
+        Assert.Equal("Gated Handoff Preview", handoffPreview.Name);
+        Assert.Equal("CodexHandoffPreview", handoffPreview.Category);
+        Assert.Equal(new[] { "codex.gatedHandoffPreview" }, handoffPreview.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, handoffPreview.ApprovalRequirement);
+        Assert.Equal(AuditEventCategory.CodexHandoffPreview, handoffPreview.AuditCategoryHint);
     }
 
     [Fact]
