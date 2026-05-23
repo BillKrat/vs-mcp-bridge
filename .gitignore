@@ -485,6 +485,7 @@ VsMcpBridge.Vsix/obj/
 /docs
 !/docs/
 /docs/*
+!/docs/mcp-search-workflow-ergonomics-gap-list.md
 !/docs/blogs/
 !/docs/blogs/source-of-truth/
 !/docs/blogs/source-of-truth/**
