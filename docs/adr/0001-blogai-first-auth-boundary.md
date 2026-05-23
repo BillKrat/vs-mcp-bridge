@@ -127,4 +127,6 @@ Before any auth implementation begins, a future slice should document:
 - failure modes
 - local validation plan
 
+The implementation gate checklist is `docs/blogai-auth-implementation-gate.md`.
+
 No auth implementation is approved by this ADR alone.

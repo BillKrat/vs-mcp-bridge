@@ -110,6 +110,7 @@ For the current transition from foundational MCP/tool-platform work into operati
 For initial BlogAI authentication/API boundary direction, read `docs/blogai-auth-api-boundary-note.md`.
 For the conceptual BlogAI auth trust-boundary flow sketch, read `docs/blogai-auth-trust-boundary-flow.md`.
 For the proposed first BlogAI authentication implementation boundary, read `docs/adr/0001-blogai-first-auth-boundary.md`.
+Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the first practical BlogAI usage path that should pressure-test the MCP/tool platform without premature auth, API, deployment, or package work, read `docs/blogai-functional-pressure-test-plan.md`.
 For the concrete first-session checklist for applying current MCP/tools to BlogAI work, read `docs/blogai-first-pressure-test-session.md`.
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.
