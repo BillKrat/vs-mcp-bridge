@@ -107,6 +107,7 @@ For the end-of-day architecture/security summary, also read `docs/session-handof
 For the current platform self-description milestone and next-step options, read `docs/session-handoffs/2026-05-16-platform-self-description-handoff.md`.
 For BlogAI platform direction and operational philosophy, read `docs/session-handoffs/2026-05-16-blogai-platform-direction.md`.
 For the current transition from foundational MCP/tool-platform work into operational BlogAI-assisted development, read `docs/session-handoffs/2026-05-17-platform-to-blogai-transition.md`.
+For initial BlogAI authentication/API boundary direction, read `docs/blogai-auth-api-boundary-note.md`.
 For the first practical BlogAI usage path that should pressure-test the MCP/tool platform without premature auth, API, deployment, or package work, read `docs/blogai-functional-pressure-test-plan.md`.
 For the concrete first-session checklist for applying current MCP/tools to BlogAI work, read `docs/blogai-first-pressure-test-session.md`.
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.
