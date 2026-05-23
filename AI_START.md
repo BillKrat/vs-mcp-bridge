@@ -118,6 +118,7 @@ For durable validation evidence of the initial BlogAI Blazor shell, read `docs/s
 For the first successful `BlogAI.Web` WebDeploy validation to `https://api.global-webnet.com`, read `docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`.
 For the `BlogAI.Web` production exposure boundary after deployment, read `docs/session-handoffs/2026-05-17-blogai-production-exposure-boundary-review.md`; deployed `BlogAI.Web` remains a smoke-test shell and `/local-dev` is not production auth.
 For the display-only deployed-environment guardrail, inspect `BlogAI.Web/Components/DeploymentGuardrailBanner.razor`; it does not change auth, routing, middleware, or deployment behavior.
+For the Auth API admin ownership boundary, read `docs/session-handoffs/2026-05-17-auth-api-admin-boundary-decision.md`; auth-admin belongs to the auth service boundary, not BlogAI page components.
 For the local/dev BlogAI auth UI integration design, read `docs/blogai-local-auth-ui-integration-design.md`.
 For the readiness review before implementing the local/dev BlogAI auth UI display boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md`.
 For the initial local/dev BlogAI auth UI display boundary, inspect `BlogAI.Web/Auth` and `BlogAI.Web/Components/Pages/LocalDev.razor`.
