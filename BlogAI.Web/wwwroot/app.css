@@ -44,6 +44,7 @@ h1 {
 }
 
 .summary-grid article,
+.decision-card,
 .boundary-panel {
     background: #ffffff;
     border: 1px solid #d9ded9;
@@ -83,6 +84,52 @@ dt {
 
 dd {
     margin: 0;
+}
+
+code {
+    color: #293632;
+    overflow-wrap: anywhere;
+}
+
+.status-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    margin-top: 1rem;
+}
+
+.decision-card {
+    border-left: 4px solid #8a9691;
+}
+
+.decision-card.allowed {
+    border-left-color: #2f7d54;
+}
+
+.decision-card.denied {
+    border-left-color: #9b3d36;
+}
+
+.decision-heading {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+}
+
+.decision-heading span {
+    background: #edf2ee;
+    border-radius: 999px;
+    color: #293632;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.25rem 0.55rem;
+}
+
+.decision-summary {
+    color: #4d5b56;
+    line-height: 1.5;
+    margin: 0.75rem 0 1rem;
 }
 
 @media (max-width: 640px) {

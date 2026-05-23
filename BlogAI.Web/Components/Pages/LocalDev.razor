@@ -1,27 +1,81 @@
 @page "/local-dev"
+@using BlogAI.Web.Auth
+@inject IBlogAiLocalAuthStatusService AuthStatusService
 
 <PageTitle>BlogAI Local Dev</PageTitle>
 
 <section class="page-header">
     <p class="eyebrow">Local development</p>
-    <h1>Service boundary placeholder</h1>
-    <p class="lede">This route reserves the UI surface that later consumes application services.</p>
+    <h1>Auth boundary status</h1>
+    <p class="lede">This local-only view shows display-safe auth decisions from the BlogAI service boundary.</p>
 </section>
 
-<section class="boundary-panel" aria-label="Boundary status">
-    <h2>Current Slice</h2>
+<section class="boundary-panel" aria-label="Local auth status">
+    <h2>Protected Placeholder</h2>
     <dl>
         <div>
-            <dt>Authentication UI</dt>
-            <dd>Not implemented</dd>
+            <dt>Resource</dt>
+            <dd>@Status.ResourceName</dd>
         </div>
         <div>
-            <dt>Identity decisions</dt>
-            <dd>Reserved for AdventuresAuth services</dd>
+            <dt>Environment</dt>
+            <dd>@Status.Environment</dd>
         </div>
         <div>
-            <dt>BlogEngine.NET dependency</dt>
-            <dd>None</dd>
+            <dt>Client</dt>
+            <dd>@Status.ClientApplication</dd>
         </div>
     </dl>
 </section>
+
+<section class="status-grid" aria-label="Local auth decisions">
+    @foreach (var decision in Status.Decisions)
+    {
+        <article class="decision-card @(decision.Allowed ? "allowed" : "denied")">
+            <div class="decision-heading">
+                <h2>@decision.Label</h2>
+                <span>@(decision.Allowed ? "Allowed" : "Denied")</span>
+            </div>
+
+            <p class="decision-summary">
+                Protected placeholder content is @(decision.Allowed ? "available for this local decision." : "not available for this local decision.")
+            </p>
+
+            <dl>
+                <div>
+                    <dt>Outcome</dt>
+                    <dd>@decision.Outcome</dd>
+                </div>
+                <div>
+                    <dt>Reason</dt>
+                    <dd>@decision.ReasonCode</dd>
+                </div>
+                <div>
+                    <dt>Principal</dt>
+                    <dd>@(decision.PrincipalDisplayName ?? "None")</dd>
+                </div>
+                <div>
+                    <dt>CorrelationId</dt>
+                    <dd><code>@decision.CorrelationId</code></dd>
+                </div>
+                <div>
+                    <dt>RequestId</dt>
+                    <dd><code>@decision.RequestId</code></dd>
+                </div>
+                <div>
+                    <dt>AuthDecisionId</dt>
+                    <dd><code>@decision.AuthDecisionId</code></dd>
+                </div>
+            </dl>
+        </article>
+    }
+</section>
+
+@code {
+    private BlogAiLocalAuthStatus Status { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Status = AuthStatusService.GetStatus();
+    }
+}

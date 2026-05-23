@@ -31,6 +31,8 @@ Durable trace evidence for the implemented interface-driven consumer flow is cap
 
 The Blazor-side local/dev display design for consuming this boundary later is captured in `docs/blogai-local-auth-ui-integration-design.md`.
 
+The first Blazor-side local/dev display uses `BlogAI.Web/Auth` as a UI-facing service boundary over `IBlogAiAuthConsumerService`; `/local-dev` renders only display-safe decision and correlation metadata.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.

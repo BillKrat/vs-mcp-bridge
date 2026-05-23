@@ -4,7 +4,9 @@
 
 Design how the `BlogAI.Web` Blazor shell should display and consume local/development `AdventuresAuth` state before any UI integration is implemented.
 
-This is documentation only. It does not add UI components, implement auth UI, call the API from Blazor, add production auth, add OAuth/OpenID/RBAC, add persistence, change deployment, or couple to BlogEngine.NET.
+This design initially did not add UI components, implement auth UI, call the API from Blazor, add production auth, add OAuth/OpenID/RBAC, add persistence, change deployment, or couple to BlogEngine.NET.
+
+The first local/dev implementation now adds a UI-facing service in `BlogAI.Web/Auth` and updates `/local-dev` to render display-safe decision metadata. It still does not add production auth, real login UX, OAuth/OpenID/RBAC, persistence, deployment changes, raw secret display, or BlogEngine.NET coupling.
 
 ## Current State
 
@@ -137,3 +139,14 @@ Suggested conceptual names:
 - `BlogAiLocalAuthDisplayModel`
 
 The first implementation should remain local/dev only and should include build validation, focused tests where practical, and trace artifacts showing allow/deny/correlation/redaction behavior at the UI boundary.
+
+## Initial Implementation
+
+The first local/dev implementation uses:
+
+- `IBlogAiLocalAuthStatusService`
+- `BlogAiLocalAuthStatusService`
+- `BlogAiLocalAuthStatus`
+- `BlogAiLocalAuthDecisionDisplay`
+
+The service calls `IBlogAiAuthConsumerService` and maps the result into display-safe state for `/local-dev`. The Razor page renders the model and does not evaluate credentials, parse tokens, or make auth decisions.
