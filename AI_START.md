@@ -117,6 +117,7 @@ For practical MCP search workflow ergonomics gaps and conservative next tooling 
 For distinguishing canonical/current source from preserved historical or diagnostic evidence during MCP searches, read `docs/evidence-classification-guidance.md`.
 For the architectural threshold before any future MCP-assisted repository mutation tools, read `docs/mcp-controlled-mutation-threshold.md`.
 For the preview-only design of the first future mutation-adjacent document update tool, read `docs/preview-only-document-update-tool-design.md`.
+For practical preview diff readability improvements that preserve the no-mutation boundary, read `docs/preview-diff-ergonomics-plan.md`.
 For validation of the implemented preview-only MCP document update tool, read `docs/session-handoffs/2026-05-17-preview-document-update-validation.md`.
 For MCP-exposed explicit repo document selection validation, also read `docs/session-handoffs/2026-05-16-document-selection-validation.md`.
 

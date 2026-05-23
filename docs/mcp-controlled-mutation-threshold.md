@@ -154,6 +154,7 @@ The first mutation-adjacent slice is preview-only:
 
 This slice proves the safety and observability shape before any apply/write tool exists.
 The detailed design for that preview-only tool is `docs/preview-only-document-update-tool-design.md`.
+Practical diff readability improvements are tracked separately in `docs/preview-diff-ergonomics-plan.md`; those improvements must remain preview-only and must not add apply/write behavior.
 
 ## Deferred
 

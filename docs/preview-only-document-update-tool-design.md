@@ -29,6 +29,9 @@ It does not write files, apply patches, mutate repository state, change MCP tran
 
 A direct MCP stdio workflow has now previewed a real documentation update against this file before any normal repository edit was made. That run preserved the boundary: MCP generated a deterministic preview and wrote no files; any accepted content change remained a separate Codex repository edit.
 
+The real workflow also exposed preview readability issues: full-document replacement diffs are deterministic but noisy for small edits.
+Practical future improvements are planned in `docs/preview-diff-ergonomics-plan.md` and must preserve the preview-only, no-mutation boundary.
+
 ## Scope
 
 The preview tool exists to prove the safety shape before any MCP apply/write tool exists:
@@ -213,6 +216,9 @@ Deferred until after preview-only behavior is designed, implemented, and validat
 - patch bundles
 - multi-file previews
 - range-based previews
+- minimal line-based diff ergonomics
+- context-window diff truncation
+- preview chunking
 - VS editor integration
 - evidence header auto-annotation
 - production publishing automation
