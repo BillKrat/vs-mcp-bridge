@@ -91,6 +91,31 @@ code {
     overflow-wrap: anywhere;
 }
 
+.deployment-guardrail {
+    align-items: center;
+    background: #f6eadb;
+    border-bottom: 1px solid #dfc6a4;
+    color: #382b1c;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.8rem;
+    line-height: 1.45;
+    padding: 0.75rem 2rem;
+}
+
+.deployment-guardrail strong {
+    font-size: 0.95rem;
+}
+
+.deployment-guardrail span {
+    font-size: 0.92rem;
+}
+
+.deployment-guardrail code {
+    color: inherit;
+    font-weight: 700;
+}
+
 .status-grid {
     display: grid;
     gap: 1rem;
@@ -189,6 +214,10 @@ code {
 
     dl div {
         grid-template-columns: 1fr;
+    }
+
+    .deployment-guardrail {
+        padding: 0.75rem 1rem;
     }
 }
 
