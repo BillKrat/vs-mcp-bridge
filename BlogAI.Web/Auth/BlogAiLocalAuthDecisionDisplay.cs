@@ -9,6 +9,9 @@ public sealed class BlogAiLocalAuthDecisionDisplay
         string outcome,
         string reasonCode,
         string? principalDisplayName,
+        string protectedPlaceholderState,
+        bool protectedPlaceholderVisible,
+        string protectedPlaceholderMessage,
         string correlationId,
         string requestId,
         string authDecisionId,
@@ -21,6 +24,9 @@ public sealed class BlogAiLocalAuthDecisionDisplay
         Outcome = outcome;
         ReasonCode = reasonCode;
         PrincipalDisplayName = principalDisplayName;
+        ProtectedPlaceholderState = protectedPlaceholderState;
+        ProtectedPlaceholderVisible = protectedPlaceholderVisible;
+        ProtectedPlaceholderMessage = protectedPlaceholderMessage;
         CorrelationId = correlationId;
         RequestId = requestId;
         AuthDecisionId = authDecisionId;
@@ -39,6 +45,12 @@ public sealed class BlogAiLocalAuthDecisionDisplay
     public string ReasonCode { get; }
 
     public string? PrincipalDisplayName { get; }
+
+    public string ProtectedPlaceholderState { get; }
+
+    public bool ProtectedPlaceholderVisible { get; }
+
+    public string ProtectedPlaceholderMessage { get; }
 
     public string CorrelationId { get; }
 

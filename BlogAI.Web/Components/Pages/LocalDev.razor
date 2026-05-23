@@ -38,8 +38,20 @@
             </div>
 
             <p class="decision-summary">
-                Protected placeholder content is @(decision.Allowed ? "available for this local decision." : "not available for this local decision.")
+                @decision.ProtectedPlaceholderMessage
             </p>
+
+            <div class="protected-placeholder @(decision.ProtectedPlaceholderVisible ? "visible" : "hidden")">
+                <h3>Protected Placeholder</h3>
+                @if (decision.ProtectedPlaceholderVisible)
+                {
+                    <p>Local protected placeholder content is shown for this display-safe decision.</p>
+                }
+                else
+                {
+                    <p>Hidden for this denied local decision.</p>
+                }
+            </div>
 
             <dl>
                 <div>
@@ -53,6 +65,10 @@
                 <div>
                     <dt>Principal</dt>
                     <dd>@(decision.PrincipalDisplayName ?? "None")</dd>
+                </div>
+                <div>
+                    <dt>Protected Placeholder</dt>
+                    <dd>@decision.ProtectedPlaceholderState</dd>
                 </div>
                 <div>
                     <dt>CorrelationId</dt>

@@ -132,6 +132,34 @@ code {
     margin: 0.75rem 0 1rem;
 }
 
+.protected-placeholder {
+    border: 1px solid #d9ded9;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 0.9rem;
+}
+
+.protected-placeholder.visible {
+    background: #f0f8f3;
+    border-color: #b8d8c4;
+}
+
+.protected-placeholder.hidden {
+    background: #faf3f2;
+    border-color: #e2c4c0;
+}
+
+.protected-placeholder h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.35rem;
+}
+
+.protected-placeholder p {
+    color: #4d5b56;
+    line-height: 1.45;
+    margin: 0;
+}
+
 @media (max-width: 640px) {
     h1 {
         font-size: 1.8rem;

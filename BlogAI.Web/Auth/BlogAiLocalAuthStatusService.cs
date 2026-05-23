@@ -43,6 +43,7 @@ public sealed class BlogAiLocalAuthStatusService : IBlogAiLocalAuthStatusService
             devAuthMarker);
 
         var decision = _authConsumerService.EvaluateAccess(request);
+        var protectedPlaceholderVisible = decision.Allowed;
 
         return new BlogAiLocalAuthDecisionDisplay(
             label,
@@ -51,6 +52,11 @@ public sealed class BlogAiLocalAuthStatusService : IBlogAiLocalAuthStatusService
             decision.Outcome,
             decision.ReasonCode,
             decision.Principal?.DisplayName,
+            protectedPlaceholderVisible ? "Shown" : "Hidden",
+            protectedPlaceholderVisible,
+            protectedPlaceholderVisible
+                ? "Protected placeholder is shown for this local development decision."
+                : "Protected placeholder is denied and hidden for this local development decision.",
             decision.Correlation.CorrelationId,
             decision.Correlation.RequestId,
             decision.Correlation.AuthDecisionId,
