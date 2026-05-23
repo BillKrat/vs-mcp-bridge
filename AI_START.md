@@ -126,6 +126,7 @@ For durable validation evidence of the local/dev BlogAI auth API client boundary
 For the readiness review before temporarily exercising API-client parity in `/local-dev`, read `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-parity-readiness-review.md`.
 For explicit local/dev API-client parity diagnostics, use `/local-dev?authPath=api-client`; the default `/local-dev` path remains the in-process baseline and does not silently fall back.
 For durable validation evidence of the explicit local/dev API-client parity mode, read `docs/session-handoffs/2026-05-17-blogai-auth-api-client-parity-mode-validation.md`.
+For the decision after API-client parity validation, read `docs/session-handoffs/2026-05-17-blogai-auth-api-client-next-step-decision.md`; parity mode remains diagnostic-only and `/local-dev` remains in-process by default.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.
