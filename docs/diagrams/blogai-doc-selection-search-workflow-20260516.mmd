@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant Caller as "Direct MCP workflow probe"
+    participant MCP as "VsMcpBridge.McpServer"
+    participant Selector as "bridge_select_repo_documents"
+    participant Repo as "Repo files"
+    participant Regex as "bridge_regex_text_search"
+    participant BM25 as "bridge_bm25_text_search"
+    participant Executor as "BridgeToolExecutor"
+    participant Artifact as "Durable evidence"
+
+    Caller->>MCP: initialize and tools/list
+    MCP-->>Caller: 20 tools, selector + regex + BM25 available
+    Caller->>MCP: bridge_get_tool_inventory
+    MCP-->>Caller: bridge.bm25TextSearch, bridge.regexTextSearch
+    Caller->>Selector: explicit include/exclude patterns, maxFiles=120
+    Selector->>Repo: enumerate explicit pattern base directories
+    Repo-->>Selector: metadata for 90 selected files
+    Selector-->>Caller: requestId, selected paths, category hints
+    Caller->>Repo: read selected files outside MCP search tools
+    Caller->>Regex: exact marker and operational terms as explicit entries
+    Regex->>Executor: execute bridge.regexTextSearch
+    Executor-->>Regex: structured matches with request/operation ids
+    Regex-->>Caller: marker absent from canonical post content/metadata
+    Caller->>BM25: relevance query over explicit documents
+    BM25->>Executor: execute bridge.bm25TextSearch
+    Executor-->>BM25: ranked results with request/operation ids
+    BM25-->>Caller: cache/chrome handoffs and reports rank highest
+    Caller->>Artifact: write log, metadata, diagram, handoff

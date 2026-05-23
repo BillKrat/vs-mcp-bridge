@@ -30,7 +30,9 @@ It confirmed the prior manual and `rg` findings while avoiding fallback search.
 Evidence:
 
 - `docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md`
+- `docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`
 - `artifacts/logs/blogai-mcp-search-workflow-20260516.log`
+- `artifacts/logs/blogai-doc-selection-search-workflow-20260516.log`
 
 ## Practical Gaps
 
@@ -72,6 +74,31 @@ It does not:
 - allow broad whole-repo wildcard selection such as `**/*`
 
 The caller still decides which selected files to read and which explicit `entries` or `documents` to pass into `bridge_regex_text_search` or `bridge_bm25_text_search`.
+
+## First Combined Workflow Result
+
+The first BlogAI workflow using document selection plus MCP regex/BM25 search selected 90 deterministic repo documents from explicit patterns:
+
+- `docs/blogs/**/*.md`
+- `docs/blogs/posts/**/*.html`
+- `docs/blogs/posts/**/*.json`
+- `docs/session-handoffs/*blogai*.md`
+- `docs/session-handoffs/*BlogAI*.md`
+
+The selected set preserved file-per-entry attribution across:
+
+- 53 blog docs
+- 16 canonical post content files
+- 16 canonical post metadata files
+- 5 BlogAI handoffs
+
+The workflow confirmed the prior stale chrome/cache finding without fallback `rg`:
+
+- the stale `feature/approval-apply-ui-slice` marker matched diagnostic, prepublish, and handoff evidence
+- the marker did not match canonical post content or metadata
+- BM25 ranked stale chrome/cache handoffs and cache-clear reports highest for the cache/widget/route query
+
+Remaining friction shifted from manual file-list assembly to orchestration: a temporary caller still had to chain inventory, selection, file reads, regex, BM25, log, metadata, and handoff capture.
 
 ## What Should Stay Manual
 

@@ -112,6 +112,7 @@ For findings from the first BlogAI pressure-test pass, read `docs/session-handof
 For the direct MCP inventory validation and BlogAI stale shared chrome search findings, read `docs/session-handoffs/2026-05-16-blogai-stale-chrome-search-findings.md`.
 For the MCP regex-tool rerun of the BlogAI stale shared chrome search, read `docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md`.
 For the first real BlogAI workflow using both MCP regex and BM25 diagnostics, read `docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md`.
+For the BlogAI workflow using MCP document selection plus regex/BM25 search, read `docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`.
 For practical MCP search workflow ergonomics gaps and conservative next tooling slices, read `docs/mcp-search-workflow-ergonomics-gap-list.md`.
 For MCP-exposed explicit repo document selection validation, also read `docs/session-handoffs/2026-05-16-document-selection-validation.md`.
 

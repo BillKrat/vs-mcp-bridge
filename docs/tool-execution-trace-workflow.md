@@ -385,6 +385,40 @@ Artifacts:
 - run metadata: [`artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json`](../artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json)
 - session handoff: [`docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md`](session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md)
 
+## Explicit Document Selection Plus MCP Search Workload
+
+The BlogAI stale shared chrome/cache workload was repeated with the full selector + search chain:
+
+1. `bridge_select_repo_documents`
+2. caller file reads for the selected paths
+3. `bridge_regex_text_search`
+4. `bridge_bm25_text_search`
+
+- run name: `blogai-doc-selection-search-workflow-20260516`
+- baseline commit: `83a79ab`
+- capture date: `2026-05-22`
+- validation mode: direct MCP stdio helper with explicit include/exclude patterns
+- selected documents: `90`
+- selection request id: `a967bf52775344298cd42dd57c33c53f`
+- regex exact marker request id: `18fea4c5bf234c7d885ff2d19e0659f9`
+- regex exact marker operation id: `29fcdfc81f5a4248a368fedbdf452482`
+- BM25 request id: `8e9d6930bc534c249b14c73d81546a9f`
+- BM25 operation id: `f430b1b6ce66493e9e5f9d63dde630c8`
+- fallback `rg`: no
+
+Observed outcome:
+
+- the stale marker matched durable reports, prepublish evidence, and handoffs
+- the stale marker did not match selected canonical post content or metadata
+- BM25 ranked stale chrome/cache handoffs and cache-clear reports highest
+
+Artifacts:
+
+- observed log transcript: [`artifacts/logs/blogai-doc-selection-search-workflow-20260516.log`](../artifacts/logs/blogai-doc-selection-search-workflow-20260516.log)
+- run metadata: [`artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json`](../artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json)
+- sequence diagram: [`docs/diagrams/blogai-doc-selection-search-workflow-20260516.mmd`](diagrams/blogai-doc-selection-search-workflow-20260516.mmd)
+- session handoff: [`docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`](session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md)
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`
