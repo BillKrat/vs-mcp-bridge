@@ -90,3 +90,7 @@ For follow-up work, start with:
 Recommended next slice:
 
 - use `bridge_bm25_text_search` only when a real explicit-input workflow benefits from ranked in-memory document search instead of deterministic regex matching.
+
+Follow-up guidance:
+
+- Future agents should use `.agents/skills/mcp-search-diagnostics/SKILL.md` before choosing between `bridge_regex_text_search`, `bridge_bm25_text_search`, and fallback `rg`.

@@ -302,6 +302,17 @@ This wrapper accepts only explicit `documents` or `entries` supplied in the MCP 
 It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
 The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
 
+## MCP Search Diagnostic Selection
+
+Use `.agents/skills/mcp-search-diagnostics/SKILL.md` for concise agent guidance before running MCP search diagnostics.
+
+- Start MCP/tooling triage with `bridge_get_tool_inventory`.
+- Use `bridge_regex_text_search` for exact markers, regex patterns, structural text checks, and deterministic evidence searches.
+- Use `bridge_bm25_text_search` for ranked relevance over a bounded explicit document set.
+- Build the document/text set in the caller and pass only explicit `inputText`, `entries`, or `documents` to MCP.
+- Do not pass paths expecting the MCP tools to read files; they do not crawl files or mutate state.
+- If MCP is unavailable, use deterministic repo search such as `rg` and preserve that fallback path in the resulting handoff or notes.
+
 ## Explicit-Input MCP Regex Search Workload
 
 The BlogAI stale shared chrome/cache workload was rerun with `bridge_regex_text_search` after the MCP wrapper was added.

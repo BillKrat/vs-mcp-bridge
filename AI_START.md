@@ -39,7 +39,7 @@ Use these as needed after that:
 - `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
 - `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
-- `.agents/skills/` for focused task workflows such as MCP validation, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
+- `.agents/skills/` for focused task workflows such as MCP validation, MCP search diagnostics, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
 
 ## New Session vs Resume Session
 
@@ -123,6 +123,7 @@ Keep these repo-specific themes in mind:
 - keep MVP/VM boundaries intact in shared WPF UI work
 - keep MCP stdout clean and route diagnostics through approved channels
 - during MCP/tooling triage, use `bridge_get_tool_inventory` early when available; it is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata without executing bridge tools
+- for MCP search diagnostics, use `.agents/skills/mcp-search-diagnostics/SKILL.md`; `bridge_regex_text_search` is for exact/regex searches, `bridge_bm25_text_search` is for ranked relevance over explicit documents, and neither tool reads paths or crawls files
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, approval evaluation when required, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices

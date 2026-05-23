@@ -6,6 +6,7 @@ AI session entry point:
 
 - for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
 - for repository-level AI operating rules, read [AGENTS.md](AGENTS.md); task-specific workflows use lightweight `SKILL.md` files under [.agents/skills/](.agents/skills/)
+- for MCP search diagnostics, use [.agents/skills/mcp-search-diagnostics/SKILL.md](.agents/skills/mcp-search-diagnostics/SKILL.md)
 - for ending or pausing an AI-assisted session cleanly, use [AI_STOP.md](AI_STOP.md)
 - for the repeatable App-host `ping` trace workflow and its durable artifacts, use [docs/app-host-ping-trace-workflow.md](docs/app-host-ping-trace-workflow.md)
 - for the repeatable VSIX-host `ping` trace workflow and its durable artifacts, use [docs/vsix-host-ping-trace-workflow.md](docs/vsix-host-ping-trace-workflow.md)
