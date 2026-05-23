@@ -540,6 +540,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md
 !/docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md
+!/docs/session-handoffs/2026-05-17-adventures-auth-api-readiness-review.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
