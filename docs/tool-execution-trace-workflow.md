@@ -302,11 +302,40 @@ This wrapper accepts only explicit `documents` or `entries` supplied in the MCP 
 It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
 The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
 
+## Live MCP Document Selection Validation Run
+
+The explicit repo document selection helper is now callable through MCP as `bridge_select_repo_documents`:
+
+- run name: `mcp-document-selection-trace-20260516`
+- branch: `main`
+- baseline commit: `207e584`
+- capture date: `2026-05-22`
+- validation mode: direct MCP stdio helper using caller-supplied root-relative include/exclude patterns
+- server info: `VsMcpBridge.McpServer 1.0.0.0`
+- `tools/list` count: `20`
+- MCP tool: `bridge_select_repo_documents`
+- selection response request id: `840ad550e4c1471caca63d5450854f92`
+- selected candidate count: `10`
+- returned document count: `8`
+- limited: `true`
+- broad root wildcard response: `success=false`, `errorCode=InvalidRequest`
+
+Live MCP document selection artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-document-selection-trace-20260516.mmd`](diagrams/mcp-document-selection-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mcp-document-selection-trace-20260516.log`](../artifacts/logs/mcp-document-selection-trace-20260516.log)
+- session handoff: [`docs/session-handoffs/2026-05-16-document-selection-validation.md`](session-handoffs/2026-05-16-document-selection-validation.md)
+
+This helper accepts only explicit repo-root-relative include/exclude patterns and returns deterministic metadata for selected files.
+It does not search content, rank relevance, execute bridge tools, mutate state, call ChatEngine, call the VSIX named pipe, build a hidden cache, or create an index.
+The caller remains responsible for reading selected files and passing explicit `entries` or `documents` into `bridge_regex_text_search` or `bridge_bm25_text_search`.
+
 ## MCP Search Diagnostic Selection
 
 Use `.agents/skills/mcp-search-diagnostics/SKILL.md` for concise agent guidance before running MCP search diagnostics.
 
 - Start MCP/tooling triage with `bridge_get_tool_inventory`.
+- Use `bridge_select_repo_documents` when a workflow needs deterministic repo-root-relative file metadata before building explicit search inputs.
 - Use `bridge_regex_text_search` for exact markers, regex patterns, structural text checks, and deterministic evidence searches.
 - Use `bridge_bm25_text_search` for ranked relevance over a bounded explicit document set.
 - Build the document/text set in the caller and pass only explicit `inputText`, `entries`, or `documents` to MCP.

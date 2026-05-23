@@ -51,6 +51,7 @@ public sealed class McpServerHostTests
                 "bridge_bm25_text_search",
                 "bridge_get_tool_inventory",
                 "bridge_regex_text_search",
+                "bridge_select_repo_documents",
                 "chat_engine_chat",
                 "chat_engine_explain_code",
                 "chat_engine_explain_error",

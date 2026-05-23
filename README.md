@@ -21,6 +21,7 @@ AI session entry point:
 - for live MCP stdio validation of the inventory diagnostic, use [artifacts/logs/mcp-tool-inventory-live-validation-20260516.log](artifacts/logs/mcp-tool-inventory-live-validation-20260516.log) and [docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd](docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
 - for live MCP stdio validation of the regex search diagnostic, use [artifacts/logs/mcp-regex-search-trace-20260516.log](artifacts/logs/mcp-regex-search-trace-20260516.log) and [docs/diagrams/mcp-regex-search-trace-20260516.mmd](docs/diagrams/mcp-regex-search-trace-20260516.mmd)
 - for live MCP stdio validation of the BM25 search diagnostic, use [artifacts/logs/mcp-bm25-search-trace-20260516.log](artifacts/logs/mcp-bm25-search-trace-20260516.log) and [docs/diagrams/mcp-bm25-search-trace-20260516.mmd](docs/diagrams/mcp-bm25-search-trace-20260516.mmd)
+- for live MCP stdio validation of the explicit repo document selection diagnostic, use [artifacts/logs/mcp-document-selection-trace-20260516.log](artifacts/logs/mcp-document-selection-trace-20260516.log) and [docs/diagrams/mcp-document-selection-trace-20260516.mmd](docs/diagrams/mcp-document-selection-trace-20260516.mmd)
 - for inactive VSIX named-pipe activation diagnostic artifacts, use [artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
@@ -45,6 +46,7 @@ Current supported capabilities:
 - propose multi-file text edits through MCP as one approval-gated proposal
 - route proposed edits into the tool window for approval or rejection
 - apply approved edits inside Visual Studio through the VSIX host
+- select deterministic repo-root-relative document metadata through MCP for explicit-input search workflows
 - execute compiled in-memory bridge tools through the shared catalog/executor boundary, including regex text search and minimal BM25-style ranked text search over caller-supplied documents
 
 The bridge is intentionally conservative at this stage:

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -433,6 +434,169 @@ public sealed class VsToolsTests
         var auditEvent = Assert.Single(auditSink.Events);
         Assert.Equal(Bm25TextSearchTool.ToolId, auditEvent.ToolId);
         Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-request-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void SelectRepoDocuments_returns_deterministic_metadata_for_explicit_patterns()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "docs", "b.md"), "bravo\nsecond");
+            File.WriteAllText(Path.Combine(root, "docs", "a.md"), "alpha");
+            File.WriteAllText(Path.Combine(root, "docs", "skip.md"), "skip");
+            var tools = new VsTools(new RecordingPipeClient(), new StubChatEngine(), NullLogger.Instance, repositoryRoot: root);
+
+            var responseJson = tools.SelectRepoDocuments(
+                includePatterns: new[] { "docs/*.md" },
+                excludePatterns: new[] { "docs/skip.md" },
+                categoryHints: new[] { "docs" },
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+            var rootElement = document.RootElement;
+            var documents = rootElement.GetProperty("documents").EnumerateArray().ToArray();
+
+            Assert.True(rootElement.GetProperty("success").GetBoolean());
+            Assert.Equal("bridge_select_repo_documents", rootElement.GetProperty("toolName").GetString());
+            Assert.Equal(2, rootElement.GetProperty("candidateCount").GetInt32());
+            Assert.Equal(2, rootElement.GetProperty("selectedCount").GetInt32());
+            Assert.False(rootElement.GetProperty("limited").GetBoolean());
+            Assert.Equal(new[] { "docs/a.md", "docs/b.md" }, documents.Select(item => item.GetProperty("relativePath").GetString()).ToArray());
+            Assert.All(documents, item => Assert.Equal("docs/*.md", item.GetProperty("sourcePattern").GetString()));
+            Assert.All(documents, item => Assert.Equal("docs", item.GetProperty("categoryHint").GetString()));
+            Assert.Equal(1, documents[0].GetProperty("lineCount").GetInt32());
+            Assert.Equal(2, documents[1].GetProperty("lineCount").GetInt32());
+            Assert.True(documents[0].GetProperty("sizeBytes").GetInt64() > 0);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SelectRepoDocuments_respects_max_files_after_deterministic_ordering()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "docs", "c.md"), "charlie");
+            File.WriteAllText(Path.Combine(root, "docs", "a.md"), "alpha");
+            File.WriteAllText(Path.Combine(root, "docs", "b.md"), "bravo");
+            var tools = new VsTools(new RecordingPipeClient(), new StubChatEngine(), NullLogger.Instance, repositoryRoot: root);
+
+            var responseJson = tools.SelectRepoDocuments(
+                includePatterns: new[] { "docs/*.md" },
+                maxFiles: 2,
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+            var documents = document.RootElement.GetProperty("documents").EnumerateArray().ToArray();
+
+            Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+            Assert.Equal(3, document.RootElement.GetProperty("candidateCount").GetInt32());
+            Assert.Equal(2, document.RootElement.GetProperty("selectedCount").GetInt32());
+            Assert.True(document.RootElement.GetProperty("limited").GetBoolean());
+            Assert.Equal(new[] { "docs/a.md", "docs/b.md" }, documents.Select(item => item.GetProperty("relativePath").GetString()).ToArray());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SelectRepoDocuments_ignores_hidden_and_system_scoped_folders()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, ".git"));
+            Directory.CreateDirectory(Path.Combine(root, ".vs"));
+            Directory.CreateDirectory(Path.Combine(root, "bin"));
+            Directory.CreateDirectory(Path.Combine(root, "obj"));
+            Directory.CreateDirectory(Path.Combine(root, "docs"));
+            File.WriteAllText(Path.Combine(root, ".git", "config.md"), "git");
+            File.WriteAllText(Path.Combine(root, ".vs", "state.md"), "vs");
+            File.WriteAllText(Path.Combine(root, "bin", "output.md"), "bin");
+            File.WriteAllText(Path.Combine(root, "obj", "output.md"), "obj");
+            File.WriteAllText(Path.Combine(root, "docs", "visible.md"), "visible");
+            var tools = new VsTools(new RecordingPipeClient(), new StubChatEngine(), NullLogger.Instance, repositoryRoot: root);
+
+            var responseJson = tools.SelectRepoDocuments(
+                includePatterns: new[] { ".git/*.md", ".vs/*.md", "bin/*.md", "obj/*.md", "docs/*.md" },
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+            var documents = document.RootElement.GetProperty("documents").EnumerateArray().ToArray();
+
+            Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+            var item = Assert.Single(documents);
+            Assert.Equal("docs/visible.md", item.GetProperty("relativePath").GetString());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SelectRepoDocuments_returns_structured_failure_for_broad_root_wildcard()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            var tools = new VsTools(new RecordingPipeClient(), new StubChatEngine(), NullLogger.Instance, repositoryRoot: root);
+
+            var responseJson = tools.SelectRepoDocuments(
+                includePatterns: new[] { "**/*" },
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+
+            Assert.False(document.RootElement.GetProperty("success").GetBoolean());
+            Assert.Equal("InvalidRequest", document.RootElement.GetProperty("errorCode").GetString());
+            Assert.Contains("explicit repo subset", document.RootElement.GetProperty("message").GetString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SelectRepoDocuments_does_not_mutate_files_or_execute_bridge_tools()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "a.md");
+            File.WriteAllText(path, "alpha");
+            var lastWriteTimeUtc = File.GetLastWriteTimeUtc(path);
+            var executor = new RecordingBridgeToolExecutor();
+            var tools = new VsTools(
+                new RecordingPipeClient(),
+                new StubChatEngine(),
+                NullLogger.Instance,
+                bridgeToolExecutor: executor,
+                repositoryRoot: root);
+
+            var responseJson = tools.SelectRepoDocuments(
+                includePatterns: new[] { "docs/*.md" },
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+
+            Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+            Assert.Equal(0, executor.CallCount);
+            Assert.Equal("alpha", File.ReadAllText(path));
+            Assert.Equal(lastWriteTimeUtc, File.GetLastWriteTimeUtc(path));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     [Fact]
@@ -1412,6 +1576,13 @@ public sealed class VsToolsTests
             provider.GetRequiredService<IBridgeToolInventoryService>(),
             provider.GetRequiredService<IBridgeToolExecutor>());
 
+    private static string CreateDocumentSelectionFixtureRoot()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "vs-mcp-bridge-doc-selection-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "docs"));
+        return root;
+    }
+
     private sealed class RecordingPipeClient : IPipeClient
     {
         public int ProposeTextEditCalls { get; private set; }
@@ -1574,6 +1745,17 @@ public sealed class VsToolsTests
             CallCount++;
             LastContext = context;
             return Task.FromResult(ToolExecutionPolicyDecision.Allow("policy observed"));
+        }
+    }
+
+    private sealed class RecordingBridgeToolExecutor : IBridgeToolExecutor
+    {
+        public int CallCount { get; private set; }
+
+        public Task<BridgeToolResult> ExecuteAsync(BridgeToolRequest request, CancellationToken cancellationToken)
+        {
+            CallCount++;
+            return Task.FromResult(BridgeToolResult.Succeeded(request, "executed"));
         }
     }
 

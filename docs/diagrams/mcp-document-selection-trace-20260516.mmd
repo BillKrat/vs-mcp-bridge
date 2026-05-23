@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant Caller as "Direct MCP stdio probe"
+    participant MCP as "VsMcpBridge.McpServer"
+    participant Tool as "bridge_select_repo_documents"
+    participant Repo as "Repo file system"
+    participant Result as "BridgeDocumentSelection"
+
+    Caller->>MCP: initialize over stdio
+    MCP-->>Caller: serverInfo "VsMcpBridge.McpServer 1.0.0.0"
+    Caller->>MCP: tools/list
+    MCP-->>Caller: 20 tools including bridge_select_repo_documents
+    Caller->>Tool: include/exclude patterns, maxFiles, category hints
+    Tool->>Tool: validate repo-root-relative patterns
+    Tool->>Repo: enumerate only explicit pattern base directories
+    Repo-->>Tool: matching file metadata
+    Tool->>Tool: sort deterministically and apply maxFiles
+    Tool-->>Caller: success, requestId, candidateCount=10, selectedCount=8
+    Caller->>Tool: includePatterns ["**/*"]
+    Tool-->>Caller: structured InvalidRequest failure

@@ -1,0 +1,33 @@
+Run: mcp-document-selection-trace-20260516
+Repository: Y:/vs-mcp-bridge
+Baseline: 207e584 Document MCP search workflow ergonomics gaps
+Mode: direct MCP stdio, explicit repo-root-relative include/exclude patterns supplied by caller
+Server: VsMcpBridge.McpServer 1.0.0.0
+tools/list count: 20
+includes bridge_select_repo_documents: true
+includes bridge_regex_text_search: true
+includes bridge_bm25_text_search: true
+selection invocation success: true; requestId=840ad550e4c1471caca63d5450854f92
+selection input includePatterns:
+- docs/blogai-*.md
+- docs/session-handoffs/2026-05-16-blogai-*.md
+- docs/session-handoffs/2026-05-16-mcp-*-validation.md
+selection input excludePatterns:
+- docs/session-handoffs/2026-05-16-blogai-platform-direction.md
+selection maxFiles: 8
+selection categoryHints:
+- blogai-plan
+- blogai-handoff
+- mcp-validation
+selection candidateCount=10; selectedCount=8; limited=true
+selected documents:
+- docs/blogai-first-pressure-test-session.md
+- docs/blogai-functional-pressure-test-plan.md
+- docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md
+- docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md
+- docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md
+- docs/session-handoffs/2026-05-16-blogai-stale-chrome-search-findings.md
+- docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md
+- docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md
+broad root wildcard invocation success: false; errorCode=InvalidRequest
+child stderr: none

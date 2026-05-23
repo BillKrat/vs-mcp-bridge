@@ -20,6 +20,7 @@ The current philosophy stays intact:
 The first real BlogAI MCP search workflow successfully used:
 
 - `bridge_get_tool_inventory`
+- `bridge_select_repo_documents`
 - `bridge_regex_text_search`
 - `bridge_bm25_text_search`
 
@@ -45,6 +46,32 @@ Evidence:
 | BM25 results lack snippets or hit explanation | The workflow uses ranking to orient, then reads source documents manually. | Add caller-side snippet extraction in the runner after BM25 returns ranked document ids. | Changing `bridge_bm25_text_search` into an opaque summarizer or semantic index. |
 | Fallback path recording is manual | The agent writes whether MCP or `rg` was used in the handoff. | Make the runner record `toolPath=mcp` or `toolPath=fallback-rg` in metadata. | Silent fallback that hides which path produced evidence. |
 | Discovering canonical versus historical docs takes time | Agents read `docs/blogs/README.md` and prior handoffs, then choose files manually. | Add small curated manifests for common evidence sets, such as BlogAI canonical posts, widget settings, rendered-route reports, and cache/auth source. | Automatic repo-wide source-of-truth inference. |
+
+## First Implemented Helper
+
+`bridge_select_repo_documents` now covers the smallest part of the manual explicit-entry assembly gap.
+
+It accepts caller-supplied repo-root-relative include patterns, optional exclude patterns, optional `maxFiles`, and optional category hints.
+It returns deterministic metadata only:
+
+- relative path
+- source include pattern
+- optional category hint
+- file size
+- line count when lightweight
+
+It does not:
+
+- read or return file bodies for search
+- rank relevance
+- call regex or BM25
+- execute bridge tools
+- mutate files
+- build a hidden cache or index
+- accept arbitrary absolute paths
+- allow broad whole-repo wildcard selection such as `**/*`
+
+The caller still decides which selected files to read and which explicit `entries` or `documents` to pass into `bridge_regex_text_search` or `bridge_bm25_text_search`.
 
 ## What Should Stay Manual
 
@@ -88,9 +115,10 @@ Avoid improvements that make results harder to audit:
 Possible next slices, in order of usefulness:
 
 1. **Explicit repo document selection helper**
-   - Input: checked-in manifest of file paths and labels.
-   - Output: explicit entries/documents for MCP search plus an input summary.
-   - Boundary: caller-side only; MCP search tools still receive text.
+   - Status: first constrained MCP helper added as `bridge_select_repo_documents`.
+   - Input: caller-supplied root-relative include/exclude patterns and optional category hints.
+   - Output: deterministic selected file metadata.
+   - Boundary: MCP search tools still receive explicit text only; the selector does not search content.
 
 2. **Search workflow template**
    - Input: manifest, regex terms, BM25 queries.

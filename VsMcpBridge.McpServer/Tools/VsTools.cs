@@ -1,8 +1,10 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Adventures.ChatEngine.Abstractions;
 using Adventures.ChatEngine.Models;
 using Microsoft.Extensions.Logging;
@@ -45,25 +47,29 @@ public sealed class VsTools
     private const string ChatEngineExplainErrorFailureError = "Error: chat_engine_explain_error failed.";
     private const string ChatEngineSuggestErrorFixInvalidInputError = "Error: chat_engine_suggest_error_fix requires a non-empty message no longer than 4000 characters.";
     private const string ChatEngineSuggestErrorFixFailureError = "Error: chat_engine_suggest_error_fix failed.";
+    private static readonly string[] IgnoredDocumentSelectionDirectoryNames = [".git", ".vs", "bin", "obj", "node_modules"];
 
     private readonly IPipeClient _pipe;
     private readonly IChatEngine _chatEngine;
     private readonly IBridgeToolInventoryService _toolInventory;
     private readonly IBridgeToolExecutor _bridgeToolExecutor;
     private readonly ILogger _logger;
+    private readonly string _repositoryRoot;
 
     public VsTools(
         IPipeClient pipe,
         IChatEngine chatEngine,
         ILogger logger,
         IBridgeToolInventoryService? toolInventory = null,
-        IBridgeToolExecutor? bridgeToolExecutor = null)
+        IBridgeToolExecutor? bridgeToolExecutor = null,
+        string? repositoryRoot = null)
     {
         _pipe = pipe;
         _chatEngine = chatEngine;
         _toolInventory = toolInventory ?? EmptyBridgeToolInventoryService.Instance;
         _bridgeToolExecutor = bridgeToolExecutor ?? EmptyBridgeToolExecutor.Instance;
         _logger = logger;
+        _repositoryRoot = Path.GetFullPath(repositoryRoot ?? Directory.GetCurrentDirectory());
     }
 
     private static readonly JsonSerializerOptions InventoryJsonOptions = new(JsonSerializerDefaults.Web)
@@ -174,6 +180,154 @@ public sealed class VsTools
                 requestId,
                 stopwatch.ElapsedMilliseconds);
             throw;
+        }
+    }
+
+    [McpServerTool(Name = "bridge_select_repo_documents")]
+    [Description("Selects deterministic repo-root-relative document metadata from explicit include/exclude patterns. Does not return file contents, search content, execute bridge tools, or mutate state.")]
+    public string SelectRepoDocuments(
+        [Description("Explicit repo-root-relative include glob patterns, such as docs/blogs/*.md or docs/session-handoffs/2026-05-16-blogai-*.md. Broad root crawls such as **/* are rejected.")] string[] includePatterns,
+        [Description("Optional repo-root-relative exclude glob patterns.")] string[]? excludePatterns = null,
+        [Description("Optional maximum number of selected files to return. Must be greater than zero when provided.")] int? maxFiles = null,
+        [Description("Optional category hints aligned by index with includePatterns.")] string[]? categoryHints = null,
+        CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP bridge_select_repo_documents started [RequestId={RequestId}] [IncludePatternCount={IncludePatternCount}].",
+            requestId,
+            includePatterns?.Length ?? 0);
+
+        try
+        {
+            if (includePatterns is not { Length: > 0 })
+            {
+                return SerializeDocumentSelectionFailure(
+                    requestId,
+                    "InvalidRequest",
+                    "bridge_select_repo_documents requires at least one explicit include pattern.",
+                    stopwatch);
+            }
+
+            if (maxFiles.HasValue && maxFiles.Value <= 0)
+            {
+                return SerializeDocumentSelectionFailure(
+                    requestId,
+                    "InvalidRequest",
+                    "bridge_select_repo_documents maxFiles must be greater than zero when provided.",
+                    stopwatch);
+            }
+
+            var includeSpecs = includePatterns
+                .Select((pattern, index) => CreateDocumentSelectionPattern(pattern, categoryHints?.ElementAtOrDefault(index), isInclude: true))
+                .ToArray();
+            var excludeSpecs = (excludePatterns ?? Array.Empty<string>())
+                .Select(pattern => CreateDocumentSelectionPattern(pattern, categoryHint: null, isInclude: false))
+                .ToArray();
+            var selected = new Dictionary<string, BridgeDocumentSelectionCandidate>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var includeSpec in includeSpecs)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                foreach (var candidatePath in EnumerateDocumentSelectionCandidates(includeSpec, ct))
+                {
+                    var relativePath = ToRepoRelativePath(candidatePath);
+                    if (string.IsNullOrWhiteSpace(relativePath)
+                        || IsIgnoredDocumentSelectionPath(relativePath)
+                        || !includeSpec.IsMatch(relativePath)
+                        || excludeSpecs.Any(excludeSpec => excludeSpec.IsMatch(relativePath)))
+                    {
+                        continue;
+                    }
+
+                    if (!selected.ContainsKey(relativePath))
+                    {
+                        selected[relativePath] = new BridgeDocumentSelectionCandidate(
+                            candidatePath,
+                            relativePath,
+                            includeSpec.Pattern,
+                            includeSpec.CategoryHint);
+                    }
+                }
+            }
+
+            var orderedCandidates = selected.Values
+                .OrderBy(candidate => candidate.RelativePath, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(candidate => candidate.RelativePath, StringComparer.Ordinal)
+                .ToArray();
+            var limited = maxFiles.HasValue && orderedCandidates.Length > maxFiles.Value;
+            var returnedCandidates = maxFiles.HasValue
+                ? orderedCandidates.Take(maxFiles.Value).ToArray()
+                : orderedCandidates;
+            var documents = returnedCandidates
+                .Select(ToDocumentSelectionItem)
+                .ToArray();
+
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP bridge_select_repo_documents completed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [SelectedCount={SelectedCount}] [ReturnedCount={ReturnedCount}] [Limited={Limited}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds,
+                orderedCandidates.Length,
+                documents.Length,
+                limited);
+
+            return JsonSerializer.Serialize(
+                new BridgeDocumentSelection
+                {
+                    Success = true,
+                    RequestId = requestId,
+                    ToolName = "bridge_select_repo_documents",
+                    CapturedAtUtc = DateTimeOffset.UtcNow,
+                    RepositoryRoot = _repositoryRoot,
+                    IncludePatterns = includeSpecs.Select(spec => spec.Pattern).ToArray(),
+                    ExcludePatterns = excludeSpecs.Select(spec => spec.Pattern).ToArray(),
+                    MaxFiles = maxFiles,
+                    CandidateCount = orderedCandidates.Length,
+                    SelectedCount = documents.Length,
+                    Limited = limited,
+                    Documents = documents
+                },
+                InventoryJsonOptions);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP bridge_select_repo_documents canceled [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (ArgumentException ex)
+        {
+            return SerializeDocumentSelectionFailure(requestId, "InvalidRequest", ex.Message, stopwatch);
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP bridge_select_repo_documents failed [RequestId={RequestId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                stopwatch.ElapsedMilliseconds);
+
+            return JsonSerializer.Serialize(
+                new BridgeDocumentSelection
+                {
+                    Success = false,
+                    RequestId = requestId,
+                    ToolName = "bridge_select_repo_documents",
+                    CapturedAtUtc = DateTimeOffset.UtcNow,
+                    RepositoryRoot = _repositoryRoot,
+                    ErrorCode = "DocumentSelectionFailed",
+                    Message = "MCP document selection failed. Review the MCP log for details."
+                },
+                InventoryJsonOptions);
         }
     }
 
@@ -895,6 +1049,288 @@ public sealed class VsTools
         public int ToolCount { get; set; }
 
         public IReadOnlyList<BridgeToolInventoryItem> Tools { get; set; } = Array.Empty<BridgeToolInventoryItem>();
+    }
+
+    private string SerializeDocumentSelectionFailure(string requestId, string errorCode, string message, Stopwatch stopwatch)
+    {
+        stopwatch.Stop();
+        _logger.LogWarning(
+            "MCP bridge_select_repo_documents returned failure [RequestId={RequestId}] [ElapsedMs={ElapsedMs}] [ErrorCode={ErrorCode}].",
+            requestId,
+            stopwatch.ElapsedMilliseconds,
+            errorCode);
+
+        return JsonSerializer.Serialize(
+            new BridgeDocumentSelection
+            {
+                Success = false,
+                RequestId = requestId,
+                ToolName = "bridge_select_repo_documents",
+                CapturedAtUtc = DateTimeOffset.UtcNow,
+                RepositoryRoot = _repositoryRoot,
+                ErrorCode = errorCode,
+                Message = message
+            },
+            InventoryJsonOptions);
+    }
+
+    private BridgeDocumentSelectionItem ToDocumentSelectionItem(BridgeDocumentSelectionCandidate candidate)
+    {
+        var fileInfo = new FileInfo(candidate.FullPath);
+        return new BridgeDocumentSelectionItem
+        {
+            RelativePath = candidate.RelativePath,
+            SourcePattern = candidate.SourcePattern,
+            CategoryHint = candidate.CategoryHint,
+            SizeBytes = fileInfo.Length,
+            LineCount = TryCountLines(candidate.FullPath)
+        };
+    }
+
+    private IEnumerable<string> EnumerateDocumentSelectionCandidates(DocumentSelectionPattern spec, CancellationToken ct)
+    {
+        if (!spec.HasWildcard)
+        {
+            var exactPath = Path.GetFullPath(Path.Combine(_repositoryRoot, spec.Pattern.Replace('/', Path.DirectorySeparatorChar)));
+            if (IsUnderRepositoryRoot(exactPath) && File.Exists(exactPath))
+            {
+                yield return exactPath;
+            }
+
+            yield break;
+        }
+
+        var basePath = Path.GetFullPath(Path.Combine(_repositoryRoot, spec.BaseDirectory.Replace('/', Path.DirectorySeparatorChar)));
+        if (!IsUnderRepositoryRoot(basePath) || !Directory.Exists(basePath))
+        {
+            yield break;
+        }
+
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            MatchCasing = MatchCasing.CaseInsensitive,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
+        };
+
+        foreach (var path in Directory.EnumerateFiles(basePath, "*", options))
+        {
+            ct.ThrowIfCancellationRequested();
+            var relativePath = ToRepoRelativePath(path);
+            if (!IsIgnoredDocumentSelectionPath(relativePath))
+            {
+                yield return path;
+            }
+        }
+    }
+
+    private string ToRepoRelativePath(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        if (!IsUnderRepositoryRoot(fullPath))
+        {
+            return string.Empty;
+        }
+
+        return Path.GetRelativePath(_repositoryRoot, fullPath).Replace('\\', '/');
+    }
+
+    private bool IsUnderRepositoryRoot(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var root = _repositoryRoot.EndsWith(Path.DirectorySeparatorChar)
+            ? _repositoryRoot
+            : _repositoryRoot + Path.DirectorySeparatorChar;
+        return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(fullPath, _repositoryRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DocumentSelectionPattern CreateDocumentSelectionPattern(string pattern, string? categoryHint, bool isInclude)
+    {
+        var normalizedPattern = NormalizeDocumentSelectionPattern(pattern, isInclude);
+        var wildcardIndex = normalizedPattern.IndexOfAny(['*', '?']);
+        var hasWildcard = wildcardIndex >= 0;
+        var baseDirectory = hasWildcard
+            ? GetWildcardBaseDirectory(normalizedPattern, wildcardIndex)
+            : Path.GetDirectoryName(normalizedPattern)?.Replace('\\', '/') ?? string.Empty;
+
+        return new DocumentSelectionPattern(
+            normalizedPattern,
+            baseDirectory,
+            categoryHint,
+            hasWildcard,
+            GlobToRegex(normalizedPattern));
+    }
+
+    private static string NormalizeDocumentSelectionPattern(string pattern, bool isInclude)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            throw new ArgumentException("Document selection patterns must not be empty.", nameof(pattern));
+        }
+
+        var normalized = pattern.Trim().Replace('\\', '/').TrimStart('/');
+        if (Path.IsPathRooted(pattern) || Regex.IsMatch(normalized, "^[A-Za-z]:", RegexOptions.CultureInvariant))
+        {
+            throw new ArgumentException("Document selection patterns must be repo-root-relative.", nameof(pattern));
+        }
+
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || segments.Any(segment => segment == "." || segment == ".."))
+        {
+            throw new ArgumentException("Document selection patterns must not contain current-directory or parent-directory segments.", nameof(pattern));
+        }
+
+        var broadPatterns = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "*",
+            "*.*",
+            "**",
+            "**/*",
+            "**/*.*"
+        };
+
+        if (isInclude && broadPatterns.Contains(normalized))
+        {
+            throw new ArgumentException("Document selection include patterns must target an explicit repo subset, not the whole repository.", nameof(pattern));
+        }
+
+        if (isInclude && normalized.IndexOfAny(['*', '?']) >= 0 && !normalized.Contains('/', StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Wildcard document selection include patterns must include an explicit directory segment.", nameof(pattern));
+        }
+
+        return normalized;
+    }
+
+    private static string GetWildcardBaseDirectory(string normalizedPattern, int wildcardIndex)
+    {
+        var slashIndex = normalizedPattern.LastIndexOf('/', wildcardIndex);
+        if (slashIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        return normalizedPattern[..slashIndex];
+    }
+
+    private static Regex GlobToRegex(string pattern)
+    {
+        var builder = new StringBuilder("^");
+        for (var i = 0; i < pattern.Length; i++)
+        {
+            var current = pattern[i];
+            if (current == '*')
+            {
+                if (i + 1 < pattern.Length && pattern[i + 1] == '*')
+                {
+                    if (i + 2 < pattern.Length && pattern[i + 2] == '/')
+                    {
+                        builder.Append("(?:.*/)?");
+                        i += 2;
+                    }
+                    else
+                    {
+                        builder.Append(".*");
+                        i++;
+                    }
+                }
+                else
+                {
+                    builder.Append("[^/]*");
+                }
+            }
+            else if (current == '?')
+            {
+                builder.Append("[^/]");
+            }
+            else
+            {
+                builder.Append(Regex.Escape(current.ToString()));
+            }
+        }
+
+        builder.Append('$');
+        return new Regex(builder.ToString(), RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+    }
+
+    private static bool IsIgnoredDocumentSelectionPath(string relativePath)
+    {
+        var segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return segments.Any(segment => IgnoredDocumentSelectionDirectoryNames.Contains(segment, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static int? TryCountLines(string path)
+    {
+        try
+        {
+            return File.ReadLines(path).Count();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private sealed record DocumentSelectionPattern(
+        string Pattern,
+        string BaseDirectory,
+        string? CategoryHint,
+        bool HasWildcard,
+        Regex Regex)
+    {
+        public bool IsMatch(string relativePath) => Regex.IsMatch(relativePath);
+    }
+
+    private sealed record BridgeDocumentSelectionCandidate(
+        string FullPath,
+        string RelativePath,
+        string SourcePattern,
+        string? CategoryHint);
+
+    private sealed class BridgeDocumentSelection
+    {
+        public bool Success { get; set; }
+
+        public string RequestId { get; set; } = string.Empty;
+
+        public string ToolName { get; set; } = string.Empty;
+
+        public DateTimeOffset CapturedAtUtc { get; set; }
+
+        public string RepositoryRoot { get; set; } = string.Empty;
+
+        public IReadOnlyList<string> IncludePatterns { get; set; } = Array.Empty<string>();
+
+        public IReadOnlyList<string> ExcludePatterns { get; set; } = Array.Empty<string>();
+
+        public int? MaxFiles { get; set; }
+
+        public int CandidateCount { get; set; }
+
+        public int SelectedCount { get; set; }
+
+        public bool Limited { get; set; }
+
+        public IReadOnlyList<BridgeDocumentSelectionItem> Documents { get; set; } = Array.Empty<BridgeDocumentSelectionItem>();
+
+        public string? ErrorCode { get; set; }
+
+        public string? Message { get; set; }
+    }
+
+    private sealed class BridgeDocumentSelectionItem
+    {
+        public string RelativePath { get; set; } = string.Empty;
+
+        public string SourcePattern { get; set; } = string.Empty;
+
+        public string? CategoryHint { get; set; }
+
+        public long SizeBytes { get; set; }
+
+        public int? LineCount { get; set; }
     }
 
     private sealed class EmptyBridgeToolInventoryService : IBridgeToolInventoryService
