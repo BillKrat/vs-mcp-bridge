@@ -115,6 +115,7 @@ For the BlogAI globalization/localization stance, read `docs/adr/0003-blogai-glo
 For the readiness review before implementing the minimal BlogAI Blazor Web App shell, read `docs/session-handoffs/2026-05-17-blogai-blazor-readiness-review.md`.
 For the initial minimal BlogAI Blazor shell, inspect `BlogAI.Web`; it is local/dev only and keeps components presentation-focused.
 For durable validation evidence of the initial BlogAI Blazor shell, read `docs/session-handoffs/2026-05-17-blogai-blazor-shell-validation.md`.
+For the first successful `BlogAI.Web` WebDeploy validation to `https://api.global-webnet.com`, read `docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`.
 For the local/dev BlogAI auth UI integration design, read `docs/blogai-local-auth-ui-integration-design.md`.
 For the readiness review before implementing the local/dev BlogAI auth UI display boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md`.
 For the initial local/dev BlogAI auth UI display boundary, inspect `BlogAI.Web/Auth` and `BlogAI.Web/Components/Pages/LocalDev.razor`.
