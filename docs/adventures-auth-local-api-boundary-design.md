@@ -28,6 +28,29 @@ The boundary should translate API requests into `AdventuresAuthRequest` values, 
 
 The boundary should not contain BlogAI-specific route authorization rules. BlogAI remains responsible for deciding which resources are public or protected and for mapping an auth decision to a BlogAI response.
 
+## Preferred Host Style
+
+The future local/dev host should prefer ASP.NET Core Minimal APIs.
+
+Rationale:
+
+- the prototype is local/dev only
+- the endpoint surface is small
+- lower ceremony keeps the boundary visible
+- `Program.cs` can show the complete `/auth` transport surface in one place
+- the style matches the current minimal implementation philosophy
+
+MVC controllers are deferred unless later endpoint complexity justifies that extra structure.
+
+Expected Minimal API shape:
+
+- `Program.cs` maps an `/auth` endpoint group
+- endpoint handlers remain thin transport adapters
+- endpoint handlers delegate to shared `AdventuresAuth` services or interfaces
+- auth decision logic stays out of endpoint lambdas
+- request/response DTO mapping may live near the host boundary
+- service registration should reuse the shared auth service layer where practical
+
 ## Conceptual Endpoints
 
 These endpoints are conceptual only. They are not implementation-approved by this document.
@@ -81,6 +104,7 @@ The response should expose only what a consumer needs to make a local authorizat
 
 The local API boundary should:
 
+- expose the local/dev host through ASP.NET Core Minimal APIs unless a later design changes that
 - translate HTTP request data into an `AdventuresAuthRequest`
 - preserve or generate correlation metadata
 - invoke `AdventuresAuthDecisionService`
@@ -94,6 +118,7 @@ The local API boundary should:
 
 The local API boundary should not:
 
+- put auth decision logic directly in endpoint lambdas
 - own BlogAI-specific route protection rules
 - decide whether a BlogAI resource is public or protected
 - create production identity semantics
@@ -155,8 +180,10 @@ Explicitly out of scope:
 
 If approved later, the first implementation slice should be narrow:
 
-- create a local minimal API host skeleton
+- create a local ASP.NET Core Minimal API host skeleton
+- map `/auth` as a Minimal API endpoint group in `Program.cs`
 - use the existing `AdventuresAuthDecisionService`
+- keep endpoint handlers thin and delegate to shared `AdventuresAuth` services
 - keep in-memory/dev credential behavior only
 - expose only local/dev endpoint behavior needed for validation
 - include tests for unauthenticated denied, valid development auth allowed, and invalid auth denied

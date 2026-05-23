@@ -24,6 +24,7 @@ This review is documentation only. It does not create an API host or project, ad
 | API boundary purpose | Pass | The API design limits the next boundary to exposing the existing `AdventuresAuthDecisionService` through a local/dev API-shaped surface while keeping BlogAI as the first consumer. | Restate local/dev-only purpose before coding. |
 | Local/dev-only scope | Pass | The design explicitly excludes production deployment, certificates, DNS, gateway, cloud routing, persistence, OAuth/OpenID, RBAC, and BlogEngine.NET coupling. | Stop if any production or deployment decision becomes necessary. |
 | Endpoint concepts | Pass | Conceptual `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, and `POST /auth/validate` are defined without approving endpoint implementation in the design slice. | Implement only local/dev semantics if the next slice is approved. |
+| Host style | Pass | The preferred future host style is ASP.NET Core Minimal APIs, with `Program.cs` mapping an `/auth` endpoint group and thin handlers delegating to shared `AdventuresAuth` services. | Defer MVC controllers unless endpoint complexity later justifies them. |
 | Correlation requirements | Pass | Required fields are defined as `CorrelationId`, `RequestId`, `AuthDecisionId`, `ClientApplication`, and `Environment`; supplied values are preserved and absent identifiers are generated as non-secret values. | Tests should prove preservation and generated-id behavior if generation is implemented. |
 | Redaction/audit expectations | Pass | Existing trace artifacts prove redaction/correlation behavior in the in-process skeleton and BlogAI consumer, and the API design requires redaction before durable logs, prompts, traces, or artifacts. | API host tests should verify no raw token/secret values appear in logs or response metadata. |
 | BlogAI responsibility split | Pass | The design keeps BlogAI responsible for route/resource protection and response mapping, while the API boundary owns only auth decision translation and invocation. | Do not put BlogAI route authorization rules inside the API boundary. |
@@ -41,7 +42,7 @@ The repo has enough design, implemented shared auth behavior, interface-driven B
 
 Recommended next slice:
 
-Create a minimal local/dev `AdventuresAuth` API host skeleton.
+Create a minimal local/dev `AdventuresAuth` API host skeleton using ASP.NET Core Minimal APIs.
 
 Scope:
 
@@ -51,6 +52,10 @@ Scope:
 - no RBAC
 - no persistence or database
 - no BlogEngine.NET coupling
+- prefer Minimal APIs over MVC controllers
+- map `/auth` as an endpoint group in `Program.cs`
+- keep endpoint handlers thin
+- keep auth decision logic in shared `AdventuresAuth` services or interfaces
 - use existing `AdventuresAuthDecisionService`
 - preserve current redaction and audit expectations
 - preserve correlation fields across the API boundary
@@ -79,6 +84,7 @@ Stop and return to design if implementation requires:
 - external identity provider integration
 - BlogEngine.NET auth coupling
 - BlogAI route authorization rules inside the API boundary
+- auth decision logic directly inside endpoint lambdas
 
 ## Resume Guidance
 
