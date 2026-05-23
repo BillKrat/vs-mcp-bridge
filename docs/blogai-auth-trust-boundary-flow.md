@@ -116,3 +116,5 @@ Explicitly deferred:
 This slice only sketches future boundaries.
 
 No auth implementation is approved here. The next useful step remains documentation: define concrete auth flows, trust boundaries, callers, protected operations, secrets, audit events, and failure modes. Only after that boundary is explicit should a minimal local authentication prototype be considered.
+
+The first proposed implementation boundary is captured in `docs/adr/0001-blogai-first-auth-boundary.md`.

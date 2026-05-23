@@ -60,6 +60,7 @@ The near-term work should answer simpler questions first:
 Architecture notes and trust-boundary diagrams should come before implementation.
 
 The first trust-boundary sketch is `docs/blogai-auth-trust-boundary-flow.md`.
+The first implementation boundary decision record is `docs/adr/0001-blogai-first-auth-boundary.md`.
 
 ## Possible Future Ownership For api.global-webnet.com
 
