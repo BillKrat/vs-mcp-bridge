@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant Caller as "Codex helper"
+    participant MCP as "VsMcpBridge.McpServer stdio"
+    participant Wrapper as "bridge_preview_document_update"
+    participant Executor as "BridgeToolExecutor"
+    participant Tool as "PreviewDocumentUpdateTool"
+    participant Doc as "docs/preview-only-document-update-tool-design.md"
+    participant RepoEdit as "Normal Codex repo edit"
+
+    Caller->>MCP: initialize via official MCP .NET client
+    MCP-->>Caller: serverInfo "VsMcpBridge.McpServer 1.0.0.0"
+    Caller->>MCP: tools/list
+    MCP-->>Caller: 21 tools including bridge_preview_document_update
+    Caller->>Wrapper: tools/call targetPath plus expectedContentHash plus replacementContent
+    Wrapper->>Executor: ExecuteAsync bridge.previewDocumentUpdate
+    Executor->>Tool: Execute preview-only request
+    Tool->>Doc: Read explicit target file
+    Doc-->>Tool: Current content
+    Tool->>Tool: Match expected SHA-256 and build deterministic unified diff
+    Tool-->>Executor: PreviewGenerated previewOnly=true
+    Executor-->>Wrapper: Structured BridgeToolResult
+    Wrapper-->>Caller: Preview generated; no files written
+    Caller->>Doc: Hash check after preview
+    Doc-->>Caller: Hash unchanged
+    Caller->>Wrapper: Repeat preview, no-op check, drift check
+    Wrapper-->>Caller: Deterministic diff, NoOp, DriftDetected
+    Caller->>Doc: Hash check after all MCP calls
+    Doc-->>Caller: Hash unchanged
+    Caller->>RepoEdit: Apply accepted documentation change through normal Codex editing
+    RepoEdit->>Doc: Write accepted section outside MCP

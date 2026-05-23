@@ -25,6 +25,10 @@ Implemented as of the preview-only document update slice:
 This implementation remains preview-only.
 It does not write files, apply patches, mutate repository state, change MCP transport, or change approval behavior.
 
+## Real Workflow Evidence
+
+A direct MCP stdio workflow has now previewed a real documentation update against this file before any normal repository edit was made. That run preserved the boundary: MCP generated a deterministic preview and wrote no files; any accepted content change remained a separate Codex repository edit.
+
 ## Scope
 
 The preview tool exists to prove the safety shape before any MCP apply/write tool exists:

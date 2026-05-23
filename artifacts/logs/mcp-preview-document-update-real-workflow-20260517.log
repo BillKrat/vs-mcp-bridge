@@ -1,0 +1,84 @@
+Run: mcp-preview-document-update-real-workflow-20260517
+Captured: 2026-05-23
+Repository: Y:\vs-mcp-bridge
+Branch: main
+Starting HEAD: f3ad9a2 Implement preview-only document update tool
+Workflow goal: prove bridge_preview_document_update on a real documentation target before any apply/write MCP tool exists.
+
+Checkpoint:
+- git status --short --branch: ## main...origin/main
+- git log --oneline -8:
+  - f3ad9a2 Implement preview-only document update tool
+  - 2ff8d9e Design preview-only document update tool
+  - 4401cec Document controlled MCP mutation threshold
+  - c272bf9 Annotate representative evidence docs
+  - a12cacc Document evidence classification guidance
+  - a95622f Capture BlogAI search workflow with document selection
+  - 83a79ab Add explicit repo document selection helper
+  - 207e584 Document MCP search workflow ergonomics gaps
+
+Target:
+- docs/preview-only-document-update-tool-design.md
+- selected because it already describes the preview-only contract and genuinely benefits from a short real-workflow evidence note after the first direct MCP stdio use on a real repository document.
+
+MCP invocation path:
+- Initial raw Content-Length JSON-RPC helper attempt timed out before initialize. No repository file changed. This was treated as helper friction, not proof of MCP server failure.
+- Successful run used the repo-established official MCP .NET client path with StdioClientTransport.
+- Server info: VsMcpBridge.McpServer 1.0.0.0
+- tools/list count: 21
+- tools/list included bridge_preview_document_update: yes
+
+Preview input summary:
+- MCP tool: bridge_preview_document_update
+- targetPath: docs/preview-only-document-update-tool-design.md
+- expected state mode: expectedContentHash
+- expected SHA-256: f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae
+- replacement mode: full replacementContent
+- proposed update: insert a short "Real Workflow Evidence" section after Implementation Status.
+
+Observed preview result:
+- success: true
+- status: PreviewGenerated
+- previewOnly: true
+- expectedMatched: true
+- changedLineCount: 460
+- deterministicDiff: true on repeated identical preview call
+- message: Preview generated. No files were written.
+
+No-write checks:
+- target hash before preview: f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae
+- target hash after preview call: f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae
+- target hash after preview, repeated preview, no-op, and drift calls: f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae
+- MCP wrote files: no
+- MCP applied patches: no
+- Codex later edited the repository normally: yes
+
+Drift and no-op behavior:
+- no-op call used the same expectedContentHash with replacementContent equal to current content.
+- no-op result: success=true, status=NoOp.
+- drift call used an intentionally wrong expectedContentHash.
+- drift result: success=false, status=DriftDetected, errorCode=DriftDetected.
+- target hash remained unchanged after both calls.
+
+Useful diff excerpt:
+--- a/docs/preview-only-document-update-tool-design.md
++++ b/docs/preview-only-document-update-tool-design.md
+@@ -... +... @@
+ This implementation remains preview-only.
+ context: It does not write files, apply patches, mutate repository state, change MCP transport, or change approval behavior.
+
++## Real Workflow Evidence
++
++A direct MCP stdio workflow has now previewed a real documentation update against this file before any normal repository edit was made. That run preserved the boundary: MCP generated a deterministic preview and wrote no files; any accepted content change remained a separate Codex repository edit.
++
+ ## Scope
+
+Friction and gaps:
+- The tool's current unified diff is deterministic but not minimal; for a full-document preview it reports the entire file removed and re-added, producing changedLineCount=460 for a one-section insertion.
+- Direct raw JSON-RPC framing from the ad hoc Node helper did not initialize cleanly; the official MCP client path worked and should remain the preferred repeatable validation path.
+- The MCP wrapper currently generates requestId and operationId internally; caller-supplied deterministic IDs were not available through this wrapper signature.
+
+Boundary conclusion:
+- MCP preview generated the proposed diff and did not mutate the target.
+- The accepted documentation change was applied only afterward through normal Codex repository editing.
+- No apply/write MCP tool was implemented or invoked.
