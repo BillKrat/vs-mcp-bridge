@@ -81,6 +81,10 @@ The MCP server also exposes `bridge_bm25_text_search` as a safe diagnostic wrapp
 Callers must provide explicit in-memory documents or entries through the MCP request; the wrapper does not crawl files, accept paths, mutate state, call ChatEngine, or use the VSIX named pipe.
 This wrapper also routes through `BridgeToolExecutor`, preserving the same policy, approval, secret-reference, redaction, audit, manifest, and correlation boundaries as other executable bridge tools.
 The durable MCP BM25-search evidence is `artifacts/logs/mcp-bm25-search-trace-20260516.*`, `docs/diagrams/mcp-bm25-search-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`.
+MCP-assisted repository mutation remains future threshold work, not current behavior.
+Current MCP analysis/search diagnostics may select metadata, search explicit text, rank explicit documents, and return evidence, but they do not write repository files.
+Codex repository edits still happen through normal repository workflows.
+Before any MCP mutation tool is introduced, it must satisfy the architectural threshold in `docs/mcp-controlled-mutation-threshold.md`, including explicit manifests, capability metadata, approval requirement, audit classification, deterministic target selection, before/after preview, dry-run/preview mode, no silent writes, durable evidence, and recovery guidance where practical.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

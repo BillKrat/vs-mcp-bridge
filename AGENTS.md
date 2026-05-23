@@ -32,6 +32,7 @@ Use targeted docs as needed:
 - Keep vertical slices incremental. Do not introduce broad framework, transport, auth, sandboxing, persistence, or UI redesign work inside unrelated slices.
 - Keep proposal mutation safety intact: AI tools suggest or propose; validated approval/apply flows mutate.
 - Preserve `BridgeToolExecutor` as the shared bridge tool execution, policy, approval, redaction, and audit boundary.
+- Treat MCP repository mutation tools as future threshold work only. See `docs/mcp-controlled-mutation-threshold.md`; current MCP search/diagnostic tools must remain read-only and explicit-input.
 - Treat MEF bridge tool support as discovery-only unless a future explicit design slice changes that.
 - During MCP/tooling triage, call `bridge_get_tool_inventory` early when available. It is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata, currently including compiled tools such as `bridge.bm25TextSearch` and `bridge.regexTextSearch`, without executing bridge tools.
 - Use `bridge_select_repo_documents` only for deterministic repo-root-relative metadata selection before explicit-input search workflows. It does not search content, rank relevance, mutate files, or replace caller review of selected documents.
