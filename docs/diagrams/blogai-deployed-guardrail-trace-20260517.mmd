@@ -18,7 +18,10 @@ sequenceDiagram
     Operator->>WebDeploy: dotnet publish with profile
     WebDeploy-->>Operator: 401 Unauthorized, no update applied
 
+    Operator->>WebDeploy: dotnet publish with profile and explicit env-sourced credential
+    WebDeploy-->>Operator: Publish Succeeded
+
     Operator->>Deployed: GET /
-    Deployed-->>Operator: 200, guardrail still missing
+    Deployed-->>Operator: 200, guardrail rendered
     Operator->>Deployed: GET /local-dev
-    Deployed-->>Operator: 200, guardrail still missing
+    Deployed-->>Operator: 200, guardrail rendered

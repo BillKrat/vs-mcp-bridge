@@ -4,6 +4,7 @@ Observed date: 2026-05-23
 Repository: Y:/vs-mcp-bridge
 Branch: main
 Starting HEAD: 6a6add2 Document Auth API admin boundary
+Successful retry checkpoint: 1441d5e Add BlogAI deployed guardrail validation evidence
 
 Scope
 - Capture durable evidence for the BlogAI.Web deployed-environment guardrail banner.
@@ -65,19 +66,32 @@ WebDeploy attempt
 - Non-secret failure text: MSDEPLOY ERROR_USER_UNAUTHORIZED; remote server returned 401 Unauthorized.
 - Retries attempted: 0
 
-Final deployed smoke validation
+WebDeploy retry
+- Repo path used: \\Mac\Dev\vs-mcp-bridge
+- Command shape: dotnet publish ./BlogAI.Web/BlogAI.Web.csproj -c Release /p:PublishProfile=apiglobalwebnet /p:UserName="billkrat-001" /p:Password="[ENV_VAR_MASKED]"
+- Password source: $env:AdventuresOnTheEdgeDP
+- Secret values printed: no
+- Result: Publish Succeeded
+- Exit code: 0
+- Existing warnings: 11 nullable warnings in VsMcpBridge.Shared
+- Warning files: LogToolWindowPresenter.cs, ProposalManager.cs
+- Warning codes: CS8601, CS8602, CS8603, CS8604
+- Errors: 0
+- Retries attempted after this retry: 0
+
+Final deployed smoke validation after successful retry
 - Deployed host: https://api.global-webnet.com
 - / status: 200
-- / guardrail rendered: no
-- / diagnostic-only/not-production-auth text rendered: no
+- / guardrail rendered: yes
+- / diagnostic-only/not-production-auth text rendered: yes
 - / raw credential/token/secret/header/password sentinel rendered: no
 - /local-dev status: 200
-- /local-dev guardrail rendered: no
-- /local-dev diagnostic-only/not-production-auth text rendered: no
+- /local-dev guardrail rendered: yes
+- /local-dev diagnostic-only/not-production-auth text rendered: yes
 - /local-dev raw credential/token/secret/header/password sentinel rendered: no
 
 Conclusion
 - Local BlogAI.Web guardrail behavior is validated.
-- Deployed BlogAI.Web guardrail behavior is not validated because the deployed site still serves the previous build.
-- The deploy blocker is WebDeploy authorization, not application build or local rendering behavior.
-- No further deploy attempt should occur until publish credentials are confirmed through a secret-safe path.
+- Deployed BlogAI.Web guardrail behavior is validated after one explicit WebDeploy retry.
+- The retry used a secret-safe environment variable path and did not print the password value.
+- No runtime code changes were made for this evidence update.

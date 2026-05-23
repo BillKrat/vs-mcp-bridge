@@ -2,17 +2,48 @@
   "runName": "blogai-deployed-guardrail-trace-20260517",
   "observedDate": "2026-05-23",
   "repository": "Y:/vs-mcp-bridge",
+  "retryRepository": "\\\\Mac\\Dev\\vs-mcp-bridge",
   "branch": "main",
   "startingHead": "6a6add2 Document Auth API admin boundary",
+  "successfulRetryCheckpoint": "1441d5e Add BlogAI deployed guardrail validation evidence",
   "scope": "Validate local and deployed BlogAI.Web guardrail rendering without adding runtime behavior.",
   "runtimeCodeChanged": false,
   "redeployAttempted": true,
   "redeployReason": "The current deployed site did not include the guardrail.",
   "deployProfile": "apiglobalwebnet",
-  "deployExitCode": 1,
-  "deployResult": "Failed",
-  "deployFailureCategory": "Unauthorized",
-  "deployFailureText": "MSDEPLOY ERROR_USER_UNAUTHORIZED; remote server returned 401 Unauthorized.",
+  "deployExitCode": 0,
+  "deployResult": "Publish Succeeded",
+  "deployFailureCategory": null,
+  "deployFailureText": null,
+  "initialDeployAttempt": {
+    "commandShape": "dotnet publish ./BlogAI.Web/BlogAI.Web.csproj -c Release /p:PublishProfile=apiglobalwebnet",
+    "exitCode": 1,
+    "result": "Failed",
+    "failureCategory": "Unauthorized",
+    "failureText": "MSDEPLOY ERROR_USER_UNAUTHORIZED; remote server returned 401 Unauthorized.",
+    "retriesAttempted": 0
+  },
+  "successfulDeployRetry": {
+    "repoPath": "\\\\Mac\\Dev\\vs-mcp-bridge",
+    "commandShape": "dotnet publish ./BlogAI.Web/BlogAI.Web.csproj -c Release /p:PublishProfile=apiglobalwebnet /p:UserName=\"billkrat-001\" /p:Password=\"[ENV_VAR_MASKED]\"",
+    "passwordSource": "$env:AdventuresOnTheEdgeDP",
+    "exitCode": 0,
+    "result": "Publish Succeeded",
+    "warnings": 11,
+    "warningProject": "VsMcpBridge.Shared",
+    "warningFiles": [
+      "LogToolWindowPresenter.cs",
+      "ProposalManager.cs"
+    ],
+    "warningCodes": [
+      "CS8601",
+      "CS8602",
+      "CS8603",
+      "CS8604"
+    ],
+    "errors": 0,
+    "retriesAttemptedAfterRetry": 0
+  },
   "secretsPrinted": false,
   "publishProfilesCommitted": false,
   "validation": {
@@ -52,20 +83,20 @@
       {
         "url": "https://api.global-webnet.com/",
         "statusCode": 200,
-        "guardrailRendered": false,
+        "guardrailRendered": true,
         "diagnosticOnlyRendered": false,
-        "notProductionAuthRendered": false,
+        "notProductionAuthRendered": true,
         "sentinelRendered": false
       },
       {
         "url": "https://api.global-webnet.com/local-dev",
         "statusCode": 200,
-        "guardrailRendered": false,
+        "guardrailRendered": true,
         "diagnosticOnlyRendered": false,
-        "notProductionAuthRendered": false,
+        "notProductionAuthRendered": true,
         "sentinelRendered": false
       }
     ]
   },
-  "conclusion": "Local guardrail behavior is validated; deployed guardrail behavior remains blocked by WebDeploy authorization."
+  "conclusion": "Local and deployed guardrail behavior are validated after one explicit successful WebDeploy retry."
 }
