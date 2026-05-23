@@ -1,0 +1,70 @@
+{
+  "runId": "blogai-route-protected-placeholder-trace-20260517",
+  "artifactType": "blogai-route-protected-placeholder-validation",
+  "observedAtUtc": "2026-05-23T17:18:00Z",
+  "repository": "Y:/vs-mcp-bridge",
+  "commitUnderTest": "7999cb7",
+  "project": "BlogAI.Web/BlogAI.Web.csproj",
+  "route": "/local-dev",
+  "validation": {
+    "buildSucceeded": true,
+    "sharedTestsPassed": true,
+    "sharedTestsPassedCount": 304,
+    "homeRouteStatusCode": 200,
+    "localDevRouteStatusCode": 200,
+    "unauthenticatedLabelRendered": true,
+    "developmentAuthenticatedLabelRendered": true,
+    "deniedProtectedPlaceholderHiddenRendered": true,
+    "developmentAuthenticatedProtectedPlaceholderShownRendered": true,
+    "correlationIdRendered": true,
+    "requestIdRendered": true,
+    "authDecisionIdRendered": true,
+    "rawDevCredentialRendered": false,
+    "rawTokenRendered": false,
+    "secretSentinelRendered": false,
+    "authorizationHeaderSentinelRendered": false,
+    "passwordSentinelRendered": false,
+    "productionDeploymentAdded": false,
+    "oauthOpenIdRbacAdded": false,
+    "persistenceOrDatabaseAdded": false,
+    "blogEngineCouplingAdded": false,
+    "authMiddlewareAdded": false
+  },
+  "safeRenderedLabels": [
+    "Unauthenticated local request",
+    "Development-authenticated local request",
+    "Hidden for this denied local decision.",
+    "Local protected placeholder content is shown for this display-safe decision.",
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId"
+  ],
+  "notRenderedSensitiveMarkers": [
+    "local-dev-credential",
+    "raw-token",
+    "raw-secret",
+    "raw-password-secret",
+    "raw-bearer-secret",
+    "Authorization:",
+    "Bearer ",
+    "password"
+  ],
+  "components": [
+    "BlogAI.Web/Components/Pages/LocalDev.razor",
+    "BlogAI.Web/Auth/IBlogAiLocalAuthStatusService.cs",
+    "BlogAI.Web/Auth/BlogAiLocalAuthStatusService.cs",
+    "BlogAI.Web/Auth/BlogAiLocalAuthDecisionDisplay.cs",
+    "VsMcpBridge.Shared/BlogAI/Auth/IBlogAiAuthConsumerService.cs",
+    "VsMcpBridge.Shared/AdventuresAuth/AdventuresAuthDecisionService.cs"
+  ],
+  "commands": [
+    "git status --short --branch",
+    "git log --oneline -10",
+    "dotnet build ./BlogAI.Web/BlogAI.Web.csproj",
+    "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj",
+    "dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev",
+    "rg -n \"local-dev-credential|raw-token|raw-secret|raw-password-secret|raw-bearer-secret|password|Authorization|Bearer|UseAuthentication|UseAuthorization|AddAuthentication|AddAuthorization|OAuth|OpenId|OpenID|RBAC|DbContext|BlogEngine\" BlogAI.Web"
+  ]
+}

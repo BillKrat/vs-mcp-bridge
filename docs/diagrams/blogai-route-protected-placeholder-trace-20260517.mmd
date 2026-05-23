@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    participant Client as "Local browser/test client"
+    participant Page as "BlogAI.Web /local-dev"
+    participant UiService as "IBlogAiLocalAuthStatusService"
+    participant Consumer as "IBlogAiAuthConsumerService"
+    participant Auth as "AdventuresAuthDecisionService"
+    participant Rendered as "Rendered protected placeholder and metadata"
+
+    Client->>Page: GET /local-dev
+    Page->>UiService: GetStatus()
+    UiService->>Consumer: Evaluate protected placeholder without dev marker
+    Consumer->>Auth: Validate local protected access
+    Auth-->>Consumer: Denied decision with correlation metadata
+    Consumer-->>UiService: Display-safe denied result
+    UiService->>Consumer: Evaluate protected placeholder with internal dev marker
+    Consumer->>Auth: Validate local protected access
+    Auth-->>Consumer: Allowed decision with safe principal placeholder
+    Consumer-->>UiService: Display-safe allowed result
+    UiService-->>Page: Hidden and shown placeholder display model
+    Page-->>Rendered: Hidden denied placeholder, shown allowed placeholder, CorrelationId, RequestId, AuthDecisionId
+    Rendered-->>Client: 200 OK
+
+    Note over Page,Rendered: Razor renders display-safe model only
+    Note over UiService,Auth: Auth decision ownership remains in BlogAI auth consumer and AdventuresAuth services
+    Note over Page,Rendered: Raw credential, token, secret, header, and password sentinels are not rendered
+    Note over Page,Auth: No production deployment, OAuth/OpenID/RBAC, persistence/database, BlogEngine.NET coupling, or new auth middleware

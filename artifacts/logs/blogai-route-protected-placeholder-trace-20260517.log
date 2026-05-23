@@ -1,0 +1,127 @@
+Trace: BlogAI route protected placeholder validation
+RunId: blogai-route-protected-placeholder-trace-20260517
+ObservedAtUtc: 2026-05-23T17:18:00Z
+Repository: Y:/vs-mcp-bridge
+CommitUnderTest: 7999cb7 Add BlogAI route protected placeholder behavior
+Scope: local/dev BlogAI.Web /local-dev route-level protected placeholder validation
+
+Purpose
+-------
+Capture durable evidence that the BlogAI `/local-dev` route proves protected placeholder behavior without adding production auth, middleware auth, persistence, deployment changes, or BlogEngine.NET coupling.
+
+Inspected Inputs
+----------------
+- AI_START.md
+- docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md
+- docs/blogai-local-auth-ui-integration-design.md
+- docs/blogai-minimal-auth-consumer-prototype-plan.md
+- BlogAI.Web/Auth
+- BlogAI.Web/Components/Pages/LocalDev.razor
+
+Checkpoint
+----------
+Command: git status --short --branch
+Result:
+  ## main...origin/main
+
+Command: git log --oneline -10
+Result:
+  7999cb7 Add BlogAI route protected placeholder behavior
+  c4c0a9d Add BlogAI local auth UI trace artifacts
+  605f191 Add minimal BlogAI local auth UI
+  9fde207 Review BlogAI local auth UI readiness
+  12e6b3a Design BlogAI local auth UI integration
+  ec9128a Add BlogAI Blazor shell trace artifacts
+  4fefd0c Add BlogAI globalization localization decision record
+  524d519 Add minimal BlogAI Blazor shell
+  35830e9 Review BlogAI Blazor app readiness
+  2fc82a7 Add BlogAI UI framework decision record
+
+Validation Commands
+-------------------
+Command: dotnet build ./BlogAI.Web/BlogAI.Web.csproj
+Result:
+  Build succeeded.
+  BlogAI.Web -> Y:\vs-mcp-bridge\BlogAI.Web\bin\Debug\net10.0\BlogAI.Web.dll
+
+Notes:
+  Existing nullable warnings from the referenced VsMcpBridge.Shared project were observed. No BlogAI.Web build errors were observed.
+
+Command: dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+Result:
+  Passed.
+  Failed: 0, Passed: 304, Skipped: 0, Total: 304
+
+Boundary Scan
+-------------
+Command: rg -n "local-dev-credential|raw-token|raw-secret|raw-password-secret|raw-bearer-secret|password|Authorization|Bearer|UseAuthentication|UseAuthorization|AddAuthentication|AddAuthorization|OAuth|OpenId|OpenID|RBAC|DbContext|BlogEngine" BlogAI.Web
+Result:
+  BlogAI.Web\Auth\BlogAiLocalAuthStatusService.cs:11:    private const string LocalDevelopmentMarker = "local-dev-credential";
+  BlogAI.Web\Components\Pages\Home.razor:22:        <p>Local development only; no production deployment or BlogEngine.NET coupling.</p>
+
+Interpretation:
+  The local development credential marker exists only as an internal local/dev service constant and was not rendered. BlogEngine.NET appears only in explanatory UI boundary text. No auth middleware, OAuth/OpenID/RBAC, database, persistence, production deployment, or BlogEngine.NET auth coupling was found.
+
+Local Host
+----------
+Command: $env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256
+Observed host output:
+  Now listening on: http://127.0.0.1:5256
+  Application started.
+  Hosting environment: Development
+  Content root path: Y:\vs-mcp-bridge\BlogAI.Web
+
+Smoke Test
+----------
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/
+Result:
+  HomeStatus=200
+
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev
+Result:
+  LocalDevStatus=200
+  UnauthenticatedLabel=True
+  DevelopmentAuthenticatedLabel=True
+  DeniedHidden=True
+  AllowedShown=True
+  CorrelationIdRendered=True
+  RequestIdRendered=True
+  AuthDecisionIdRendered=True
+  RawDevCredentialRendered=False
+  RawTokenSentinelRendered=False
+  RawSecretSentinelRendered=False
+  HeaderSentinelRendered=False
+  PasswordSentinelRendered=False
+
+Observed Page Evidence
+----------------------
+- `/local-dev` rendered `Unauthenticated local request`.
+- `/local-dev` rendered hidden protected placeholder text for the denied local decision.
+- `/local-dev` rendered `Development-authenticated local request`.
+- `/local-dev` rendered shown protected placeholder text for the allowed local decision.
+- `/local-dev` rendered `CorrelationId`, `RequestId`, and `AuthDecisionId`.
+- `/local-dev` did not render `local-dev-credential`.
+- `/local-dev` did not render raw token or secret sentinel values.
+- `/local-dev` did not render authorization header or password sentinel text.
+
+Observed Flow
+-------------
+1. Local browser/test client requests `/local-dev`.
+2. `LocalDev.razor` calls `IBlogAiLocalAuthStatusService`.
+3. `BlogAiLocalAuthStatusService` calls `IBlogAiAuthConsumerService`.
+4. `IBlogAiAuthConsumerService` delegates the auth decision to `AdventuresAuthDecisionService`.
+5. The UI-facing service maps denied and allowed decisions into display-safe protected placeholder state.
+6. Razor renders hidden state for unauthenticated local access and shown state for development-authenticated local access.
+7. Razor renders correlation metadata and never receives or renders raw credential/token/header/password material.
+
+Conclusion
+----------
+- BlogAI.Web builds.
+- Shared tests pass.
+- `/` returns HTTP 200.
+- `/local-dev` returns HTTP 200.
+- Unauthenticated local request renders the protected placeholder as hidden.
+- Development-authenticated local request renders the protected placeholder as shown.
+- CorrelationId, RequestId, and AuthDecisionId render safely.
+- Raw credential, token, secret, header, and password sentinels do not render.
+- No production deployment, OAuth/OpenID/RBAC, persistence/database, BlogEngine.NET auth coupling, or new auth middleware was added.

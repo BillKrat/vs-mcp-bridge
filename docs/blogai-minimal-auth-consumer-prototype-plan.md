@@ -37,6 +37,8 @@ The `/local-dev` route-level protected placeholder now follows the same boundary
 
 Durable validation evidence for this Blazor-side display is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md`.
 
+Durable validation evidence for the route-level protected placeholder behavior is captured in `docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md`.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.

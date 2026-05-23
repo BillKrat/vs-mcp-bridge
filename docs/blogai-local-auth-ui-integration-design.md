@@ -154,3 +154,5 @@ The service calls `IBlogAiAuthConsumerService` and maps the result into display-
 The route-level protected placeholder behavior is also service-driven: the display model marks the placeholder as `Shown` only when the BlogAI auth consumer decision is allowed, and `Hidden` when the decision is denied. The Razor page only renders that display-safe state and never sees the local development credential, raw tokens, headers, cookies, passwords, or secret-bearing request material.
 
 Durable validation evidence for the initial local/dev UI display is captured in `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md`.
+
+Durable validation evidence for the route-level protected placeholder behavior is captured in `docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md`.
