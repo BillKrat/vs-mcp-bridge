@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant Caller as Test Caller
+    participant Executor as BridgeToolExecutor
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Policy as IToolExecutionPolicy
+    participant Approval as IToolExecutionApprovalService
+    participant Tool as GatedHandoffPreviewTool
+    participant Audit as IAuditSink
+    participant Log as RecordingBridgeLogger
+
+    Caller->>Executor: ExecuteAsync bridge.gatedHandoffPreview requestId=request-123 operationId=operation-456
+    Executor->>Log: Bridge tool execution started
+    Executor->>Log: Redacted request payload
+    Executor->>Catalog: TryGetTool bridge.gatedHandoffPreview
+    Catalog-->>Executor: Descriptor and compiled tool instance
+    Executor->>Log: Manifest and capability metadata
+    Executor->>Policy: EvaluateAsync ToolExecutionSecurityContext
+    Policy-->>Executor: Allow
+    Executor->>Approval: Not invoked because ApprovalRequirement=NotRequired
+    Executor->>Tool: ExecuteAsync explicit scoped handoff request
+    Tool->>Tool: Preserve or generate request and operation ids
+    Tool->>Tool: Validate objective, repo path, and validation requirements
+    Tool->>Tool: Redact secret-shaped input
+    Tool->>Tool: Emit risk flags for deployment, destructive git, secrets, Codex, commands, and mutation scope
+    Tool->>Tool: Build scoped task text, validation checklist, stop conditions, approval reminder, and redaction notice
+    Tool-->>Executor: BridgeToolResult previewOnly=true with no side effects
+    Executor->>Log: Bridge tool execution completed
+    Executor->>Log: Redacted result payload
+    Executor->>Audit: RecordAsync CodexHandoffPreview envelope
+    Executor-->>Caller: Structured gated handoff preview

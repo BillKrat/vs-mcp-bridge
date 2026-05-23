@@ -1,0 +1,110 @@
+Run: gated-handoff-preview-tool-trace-20260517
+Captured: 2026-05-23
+Repository: \\Mac\Dev\vs-mcp-bridge
+Branch: main
+Baseline commit before evidence slice: e22a9ae Add gated handoff preview tool
+Validation mode: shared tests covering compiled catalog, inventory, direct tool execution, and executor/audit path
+
+Scope:
+- Captured durable validation evidence for the preview-only compiled bridge tool.
+- Tool id: bridge.gatedHandoffPreview
+- Tool class: GatedHandoffPreviewTool
+- Request model: GatedHandoffPreviewRequest
+- Result model: GatedHandoffPreviewResult
+- No runtime behavior changes in this evidence slice.
+- No Codex execution, repo mutation behavior, command execution, background workflow, or deployment behavior.
+
+Observed compiled catalog behavior:
+- AddBridgeToolServices registers GatedHandoffPreviewTool.
+- CompiledBridgeToolCatalog discovers descriptor id bridge.gatedHandoffPreview.
+- Descriptor metadata:
+  - name: Gated Handoff Preview
+  - category: CodexHandoffPreview
+  - source: Compiled
+  - host: Shared
+  - required capability: codex.gatedHandoffPreview
+  - approval requirement: NotRequired
+  - audit category hint: CodexHandoffPreview
+
+Observed inventory behavior:
+- BridgeToolInventoryService includes bridge.gatedHandoffPreview.
+- MCP host inventory test includes bridge.gatedHandoffPreview in bridge tool inventory output.
+- Inventory access does not execute the tool.
+
+Observed structured preview request:
+- toolId: bridge.gatedHandoffPreview
+- requestId: request-123
+- operationId: operation-456
+- sliceObjective: Implement a preview-only gated handoff proposal contract.
+- repoPath: \\Mac\Dev\vs-mcp-bridge
+- validationRequirements:
+  - git diff --check
+  - dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+- constraints/non-goals preserved as explicit caller input.
+- expectedArtifacts preserved as explicit caller input.
+
+Observed structured preview result:
+- status: PreviewGenerated
+- previewOnly: true
+- correlationId: request-123
+- requestId: request-123
+- operationId: operation-456
+- taskSummary preserved from slice objective.
+- scopedTaskText generated with objective, repo path, constraints/non-goals, validation checklist, artifacts, stop conditions, approval reminder, and redaction notice.
+- validationChecklist preserved.
+- stopConditions included.
+- approvalRequiredBeforeExecution: true
+- auditCategory: CodexHandoffPreview
+
+Observed risky-scope handling:
+- Deployment scope emitted risk flag: Deployment
+- Destructive git scope emitted risk flag: DestructiveGit
+- Production auth scope emitted risk flag: ProductionAuth
+- Secret-shaped scope emitted risk flag: SecretHandling
+- Command execution scope emitted risk flag: CommandExecution
+- Repo mutation scope emitted risk flag: RepoMutation
+- Codex execution scope emitted risk flag: CodexExecution
+- Caller-provided risk flag preserved: ManualReview
+- Stop conditions included guardrails for Codex invocation, command execution, repo mutation, deployment, destructive git, production auth expansion, and secret exposure.
+
+Observed redaction behavior:
+- Secret-shaped value password=raw-password was redacted to password=[REDACTED].
+- Authorization bearer value was redacted.
+- Flattened preview result did not contain raw-password.
+- Flattened preview result did not contain raw-bearer-token.
+- redactionApplied: true
+- Redaction notice stated that secret-shaped input was redacted.
+
+Observed correlation behavior:
+- Caller-supplied requestId and operationId were preserved.
+- Missing requestId and operationId were generated safely when absent.
+- correlationId matched the request id in generated preview results.
+- Executor path preserved requestId and operationId into audit metadata.
+
+Observed no-side-effect behavior:
+- codexExecutionInvoked: false
+- commandExecutionPerformed: false
+- repoMutationPerformed: false
+- deploymentPerformed: false
+- backgroundWorkflowStarted: false
+- Temp-directory no-mutation check observed no files created by direct tool execution.
+- No command execution path, Codex invocation path, deployment path, or background worker was added.
+
+Observed executor/audit path:
+Bridge tool execution started [ToolId=bridge.gatedHandoffPreview] [RequestId=request-123] [OperationId=operation-456].
+Bridge tool manifest metadata included id=bridge.gatedHandoffPreview, category=CodexHandoffPreview, source=Compiled, host=Shared.
+Bridge tool capability metadata included codex.gatedHandoffPreview.
+IToolExecutionPolicy evaluated ToolExecutionSecurityContext.
+Approval was not required by descriptor.
+GatedHandoffPreviewTool generated a structured preview only.
+Bridge tool execution completed [ToolId=bridge.gatedHandoffPreview] [RequestId=request-123] [OperationId=operation-456] [Success=True].
+IAuditSink received BridgeAuditEnvelope with category=CodexHandoffPreview.
+
+Validation:
+- git diff --check passed.
+- dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj passed with 313 tests.
+
+Non-secret warnings observed during test build:
+- Existing nullable warnings in VsMcpBridge.Shared.
+- Existing nullable warnings in VsMcpBridge.McpServer.
+- Existing xUnit2031 analyzer warning in VsMcpBridge.Shared.Tests/MvpVmTests.cs.

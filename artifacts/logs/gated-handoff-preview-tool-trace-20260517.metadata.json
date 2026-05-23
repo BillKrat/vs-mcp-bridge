@@ -1,0 +1,58 @@
+{
+  "runName": "gated-handoff-preview-tool-trace-20260517",
+  "capturedAt": "2026-05-23",
+  "repository": "\\\\Mac\\Dev\\vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "e22a9ae Add gated handoff preview tool",
+  "captureMethod": "shared tests covering compiled catalog, inventory, direct tool execution, executor audit path, and no-side-effect checks",
+  "bridgeToolId": "bridge.gatedHandoffPreview",
+  "toolClass": "GatedHandoffPreviewTool",
+  "requestModel": "GatedHandoffPreviewRequest",
+  "resultModel": "GatedHandoffPreviewResult",
+  "capability": "codex.gatedHandoffPreview",
+  "approvalRequirement": "NotRequired",
+  "auditCategory": "CodexHandoffPreview",
+  "observedResultSummary": {
+    "status": "PreviewGenerated",
+    "previewOnly": true,
+    "structuredHandoffProposal": true,
+    "validationChecklistPreserved": true,
+    "stopConditionsIncluded": true,
+    "secretShapedInputRedacted": true,
+    "correlationMetadataPreserved": true,
+    "correlationMetadataGeneratedWhenMissing": true,
+    "usesBridgeToolExecutor": true,
+    "inventoryIncludesTool": true,
+    "compiledCatalogDiscoversTool": true,
+    "codexExecutionInvoked": false,
+    "commandExecutionPerformed": false,
+    "repoMutationPerformed": false,
+    "deploymentPerformed": false,
+    "backgroundWorkflowStarted": false
+  },
+  "observedRiskFlags": [
+    "CodexExecution",
+    "CommandExecution",
+    "Deployment",
+    "DestructiveGit",
+    "ManualReview",
+    "ProductionAuth",
+    "RepoMutation",
+    "SecretHandling"
+  ],
+  "validation": {
+    "gitDiffCheck": "passed",
+    "sharedTests": "passed",
+    "sharedTestCount": 313
+  },
+  "scopeExclusions": [
+    "no runtime behavior changes in evidence slice",
+    "no Codex execution",
+    "no command execution",
+    "no repo writes from the tool",
+    "no mutation behavior",
+    "no deployment",
+    "no background workflow",
+    "no auto-continuation"
+  ]
+}

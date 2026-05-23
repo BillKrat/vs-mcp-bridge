@@ -44,6 +44,7 @@ Use these as needed after that:
 - `docs/first-gated-handoff-preview-tool-candidate.md` for the first bridge-side gated handoff preview/proposal tool candidate
 - `docs/session-handoffs/2026-05-17-gated-handoff-tool-readiness-review.md` for the readiness decision before any bridge-side gated handoff tool implementation
 - `docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-implementation-readiness.md` for the preview-only gated handoff proposal tool implementation readiness decision
+- `docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-validation.md` for durable validation evidence of the implemented preview-only gated handoff proposal tool
 - `docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` for the current stable/deferred/validated operating checkpoint across bridge, BlogAI, auth, deployment, and gated orchestration work
 - `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
 - `.agents/skills/` for focused task workflows such as MCP validation, MCP search diagnostics, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
