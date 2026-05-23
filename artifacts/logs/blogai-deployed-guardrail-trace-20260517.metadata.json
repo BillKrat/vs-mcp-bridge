@@ -1,0 +1,71 @@
+{
+  "runName": "blogai-deployed-guardrail-trace-20260517",
+  "observedDate": "2026-05-23",
+  "repository": "Y:/vs-mcp-bridge",
+  "branch": "main",
+  "startingHead": "6a6add2 Document Auth API admin boundary",
+  "scope": "Validate local and deployed BlogAI.Web guardrail rendering without adding runtime behavior.",
+  "runtimeCodeChanged": false,
+  "redeployAttempted": true,
+  "redeployReason": "The current deployed site did not include the guardrail.",
+  "deployProfile": "apiglobalwebnet",
+  "deployExitCode": 1,
+  "deployResult": "Failed",
+  "deployFailureCategory": "Unauthorized",
+  "deployFailureText": "MSDEPLOY ERROR_USER_UNAUTHORIZED; remote server returned 401 Unauthorized.",
+  "secretsPrinted": false,
+  "publishProfilesCommitted": false,
+  "validation": {
+    "gitDiffCheck": "Passed",
+    "blogAiWebBuild": {
+      "command": "dotnet build ./BlogAI.Web/BlogAI.Web.csproj",
+      "result": "Passed",
+      "warnings": 11,
+      "errors": 0
+    },
+    "sharedTests": {
+      "command": "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj",
+      "result": "Passed",
+      "passed": 306,
+      "failed": 0,
+      "skipped": 0
+    },
+    "localSmoke": [
+      {
+        "url": "http://localhost:5255/",
+        "statusCode": 200,
+        "guardrailRendered": true,
+        "diagnosticOnlyRendered": true,
+        "notProductionAuthRendered": true,
+        "sentinelRendered": false
+      },
+      {
+        "url": "http://localhost:5255/local-dev",
+        "statusCode": 200,
+        "guardrailRendered": true,
+        "diagnosticOnlyRendered": true,
+        "notProductionAuthRendered": true,
+        "sentinelRendered": false
+      }
+    ],
+    "deployedSmokeFinal": [
+      {
+        "url": "https://api.global-webnet.com/",
+        "statusCode": 200,
+        "guardrailRendered": false,
+        "diagnosticOnlyRendered": false,
+        "notProductionAuthRendered": false,
+        "sentinelRendered": false
+      },
+      {
+        "url": "https://api.global-webnet.com/local-dev",
+        "statusCode": 200,
+        "guardrailRendered": false,
+        "diagnosticOnlyRendered": false,
+        "notProductionAuthRendered": false,
+        "sentinelRendered": false
+      }
+    ]
+  },
+  "conclusion": "Local guardrail behavior is validated; deployed guardrail behavior remains blocked by WebDeploy authorization."
+}

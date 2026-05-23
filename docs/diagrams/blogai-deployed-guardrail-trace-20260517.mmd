@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    participant Operator as "Codex validation"
+    participant Local as "BlogAI.Web local host"
+    participant Deployed as "https://api.global-webnet.com"
+    participant WebDeploy as "WebDeploy profile apiglobalwebnet"
+
+    Operator->>Local: GET /
+    Local-->>Operator: 200, guardrail rendered
+    Operator->>Local: GET /local-dev
+    Local-->>Operator: 200, guardrail rendered, diagnostic-only/not-production-auth text
+
+    Operator->>Deployed: GET /
+    Deployed-->>Operator: 200, guardrail missing
+    Operator->>Deployed: GET /local-dev
+    Deployed-->>Operator: 200, guardrail missing
+
+    Operator->>WebDeploy: dotnet publish with profile
+    WebDeploy-->>Operator: 401 Unauthorized, no update applied
+
+    Operator->>Deployed: GET /
+    Deployed-->>Operator: 200, guardrail still missing
+    Operator->>Deployed: GET /local-dev
+    Deployed-->>Operator: 200, guardrail still missing

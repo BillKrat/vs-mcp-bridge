@@ -85,3 +85,8 @@ The smallest useful slice should:
 - Preserve the current in-process `/local-dev` baseline.
 - Build and smoke test `/` and `/local-dev` after the change.
 
+## Follow-Up Validation
+
+The display-only guardrail was implemented locally after this review, but deployed validation is not complete yet.
+
+Durable evidence is captured in `docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`. Local smoke validation passed, but `https://api.global-webnet.com` still served the previous build after a permitted WebDeploy attempt failed with `401 Unauthorized`.

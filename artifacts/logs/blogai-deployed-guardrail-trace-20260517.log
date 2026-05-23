@@ -1,0 +1,83 @@
+BlogAI deployed guardrail validation trace
+Run label: blogai-deployed-guardrail-trace-20260517
+Observed date: 2026-05-23
+Repository: Y:/vs-mcp-bridge
+Branch: main
+Starting HEAD: 6a6add2 Document Auth API admin boundary
+
+Scope
+- Capture durable evidence for the BlogAI.Web deployed-environment guardrail banner.
+- No runtime code changes were made.
+- No production auth, middleware, cookies/session topology, OAuth/OpenID/RBAC, persistence/database, or BlogEngine.NET coupling was added.
+- Redeploy was allowed only if the current deployed site did not include the guardrail.
+
+Inputs reviewed
+- AI_START.md
+- docs/session-handoffs/2026-05-17-blogai-production-exposure-boundary-review.md
+- docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md
+
+Build validation
+- Command: dotnet build ./BlogAI.Web/BlogAI.Web.csproj
+- Result: passed
+- Existing warnings: 11 nullable warnings in VsMcpBridge.Shared
+- Errors: 0
+
+Test validation
+- Command: dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+- Result: passed
+- Total tests: 306
+- Failed: 0
+- Skipped: 0
+
+Local smoke validation
+- Local host: http://localhost:5255
+- / status: 200
+- / guardrail rendered: yes
+- / diagnostic-only/not-production-auth text rendered: yes
+- / raw credential/token/secret/header/password sentinel rendered: no
+- /local-dev status: 200
+- /local-dev guardrail rendered: yes
+- /local-dev diagnostic-only/not-production-auth text rendered: yes
+- /local-dev raw credential/token/secret/header/password sentinel rendered: no
+
+Initial deployed smoke validation
+- Deployed host: https://api.global-webnet.com
+- / status: 200
+- / guardrail rendered: no
+- / diagnostic-only/not-production-auth text rendered: no
+- / raw credential/token/secret/header/password sentinel rendered: no
+- /local-dev status: 200
+- /local-dev guardrail rendered: no
+- /local-dev diagnostic-only/not-production-auth text rendered: no
+- /local-dev raw credential/token/secret/header/password sentinel rendered: no
+
+Deploy decision
+- Current deployed site did not include the guardrail.
+- One WebDeploy attempt was allowed by the slice constraints.
+- Publish profile used: apiglobalwebnet
+- Secret values printed: no
+- Publish profiles committed: no
+
+WebDeploy attempt
+- Command shape: dotnet publish ./BlogAI.Web/BlogAI.Web.csproj -c Release /p:PublishProfile=apiglobalwebnet
+- Result: failed
+- Exit code: 1
+- Non-secret failure text: MSDEPLOY ERROR_USER_UNAUTHORIZED; remote server returned 401 Unauthorized.
+- Retries attempted: 0
+
+Final deployed smoke validation
+- Deployed host: https://api.global-webnet.com
+- / status: 200
+- / guardrail rendered: no
+- / diagnostic-only/not-production-auth text rendered: no
+- / raw credential/token/secret/header/password sentinel rendered: no
+- /local-dev status: 200
+- /local-dev guardrail rendered: no
+- /local-dev diagnostic-only/not-production-auth text rendered: no
+- /local-dev raw credential/token/secret/header/password sentinel rendered: no
+
+Conclusion
+- Local BlogAI.Web guardrail behavior is validated.
+- Deployed BlogAI.Web guardrail behavior is not validated because the deployed site still serves the previous build.
+- The deploy blocker is WebDeploy authorization, not application build or local rendering behavior.
+- No further deploy attempt should occur until publish credentials are confirmed through a secret-safe path.
