@@ -116,6 +116,7 @@ For the readiness review before implementing the minimal BlogAI Blazor Web App s
 For the initial minimal BlogAI Blazor shell, inspect `BlogAI.Web`; it is local/dev only and keeps components presentation-focused.
 For durable validation evidence of the initial BlogAI Blazor shell, read `docs/session-handoffs/2026-05-17-blogai-blazor-shell-validation.md`.
 For the local/dev BlogAI auth UI integration design, read `docs/blogai-local-auth-ui-integration-design.md`.
+For the readiness review before implementing the local/dev BlogAI auth UI display boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md`.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.

@@ -554,6 +554,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-17-adventures-auth-local-api-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-blazor-readiness-review.md
 !/docs/session-handoffs/2026-05-17-blogai-blazor-shell-validation.md
+!/docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
