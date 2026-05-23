@@ -100,6 +100,8 @@ artifacts/logs/*
 !artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json
 !artifacts/logs/mcp-regex-search-trace-20260516.log
 !artifacts/logs/mcp-regex-search-trace-20260516.metadata.json
+!artifacts/logs/mcp-bm25-search-trace-20260516.log
+!artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.log
@@ -148,6 +150,7 @@ StyleCopReport.xml
 !artifacts/logs/mcp-tool-inventory-trace-20260516.log
 !artifacts/logs/mcp-tool-inventory-live-validation-20260516.log
 !artifacts/logs/mcp-regex-search-trace-20260516.log
+!artifacts/logs/mcp-bm25-search-trace-20260516.log
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log
 !artifacts/logs/vsix-activation-diagnostic-trace-20260516.log
 *.tlog
@@ -508,6 +511,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-16-platform-self-description-handoff.md
 !/docs/session-handoffs/2026-05-16-blogai-platform-direction.md
 !/docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md
+!/docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md
 !/docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md
 !/docs/diagrams/
 /docs/diagrams/*
@@ -523,6 +527,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/mcp-tool-inventory-trace-20260516.mmd
 !/docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd
 !/docs/diagrams/mcp-regex-search-trace-20260516.mmd
+!/docs/diagrams/mcp-bm25-search-trace-20260516.mmd
 !/docs/diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd
 !/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd
 !/docs/blog-drafts/

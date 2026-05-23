@@ -153,7 +153,7 @@ public sealed class VsToolsTests
         services.AddSingleton<IToolExecutionPolicy>(policy);
         services.AddBridgeToolServices();
         using var provider = services.BuildServiceProvider();
-        var tools = CreateRegexMcpTools(provider, logger);
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
 
         var responseJson = await tools.RegexTextSearchAsync(
             pattern: "error",
@@ -196,7 +196,7 @@ public sealed class VsToolsTests
         services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
         services.AddBridgeToolServices();
         using var provider = services.BuildServiceProvider();
-        var tools = CreateRegexMcpTools(provider, logger);
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
 
         var responseJson = await tools.RegexTextSearchAsync(
             pattern: "[",
@@ -222,7 +222,7 @@ public sealed class VsToolsTests
         services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
         services.AddBridgeToolServices();
         using var provider = services.BuildServiceProvider();
-        var tools = CreateRegexMcpTools(provider, logger);
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
 
         var responseJson = await tools.RegexTextSearchAsync(
             pattern: "hit",
@@ -250,7 +250,7 @@ public sealed class VsToolsTests
         services.AddSingleton<IAuditSink>(auditSink);
         services.AddBridgeToolServices();
         using var provider = services.BuildServiceProvider();
-        var tools = CreateRegexMcpTools(provider, logger);
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
 
         var responseJson = await tools.RegexTextSearchAsync(
             pattern: "token",
@@ -272,6 +272,166 @@ public sealed class VsToolsTests
         Assert.Contains(logMessages, message => message.Contains("[REDACTED]", StringComparison.Ordinal));
         var auditEvent = Assert.Single(auditSink.Events);
         Assert.Equal(RegexTextSearchTool.ToolId, auditEvent.ToolId);
+        Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-request-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Bm25TextSearchAsync_executes_compiled_bm25_tool_through_executor()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var policy = new RecordingAllowPolicy();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddSingleton<IAuditSink>(auditSink);
+        services.AddSingleton<IToolExecutionPolicy>(policy);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
+
+        var responseJson = await tools.Bm25TextSearchAsync(
+            query: "approval workflow",
+            documents: new[] { "approval workflow bridge executor", "unrelated diagnostic text" },
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+        var results = root.GetProperty("data").GetProperty("results").EnumerateArray().ToArray();
+
+        Assert.True(root.GetProperty("success").GetBoolean());
+        Assert.Equal(Bm25TextSearchTool.ToolId, root.GetProperty("toolId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("requestId").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("operationId").GetString()));
+        var result = Assert.Single(results);
+        Assert.Equal(0, result.GetProperty("documentIndex").GetInt32());
+        Assert.Equal("0", result.GetProperty("documentId").GetString());
+        Assert.True(result.GetProperty("score").GetDouble() > 0);
+        Assert.Equal(1, policy.CallCount);
+        Assert.Equal(Bm25TextSearchTool.ToolId, policy.LastContext!.ToolId);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("MCP bridge_bm25_text_search started", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution started", StringComparison.Ordinal)
+            && message.Contains($"[ToolId={Bm25TextSearchTool.ToolId}]", StringComparison.Ordinal));
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed", StringComparison.Ordinal)
+            && message.Contains("[Success=True]", StringComparison.Ordinal));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.True(auditEvent.Allowed);
+        Assert.True(auditEvent.Success);
+        Assert.Equal(Bm25TextSearchTool.ToolId, auditEvent.ToolId);
+        Assert.Equal(root.GetProperty("requestId").GetString(), auditEvent.RequestId);
+        Assert.Equal(root.GetProperty("operationId").GetString(), auditEvent.OperationId);
+        Assert.Equal("BM25 Text Search", auditEvent.Metadata["manifestToolName"]);
+        Assert.Equal("policy observed", auditEvent.Metadata["policyReason"]);
+    }
+
+    [Fact]
+    public async Task Bm25TextSearchAsync_respects_max_results()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
+
+        var responseJson = await tools.Bm25TextSearchAsync(
+            query: "bridge",
+            entries: new[] { "bridge alpha", "bridge beta", "bridge gamma" },
+            maxResults: 2,
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var data = document.RootElement.GetProperty("data");
+
+        Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal(2, data.GetProperty("resultCount").GetInt32());
+        Assert.Equal(3, data.GetProperty("totalResultCount").GetInt32());
+        Assert.True(data.GetProperty("limited").GetBoolean());
+        Assert.Equal(2, data.GetProperty("results").EnumerateArray().Count());
+    }
+
+    [Fact]
+    public async Task Bm25TextSearchAsync_returns_structured_failure_for_empty_query()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
+
+        var responseJson = await tools.Bm25TextSearchAsync(
+            query: " ",
+            documents: new[] { "bridge diagnostics" },
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+
+        Assert.False(root.GetProperty("success").GetBoolean());
+        Assert.Equal(Bm25TextSearchTool.ToolId, root.GetProperty("toolId").GetString());
+        Assert.Equal("InvalidRequest", root.GetProperty("errorCode").GetString());
+        Assert.Contains("non-empty 'query'", root.GetProperty("message").GetString(), StringComparison.Ordinal);
+        Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution completed", StringComparison.Ordinal)
+            && message.Contains("[Success=False]", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Bm25TextSearchAsync_returns_structured_failure_for_empty_documents()
+    {
+        var logger = new RecordingBridgeLogger();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
+
+        var responseJson = await tools.Bm25TextSearchAsync(
+            query: "bridge",
+            documents: Array.Empty<string>(),
+            entries: Array.Empty<string>(),
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+
+        Assert.False(root.GetProperty("success").GetBoolean());
+        Assert.Equal(Bm25TextSearchTool.ToolId, root.GetProperty("toolId").GetString());
+        Assert.Equal("InvalidRequest", root.GetProperty("errorCode").GetString());
+        Assert.Contains("non-empty 'documents' or 'entries'", root.GetProperty("message").GetString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Bm25TextSearchAsync_uses_executor_redaction_for_secret_like_payload_logs()
+    {
+        var logger = new RecordingBridgeLogger();
+        var auditSink = new InMemoryAuditSink();
+        var services = new ServiceCollection();
+        services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(logger);
+        services.AddSingleton<IAuditSink>(auditSink);
+        services.AddBridgeToolServices();
+        using var provider = services.BuildServiceProvider();
+        var tools = CreateBridgeExecutorMcpTools(provider, logger);
+
+        var responseJson = await tools.Bm25TextSearchAsync(
+            query: "token",
+            documents: new[] { "token=raw-request-secret Authorization: Bearer raw-bearer-secret" },
+            ct: CancellationToken.None);
+
+        using var document = JsonDocument.Parse(responseJson);
+        Assert.True(document.RootElement.GetProperty("success").GetBoolean());
+
+        var logMessages = logger.VerboseMessages
+            .Concat(logger.InformationMessages)
+            .Concat(logger.WarningMessages)
+            .Concat(logger.Errors.Select(error => error.Message))
+            .Concat(logger.Errors.Select(error => error.Exception?.Message ?? string.Empty))
+            .ToArray();
+
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-request-secret", StringComparison.Ordinal));
+        Assert.DoesNotContain(logMessages, message => message.Contains("raw-bearer-secret", StringComparison.Ordinal));
+        Assert.Contains(logMessages, message => message.Contains("[REDACTED]", StringComparison.Ordinal));
+        var auditEvent = Assert.Single(auditSink.Events);
+        Assert.Equal(Bm25TextSearchTool.ToolId, auditEvent.ToolId);
         Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-request-secret", StringComparison.Ordinal));
     }
 
@@ -1244,7 +1404,7 @@ public sealed class VsToolsTests
         Assert.False(string.IsNullOrWhiteSpace(response.RequestId));
     }
 
-    private static VsTools CreateRegexMcpTools(ServiceProvider provider, RecordingBridgeLogger logger)
+    private static VsTools CreateBridgeExecutorMcpTools(ServiceProvider provider, RecordingBridgeLogger logger)
         => new(
             new RecordingPipeClient(),
             new StubChatEngine(),

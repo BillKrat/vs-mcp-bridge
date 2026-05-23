@@ -260,6 +260,89 @@ public sealed class VsTools
         }
     }
 
+    [McpServerTool(Name = "bridge_bm25_text_search")]
+    [Description("Executes the compiled bridge.bm25TextSearch tool through BridgeToolExecutor against explicit in-memory documents or entries. Does not read files or mutate state.")]
+    public async Task<string> Bm25TextSearchAsync(
+        [Description("Search query used to rank the supplied documents.")] string query,
+        [Description("Optional explicit in-memory document text values to rank. No file paths are read.")] string[]? documents = null,
+        [Description("Optional explicit text entries to rank when documents are not provided. No file paths are read.")] string[]? entries = null,
+        [Description("Whether token matching is case-sensitive. Defaults to false.")] bool caseSensitive = false,
+        [Description("Maximum number of ranked results to return. Must be greater than zero when provided.")] int? maxResults = null,
+        CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP bridge_bm25_text_search started [RequestId={RequestId}] [OperationId={OperationId}].",
+            requestId,
+            operationId);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["query"] = query,
+            ["caseSensitive"] = caseSensitive
+        };
+
+        if (documents is { Length: > 0 })
+            arguments["documents"] = documents;
+        else if (entries is { Length: > 0 })
+            arguments["entries"] = entries;
+
+        if (maxResults.HasValue)
+            arguments["maxResults"] = maxResults.Value;
+
+        var request = new BridgeToolRequest
+        {
+            ToolId = Bm25TextSearchTool.ToolId,
+            RequestId = requestId,
+            OperationId = operationId,
+            Arguments = arguments
+        };
+
+        try
+        {
+            var result = await _bridgeToolExecutor.ExecuteAsync(request, ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP bridge_bm25_text_search completed [RequestId={RequestId}] [OperationId={OperationId}] [Success={Success}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                result.Success,
+                stopwatch.ElapsedMilliseconds);
+
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP bridge_bm25_text_search canceled [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP bridge_bm25_text_search failed [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+
+            var result = BridgeToolResult.Failed(
+                request,
+                "McpWrapperFailed",
+                "MCP BM25 text search failed before the bridge tool completed. Review the MCP log for details.");
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
+        }
+    }
+
     private async Task<string> ExecuteChatEngineToolAsync(
         string input,
         CancellationToken ct,

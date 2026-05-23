@@ -113,3 +113,9 @@ The temporary caller read selected files to construct explicit input text. That 
 Use `bridge_regex_text_search` for one small explicit-input BlogAI source/docs triage workflow during the first practical BlogAI implementation planning pass.
 
 Do not expose BM25 until a real workflow needs ranked in-memory document search rather than deterministic regex matching.
+
+## Follow-Up Note
+
+The next MCP tooling slice exposed the compiled BM25 search capability through MCP as `bridge_bm25_text_search`.
+That wrapper executes `bridge.bm25TextSearch` through `BridgeToolExecutor` and accepts only explicit `documents` or `entries` from the MCP request.
+See `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md` and `artifacts/logs/mcp-bm25-search-trace-20260516.log`.

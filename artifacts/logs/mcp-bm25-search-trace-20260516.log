@@ -1,0 +1,13 @@
+Run: mcp-bm25-search-trace-20260516
+Repository: Y:/vs-mcp-bridge
+Baseline: 29c713f Capture BlogAI stale chrome search with MCP regex tool
+Mode: direct MCP stdio, explicit in-memory documents supplied by caller
+Server: VsMcpBridge.McpServer 1.0.0.0
+tools/list count: 19
+includes bridge_bm25_text_search: true
+includes bridge_regex_text_search: true
+ranked invocation success: true; requestId=b2f5a3c9174548f8bd692f8c9411f172; operationId=1c7b57acc47f4efd976617fce3b39a11
+ranked results: resultCount=2; totalResultCount=3; limited=true
+top result: documentIndex=1; documentId=1; score=0.135511
+empty query success: false; errorCode=InvalidRequest
+empty documents success: false; errorCode=InvalidRequest

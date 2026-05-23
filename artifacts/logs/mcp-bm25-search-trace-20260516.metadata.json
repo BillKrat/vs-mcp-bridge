@@ -1,0 +1,70 @@
+{
+  "runName": "mcp-bm25-search-trace-20260516",
+  "repository": "Y:/vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "29c713f Capture BlogAI stale chrome search with MCP regex tool",
+  "captureDate": "2026-05-22",
+  "validationMode": "direct MCP stdio helper using explicit in-memory documents",
+  "serverInfo": {
+    "name": "VsMcpBridge.McpServer",
+    "version": "1.0.0.0"
+  },
+  "toolsList": {
+    "toolCount": 19,
+    "includesBridgeGetToolInventory": true,
+    "includesBridgeRegexTextSearch": true,
+    "includesBridgeBm25TextSearch": true,
+    "toolNames": [
+      "bridge_bm25_text_search",
+      "bridge_get_tool_inventory",
+      "bridge_regex_text_search",
+      "chat_engine_chat",
+      "chat_engine_explain_code",
+      "chat_engine_explain_error",
+      "chat_engine_ping",
+      "chat_engine_rewrite",
+      "chat_engine_rewrite_with_target",
+      "chat_engine_suggest_error_fix",
+      "chat_engine_suggest_fixes",
+      "chat_engine_suggest_fixes_with_target",
+      "chat_engine_summarize",
+      "vs_get_active_document",
+      "vs_get_error_list",
+      "vs_get_selected_text",
+      "vs_list_solution_projects",
+      "vs_propose_text_edit",
+      "vs_propose_text_edits"
+    ]
+  },
+  "rankedCall": {
+    "mcpToolName": "bridge_bm25_text_search",
+    "bridgeToolId": "bridge.bm25TextSearch",
+    "requestId": "b2f5a3c9174548f8bd692f8c9411f172",
+    "operationId": "1c7b57acc47f4efd976617fce3b39a11",
+    "success": true,
+    "resultCount": 2,
+    "totalResultCount": 3,
+    "limited": true,
+    "topDocumentIndex": 1,
+    "topDocumentId": "1",
+    "topScore": 0.135511
+  },
+  "emptyQueryCall": {
+    "success": false,
+    "errorCode": "InvalidRequest",
+    "message": "BM25 text search requires a non-empty 'query' argument."
+  },
+  "emptyDocumentsCall": {
+    "success": false,
+    "errorCode": "InvalidRequest",
+    "message": "BM25 text search requires a non-empty 'documents' or 'entries' collection."
+  },
+  "safety": {
+    "filesystemReadPerformed": false,
+    "pathArgumentsAccepted": false,
+    "mutationPerformed": false,
+    "vsixPipeRequestSent": false,
+    "chatEngineRequestSent": false,
+    "executesThroughBridgeToolExecutor": true
+  }
+}

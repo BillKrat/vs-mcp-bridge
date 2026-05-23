@@ -272,6 +272,36 @@ This wrapper accepts only explicit `inputText` or `entries` supplied in the MCP 
 It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
 The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
 
+## Live MCP BM25 Search Validation Run
+
+The compiled BM25 search tool is now callable through MCP as `bridge_bm25_text_search`:
+
+- run name: `mcp-bm25-search-trace-20260516`
+- branch: `main`
+- baseline commit: `29c713f`
+- capture date: `2026-05-22`
+- validation mode: direct MCP stdio helper using explicit in-memory documents
+- server info: `VsMcpBridge.McpServer 1.0.0.0`
+- `tools/list` count: `19`
+- MCP tool: `bridge_bm25_text_search`
+- bridge tool id: `bridge.bm25TextSearch`
+- successful response request id: `b2f5a3c9174548f8bd692f8c9411f172`
+- successful response operation id: `1c7b57acc47f4efd976617fce3b39a11`
+- successful response counts: `resultCount=2`, `totalResultCount=3`, `limited=true`
+- empty query response: `success=false`, `errorCode=InvalidRequest`
+- empty documents response: `success=false`, `errorCode=InvalidRequest`
+
+Live MCP BM25 search artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-bm25-search-trace-20260516.mmd`](diagrams/mcp-bm25-search-trace-20260516.mmd)
+- observed log transcript: [`artifacts/logs/mcp-bm25-search-trace-20260516.log`](../artifacts/logs/mcp-bm25-search-trace-20260516.log)
+- run metadata: [`artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json`](../artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`](session-handoffs/2026-05-16-mcp-bm25-search-validation.md)
+
+This wrapper accepts only explicit `documents` or `entries` supplied in the MCP request.
+It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
+The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
+
 ## Explicit-Input MCP Regex Search Workload
 
 The BlogAI stale shared chrome/cache workload was rerun with `bridge_regex_text_search` after the MCP wrapper was added.

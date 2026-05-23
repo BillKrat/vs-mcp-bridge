@@ -48,6 +48,7 @@ public sealed class McpServerHostTests
         Assert.Equal(
             new[]
             {
+                "bridge_bm25_text_search",
                 "bridge_get_tool_inventory",
                 "bridge_regex_text_search",
                 "chat_engine_chat",

@@ -99,6 +99,7 @@ For bridge tool catalog inventory behavior, also read `docs/session-handoffs/202
 For MCP-exposed bridge tool inventory diagnostics, also read `docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`.
 For live MCP stdio validation of the inventory diagnostic, also read `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`.
 For MCP-exposed regex search validation through `BridgeToolExecutor`, also read `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`.
+For MCP-exposed BM25 search validation through `BridgeToolExecutor`, also read `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`.
 For the current foundational security architecture seams and deferred scope, also read `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 For the latest full validation checkpoint, also read `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`.
 For inactive VSIX named-pipe activation diagnostics, also read `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`.

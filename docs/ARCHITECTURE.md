@@ -77,6 +77,10 @@ The MCP server also exposes `bridge_regex_text_search` as a safe diagnostic wrap
 Callers must provide explicit text input through the MCP request; the wrapper does not crawl files, accept paths, mutate state, call ChatEngine, or use the VSIX named pipe.
 Unlike `bridge_get_tool_inventory`, this wrapper executes a bridge tool and therefore routes through `BridgeToolExecutor` so policy, approval, secret-reference, redaction, audit, manifest, and correlation boundaries remain intact.
 The durable MCP regex-search evidence is `artifacts/logs/mcp-regex-search-trace-20260516.*`, `docs/diagrams/mcp-regex-search-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`.
+The MCP server also exposes `bridge_bm25_text_search` as a safe diagnostic wrapper over the compiled `bridge.bm25TextSearch` tool.
+Callers must provide explicit in-memory documents or entries through the MCP request; the wrapper does not crawl files, accept paths, mutate state, call ChatEngine, or use the VSIX named pipe.
+This wrapper also routes through `BridgeToolExecutor`, preserving the same policy, approval, secret-reference, redaction, audit, manifest, and correlation boundaries as other executable bridge tools.
+The durable MCP BM25-search evidence is `artifacts/logs/mcp-bm25-search-trace-20260516.*`, `docs/diagrams/mcp-bm25-search-trace-20260516.mmd`, and `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

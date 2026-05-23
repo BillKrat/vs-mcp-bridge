@@ -1,0 +1,40 @@
+sequenceDiagram
+    autonumber
+    participant Helper as "Direct MCP stdio helper"
+    participant MCP as "VsMcpBridge.McpServer"
+    participant VsTools as "VsTools.bridge_bm25_text_search"
+    participant Executor as "BridgeToolExecutor"
+    participant Catalog as "IBridgeToolCatalog"
+    participant Tool as "Bm25TextSearchTool"
+    participant Audit as "IAuditSink"
+
+    Helper->>MCP: initialize
+    MCP-->>Helper: "VsMcpBridge.McpServer 1.0.0.0"
+    Helper->>MCP: tools/list
+    MCP-->>Helper: "19 tools including bridge_bm25_text_search"
+    Helper->>VsTools: tools/call bridge_bm25_text_search(query, documents, maxResults)
+    VsTools->>Executor: ExecuteAsync("bridge.bm25TextSearch")
+    Executor->>Catalog: TryGetTool("bridge.bm25TextSearch")
+    Catalog-->>Executor: "Bm25TextSearchTool descriptor"
+    Executor->>Executor: policy, approval, secret-reference checks
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: "success with ranked limited results"
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor-->>VsTools: "BridgeToolResult with requestId and operationId"
+    VsTools-->>Helper: JSON result
+
+    Helper->>VsTools: tools/call bridge_bm25_text_search(empty query)
+    VsTools->>Executor: ExecuteAsync("bridge.bm25TextSearch")
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: InvalidRequest failure
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor-->>VsTools: structured failure
+    VsTools-->>Helper: JSON result
+
+    Helper->>VsTools: tools/call bridge_bm25_text_search(empty documents)
+    VsTools->>Executor: ExecuteAsync("bridge.bm25TextSearch")
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: InvalidRequest failure
+    Executor->>Audit: RecordAsync(BridgeAuditEnvelope)
+    Executor-->>VsTools: structured failure
+    VsTools-->>Helper: JSON result
