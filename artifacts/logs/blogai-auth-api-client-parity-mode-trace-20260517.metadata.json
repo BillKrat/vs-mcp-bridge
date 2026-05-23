@@ -1,0 +1,84 @@
+{
+  "runId": "blogai-auth-api-client-parity-mode-trace-20260517",
+  "artifactType": "blogai-auth-api-client-parity-mode-validation",
+  "observedAtUtc": "2026-05-23T17:32:56Z",
+  "repository": "Y:/vs-mcp-bridge",
+  "commitUnderTest": "70761bb",
+  "commitSubject": "Add BlogAI auth API client parity mode",
+  "projects": [
+    "BlogAI.Web/BlogAI.Web.csproj",
+    "Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj",
+    "VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj"
+  ],
+  "routes": {
+    "home": {
+      "path": "/",
+      "statusCode": 200
+    },
+    "localDevBaseline": {
+      "path": "/local-dev",
+      "statusCode": 200,
+      "authPath": "in-process",
+      "defaultPath": true,
+      "deniedPlaceholderHidden": true,
+      "developmentAuthenticatedPlaceholderShown": true
+    },
+    "localDevApiClientDiagnostic": {
+      "path": "/local-dev?authPath=api-client",
+      "statusCode": 200,
+      "authPath": "api-client",
+      "defaultPath": false,
+      "explicitDiagnosticPath": true,
+      "apiClientDiagnosticLabelRendered": true,
+      "unauthenticatedDenied": true,
+      "developmentAuthenticatedAllowed": true,
+      "diagnosticFailureRendered": false,
+      "silentFallbackUsed": false
+    }
+  },
+  "correlationMetadata": {
+    "correlationIdRendered": true,
+    "requestIdRendered": true,
+    "authDecisionIdRendered": true,
+    "clientApplicationRendered": true,
+    "environmentRendered": true
+  },
+  "sensitiveRendering": {
+    "rawDevelopmentCredentialRendered": false,
+    "rawTokenRendered": false,
+    "rawSecretRendered": false,
+    "authorizationHeaderRendered": false,
+    "bearerValueRendered": false,
+    "passwordSentinelRendered": false
+  },
+  "scopeGuards": {
+    "productionDeploymentAdded": false,
+    "oauthOpenIdRbacAdded": false,
+    "persistenceOrDatabaseAdded": false,
+    "blogEngineCouplingAdded": false,
+    "realLoginUiAdded": false,
+    "cookieSessionTopologyAdded": false,
+    "authMiddlewareAdded": false,
+    "defaultPathSwitchedToApiClient": false,
+    "newRuntimeBehaviorAddedInEvidenceSlice": false
+  },
+  "validation": {
+    "gitDiffCheckPassed": true,
+    "blogAiWebBuildSucceeded": true,
+    "sharedTestsPassed": true,
+    "sharedTestsPassedCount": 304,
+    "localSmokePassed": true
+  },
+  "commands": [
+    "git status --short --branch",
+    "git log --oneline -5",
+    "dotnet run --no-launch-profile --project ./Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj --urls http://127.0.0.1:5257",
+    "dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev?authPath=api-client",
+    "git diff --check",
+    "dotnet build ./BlogAI.Web/BlogAI.Web.csproj",
+    "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj"
+  ]
+}

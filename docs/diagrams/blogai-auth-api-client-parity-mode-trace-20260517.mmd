@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    participant Browser as "Local browser/test client"
+    participant LocalDev as "BlogAI.Web /local-dev"
+    participant StatusService as "IBlogAiLocalAuthStatusService"
+    participant Consumer as "IBlogAiAuthConsumerService"
+    participant ApiClient as "IBlogAiLocalAuthApiClient"
+    participant LocalApi as "Adventures.Auth.LocalApi /auth/login"
+    participant Rendered as "Rendered display-safe status"
+
+    Browser->>LocalDev: GET /local-dev
+    LocalDev->>StatusService: GetStatusAsync(authPath: null)
+    StatusService->>Consumer: Evaluate in-process baseline decisions
+    Consumer-->>StatusService: Denied/hidden and allowed/shown decisions
+    StatusService-->>LocalDev: Display-safe baseline model
+    LocalDev-->>Rendered: In-process label, placeholder states, correlation metadata
+    Rendered-->>Browser: 200 OK
+
+    Browser->>LocalDev: GET /local-dev?authPath=api-client
+    LocalDev->>StatusService: GetStatusAsync(authPath: "api-client")
+    StatusService->>ApiClient: LoginAsync without local dev credential
+    ApiClient->>LocalApi: POST /auth/login
+    LocalApi-->>ApiClient: Display-safe denied decision
+    StatusService->>ApiClient: LoginAsync with local/dev credential held in service layer
+    ApiClient->>LocalApi: POST /auth/login
+    LocalApi-->>ApiClient: Display-safe allowed decision
+    ApiClient-->>StatusService: API-backed diagnostic decisions
+    StatusService-->>LocalDev: Display-safe API-client diagnostic model
+    LocalDev-->>Rendered: API-client label, no-fallback note, placeholder states, correlation metadata
+    Rendered-->>Browser: 200 OK
+
+    Note over LocalDev,Consumer: Default /local-dev remains in-process baseline
+    Note over LocalDev,ApiClient: API client path runs only when authPath=api-client is explicit
+    Note over StatusService,Rendered: API-client failure would render diagnostic failure without silent fallback
+    Note over Browser,Rendered: Raw credential, token, secret, header, bearer, and password values are not rendered
+    Note over Browser,LocalApi: No production deployment, OAuth/OpenID/RBAC, persistence/database, BlogEngine.NET coupling, real login UI, cookies/session topology, or auth middleware

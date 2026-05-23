@@ -1,0 +1,121 @@
+Trace: BlogAI auth API client parity mode validation
+RunId: blogai-auth-api-client-parity-mode-trace-20260517
+ObservedAtUtc: 2026-05-23T17:32:56Z
+Repository: Y:/vs-mcp-bridge
+CommitUnderTest: 70761bb Add BlogAI auth API client parity mode
+Scope: local/dev BlogAI.Web explicit API-client parity diagnostics
+
+Purpose
+-------
+Capture durable evidence that `/local-dev` keeps the in-process baseline by default while `/local-dev?authPath=api-client` explicitly exercises the local/dev API client path with display-safe parity output.
+
+Inspected Inputs
+----------------
+- AI_START.md
+- docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-parity-readiness-review.md
+- docs/blogai-local-auth-ui-integration-design.md
+- docs/adventures-auth-local-api-boundary-design.md
+- BlogAI.Web/Auth
+- BlogAI.Web/Components/Pages/LocalDev.razor
+- Adventures.Auth.LocalApi
+
+Checkpoint
+----------
+Command: git status --short --branch
+Result:
+  ## main...origin/main
+
+Command: git log --oneline -5
+Result:
+  70761bb Add BlogAI auth API client parity mode
+  aeb2b4d Review BlogAI auth API client parity readiness
+  d5fef59 Add BlogAI local auth API client boundary trace artifacts
+  28a3cb6 Add BlogAI local auth API client boundary
+  14853b5 Review BlogAI local auth API client readiness
+
+Local Hosts
+-----------
+Command: dotnet run --no-launch-profile --project ./Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj --urls http://127.0.0.1:5257
+Observed output:
+  Now listening on: http://127.0.0.1:5257
+  Hosting environment: Development
+  Content root path: Y:\vs-mcp-bridge\Adventures.Auth.LocalApi
+
+Command: dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256
+Observed output:
+  Now listening on: http://127.0.0.1:5256
+  Hosting environment: Development
+  Content root path: Y:\vs-mcp-bridge\BlogAI.Web
+
+Smoke Test
+----------
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/
+Result:
+  HomeStatus=200
+
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev
+Result:
+  BaselineStatus=200
+  BaselinePathLabel=True
+  BaselineDeniedHidden=True
+  BaselineAllowedShown=True
+  CorrelationId=True
+  RequestId=True
+  AuthDecisionId=True
+
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev?authPath=api-client
+Result:
+  ApiStatus=200
+  ApiPathLabel=True
+  ApiUnauthenticatedDenied=True
+  ApiDevelopmentAllowed=True
+  ApiFailure=False
+  NoSilentFallback=True
+  CorrelationId=True
+  RequestId=True
+  AuthDecisionId=True
+
+Sensitive-Value Rendering Check
+-------------------------------
+Rendered baseline and API-client diagnostic output were checked for raw credential, token, secret, authorization header, bearer, and password sentinel categories.
+
+Result:
+  RawDevCredential=False
+  RawTokenSentinel=False
+  SecretSentinel=False
+  HeaderSentinel=False
+  PasswordSentinel=False
+
+Interpretation:
+  The diagnostic UI displays correlation and decision metadata only. It does not render raw local development credential values, raw token values, secret-like values, authorization header text, bearer values, or password sentinel text.
+
+Observed Boundary Evidence
+--------------------------
+- Default `/local-dev` remains on the in-process baseline.
+- Explicit `/local-dev?authPath=api-client` exercises the API-client diagnostic path.
+- API-client diagnostic mode calls `Adventures.Auth.LocalApi` through `IBlogAiLocalAuthApiClient`.
+- API-client diagnostic mode renders parity-safe denied/hidden and allowed/shown results.
+- The API-client diagnostic output says it does not fall back to the in-process path.
+- `CorrelationId`, `RequestId`, and `AuthDecisionId` render safely in both paths.
+- No production deployment, OAuth/OpenID/RBAC, persistence/database, BlogEngine.NET auth coupling, real login UI, cookies/session topology, auth middleware, or default-path switch was introduced.
+
+Validation Commands
+-------------------
+Command: git diff --check
+Result:
+  Passed. Git reported line-ending normalization warnings for changed text files only.
+
+Command: dotnet build ./BlogAI.Web/BlogAI.Web.csproj
+Result:
+  Build succeeded.
+  0 warnings.
+  0 errors.
+
+Command: dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+Result:
+  Passed.
+  Failed: 0, Passed: 304, Skipped: 0, Total: 304
+
+Conclusion
+----------
+The explicit local/dev API-client parity mode is validated as an opt-in diagnostic path. The default `/local-dev` route still uses the in-process baseline, the API-client path returns display-safe parity output when the local API host is running, and no silent fallback or production-auth scope was introduced.
