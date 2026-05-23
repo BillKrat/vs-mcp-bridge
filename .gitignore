@@ -575,6 +575,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-17-blogai-auth-api-client-parity-mode-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-auth-api-client-next-step-decision.md
 !/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md
+!/docs/session-handoffs/2026-05-17-blogai-production-exposure-boundary-review.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
