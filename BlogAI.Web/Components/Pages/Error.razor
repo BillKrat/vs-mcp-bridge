@@ -1,0 +1,25 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>BlogAI Error</PageTitle>
+
+<section class="page-header">
+    <p class="eyebrow">Error</p>
+    <h1>Request failed</h1>
+    @if (ShowRequestId)
+    {
+        <p class="lede">Request ID: <code>@RequestId</code></p>
+    }
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

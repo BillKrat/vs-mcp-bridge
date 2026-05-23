@@ -112,6 +112,7 @@ For the conceptual BlogAI auth trust-boundary flow sketch, read `docs/blogai-aut
 For the proposed first BlogAI authentication implementation boundary, read `docs/adr/0001-blogai-first-auth-boundary.md`.
 For the proposed initial BlogAI UI framework decision, read `docs/adr/0002-blogai-ui-framework.md`.
 For the readiness review before implementing the minimal BlogAI Blazor Web App shell, read `docs/session-handoffs/2026-05-17-blogai-blazor-readiness-review.md`.
+For the initial minimal BlogAI Blazor shell, inspect `BlogAI.Web`; it is local/dev only and keeps components presentation-focused.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.

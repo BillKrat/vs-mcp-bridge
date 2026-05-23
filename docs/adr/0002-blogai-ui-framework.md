@@ -22,7 +22,7 @@ Before adding any BlogAI UI project, the repo needs a durable framework decision
 
 Use Blazor Web App as the preferred initial BlogAI UI framework.
 
-This decision does not create a Blazor project, UI components, packages, deployment path, or BlogAI runtime behavior. It records the preferred first UI direction for a later explicit implementation slice.
+This decision originally did not create a Blazor project, UI components, packages, deployment path, or BlogAI runtime behavior. The first implementation slice later added `BlogAI.Web` as a minimal Blazor Web App shell with no production auth, deployment configuration, persistence, OAuth/OpenID, RBAC, or BlogEngine.NET coupling.
 
 ## Rationale
 
@@ -141,3 +141,9 @@ Current preferred stack direction:
 - future `Adventures.*` packages only when reuse pressure justifies extraction
 
 This keeps BlogAI as the first consumer of the platform and auth/API boundary without making UI code the owner of platform behavior.
+
+## Initial Shell
+
+The initial shell project is `BlogAI.Web`.
+
+It contains a basic Blazor Web App surface for local development only. Components are presentation-only placeholders. The project does not reference BlogEngine.NET, does not implement auth UI, and does not make identity decisions. Future protected behavior should consume service or API client boundaries rather than placing auth or business logic in Razor components.

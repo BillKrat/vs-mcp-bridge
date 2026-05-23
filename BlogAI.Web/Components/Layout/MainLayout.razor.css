@@ -1,0 +1,85 @@
+.app-shell {
+    min-height: 100vh;
+    background: #f7f7f4;
+    color: #1d2523;
+}
+
+.top-bar {
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 1px solid #d9ded9;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    min-height: 4rem;
+    padding: 0 2rem;
+}
+
+.brand {
+    color: #1d2523;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+nav a {
+    border-radius: 6px;
+    color: #42514c;
+    padding: 0.55rem 0.75rem;
+    text-decoration: none;
+}
+
+nav a:hover,
+nav a:focus {
+    background: #edf2ee;
+    color: #1d2523;
+}
+
+.content {
+    margin: 0 auto;
+    max-width: 960px;
+    padding: 2rem;
+}
+
+@media (max-width: 640px) {
+    .top-bar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 1rem;
+    }
+
+    nav {
+        flex-wrap: wrap;
+    }
+
+    .content {
+        padding: 1.25rem;
+    }
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
