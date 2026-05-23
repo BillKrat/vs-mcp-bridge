@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Define how BlogAI should consume the local `AdventuresAuth` boundary before adding any BlogAI app code.
+Define how BlogAI should consume the local `AdventuresAuth` boundary.
 
-This is design guidance only. It does not implement BlogAI integration, create BlogAI app code, add API hosting, add OAuth/OpenID, add persistence, change deployment, or modify BlogEngine.NET runtime.
+This design now has a first local shared-layer prototype. It still does not create BlogAI app code, add API hosting, add OAuth/OpenID, add persistence, change deployment, or modify BlogEngine.NET runtime.
 
 ## Consumer Boundary
 
@@ -74,6 +74,14 @@ BlogAI should need only:
 
 The local principal placeholder should stay non-sensitive. It is not a production identity model, role model, or claims platform.
 
+## Initial Prototype
+
+The first local/dev-only consumer adapter lives under `VsMcpBridge.Shared/BlogAI/Auth` with tests in `VsMcpBridge.Shared.Tests/BlogAiAuthConsumerTests.cs`.
+
+The adapter accepts a BlogAI resource name, public/protected route category, optional development auth marker or local session placeholder, and correlation metadata. It calls the existing in-process `AdventuresAuthDecisionService`, maps the auth decision to BlogAI allow/deny output, and records only route, correlation, decision, reason, and redaction metadata.
+
+This is not a web host, middleware layer, production auth path, BlogEngine.NET auth bridge, or deployment slice.
+
 ## Non-Goals
 
 Explicitly out of scope:
@@ -96,7 +104,7 @@ Explicitly out of scope:
 
 ## Next Slice Guidance
 
-The next implementation slice, if approved, should add the smallest local BlogAI-style consumer harness or adapter needed to call the existing in-process `AdventuresAuthDecisionService`.
+The next slice, if approved, should capture durable trace artifacts for the local adapter or add the smallest BlogAI-side harness needed to exercise the existing in-process consumer boundary.
 
 It should not create production hosting, persistence, OAuth/OpenID, RBAC, deployment changes, BlogEngine.NET runtime changes, or a generalized identity platform.
 

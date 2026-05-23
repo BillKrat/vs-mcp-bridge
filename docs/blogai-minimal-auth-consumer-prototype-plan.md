@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Define the first minimal BlogAI-side prototype that consumes `AdventuresAuth`, without implementing BlogAI code yet.
+Define the first minimal BlogAI-side prototype that consumes `AdventuresAuth`.
 
-This is planning only. It does not create BlogAI app code, create projects, implement auth middleware, change deployment, modify BlogEngine.NET runtime, add persistence/database, or add OAuth/OpenID/RBAC.
+This plan guided the first local shared-layer adapter. It does not create BlogAI app code, create projects, implement auth middleware, change deployment, modify BlogEngine.NET runtime, add persistence/database, or add OAuth/OpenID/RBAC.
 
 ## First Prototype Objective
 
@@ -19,11 +19,15 @@ The first BlogAI-side prototype should prove:
 
 The prototype remains local/dev only. It is not production auth and it is not a BlogEngine.NET auth bridge.
 
+## Initial Prototype Location
+
+The first implementation slice placed the local/dev-only consumer adapter under `VsMcpBridge.Shared/BlogAI/Auth` with tests in `VsMcpBridge.Shared.Tests/BlogAiAuthConsumerTests.cs`.
+
+That location keeps the prototype in-process, small, and testable. It is not a web host, middleware layer, production `api.global-webnet.com` deployment, BlogEngine.NET auth bridge, or identity platform.
+
 ## Future Code Location Guidance
 
-No code is created by this plan.
-
-If later approved, code may live in the smallest BlogAI app-layer or consumer-boundary location that can exercise the current in-process `AdventuresAuthDecisionService`.
+Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.
 
 Boundary expectations:
 
@@ -92,9 +96,9 @@ Explicitly out of scope:
 
 ## Implementation Gate
 
-No BlogAI consumer code should be added until this plan is reviewed.
+The initial gate was reviewed in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-readiness-review.md`, then the first local shared-layer adapter was added.
 
-If implemented, the first slice must:
+Any next implementation slice must still:
 
 - remain local/dev only
 - use the existing `AdventuresAuth` decision shape
@@ -105,6 +109,6 @@ If implemented, the first slice must:
 
 ## Expected Next Slice
 
-The next implementation slice, if approved, should add only a minimal local BlogAI-style consumer harness or adapter that calls `AdventuresAuthDecisionService` and maps the decision to an allow/deny response.
+The next slice, if approved, should capture durable trace artifacts for the implemented local adapter or add only the smallest BlogAI-side harness needed to exercise it.
 
 It should not create a production service, deploy anything, or introduce identity-platform scope.
