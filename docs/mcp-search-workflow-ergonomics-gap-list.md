@@ -100,6 +100,21 @@ The workflow confirmed the prior stale chrome/cache finding without fallback `rg
 
 Remaining friction shifted from manual file-list assembly to orchestration: a temporary caller still had to chain inventory, selection, file reads, regex, BM25, log, metadata, and handoff capture.
 
+## Classification Guidance Added
+
+`docs/evidence-classification-guidance.md` now defines lightweight evidence categories for future MCP search workflows:
+
+- `canonical-current`
+- `operational-handoff`
+- `historical-evidence`
+- `preserved-before-update`
+- `rendered-failure-evidence`
+- `diagnostic-trace`
+- `transient-generated`
+
+This addresses the canonical-vs-historical ambiguity without adding databases, background indexing, metadata services, or automated classification.
+The guidance recommends searching canonical/current sources first, then searching historical or diagnostic evidence intentionally and preserving which category produced each finding.
+
 ## What Should Stay Manual
 
 Keep these decisions explicit for safety and clarity:
@@ -158,9 +173,10 @@ Possible next slices, in order of usefulness:
    - Boundary: read-only repo artifact inventory.
 
 4. **Canonical-vs-historical evidence tagging**
-   - Input: small curated manifests for BlogAI evidence groups.
-   - Output: explicit categories agents can filter before building entries.
-   - Boundary: human-curated tags, not automatic authority inference.
+   - Status: lightweight guidance added in `docs/evidence-classification-guidance.md`.
+   - Input: folder semantics, filename conventions, optional header markers, and caller-supplied category hints.
+   - Output: clearer category labels in future handoffs and MCP search evidence groups.
+   - Boundary: human-readable guidance only, not automatic authority inference.
 
 5. **Caller-side BM25 snippet extraction**
    - Input: BM25 ranked document ids plus original explicit documents.

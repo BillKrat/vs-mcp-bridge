@@ -2,6 +2,9 @@
 
 The canonical repository-backed blog format now lives under `docs/blogs/posts/`.
 
+Evidence category: canonical-current for `docs/blogs/posts/**`; preserved export and diagnostic folders are evidence, not publishable canonical source.
+See `../evidence-classification-guidance.md` before interpreting MCP search hits across canonical posts, preserved exports, rendered-route reports, and handoffs.
+
 Each post is stored as:
 
 ```text

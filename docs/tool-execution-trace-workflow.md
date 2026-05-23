@@ -333,12 +333,14 @@ The caller remains responsible for reading selected files and passing explicit `
 ## MCP Search Diagnostic Selection
 
 Use `.agents/skills/mcp-search-diagnostics/SKILL.md` for concise agent guidance before running MCP search diagnostics.
+Use `docs/evidence-classification-guidance.md` when search results need to distinguish canonical/current source from historical, rendered-failure, handoff, or diagnostic trace evidence.
 
 - Start MCP/tooling triage with `bridge_get_tool_inventory`.
 - Use `bridge_select_repo_documents` when a workflow needs deterministic repo-root-relative file metadata before building explicit search inputs.
 - Use `bridge_regex_text_search` for exact markers, regex patterns, structural text checks, and deterministic evidence searches.
 - Use `bridge_bm25_text_search` for ranked relevance over a bounded explicit document set.
 - Build the document/text set in the caller and pass only explicit `inputText`, `entries`, or `documents` to MCP.
+- Record evidence category with selected files when category affects whether a finding is actionable.
 - Do not pass paths expecting the MCP tools to read files; they do not crawl files or mutate state.
 - If MCP is unavailable, use deterministic repo search such as `rg` and preserve that fallback path in the resulting handoff or notes.
 

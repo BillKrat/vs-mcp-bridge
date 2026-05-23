@@ -24,11 +24,12 @@ description: Use MCP-exposed bridge search diagnostics over explicit caller-prov
 
 1. Call `bridge_get_tool_inventory`.
 2. Optionally call `bridge_select_repo_documents` with explicit include/exclude patterns to produce a visible file list.
-3. Read only the selected files you choose in the caller.
-4. Choose `bridge_regex_text_search` or `bridge_bm25_text_search`.
-5. Build a bounded set of explicit `inputText`, `entries`, or `documents` in the caller.
-6. Pass only that text into the MCP search tool.
-7. Preserve selected files, matched entries, request/operation ids, and the search path in a handoff when the result affects future work.
+3. Classify selected files as canonical/current, historical, rendered-failure, handoff, or diagnostic trace evidence when that distinction affects conclusions.
+4. Read only the selected files you choose in the caller.
+5. Choose `bridge_regex_text_search` or `bridge_bm25_text_search`.
+6. Build a bounded set of explicit `inputText`, `entries`, or `documents` in the caller.
+7. Pass only that text into the MCP search tool.
+8. Preserve selected files, evidence categories, matched entries, request/operation ids, and the search path in a handoff when the result affects future work.
 
 ## Safety Rules
 
@@ -38,9 +39,11 @@ description: Use MCP-exposed bridge search diagnostics over explicit caller-prov
 - Do not mutate state.
 - Do not include secrets, tokens, passwords, bearer values, or private credentials in search inputs.
 - Both search tools execute through `BridgeToolExecutor`; preserve its policy, approval, redaction, audit, manifest, and correlation boundaries.
+- A match in historical or diagnostic evidence is not proof that the marker remains in canonical/current source.
 
 ## References
 
+- `docs/evidence-classification-guidance.md`
 - `docs/tool-execution-trace-workflow.md`
 - `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`
 - `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`

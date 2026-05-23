@@ -114,6 +114,7 @@ For the MCP regex-tool rerun of the BlogAI stale shared chrome search, read `doc
 For the first real BlogAI workflow using both MCP regex and BM25 diagnostics, read `docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md`.
 For the BlogAI workflow using MCP document selection plus regex/BM25 search, read `docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`.
 For practical MCP search workflow ergonomics gaps and conservative next tooling slices, read `docs/mcp-search-workflow-ergonomics-gap-list.md`.
+For distinguishing canonical/current source from preserved historical or diagnostic evidence during MCP searches, read `docs/evidence-classification-guidance.md`.
 For MCP-exposed explicit repo document selection validation, also read `docs/session-handoffs/2026-05-16-document-selection-validation.md`.
 
 ## Current Working Guidance
@@ -128,6 +129,7 @@ Keep these repo-specific themes in mind:
 - keep MCP stdout clean and route diagnostics through approved channels
 - during MCP/tooling triage, use `bridge_get_tool_inventory` early when available; it is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata without executing bridge tools
 - for MCP search diagnostics, use `.agents/skills/mcp-search-diagnostics/SKILL.md`; `bridge_select_repo_documents` is for deterministic metadata-only file selection, `bridge_regex_text_search` is for exact/regex searches, `bridge_bm25_text_search` is for ranked relevance over explicit documents, and the search tools do not read paths or crawl files
+- when MCP search results include preserved BlogAI evidence, distinguish `canonical-current` sources from `historical-evidence`, `rendered-failure-evidence`, and `diagnostic-trace` sources before recommending action
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, approval evaluation when required, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices
