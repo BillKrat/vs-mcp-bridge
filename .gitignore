@@ -527,6 +527,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/chatgpt-codex-gated-handoff-workflow.md
 !/docs/session-slice-operating-template.md
 !/docs/future-contributor-operating-expectations.md
+!/docs/first-gated-handoff-preview-tool-candidate.md
 !/docs/adventures-auth-local-api-boundary-design.md
 !/docs/blogai-local-auth-ui-integration-design.md
 !/docs/adr/
