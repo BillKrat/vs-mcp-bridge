@@ -39,6 +39,8 @@ Durable validation evidence for this Blazor-side display is captured in `docs/se
 
 Durable validation evidence for the route-level protected placeholder behavior is captured in `docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md`.
 
+The first local/dev BlogAI API client boundary now exists in `BlogAI.Web/Auth` behind `IBlogAiLocalAuthApiClient`. It is registered for dependency injection and targets the local `Adventures.Auth.LocalApi` endpoint shape, but `/local-dev` continues to use the in-process `IBlogAiAuthConsumerService` display path by default until a future parity slice explicitly wires and validates the API-backed path.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.

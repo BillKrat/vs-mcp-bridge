@@ -193,6 +193,12 @@ The skeleton remains local/dev only. It validates unauthenticated denied, valid 
 
 Durable trace artifacts for the local API host skeleton are captured in `docs/session-handoffs/2026-05-17-adventures-auth-local-api-validation.md`.
 
+## BlogAI Client Boundary
+
+`BlogAI.Web/Auth` now includes a local/dev-only `IBlogAiLocalAuthApiClient` boundary that can call the `Adventures.Auth.LocalApi` `/auth` endpoints.
+
+The client does not switch BlogAI UI behavior by default. `/local-dev` still uses the in-process `IBlogAiAuthConsumerService` path until a future slice explicitly proves API-backed parity with equivalent allow/deny, correlation, redaction, and no-secret-rendering evidence.
+
 ## Future Slice
 
 The implementation should still stop if it needs production deployment, persistent identity storage, external identity providers, or BlogAI-specific authorization logic inside the API boundary.

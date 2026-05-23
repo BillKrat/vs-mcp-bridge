@@ -8,6 +8,10 @@ public static class BlogAiLocalAuthStatusServiceExtensions
     public static IServiceCollection AddBlogAiLocalAuthStatusServices(this IServiceCollection services)
     {
         services.TryAddScoped<IBlogAiLocalAuthStatusService, BlogAiLocalAuthStatusService>();
+        services.AddHttpClient<IBlogAiLocalAuthApiClient, BlogAiLocalAuthApiClient>(client =>
+        {
+            client.BaseAddress = BlogAiLocalAuthApiClient.LocalDevelopmentBaseAddress;
+        });
 
         return services;
     }
