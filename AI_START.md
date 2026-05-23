@@ -111,6 +111,7 @@ For the concrete first-session checklist for applying current MCP/tools to BlogA
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.
 For the direct MCP inventory validation and BlogAI stale shared chrome search findings, read `docs/session-handoffs/2026-05-16-blogai-stale-chrome-search-findings.md`.
 For the MCP regex-tool rerun of the BlogAI stale shared chrome search, read `docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md`.
+For the first real BlogAI workflow using both MCP regex and BM25 diagnostics, read `docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md`.
 
 ## Current Working Guidance
 

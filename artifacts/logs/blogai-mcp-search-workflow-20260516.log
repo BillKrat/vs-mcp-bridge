@@ -1,0 +1,29 @@
+Run: blogai-mcp-search-workflow-20260516
+Target: BlogAI stale shared chrome/cache issue
+Repository: Y:/vs-mcp-bridge
+Baseline: 3809cf2 Document MCP search diagnostic guidance
+Server: VsMcpBridge.McpServer 1.0.0.0
+tools/list count: 19
+tools/list includes inventory/regex/bm25: true/true/true
+bridge_get_tool_inventory success: true; toolCount=2; includes bridge.regexTextSearch=true; includes bridge.bm25TextSearch=true
+explicit documents:
+  [0] stale-inspection: Stale shared chrome inspection report (1 files, 7611 chars)
+  [1] cache-clear-failure: Cache clear failure inspection report (1 files, 8709 chars)
+  [2] final-route-after-cache-clear: Final rendered route verification after failed cache clear (1 files, 9257 chars)
+  [3] cache-reload-inspection: BlogAI cache reload inspection report (1 files, 6497 chars)
+  [4] widget-before: Preserved before-update widget settings row 26512 (3 files, 5320 chars)
+  [5] widget-after: Current after-update widget settings row 26512 (3 files, 10408 chars)
+  [6] local-blogai-cache-source: Selected local BlogAI cache/auth source files (2 files, 4105 chars)
+  [7] canonical-posts: Canonical docs/blogs/posts aggregate (32 files, 188384 chars)
+regex summaries:
+  feature/approval-apply-ui-slice: total=49; matched=stale-inspection:11, cache-clear-failure:3, final-route-after-cache-clear:32, widget-before:3; requestId=51608ac754ee4d75a7306a19a09e2a14; operationId=a49cff67c1984180a67771709c19d7f2
+  clearCache: total=13; matched=stale-inspection:2, cache-clear-failure:8, final-route-after-cache-clear:2, local-blogai-cache-source:1; requestId=86bf20abe12e4965abc03c98d1b7aded; operationId=8401e8d016744ec7b67e6a6970be3737
+  TextBox: total=11; matched=stale-inspection:7, cache-clear-failure:3, canonical-posts:1; requestId=3ac2089be7e4407ca0a82c21e32290a4; operationId=34be7aa684a94731bb63447016c8e97c
+  widget: total=81; matched=stale-inspection:31, cache-clear-failure:16, final-route-after-cache-clear:3, cache-reload-inspection:2, widget-before:5, widget-after:5, local-blogai-cache-source:14, canonical-posts:5; requestId=5030cec8c21b4c44837deb4ed0ed7718; operationId=200a136fd2d74231a6df9a86e3bb4cff
+  route: total=51; matched=stale-inspection:11, cache-clear-failure:8, final-route-after-cache-clear:19, cache-reload-inspection:7, canonical-posts:6; requestId=915bb41e88fd469ea3d7d6b80e222ca4; operationId=5124509ccc034094976eac527a9a16c7
+  blogAi: total=71; matched=stale-inspection:13, cache-clear-failure:13, final-route-after-cache-clear:2, cache-reload-inspection:16, widget-before:2, widget-after:5, local-blogai-cache-source:4, canonical-posts:16; requestId=69ef517e5482437986e3421bcb6ffd6c; operationId=1b147e748347404087b79d7081c6a739
+bm25 summaries:
+  cache clear endpoint shared widget chrome stale marker: top=cache-clear-failure:10.615401, final-route-after-cache-clear:10.503353, stale-inspection:7.776591, canonical-posts:3.886438, cache-reload-inspection:2.136348; requestId=c1a81046a45c4f1f833f6d93a6877616; operationId=8e0cb51f98f949dfb969a072618c3fb0
+  BlogEngine widget settings stale chrome deployment cache: top=final-route-after-cache-clear:5.214225, cache-clear-failure:5.09085, stale-inspection:2.867684, canonical-posts:1.63326, local-blogai-cache-source:1.368723; requestId=8fcab689100149c2a511b14853baf280; operationId=a60cb2ae575e487db65d188e9b449799
+  BlogAI source of truth publishing route validation: top=canonical-posts:5.012699, final-route-after-cache-clear:3.250082, cache-reload-inspection:3.214882, stale-inspection:2.775291, cache-clear-failure:2.361506; requestId=19f5699005c0488fa2229bcb9758b79f; operationId=19fa0b7c359e48caa4d90957c8cd95b8
+fallback rg used: false
