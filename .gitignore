@@ -563,6 +563,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md
 !/docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md
 !/docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md
+!/docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-readiness-review.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd

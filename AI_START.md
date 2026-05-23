@@ -120,6 +120,7 @@ For the readiness review before implementing the local/dev BlogAI auth UI displa
 For the initial local/dev BlogAI auth UI display boundary, inspect `BlogAI.Web/Auth` and `BlogAI.Web/Components/Pages/LocalDev.razor`.
 For durable validation evidence of the initial local/dev BlogAI auth UI display boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-ui-validation.md`.
 For durable validation evidence of the local/dev route-level protected placeholder behavior, read `docs/session-handoffs/2026-05-17-blogai-route-protected-placeholder-validation.md`.
+For the readiness review before wiring BlogAI to the local/dev AdventuresAuth API client boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-readiness-review.md`.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.
