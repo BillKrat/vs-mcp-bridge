@@ -39,6 +39,7 @@ Use these as needed after that:
 - `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
 - `docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
+- `docs/session-handoffs/2026-05-17-gated-handoff-tool-readiness-review.md` for the readiness decision before any bridge-side gated handoff tool implementation
 - `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
 - `.agents/skills/` for focused task workflows such as MCP validation, MCP search diagnostics, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
 
