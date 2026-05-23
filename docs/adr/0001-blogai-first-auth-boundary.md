@@ -128,5 +128,6 @@ Before any auth implementation begins, a future slice should document:
 - local validation plan
 
 The implementation gate checklist is `docs/blogai-auth-implementation-gate.md`.
+The minimal local prototype objective is clarified in `docs/blogai-minimal-auth-prototype-clarification.md`.
 
 No auth implementation is approved by this ADR alone.

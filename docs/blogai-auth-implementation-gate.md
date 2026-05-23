@@ -108,3 +108,5 @@ Stop immediately if:
 Implementation may be proposed only after every applicable checklist item is satisfied and the minimal prototype objective is written down.
 
 If any item remains unclear, continue documentation or boundary analysis instead of coding.
+
+The minimal prototype objective and local validation expectations are clarified in `docs/blogai-minimal-auth-prototype-clarification.md`.

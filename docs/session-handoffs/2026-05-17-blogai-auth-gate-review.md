@@ -39,6 +39,8 @@ Not ready; clarify boundary first.
 
 The project is close to ready for a minimal local-only auth prototype, but the gate requires the minimal prototype objective and local validation plan to be written down before coding. That missing clarification is small and docs-only, but it should happen before any auth implementation starts.
 
+Follow-up clarification: `docs/blogai-minimal-auth-prototype-clarification.md`.
+
 ## Smallest Needed Clarification
 
 Add a concise docs-only prototype plan that defines:
@@ -72,3 +74,5 @@ If the clarification passes, the next implementation slice should be narrowly sc
 Next recommended slice:
 
 `Create a docs-only BlogAI auth prototype objective and local validation plan. Do not implement auth.`
+
+After that clarification is reviewed, a later slice may consider the minimal local-only auth prototype described there.
