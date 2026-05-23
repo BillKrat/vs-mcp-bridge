@@ -38,6 +38,7 @@ Use these as needed after that:
 - `docs/MVPVM_OVERVIEW.md` for UI/presenter/viewmodel boundaries
 - `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
+- `docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
 - `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations
 - `.agents/skills/` for focused task workflows such as MCP validation, MCP search diagnostics, VSIX validation, trace artifacts, architecture handoffs, blog publishing review, and security seam development
 
