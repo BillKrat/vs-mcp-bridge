@@ -59,6 +59,8 @@ The near-term work should answer simpler questions first:
 
 Architecture notes and trust-boundary diagrams should come before implementation.
 
+The first trust-boundary sketch is `docs/blogai-auth-trust-boundary-flow.md`.
+
 ## Possible Future Ownership For api.global-webnet.com
 
 If introduced later, `https://api.global-webnet.com` may own:
