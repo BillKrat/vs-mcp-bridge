@@ -150,3 +150,5 @@ The initial shell project is `BlogAI.Web`.
 It contains a basic Blazor Web App surface for local development only. Components are presentation-only placeholders. The project does not reference BlogEngine.NET, does not implement auth UI, and does not make identity decisions. Future protected behavior should consume service or API client boundaries rather than placing auth or business logic in Razor components.
 
 Globalization and localization direction is recorded in `docs/adr/0003-blogai-globalization-localization.md`: BlogAI remains English-first for now, but UI/API presentation should be globalization-ready while logs, audit events, traces, and developer docs remain invariant.
+
+Durable validation evidence for the initial shell is captured in `docs/session-handoffs/2026-05-17-blogai-blazor-shell-validation.md`.

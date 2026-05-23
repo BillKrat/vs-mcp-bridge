@@ -1,0 +1,52 @@
+{
+  "runId": "blogai-blazor-shell-trace-20260517",
+  "artifactType": "blogai-blazor-shell-validation",
+  "observedAtUtc": "2026-05-23T16:30:04Z",
+  "repository": "Y:/vs-mcp-bridge",
+  "commitUnderTest": "4fefd0c",
+  "project": "BlogAI.Web/BlogAI.Web.csproj",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "statusCode": 200,
+      "expectedContentEvidence": [
+        "BlogAI",
+        "Blazor shell"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/local-dev",
+      "statusCode": 200,
+      "expectedContentEvidence": [
+        "Service boundary placeholder",
+        "BlogEngine.NET dependency"
+      ]
+    }
+  ],
+  "validation": {
+    "buildSucceeded": true,
+    "buildWarnings": 0,
+    "buildErrors": 0,
+    "authUiAdded": false,
+    "productionAuthIntegrated": false,
+    "blogEngineDependencyAdded": false,
+    "deploymentConfigAdded": false,
+    "persistenceAdded": false,
+    "localizationResourcesAdded": false
+  },
+  "commands": [
+    "dotnet build ./BlogAI.Web/BlogAI.Web.csproj",
+    "dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/",
+    "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev",
+    "rg -n \"PackageReference|ProjectReference|UseAuthentication|UseAuthorization|AddAuthentication|AddAuthorization|Identity|OAuth|OpenId|OpenID|RBAC|DbContext|BlogEngine|IStringLocalizer|\\.resx|RequestLocalization|UseRequestLocalization|AddLocalization\" BlogAI.Web",
+    "rg --files BlogAI.Web -g \"*.resx\" -g \"*.resw\" -g \"Resources/**\""
+  ],
+  "notes": [
+    "BlogEngine.NET search matches are explanatory boundary text only.",
+    "No auth/API service dependency is present yet.",
+    "No localization resources are present yet."
+  ]
+}

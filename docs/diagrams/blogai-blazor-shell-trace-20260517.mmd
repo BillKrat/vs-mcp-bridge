@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    participant Client as "Local browser/test client"
+    participant App as "BlogAI.Web Blazor app"
+    participant Home as "Route: /"
+    participant LocalDev as "Route: /local-dev"
+    participant Auth as "Auth/API dependency"
+
+    Note over App: Local/dev shell only
+    Client->>App: GET /
+    App->>Home: Render presentation-only home page
+    Home-->>App: BlogAI shell content
+    App-->>Client: 200 OK
+
+    Client->>App: GET /local-dev
+    App->>LocalDev: Render service-boundary placeholder
+    LocalDev-->>App: Placeholder content
+    App-->>Client: 200 OK
+
+    Note over App,Auth: No auth UI, production auth, service call, persistence, localization resources, deployment config, or BlogEngine.NET dependency in this slice

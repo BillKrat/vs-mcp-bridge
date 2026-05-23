@@ -1,0 +1,112 @@
+Trace: BlogAI Blazor shell validation
+RunId: blogai-blazor-shell-trace-20260517
+ObservedAtUtc: 2026-05-23T16:30:04Z
+Repository: Y:/vs-mcp-bridge
+CommitUnderTest: 4fefd0c Add BlogAI globalization localization decision record
+Scope: local/dev BlogAI.Web shell validation
+
+Purpose
+-------
+Capture durable evidence that the minimal BlogAI Blazor Web App shell builds and serves its initial routes before auth UI, service integration, deployment, persistence, localization resources, or BlogEngine.NET coupling are added.
+
+Inspected Inputs
+----------------
+- BlogAI.Web
+- docs/adr/0002-blogai-ui-framework.md
+- docs/adr/0003-blogai-globalization-localization.md
+- docs/session-handoffs/2026-05-17-blogai-blazor-readiness-review.md
+
+Command: git status --short --branch
+Result:
+  ## main...origin/main
+
+Command: git log --oneline -10
+Result:
+  4fefd0c Add BlogAI globalization localization decision record
+  524d519 Add minimal BlogAI Blazor shell
+  35830e9 Review BlogAI Blazor app readiness
+  2fc82a7 Add BlogAI UI framework decision record
+  7595f3a Add AdventuresAuth Local API trace artifacts
+  225262f Add local AdventuresAuth Minimal API host skeleton
+  fe94f89 Document Minimal API direction for AdventuresAuth host
+  3c4ac70 Review AdventuresAuth API readiness
+  86e3e04 Design local AdventuresAuth API boundary
+  83777fe Add BlogAI auth consumer trace artifacts
+
+Command: rg --files BlogAI.Web
+Result:
+  BlogAI.Web/appsettings.json
+  BlogAI.Web/BlogAI.Web.csproj
+  BlogAI.Web/Program.cs
+  BlogAI.Web/appsettings.Development.json
+  BlogAI.Web/Properties/launchSettings.json
+  BlogAI.Web/wwwroot/app.css
+  BlogAI.Web/Components/Routes.razor
+  BlogAI.Web/Components/App.razor
+  BlogAI.Web/Components/_Imports.razor
+  BlogAI.Web/Components/Pages/LocalDev.razor
+  BlogAI.Web/Components/Pages/Home.razor
+  BlogAI.Web/Components/Pages/NotFound.razor
+  BlogAI.Web/Components/Pages/Error.razor
+  BlogAI.Web/Components/Layout/MainLayout.razor
+  BlogAI.Web/Components/Layout/MainLayout.razor.css
+
+Command: dotnet build ./BlogAI.Web/BlogAI.Web.csproj
+Result:
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  BlogAI.Web -> Y:\vs-mcp-bridge\BlogAI.Web\bin\Debug\net10.0\BlogAI.Web.dll
+
+  Build succeeded.
+      0 Warning(s)
+      0 Error(s)
+
+Command: $env:ASPNETCORE_ENVIRONMENT='Development'; dotnet run --no-launch-profile --project ./BlogAI.Web/BlogAI.Web.csproj --urls http://127.0.0.1:5256
+Observed host output:
+  Now listening on: http://127.0.0.1:5256
+  Application started.
+  Hosting environment: Development
+  Content root path: Y:\vs-mcp-bridge\BlogAI.Web
+
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/
+Result:
+  GET / status=200 containsBlogAI=True containsShell=True
+
+Command: Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5256/local-dev
+Result:
+  GET /local-dev status=200 containsPlaceholder=True containsNoBlogEngine=True
+
+Command: stop local BlogAI.Web host
+Result:
+  Application is shutting down.
+
+Boundary Checks
+---------------
+Command: rg -n "PackageReference|ProjectReference|UseAuthentication|UseAuthorization|AddAuthentication|AddAuthorization|Identity|OAuth|OpenId|OpenID|RBAC|DbContext|BlogEngine|IStringLocalizer|\.resx|RequestLocalization|UseRequestLocalization|AddLocalization" BlogAI.Web
+Result:
+  BlogAI.Web\Components\Pages\LocalDev.razor:19:            <dt>Identity decisions</dt>
+  BlogAI.Web\Components\Pages\LocalDev.razor:23:            <dt>BlogEngine.NET dependency</dt>
+  BlogAI.Web\Components\Pages\Home.razor:22:        <p>Local development only; no production deployment or BlogEngine.NET coupling.</p>
+
+Interpretation:
+  The matches are explanatory UI boundary text only. The project file contains no PackageReference or ProjectReference entries. Program.cs contains no authentication, authorization, localization, database, or deployment integration. No BlogEngine.NET dependency was introduced.
+
+Command: rg --files BlogAI.Web -g "*.resx" -g "*.resw" -g "Resources/**"
+Result:
+  No files matched.
+
+Interpretation:
+  No localization resource files were introduced.
+
+Conclusion
+----------
+- BlogAI.Web builds successfully.
+- The initial routes `/` and `/local-dev` return HTTP 200.
+- The shell remains local/dev oriented.
+- No auth UI was added.
+- No production auth integration was added.
+- No BlogEngine.NET dependency was added.
+- No deployment configuration was added.
+- No persistence or database behavior was added.
+- No localization resources were added.
+- The shell is ready for future small slices to add service integration only after explicit approval.
