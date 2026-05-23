@@ -588,6 +588,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-17-blogai-auth-webdeploy-state-handoff.md
 !/docs/session-handoffs/2026-05-17-gated-handoff-tool-readiness-review.md
 !/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md
+!/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-implementation-readiness.md
 !/docs/diagrams/
 /docs/diagrams/*
 !/docs/diagrams/app-host-ping-trace-20260507.mmd
