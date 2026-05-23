@@ -12,9 +12,11 @@ The current directional shape remains:
 
 - legacy site: `https://www.global-webnet.com`
 - possible BlogAI application surface: `https://www.global-webnet.com/blogAi`
-- possible future API/auth boundary: `https://api.global-webnet.com`
+- possible future reusable API/auth boundary: `https://api.global-webnet.com`
 
 The legacy BlogEngine.NET site should remain stable while BlogAI grows beside it. The API/auth host is boundary thinking, not approval to create services, routing, deployment automation, or auth code.
+
+The boundary should evolve as a Global WebNet auth/API service that BlogAI consumes first, not as one-off BlogAI auth. The broader direction is captured in `docs/global-webnet-auth-boundary-direction.md`.
 
 ## Why Auth/API Should Be A Boundary
 
@@ -29,6 +31,8 @@ BlogAI should treat authentication and API access as an explicit boundary becaus
 - future user, role, or organization concepts
 
 Keeping this boundary explicit now avoids mixing future BlogAI security decisions into legacy publishing code, cache diagnostics, MCP tooling, or ad hoc deployment scripts.
+
+The current priority order is `vs-mcp-bridge` platform correctness first, a reusable Global WebNet auth/API boundary second, BlogAI as the first consumer third, and broader reuse later for MCP tunnel, website authentication, mobile apps, and future applications.
 
 ## Relationship To Legacy BlogEngine.NET Auth
 
@@ -67,6 +71,10 @@ The implementation gate checklist is `docs/blogai-auth-implementation-gate.md`.
 
 If introduced later, `https://api.global-webnet.com` may own:
 
+- login/authenticate
+- authenticated vs unauthenticated request validation
+- logout or session invalidation
+- current user or claims responses
 - BlogAI API endpoints
 - authentication handoff or token validation boundaries
 - administrative BlogAI operations
@@ -77,6 +85,8 @@ If introduced later, `https://api.global-webnet.com` may own:
 
 It should not be treated as a dumping ground for unclear responsibilities.
 Each endpoint should have a documented caller, trust level, secret behavior, audit expectation, and failure mode before implementation.
+
+The first useful proof is narrower than a complete identity system: unauthenticated request denied, authenticated request allowed, observable auth decision, no raw secret or token logging, correlation id preserved, and BlogAI able to call the boundary without owning the identity decision.
 
 ## Alignment With MCP Security Seams
 
@@ -130,6 +140,9 @@ Deferred until a later explicit implementation slice:
 - `api.global-webnet.com` project or service creation
 - BlogEngine.NET runtime changes
 - production cache-clear, publish, or deployment automation
+- MCP tunnel integration
+- mobile-specific flows
+- broader website auth migration
 
 ## First Future Implementation Candidate
 
@@ -137,9 +150,10 @@ The first future implementation candidate is not auth code.
 
 Recommended sequence:
 
-1. document BlogAI auth flows and trust boundaries
-2. identify callers, protected operations, secrets, audit events, and failure modes
-3. decide what remains legacy-auth-backed and what needs a BlogAI-owned boundary
-4. only then create a minimal authentication prototype, if the boundary document justifies it
+1. acknowledge the reusable Global WebNet auth/API boundary direction
+2. document BlogAI auth flows and trust boundaries
+3. identify callers, protected operations, secrets, audit events, and failure modes
+4. decide what remains legacy-auth-backed and what needs the reusable boundary
+5. only then create a minimal authentication prototype, if the boundary document justifies it
 
-That prototype should stay narrow, local-first, observable, and reversible.
+That prototype should stay narrow, local-first, observable, and reversible. BlogAI should consume the boundary first, but it should not own identity decisions.

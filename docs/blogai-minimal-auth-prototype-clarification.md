@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Resolve the BlogAI auth gate review blockers before any authentication implementation begins.
+Resolve the BlogAI auth gate review blockers before any authentication implementation begins, while aligning the first prototype with a reusable Global WebNet auth/API boundary.
 
 This is documentation only. It does not implement auth, add services or projects, create database schema, change deployment, modify BlogEngine.NET runtime, or create `api.global-webnet.com` code.
 
@@ -10,17 +10,19 @@ This is documentation only. It does not implement auth, add services or projects
 
 The first acceptable prototype objective is:
 
-Prove that BlogAI can make an authenticated vs unauthenticated access decision through a clean, owned, local-only auth boundary while preserving redacted, observable decision evidence.
+Prove that a reusable Global WebNet auth/API boundary can make an authenticated vs unauthenticated access decision for BlogAI as the first consumer while preserving redacted, observable decision evidence.
 
 The prototype must be:
 
 - local-only or development-only
-- limited to a single protected BlogAI request path
+- limited to a single protected BlogAI request path or equivalent local BlogAI consumer call
 - independent of production identity providers
 - independent of production `api.global-webnet.com`
 - independent of legacy BlogEngine.NET auth ownership
+- independent of BlogAI-owned identity decisions
 - free of OAuth/OpenID scope
 - free of RBAC, tenant, organization, or role modeling
+- free of MCP tunnel, mobile, or website-wide auth integration
 - free of persistent credential storage unless a later docs slice explicitly designs and approves it
 
 The prototype may simulate authenticated state with a development-only test principal or test header if that simulation is documented, deterministic, and never treated as production security.
@@ -31,7 +33,7 @@ The prototype may simulate authenticated state with a development-only test prin
 
 Before coding, define the exact local request path to protect.
 
-The path should be a development-only BlogAI route or handler that can be exercised locally without production deployment, certificate changes, database schema, or BlogEngine.NET runtime modification.
+The path should be a development-only BlogAI route, handler, or consumer call that exercises the reusable boundary locally without production deployment, certificate changes, database schema, `api.global-webnet.com` production code, or BlogEngine.NET runtime modification.
 
 ### Unauthenticated Access
 
@@ -61,6 +63,7 @@ Expected result:
 
 - access is allowed
 - outcome is recorded as authenticated allowed
+- BlogAI receives the boundary decision instead of making the identity decision itself
 - principal metadata is redacted or non-sensitive
 - no raw token, secret, cookie, or credential is logged
 
@@ -88,6 +91,7 @@ Use stable event names for local validation evidence:
 - `BlogAiAuth.AccessAllowed`
 - `BlogAiAuth.AccessDenied`
 - `BlogAiAuth.SecretRedacted`
+- `GlobalWebNetAuth.BoundaryCalled`
 
 Optional event names if needed:
 
@@ -131,6 +135,7 @@ The prototype clarification is satisfied when a future local validation run can 
 
 - unauthenticated request denied
 - authenticated request allowed
+- BlogAI can call the boundary without owning the identity decision
 - denied/error request produces a clear denial or error outcome
 - no raw token, secret, cookie, authorization header, API key, or credential appears in logs, prompts, traces, or artifacts
 - `CorrelationId` is preserved across request and auth decision evidence
@@ -147,9 +152,11 @@ The prototype fails the gate if:
 - raw secrets or tokens appear in logs, prompts, traces, or artifacts
 - decision path is opaque or cannot be reconstructed from local evidence
 - legacy BlogEngine.NET auth coupling is introduced as a requirement
+- BlogAI-owned identity decisions are introduced as a requirement
 - scope expands into OAuth/OpenID
 - scope expands into RBAC, tenant, organization, or role modeling
 - scope expands into a general identity platform
+- scope expands into MCP tunnel, mobile, or website-wide auth integration
 - production deployment or certificate changes are needed
 - database schema is needed
 - `api.global-webnet.com` code or project creation is needed
@@ -157,6 +164,6 @@ The prototype fails the gate if:
 
 ## Ready State
 
-With this clarification in place, the previous gate-review blockers are resolved in documentation.
+With this clarification in place, the previous gate-review blockers are resolved in documentation and aligned with the reusable Global WebNet boundary direction in `docs/global-webnet-auth-boundary-direction.md`.
 
-The project is ready to consider a later minimal local auth prototype slice, provided that slice keeps the exact objective above and does not add deferred identity, deployment, database, or legacy runtime scope.
+The project is ready to consider a later minimal local auth prototype slice, provided that slice keeps the exact objective above and does not add deferred identity, deployment, database, broader-consumer, or legacy runtime scope.

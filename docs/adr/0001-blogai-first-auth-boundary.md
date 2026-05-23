@@ -16,11 +16,12 @@ Current directional shape:
 
 Existing direction is captured in:
 
+- `docs/global-webnet-auth-boundary-direction.md`
 - `docs/blogai-auth-api-boundary-note.md`
 - `docs/blogai-auth-trust-boundary-flow.md`
 - `docs/session-handoffs/2026-05-17-platform-to-blogai-transition.md`
 
-The first auth work must avoid premature infrastructure. BlogAI needs a clean owned boundary for authentication and API decisions, but it does not yet need production OAuth/OpenID, a general identity provider, an Auth0 replacement, external provider integration, a public API gateway, or database-backed identity schema.
+The first auth work must avoid premature infrastructure. BlogAI needs a clean owned boundary for authentication and API decisions, but that boundary should be reusable Global WebNet infrastructure with BlogAI as its first consumer, not a BlogAI-only subsystem. It does not yet need production OAuth/OpenID, a general identity provider, an Auth0 replacement, external provider integration, a public API gateway, or database-backed identity schema.
 
 The boundary should align with MCP platform security principles already used in this repository:
 
@@ -34,13 +35,14 @@ The boundary should align with MCP platform security principles already used in 
 
 ## Decision
 
-The first future BlogAI authentication implementation should validate an owned auth/API boundary concept.
+The first future authentication implementation should validate a reusable Global WebNet auth/API boundary concept that BlogAI consumes first.
 
 It should:
 
-- begin with the smallest viable trusted-session/API boundary needed for BlogAI development
+- begin with the smallest viable trusted-session/API boundary needed for BlogAI development as the first consumer
 - distinguish authenticated from unauthenticated access through an explicit boundary
 - avoid tightly binding BlogAI to legacy BlogEngine.NET auth
+- avoid making BlogAI the owner of identity decisions
 - avoid becoming a general identity provider
 - avoid replacing Auth0 or designing an Auth0 equivalent
 - keep auth decisions observable and auditable
@@ -54,6 +56,7 @@ This decision does not approve implementation. It defines the boundary any later
 Positive consequences:
 
 - BlogAI auth work can start small without collapsing into a full identity platform.
+- The first auth work stays reusable instead of becoming a BlogAI one-off.
 - Legacy BlogEngine.NET can remain stable while BlogAI develops beside it.
 - Future `api.global-webnet.com` work has a clearer responsibility boundary.
 - Security discussion can use the same vocabulary as the MCP platform: capabilities, policy, approval, secret indirection, audit, redaction, and observability.
@@ -71,9 +74,10 @@ Tradeoffs:
 The first implementation, when explicitly approved later, should validate only this:
 
 - BlogAI can distinguish authenticated vs unauthenticated access through a clean boundary.
+- BlogAI can call the boundary without owning the identity decision.
 - Sensitive values are not logged, persisted in durable artifacts, or exposed to prompts.
 - Auth decisions are observable and auditable with redacted operation metadata.
-- The boundary can evolve later toward stronger identity providers without binding BlogAI tightly to legacy BlogEngine.NET auth.
+- The boundary can evolve later toward stronger identity providers and later consumers such as MCP tunnel, websites, mobile, and other applications without binding BlogAI tightly to legacy BlogEngine.NET auth.
 
 This validation should be local-first, narrow, reversible, and documented before any production deployment or broader identity work.
 
@@ -91,6 +95,10 @@ This ADR explicitly does not pursue:
 - enterprise identity platform
 - replacing Auth0
 - tightly coupling to BlogEngine.NET auth
+- BlogAI-owned identity decisions
+- MCP tunnel integration
+- mobile-specific auth flows
+- website-wide auth migration
 - `api.global-webnet.com` code
 - API projects or new services
 - database schema

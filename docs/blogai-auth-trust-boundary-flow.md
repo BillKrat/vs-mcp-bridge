@@ -4,6 +4,8 @@
 
 Sketch the future BlogAI authentication and API trust boundaries before any implementation exists.
 
+BlogAI is the first consumer, but the target boundary should be reusable for Global WebNet applications rather than BlogAI-specific auth.
+
 This document is conceptual direction only. It does not approve or implement authentication, OAuth/OpenID, `api.global-webnet.com`, new projects, deployment changes, BlogEngine.NET runtime changes, or production secret storage.
 
 ## Boundary Sketch
@@ -16,6 +18,7 @@ flowchart LR
     API["Future API/Auth boundary<br/>api.global-webnet.com"]
     Auth["Future auth/session/token boundary"]
     Data["Future BlogAI data/service boundary"]
+    Future["Future consumers<br/>MCP tunnel / websites / mobile / apps"]
     Audit["Audit/logging/redaction boundary"]
 
     User -->|"legacy page requests"| Legacy
@@ -23,6 +26,7 @@ flowchart LR
     BlogAI -->|"validated API calls"| API
     API -->|"validate session/token if introduced"| Auth
     API -->|"authorized operations only"| Data
+    Future -.->|"later validated API calls"| API
     Legacy -.->|"limited compatibility only"| BlogAI
     API -->|"redacted operation metadata"| Audit
     Auth -->|"redacted auth events only"| Audit
@@ -57,6 +61,8 @@ It may collect user intent and call a future API, but protected operations shoul
 
 If introduced, it should validate all client claims before use, enforce policy, record audit-relevant operations, and isolate BlogAI-specific API behavior from legacy page rendering. It should not inherit trust from the browser or legacy page context without explicit validation.
 
+The boundary should be shaped as a reusable Global WebNet API/auth service. BlogAI is the first consumer; MCP tunnel, broader website authentication, mobile flows, and other applications remain future consumers.
+
 ### Downstream Data Boundary
 
 Future BlogAI data or service dependencies are separate trust zones.
@@ -77,6 +83,7 @@ They should capture redacted operation metadata, correlation ids, capability/pol
 - `api.global-webnet.com`: if built later, trusted only after explicit design to validate requests, enforce policy, and mediate protected operations.
 - Future auth/session/token boundary: trusted only for explicitly documented validation results, not raw token contents in logs or prompts.
 - Future BlogAI data/service boundary: trusted only behind API-side policy and operation checks.
+- Future consumers: not trusted until each consumer has an explicit caller contract, validation model, and audit expectations.
 - Audit/logging boundary: trusted for redacted evidence, never for secret persistence.
 
 ## Alignment With MCP Security Seams
@@ -108,6 +115,9 @@ Explicitly deferred:
 - deployment decisions
 - certificate decisions
 - `api.global-webnet.com` project or service creation
+- MCP tunnel integration
+- mobile-specific flows
+- broader website auth migration
 - BlogEngine.NET runtime modification
 - cache-clear, publish, or deployment automation
 
@@ -115,6 +125,7 @@ Explicitly deferred:
 
 This slice only sketches future boundaries.
 
-No auth implementation is approved here. The next useful step remains documentation: define concrete auth flows, trust boundaries, callers, protected operations, secrets, audit events, and failure modes. Only after that boundary is explicit should a minimal local authentication prototype be considered.
+No auth implementation is approved here. The next useful step remains documentation: define concrete auth flows, trust boundaries, callers, protected operations, secrets, audit events, and failure modes for a reusable Global WebNet boundary with BlogAI as the first consumer. Only after that boundary is explicit should a minimal local authentication prototype be considered.
 
 The first proposed implementation boundary is captured in `docs/adr/0001-blogai-first-auth-boundary.md`.
+The reusable boundary direction is captured in `docs/global-webnet-auth-boundary-direction.md`.

@@ -8,10 +8,12 @@ This is the last planning gate before any prototype. It does not approve impleme
 
 ## Boundary Confirmed
 
+- [ ] `docs/global-webnet-auth-boundary-direction.md` reviewed.
 - [ ] `docs/adr/0001-blogai-first-auth-boundary.md` reviewed.
 - [ ] `docs/blogai-auth-api-boundary-note.md` reviewed.
 - [ ] `docs/blogai-auth-trust-boundary-flow.md` reviewed.
-- [ ] Prototype boundary is described as an owned BlogAI auth/API boundary.
+- [ ] Prototype boundary is described as a reusable Global WebNet auth/API boundary with BlogAI as the first consumer.
+- [ ] Prototype does not make BlogAI the owner of identity decisions.
 - [ ] Prototype does not bind BlogAI tightly to legacy BlogEngine.NET auth.
 - [ ] Prototype does not introduce `api.global-webnet.com` production code.
 - [ ] Prototype objective is minimal and local-first before coding begins.
@@ -39,6 +41,7 @@ This is the last planning gate before any prototype. It does not approve impleme
 ## First Validation Goal Confirmed
 
 - [ ] Prototype proves BlogAI can distinguish authenticated from unauthenticated access through a clean boundary.
+- [ ] Prototype proves BlogAI can call the boundary without owning the auth decision.
 - [ ] Prototype proves sensitive values are not logged.
 - [ ] Prototype proves auth decisions are observable and auditable.
 - [ ] Prototype proves the boundary can evolve later toward stronger identity providers.
@@ -57,6 +60,10 @@ This is the last planning gate before any prototype. It does not approve impleme
 - [ ] No enterprise identity platform.
 - [ ] No Auth0 replacement.
 - [ ] No tight coupling to BlogEngine.NET auth.
+- [ ] No BlogAI-specific identity subsystem.
+- [ ] No MCP tunnel integration.
+- [ ] No mobile-specific auth flow.
+- [ ] No website-wide auth migration.
 - [ ] No API projects or new services unless a later slice explicitly approves them.
 - [ ] No database schema.
 - [ ] No deployment change.
@@ -96,6 +103,7 @@ This is the last planning gate before any prototype. It does not approve impleme
 Stop immediately if:
 
 - auth scope expands into an identity platform
+- auth scope collapses into a BlogAI-only identity subsystem
 - deployment or certificate decisions become blockers
 - sensitive data handling is unclear
 - audit/logging boundary is unclear
@@ -110,3 +118,4 @@ Implementation may be proposed only after every applicable checklist item is sat
 If any item remains unclear, continue documentation or boundary analysis instead of coding.
 
 The minimal prototype objective and local validation expectations are clarified in `docs/blogai-minimal-auth-prototype-clarification.md`.
+The reusable boundary direction is clarified in `docs/global-webnet-auth-boundary-direction.md`.
