@@ -80,6 +80,8 @@ The first local/dev-only consumer adapter lives under `VsMcpBridge.Shared/BlogAI
 
 The adapter accepts a BlogAI resource name, public/protected route category, optional development auth marker or local session placeholder, and correlation metadata. It calls the existing in-process `AdventuresAuthDecisionService`, maps the auth decision to BlogAI allow/deny output, and records only route, correlation, decision, reason, and redaction metadata.
 
+Consumers should depend on `IBlogAiAuthConsumerService`. The concrete `BlogAiAuthConsumerService` remains the local/dev-only implementation, and `AddBlogAiAuthConsumerServices` provides the shared DI registration.
+
 This is not a web host, middleware layer, production auth path, BlogEngine.NET auth bridge, or deployment slice.
 
 ## Non-Goals

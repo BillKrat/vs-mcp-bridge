@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using VsMcpBridge.Shared.AdventuresAuth;
 using VsMcpBridge.Shared.BlogAI.Auth;
+using VsMcpBridge.Shared.Composition;
 using Xunit;
 
 namespace VsMcpBridge.Shared.Tests;
@@ -11,7 +13,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Protected_resource_denies_unauthenticated_request()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest();
 
         var decision = service.EvaluateAccess(request);
@@ -30,7 +32,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Protected_resource_allows_valid_local_development_auth()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest(devAuthMarker: "local-dev-credential");
 
         var decision = service.EvaluateAccess(request);
@@ -51,7 +53,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Protected_resource_denies_invalid_local_development_auth()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest(devAuthMarker: "invalid-local-credential");
 
         var decision = service.EvaluateAccess(request);
@@ -67,7 +69,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Protected_resource_denies_invalid_local_session()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest(localSessionId: "invalid-session-token");
 
         var decision = service.EvaluateAccess(request);
@@ -85,7 +87,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Public_resource_allows_without_auth()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest(resourceName: "/blogAi/public", requiresAuthentication: false);
 
         var decision = service.EvaluateAccess(request);
@@ -101,7 +103,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Correlation_metadata_preserved_from_blogai_to_adventuresauth()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var correlation = new AdventuresAuthCorrelation(
             "corr-blogai-123",
             "request-blogai-456",
@@ -128,7 +130,7 @@ public sealed class BlogAiAuthConsumerTests
     [Fact]
     public void Decision_metadata_and_audit_evidence_redact_secret_like_values()
     {
-        var service = new BlogAiAuthConsumerService();
+        var service = CreateService();
         var request = CreateRequest(
             devAuthMarker: "token=raw-token-secret password=raw-password-secret Authorization: Bearer raw-bearer-secret");
 
@@ -162,6 +164,21 @@ public sealed class BlogAiAuthConsumerTests
             reference => reference.Name != null && reference.Name.Contains("BlogEngine", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void Composition_registers_consumer_interface_boundary()
+    {
+        var serviceProvider = new ServiceCollection()
+            .AddBlogAiAuthConsumerServices()
+            .BuildServiceProvider();
+
+        var service = serviceProvider.GetRequiredService<IBlogAiAuthConsumerService>();
+
+        Assert.IsType<BlogAiAuthConsumerService>(service);
+        var decision = service.EvaluateAccess(CreateRequest(devAuthMarker: "local-dev-credential"));
+        Assert.True(decision.Allowed);
+        Assert.Equal("DevCredentialAccepted", decision.ReasonCode);
+    }
+
     private static BlogAiAuthConsumerRequest CreateRequest(
         string resourceName = "/blogAi/protected",
         bool requiresAuthentication = true,
@@ -180,6 +197,11 @@ public sealed class BlogAiAuthConsumerTests
                 "LocalDevelopment"),
             devAuthMarker,
             localSessionId);
+    }
+
+    private static IBlogAiAuthConsumerService CreateService()
+    {
+        return new BlogAiAuthConsumerService();
     }
 
     private static void AssertCorrelation(

@@ -5,7 +5,7 @@ using VsMcpBridge.Shared.AdventuresAuth;
 
 namespace VsMcpBridge.Shared.BlogAI.Auth
 {
-    public sealed class BlogAiAuthConsumerService
+    public sealed class BlogAiAuthConsumerService : IBlogAiAuthConsumerService
     {
         private readonly AdventuresAuthDecisionService _authDecisionService;
 

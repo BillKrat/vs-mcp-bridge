@@ -25,6 +25,8 @@ The first implementation slice placed the local/dev-only consumer adapter under 
 
 That location keeps the prototype in-process, small, and testable. It is not a web host, middleware layer, production `api.global-webnet.com` deployment, BlogEngine.NET auth bridge, or identity platform.
 
+The consumer boundary is exposed through `IBlogAiAuthConsumerService` so future BlogAI/web/API integration can depend on a stable abstraction instead of the concrete local prototype service. Shared DI registration is available through `AddBlogAiAuthConsumerServices`.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.
