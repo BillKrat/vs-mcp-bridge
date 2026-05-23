@@ -88,6 +88,8 @@ Durable validation evidence for the interface-driven consumer flow is captured i
 
 The future local API boundary design for exposing `AdventuresAuth` without adding a host yet is captured in `docs/adventures-auth-local-api-boundary-design.md`.
 
+The future Blazor local/dev auth UI integration design is captured in `docs/blogai-local-auth-ui-integration-design.md`. The UI should display only safe state and decision metadata through a UI-facing service; it should not own auth decisions or display raw token or secret values.
+
 ## Non-Goals
 
 Explicitly out of scope:

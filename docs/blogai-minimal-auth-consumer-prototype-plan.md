@@ -29,6 +29,8 @@ The consumer boundary is exposed through `IBlogAiAuthConsumerService` so future 
 
 Durable trace evidence for the implemented interface-driven consumer flow is captured in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
 
+The Blazor-side local/dev display design for consuming this boundary later is captured in `docs/blogai-local-auth-ui-integration-design.md`.
+
 ## Future Code Location Guidance
 
 Future code may move closer to a BlogAI app-layer or consumer-boundary location only when that can be done without production hosting, deployment changes, BlogEngine.NET runtime changes, or persistence.

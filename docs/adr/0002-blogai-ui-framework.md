@@ -152,3 +152,5 @@ It contains a basic Blazor Web App surface for local development only. Component
 Globalization and localization direction is recorded in `docs/adr/0003-blogai-globalization-localization.md`: BlogAI remains English-first for now, but UI/API presentation should be globalization-ready while logs, audit events, traces, and developer docs remain invariant.
 
 Durable validation evidence for the initial shell is captured in `docs/session-handoffs/2026-05-17-blogai-blazor-shell-validation.md`.
+
+The local/dev auth UI integration design is captured in `docs/blogai-local-auth-ui-integration-design.md`; any future UI integration should keep components thin and call a UI-facing service rather than placing auth decision logic in Razor components.

@@ -510,6 +510,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/mcp-controlled-mutation-threshold.md
 !/docs/preview-only-document-update-tool-design.md
 !/docs/adventures-auth-local-api-boundary-design.md
+!/docs/blogai-local-auth-ui-integration-design.md
 !/docs/adr/
 !/docs/adr/0002-blogai-ui-framework.md
 !/docs/adr/0003-blogai-globalization-localization.md
