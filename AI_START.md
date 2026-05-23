@@ -38,6 +38,7 @@ Use these as needed after that:
 - `docs/MVPVM_OVERVIEW.md` for UI/presenter/viewmodel boundaries
 - `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
+- `docs/session-slice-operating-template.md` for the reusable 60-120 minute session workflow template
 - `docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
 - `docs/session-handoffs/2026-05-17-gated-handoff-tool-readiness-review.md` for the readiness decision before any bridge-side gated handoff tool implementation
 - `docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` for the current stable/deferred/validated operating checkpoint across bridge, BlogAI, auth, deployment, and gated orchestration work

@@ -525,6 +525,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/mcp-controlled-mutation-threshold.md
 !/docs/preview-only-document-update-tool-design.md
 !/docs/chatgpt-codex-gated-handoff-workflow.md
+!/docs/session-slice-operating-template.md
 !/docs/adventures-auth-local-api-boundary-design.md
 !/docs/blogai-local-auth-ui-integration-design.md
 !/docs/adr/
