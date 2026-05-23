@@ -99,3 +99,5 @@ Explicitly out of scope:
 The next implementation slice, if approved, should add the smallest local BlogAI-style consumer harness or adapter needed to call the existing in-process `AdventuresAuthDecisionService`.
 
 It should not create production hosting, persistence, OAuth/OpenID, RBAC, deployment changes, BlogEngine.NET runtime changes, or a generalized identity platform.
+
+The first concrete prototype plan is `docs/blogai-minimal-auth-consumer-prototype-plan.md`.
