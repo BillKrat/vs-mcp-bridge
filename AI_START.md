@@ -123,6 +123,7 @@ For durable validation evidence of the local/dev route-level protected placehold
 For the readiness review before wiring BlogAI to the local/dev AdventuresAuth API client boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-readiness-review.md`.
 For the local/dev BlogAI auth API client boundary, inspect `IBlogAiLocalAuthApiClient` in `BlogAI.Web/Auth`; `/local-dev` still uses the in-process display path by default.
 For durable validation evidence of the local/dev BlogAI auth API client boundary, read `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-boundary-validation.md`.
+For the readiness review before temporarily exercising API-client parity in `/local-dev`, read `docs/session-handoffs/2026-05-17-blogai-local-auth-api-client-parity-readiness-review.md`.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.
