@@ -15,6 +15,7 @@ The near-term shape is intentionally conservative:
 - `https://www.global-webnet.com` remains the stable legacy BlogEngine.NET site.
 - BlogAI may grow beside it under `/blogAi` as the practical application surface matures.
 - `https://api.global-webnet.com` remains future auth/API boundary thinking only.
+- Blazor Web App is the preferred initial BlogAI UI framework when a UI slice is explicitly approved.
 
 Do not treat that target shape as approval to implement routing, hosting, production APIs, OAuth/OpenID, deployment automation, or BlogEngine.NET migration work. The platform should first prove that it can support real BlogAI workflows with observable, repeatable tooling.
 

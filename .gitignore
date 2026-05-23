@@ -507,6 +507,8 @@ VsMcpBridge.Vsix/obj/
 !/docs/mcp-controlled-mutation-threshold.md
 !/docs/preview-only-document-update-tool-design.md
 !/docs/adventures-auth-local-api-boundary-design.md
+!/docs/adr/
+!/docs/adr/0002-blogai-ui-framework.md
 !/docs/blogs/
 !/docs/blogs/source-of-truth/
 !/docs/blogs/source-of-truth/**

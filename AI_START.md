@@ -110,6 +110,7 @@ For the current transition from foundational MCP/tool-platform work into operati
 For initial BlogAI authentication/API boundary direction, read `docs/blogai-auth-api-boundary-note.md`.
 For the conceptual BlogAI auth trust-boundary flow sketch, read `docs/blogai-auth-trust-boundary-flow.md`.
 For the proposed first BlogAI authentication implementation boundary, read `docs/adr/0001-blogai-first-auth-boundary.md`.
+For the proposed initial BlogAI UI framework decision, read `docs/adr/0002-blogai-ui-framework.md`.
 Before any BlogAI auth prototype, read `docs/blogai-auth-implementation-gate.md`.
 For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-blogai-auth-gate-review.md`.
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.

@@ -93,3 +93,4 @@ The first local prototype validation trace is captured in `docs/session-handoffs
 The BlogAI consumer boundary is captured in `docs/blogai-adventures-auth-consumer-design.md`.
 The local API boundary design and initial skeleton are captured in `docs/adventures-auth-local-api-boundary-design.md`; the skeleton uses ASP.NET Core Minimal APIs with thin endpoint handlers.
 The local API skeleton validation trace is captured in `docs/session-handoffs/2026-05-17-adventures-auth-local-api-validation.md`.
+The preferred initial BlogAI UI framework is Blazor Web App, recorded in `docs/adr/0002-blogai-ui-framework.md`.
