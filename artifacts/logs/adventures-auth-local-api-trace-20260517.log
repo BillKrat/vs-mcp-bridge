@@ -1,0 +1,199 @@
+# AdventuresAuth Local API Trace - 2026-05-17
+
+Run name: adventures-auth-local-api-trace-20260517
+Scope: local/dev-only AdventuresAuth Minimal API host skeleton validation
+Commit under validation: 225262f Add local AdventuresAuth Minimal API host skeleton
+Validation path: VsMcpBridge.Shared.Tests/AdventuresAuthLocalApiTests.cs
+Implementation path: Adventures.Auth.LocalApi/
+Shared auth path: VsMcpBridge.Shared/AdventuresAuth/
+
+## Boundary
+
+This trace validates the current local/dev ASP.NET Core Minimal API host skeleton only.
+
+Program.cs maps the Minimal API host.
+MapAdventuresAuthEndpoints maps the /auth endpoint group.
+AdventuresAuthEndpointHandlers are thin transport handlers.
+IAdventuresAuthApiService owns API DTO translation.
+IAdventuresAuthDecisionService / AdventuresAuthDecisionService owns auth decisions.
+
+No production deployment was used.
+No OAuth/OpenID behavior was used.
+No RBAC, tenant, or organization model was used.
+No persistence/database behavior was used.
+No real password storage was used.
+No external identity provider was used.
+No BlogEngine.NET dependency was introduced.
+No Blazor UI was added.
+
+## Observed Scenarios
+
+### POST /auth/login with valid local dev credential allowed
+
+Test: Login_with_valid_development_credential_allows_access
+Endpoint concept: POST /auth/login
+Service method: AdventuresAuthApiService.Login
+Delegated auth method: IAdventuresAuthDecisionService.Login
+Input summary:
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+- development credential: valid local marker
+
+Observed result:
+- Allowed: true
+- Outcome: Allowed
+- ReasonCode: DevCredentialAccepted
+- Principal.Subject: local-dev-user
+- Principal.Claims.authMode: DevelopmentOnly
+- LocalSessionId shape: local-session-{AuthDecisionId}
+- Events include:
+  - AdventuresAuth.AccessAllowed
+
+### POST /auth/login with invalid credential denied
+
+Test: Invalid_credential_and_invalid_session_are_denied
+Endpoint concept: POST /auth/login
+Service method: AdventuresAuthApiService.Login
+Delegated auth method: IAdventuresAuthDecisionService.Login
+Input summary:
+- development credential: invalid local marker
+
+Observed result:
+- Allowed: false
+- Outcome: Denied
+- ReasonCode: DevCredentialRejected
+- Principal: null
+- LocalSessionId: null
+
+### POST /auth/validate with valid session allowed
+
+Covered through:
+- Login_with_valid_development_credential_allows_access
+- Current_principal_returns_placeholder_for_valid_session
+- Logout_invalidates_local_session_placeholder
+
+Endpoint concept: POST /auth/validate
+Service method: AdventuresAuthApiService.Validate
+Delegated auth method: IAdventuresAuthDecisionService.ValidateSession
+
+Observed result:
+- A valid local session produced by login can be reused by later operations.
+- Before logout, the local session can resolve a current principal placeholder.
+- The session is the existing local in-memory placeholder behavior from AdventuresAuthDecisionService.
+
+### POST /auth/validate with invalid session denied
+
+Test: Invalid_credential_and_invalid_session_are_denied
+Endpoint concept: POST /auth/validate
+Service method: AdventuresAuthApiService.Validate
+Delegated auth method: IAdventuresAuthDecisionService.ValidateSession
+Input summary:
+- local session id: invalid local marker
+
+Observed result:
+- Allowed: false
+- Outcome: Denied
+- ReasonCode: LocalSessionRejected
+
+### GET /auth/me returns current principal placeholder where valid
+
+Test: Current_principal_returns_placeholder_for_valid_session
+Endpoint concept: GET /auth/me
+Service method: AdventuresAuthApiService.CurrentPrincipal
+Delegated auth method: IAdventuresAuthDecisionService.CurrentPrincipal
+
+Observed result:
+- Allowed: true
+- ReasonCode: CurrentPrincipalReturned
+- Principal.Subject: local-dev-user
+
+### POST /auth/logout invalidates placeholder session behavior
+
+Test: Logout_invalidates_local_session_placeholder
+Endpoint concept: POST /auth/logout
+Service method: AdventuresAuthApiService.Logout
+Delegated auth method: IAdventuresAuthDecisionService.Logout
+
+Observed result:
+- Logout Allowed: true
+- Logout ReasonCode: LocalSessionInvalidated
+- Validate-after-logout Allowed: false
+- Validate-after-logout ReasonCode: LocalSessionRejected
+
+### correlation metadata preserved or generated
+
+Test: Supplied_correlation_is_preserved_and_missing_correlation_is_generated
+
+Observed result for supplied fields:
+- CorrelationId: corr-supplied
+- RequestId: request-supplied
+- AuthDecisionId: auth-supplied
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+
+Observed result for generated fields:
+- CorrelationId shape: corr-{non-secret identifier}
+- RequestId shape: request-{non-secret identifier}
+- AuthDecisionId shape: auth-{non-secret identifier}
+- ClientApplication default: BlogAI
+- Environment default: LocalDevelopment
+
+### redaction evidence
+
+Test: Secret_like_values_are_redacted_from_response_evidence
+Endpoint concept: POST /auth/login
+Delegated redaction boundary: AdventuresAuthDecisionService with BridgeSecurityRedactor
+Input summary:
+- development credential contains token-like, password-like, and bearer-like sentinel values
+- raw sentinel values are intentionally omitted from this durable trace
+
+Observed result:
+- Allowed: false
+- SecretsRedacted: true
+- Events include AdventuresAuth.SecretRedacted.
+- Serialized response evidence does not include raw token, password, or bearer sentinel values.
+
+### endpoint handlers are thin and delegate
+
+Test: Endpoint_handler_delegates_login_to_api_service
+Endpoint handler: AdventuresAuthEndpointHandlers.Login
+
+Observed result:
+- Handler returns Results.Ok(service.Login(request)).
+- Fake IAdventuresAuthApiService records LastOperation=Login.
+- Handler returns the service response object.
+- Auth decision logic is not performed in the endpoint handler.
+
+### no persistence/database behavior
+
+Test: Local_api_service_uses_no_persistence_or_blogengine_dependency
+
+Observed result:
+- AdventuresAuthApiService.UsesPersistence: false
+- AdventuresAuthApiService.StorageKind: None
+- Session behavior remains local in-memory placeholder behavior inside AdventuresAuthDecisionService.
+
+### no BlogEngine.NET dependency
+
+Test: Local_api_service_uses_no_persistence_or_blogengine_dependency
+
+Observed result:
+- AdventuresAuthApiService assembly references do not include BlogEngine.
+
+## Validation Commands
+
+Executed:
+- git diff --check
+- dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+- dotnet build ./Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj
+- dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj
+
+Observed status before artifact commit:
+- Whitespace validation passed.
+- Shared test project passed.
+- Local API project build passed.
+- Shared project build passed.
+
+Known warning context:
+- Existing nullable/analyzer warnings may appear in broader shared/MCP test/build paths.
+- No warning or error required changing AdventuresAuth Local API behavior.

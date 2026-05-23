@@ -1,0 +1,96 @@
+{
+  "artifact": "adventures-auth-local-api-trace-20260517",
+  "date": "2026-05-17",
+  "validatedCommit": "225262f",
+  "scope": "local/dev-only AdventuresAuth Minimal API host skeleton validation",
+  "implementationPaths": [
+    "Adventures.Auth.LocalApi/",
+    "VsMcpBridge.Shared/AdventuresAuth/",
+    "VsMcpBridge.Shared.Tests/AdventuresAuthLocalApiTests.cs"
+  ],
+  "hostStyle": {
+    "framework": "ASP.NET Core Minimal APIs",
+    "routeGroup": "/auth",
+    "programMapsEndpointGroup": true,
+    "mvcControllersUsed": false,
+    "endpointHandlersThin": true
+  },
+  "serviceSeams": {
+    "apiServiceInterface": "IAdventuresAuthApiService",
+    "apiServiceImplementation": "AdventuresAuthApiService",
+    "authDecisionInterface": "IAdventuresAuthDecisionService",
+    "authDecisionImplementation": "AdventuresAuthDecisionService"
+  },
+  "endpointConceptsValidated": {
+    "postAuthLogin": true,
+    "postAuthLogout": true,
+    "getAuthMe": true,
+    "postAuthValidate": true
+  },
+  "scenarioCoverage": {
+    "loginValidDevCredentialAllowed": true,
+    "loginInvalidCredentialDenied": true,
+    "validateValidSessionAllowed": true,
+    "validateInvalidSessionDenied": true,
+    "currentPrincipalPlaceholderReturned": true,
+    "logoutInvalidatesSessionPlaceholder": true,
+    "correlationMetadataPreserved": true,
+    "missingCorrelationGenerated": true,
+    "rawSecretValuesRedactedFromEvidence": true,
+    "endpointHandlerDelegationValidated": true,
+    "noPersistenceOrDatabase": true,
+    "noBlogEngineDependency": true
+  },
+  "eventNamesObserved": [
+    "AdventuresAuth.RequestReceived",
+    "AdventuresAuth.LoginEvaluated",
+    "AdventuresAuth.SessionValidated",
+    "AdventuresAuth.AccessAllowed",
+    "AdventuresAuth.AccessDenied",
+    "AdventuresAuth.SecretRedacted"
+  ],
+  "responseFields": [
+    "Allowed",
+    "Outcome",
+    "ReasonCode",
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId",
+    "ClientApplication",
+    "Environment",
+    "Principal",
+    "LocalSessionId",
+    "AuditEventNames",
+    "SecretsRedacted",
+    "StorageKind"
+  ],
+  "correlationFields": [
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId",
+    "ClientApplication",
+    "Environment"
+  ],
+  "nonGoalsPreserved": {
+    "productionDeployment": false,
+    "oauthOrOpenId": false,
+    "rbac": false,
+    "tenantOrOrganizationModel": false,
+    "persistenceOrDatabase": false,
+    "realPasswordStorage": false,
+    "externalIdentityProvider": false,
+    "blogEngineAuthCoupling": false,
+    "blazorUi": false
+  },
+  "validationCommands": [
+    "git diff --check",
+    "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj",
+    "dotnet build ./Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj",
+    "dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj"
+  ],
+  "notes": [
+    "Raw secret-like sentinel values are intentionally not stored in this metadata artifact.",
+    "The Minimal API host remains local/dev only.",
+    "Endpoint handlers delegate to the API service; auth decisions remain in AdventuresAuth services."
+  ]
+}

@@ -191,6 +191,8 @@ The skeleton remains local/dev only. It validates unauthenticated denied, valid 
 
 ## Future Trace Slice
 
-The next useful slice should capture durable trace artifacts for the local API host skeleton.
+Durable trace artifacts for the local API host skeleton are captured in `docs/session-handoffs/2026-05-17-adventures-auth-local-api-validation.md`.
+
+## Future Slice
 
 The implementation should still stop if it needs production deployment, persistent identity storage, external identity providers, or BlogAI-specific authorization logic inside the API boundary.
