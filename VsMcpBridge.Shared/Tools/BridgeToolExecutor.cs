@@ -210,7 +210,7 @@ namespace VsMcpBridge.Shared.Tools
                     approvalRequirement: manifest.ApprovalRequirement,
                     approvalDecision: GetApprovalDecisionName(manifest, approvalDecision),
                     approvalReason: approvalDecision.Reason,
-                    classification: result.Success ? ClassifySuccessfulExecution() : ClassifyExecutionFailed(),
+                    classification: ClassifyToolResult(manifest, result),
                     stopwatch.ElapsedMilliseconds,
                     cancellationToken).ConfigureAwait(false);
                 return result;
@@ -479,5 +479,18 @@ namespace VsMcpBridge.Shared.Tools
                 AuditSeverity.Error,
                 AuditRiskLevel.High,
                 AuditOutcome.Failed);
+
+        private static AuditClassificationMetadata ClassifyToolResult(BridgeToolManifest manifest, BridgeToolResult result)
+        {
+            var riskProfile = manifest.RiskProfile;
+            if (riskProfile == null)
+                return result.Success ? ClassifySuccessfulExecution() : ClassifyExecutionFailed();
+
+            return new AuditClassificationMetadata(
+                riskProfile.AuditCategoryHint,
+                riskProfile.SeverityHint,
+                riskProfile.RiskLevelHint,
+                result.Success ? AuditOutcome.Succeeded : AuditOutcome.Failed);
+        }
     }
 }

@@ -1,0 +1,52 @@
+Run: mcp-preview-document-update-trace-20260517
+Captured: 2026-05-23
+Repository: Y:\vs-mcp-bridge
+Branch: main
+Baseline commit before slice: 2ff8d9e Design preview-only document update tool
+Validation mode: shared tests plus MCP wrapper unit coverage
+
+Scope:
+- Implemented compiled bridge tool bridge.previewDocumentUpdate.
+- Implemented MCP wrapper bridge_preview_document_update.
+- Preview-only full-document replacement diff generation.
+- No file writes, no apply path, no broad repo crawling, no VSIX named-pipe call, no ChatEngine call.
+
+Observed deterministic shared-tool request:
+- toolId: bridge.previewDocumentUpdate
+- requestId: request-123
+- operationId: operation-456
+- targetPath: docs/example.md
+- expected state mode: expectedContent
+- replacement mode: replacementContent
+
+Observed executor path:
+Bridge tool execution started [ToolId=bridge.previewDocumentUpdate] [RequestId=request-123] [OperationId=operation-456].
+Bridge tool manifest metadata included id=bridge.previewDocumentUpdate, category=DocumentPreview, source=Compiled, host=Shared.
+Bridge tool capability metadata included workspace.previewDocumentUpdate.
+IToolExecutionPolicy evaluated ToolExecutionSecurityContext.
+Approval was not required by descriptor.
+PreviewDocumentUpdateTool read only explicit target docs/example.md.
+PreviewDocumentUpdateTool generated deterministic unified diff.
+Bridge tool execution completed [ToolId=bridge.previewDocumentUpdate] [RequestId=request-123] [OperationId=operation-456] [Success=True].
+IAuditSink received BridgeAuditEnvelope with category=DocumentPreview, severity=Informational, risk=Low, outcome=Succeeded.
+
+Observed result summary:
+- status: PreviewGenerated
+- previewOnly: true
+- targetExists: true
+- expectedMatched: true
+- noOp: false
+- changedLineCount: 4
+- approvalRequiredForApply: true
+- file content after preview matched original content
+
+Additional covered paths:
+- NoOp returned success with status=NoOp and no diff.
+- DriftDetected returned structured failure and left file content unchanged.
+- InvalidTargetPath rejected parent traversal, wildcards, and absolute paths.
+- expectedContentHash accepted SHA-256 expected-state verification.
+- secret-like values were redacted from executor payload logs and audit metadata.
+- MCP wrapper returned serialized BridgeToolResult and preserved executor ownership.
+
+Validation:
+- dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj passed with 275 tests.

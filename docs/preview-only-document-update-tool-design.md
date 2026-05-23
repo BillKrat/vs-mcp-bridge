@@ -11,10 +11,21 @@ Suggested tool name:
 The tool would compute a deterministic proposed document update and return a human-reviewable preview.
 It would not write files, apply patches, mutate repository state, change MCP transport, or change approval behavior.
 
-## Scope
+## Implementation Status
 
-This is design guidance only.
-It does not implement the tool.
+Implemented as of the preview-only document update slice:
+
+- compiled bridge tool: `bridge.previewDocumentUpdate`
+- MCP wrapper: `bridge_preview_document_update`
+- capability metadata: `workspace.previewDocumentUpdate`
+- approval requirement: `NotRequired` for preview-only behavior
+- audit category hint: `DocumentPreview`
+- durable validation: `artifacts/logs/mcp-preview-document-update-trace-20260517.*`, `docs/diagrams/mcp-preview-document-update-trace-20260517.mmd`, and `docs/session-handoffs/2026-05-17-preview-document-update-validation.md`
+
+This implementation remains preview-only.
+It does not write files, apply patches, mutate repository state, change MCP transport, or change approval behavior.
+
+## Scope
 
 The preview tool exists to prove the safety shape before any MCP apply/write tool exists:
 
@@ -35,12 +46,12 @@ The tool should require explicit caller input:
 | `targetPath` | yes | Repo-root-relative path for the file being previewed. |
 | `expectedContent` | preferred | Exact content the caller expects before the update. |
 | `expectedContentHash` | optional alternative | Hash of expected content when sending full original content is not practical. |
-| `replacementContent` | one update mode | Complete proposed replacement content. |
-| `rangeStart` / `rangeEnd` plus `replacementText` | optional future mode | Bounded range replacement once the full-file path is proven. |
+| `replacementContent` | yes | Complete proposed replacement content. |
+| `rangeStart` / `rangeEnd` plus `replacementText` | deferred | Bounded range replacement once the full-file path is proven. |
 | `description` | optional | Human-readable purpose for the preview. |
 | `requestId` / `operationId` | optional caller supplied, otherwise generated | Correlation. |
 
-Initial design should prefer full-document preview before range/patch preview.
+Initial implementation uses full-document preview only.
 Patch execution should remain deferred.
 
 ## Required Behavior

@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Caller as MCP Wrapper / Test Caller
+    participant Executor as BridgeToolExecutor
+    participant Catalog as CompiledBridgeToolCatalog
+    participant Policy as IToolExecutionPolicy
+    participant Approval as IToolExecutionApprovalService
+    participant Tool as PreviewDocumentUpdateTool
+    participant FS as Explicit Target File
+    participant Audit as IAuditSink
+    participant Log as RecordingBridgeLogger
+
+    Caller->>Executor: ExecuteAsync bridge.previewDocumentUpdate requestId=request-123 operationId=operation-456
+    Executor->>Log: Bridge tool execution started
+    Executor->>Log: Redacted request payload
+    Executor->>Catalog: TryGetTool bridge.previewDocumentUpdate
+    Catalog-->>Executor: Descriptor and tool instance
+    Executor->>Log: Manifest and capability metadata
+    Executor->>Policy: EvaluateAsync ToolExecutionSecurityContext
+    Policy-->>Executor: Allow
+    Executor->>Approval: Not invoked because ApprovalRequirement=NotRequired
+    Executor->>Tool: ExecuteAsync explicit targetPath plus expected state and replacementContent
+    Tool->>Tool: Validate repo-relative path and reject traversal or wildcards
+    Tool->>FS: Read only explicit target file
+    FS-->>Tool: Current content
+    Tool->>Tool: Compare expected content or SHA-256 hash
+    Tool->>Tool: Detect PreviewGenerated, NoOp, DriftDetected, or InvalidRequest
+    Tool->>Tool: Build deterministic unified diff when changed
+    Tool-->>Executor: BridgeToolResult previewOnly=true
+    Executor->>Log: Bridge tool execution completed
+    Executor->>Log: Redacted result payload
+    Executor->>Audit: RecordAsync DocumentPreview envelope
+    Executor-->>Caller: Structured preview result with preserved correlation

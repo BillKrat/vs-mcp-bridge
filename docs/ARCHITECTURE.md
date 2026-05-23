@@ -86,6 +86,11 @@ Current MCP analysis/search diagnostics may select metadata, search explicit tex
 Codex repository edits still happen through normal repository workflows.
 Before any MCP mutation tool is introduced, it must satisfy the architectural threshold in `docs/mcp-controlled-mutation-threshold.md`, including explicit manifests, capability metadata, approval requirement, audit classification, deterministic target selection, before/after preview, dry-run/preview mode, no silent writes, durable evidence, and recovery guidance where practical.
 The first designed mutation-adjacent step is preview-only: `bridge_preview_document_update` is documented in `docs/preview-only-document-update-tool-design.md` as a no-write diff generator, not an apply tool.
+That preview-only step is now implemented as the compiled bridge tool `bridge.previewDocumentUpdate` and MCP wrapper `bridge_preview_document_update`.
+The wrapper accepts one explicit repo-root-relative target path plus expected content or expected SHA-256 content hash and full replacement content.
+The tool reads only that explicit target, rejects absolute paths, parent traversal, and wildcards, detects drift and no-op cases, and returns deterministic preview metadata plus a unified diff without writing files, applying patches, creating proposals, calling ChatEngine, calling the VSIX named pipe, or scanning the repository.
+`bridge.previewDocumentUpdate` routes through `BridgeToolExecutor`, declares `workspace.previewDocumentUpdate`, defaults to `ApprovalRequirement=NotRequired` because it cannot mutate state, and carries `DocumentPreview` audit classification metadata.
+Any future apply/write tool remains separate threshold work and must require explicit approval after preview.
 A minimal MEF seam now exists for discovery only:
 
 - `CompiledBridgeToolDiscovery` adapts current DI-registered compiled tools into the catalog.

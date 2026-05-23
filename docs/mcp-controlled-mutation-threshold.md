@@ -15,10 +15,15 @@ Current MCP diagnostics support analysis, search, and observability:
 - `bridge_select_repo_documents`
 - `bridge_regex_text_search`
 - `bridge_bm25_text_search`
+- `bridge_preview_document_update`
 - VS/host diagnostic and proposal tools already documented in `docs/ARCHITECTURE.md`
 
 Repository edits are not currently performed through MCP mutation tools.
 Codex edits files directly through the normal repository workflow, with local diffs, validation, commit, and push.
+
+`bridge_preview_document_update` is mutation-adjacent but remains below the mutation threshold.
+It can read one explicit repo-root-relative target and generate deterministic before/after preview metadata plus a unified diff, but it cannot write, apply, create, delete, rename, format, publish, deploy, call production endpoints, call the VSIX named pipe, or execute shell commands.
+It exists to exercise manifest, capability, policy, approval metadata, redaction, audit classification, and correlation seams before any write-capable MCP tool exists.
 
 The current MCP search workflow boundary is explicit:
 
@@ -65,7 +70,7 @@ These are possible future tool names, not implementation commitments:
 
 | Candidate Tool | Intended Role | Mutation Status |
 | --- | --- | --- |
-| `bridge_preview_document_update` | Produce a deterministic before/after diff for explicit document updates. | Preview-only; recommended first slice. |
+| `bridge_preview_document_update` | Produce a deterministic before/after diff for explicit document updates. | Implemented preview-only; below mutation threshold. |
 | `bridge_apply_document_update` | Apply a previously previewed and approved document update. | Mutation; deferred. |
 | `bridge_create_handoff` | Create a structured handoff from explicit caller-provided content. | Mutation; deferred. |
 | `bridge_annotate_evidence_header` | Add or update a lightweight evidence classification header on explicit files. | Mutation; deferred. |
@@ -134,9 +139,9 @@ Meaningful mutation workflows should preserve enough evidence to reconstruct wha
 
 Evidence artifacts should avoid raw secrets and should not duplicate large file bodies unless the content itself is the reviewed artifact.
 
-## Recommended First Future Slice
+## Preview-Only Slice
 
-The first future mutation-adjacent slice should be preview-only:
+The first mutation-adjacent slice is preview-only:
 
 - tool name: `bridge_preview_document_update`
 - no write capability
@@ -147,7 +152,7 @@ The first future mutation-adjacent slice should be preview-only:
 - validates current file state
 - exercises manifest, capability, policy, approval metadata, audit classification, redaction, and correlation without changing files
 
-This slice should prove the safety and observability shape before any apply/write tool exists.
+This slice proves the safety and observability shape before any apply/write tool exists.
 The detailed design for that preview-only tool is `docs/preview-only-document-update-tool-design.md`.
 
 ## Deferred

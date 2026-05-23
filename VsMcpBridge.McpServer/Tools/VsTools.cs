@@ -497,6 +497,92 @@ public sealed class VsTools
         }
     }
 
+    [McpServerTool(Name = "bridge_preview_document_update")]
+    [Description("Executes the compiled bridge.previewDocumentUpdate tool through BridgeToolExecutor for an explicit repo-relative target. Generates preview and diff only; never writes files.")]
+    public async Task<string> PreviewDocumentUpdateAsync(
+        [Description("Explicit repo-root-relative path for the target document. Absolute paths, parent traversal, and wildcards are rejected.")] string targetPath,
+        [Description("Optional exact original/current content expected by the caller. Required when expectedContentHash is not supplied.")] string? expectedContent = null,
+        [Description("Optional SHA-256 hash of the expected current content. Required when expectedContent is not supplied.")] string? expectedContentHash = null,
+        [Description("Complete proposed replacement content for the full document. No patch is applied.")] string? replacementContent = null,
+        [Description("Optional human-readable operation description for audit/correlation context.")] string? description = null,
+        CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var requestId = Guid.NewGuid().ToString("N");
+        var operationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "MCP bridge_preview_document_update started [RequestId={RequestId}] [OperationId={OperationId}].",
+            requestId,
+            operationId);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["targetPath"] = targetPath
+        };
+
+        if (expectedContent != null)
+            arguments["expectedContent"] = expectedContent;
+
+        if (!string.IsNullOrWhiteSpace(expectedContentHash))
+            arguments["expectedContentHash"] = expectedContentHash;
+
+        if (replacementContent != null)
+            arguments["replacementContent"] = replacementContent;
+
+        if (!string.IsNullOrWhiteSpace(description))
+            arguments["description"] = description;
+
+        var request = new BridgeToolRequest
+        {
+            ToolId = PreviewDocumentUpdateTool.ToolId,
+            RequestId = requestId,
+            OperationId = operationId,
+            Arguments = arguments
+        };
+
+        try
+        {
+            var result = await _bridgeToolExecutor.ExecuteAsync(request, ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "MCP bridge_preview_document_update completed [RequestId={RequestId}] [OperationId={OperationId}] [Success={Success}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                result.Success,
+                stopwatch.ElapsedMilliseconds);
+
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(
+                "MCP bridge_preview_document_update canceled [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(
+                ex,
+                "MCP bridge_preview_document_update failed [RequestId={RequestId}] [OperationId={OperationId}] [ElapsedMs={ElapsedMs}].",
+                requestId,
+                operationId,
+                stopwatch.ElapsedMilliseconds);
+
+            var result = BridgeToolResult.Failed(
+                request,
+                "McpWrapperFailed",
+                "MCP preview document update failed before the bridge tool completed. Review the MCP log for details.");
+            return JsonSerializer.Serialize(result, InventoryJsonOptions);
+        }
+    }
+
     private async Task<string> ExecuteChatEngineToolAsync(
         string input,
         CancellationToken ct,

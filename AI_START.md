@@ -117,6 +117,7 @@ For practical MCP search workflow ergonomics gaps and conservative next tooling 
 For distinguishing canonical/current source from preserved historical or diagnostic evidence during MCP searches, read `docs/evidence-classification-guidance.md`.
 For the architectural threshold before any future MCP-assisted repository mutation tools, read `docs/mcp-controlled-mutation-threshold.md`.
 For the preview-only design of the first future mutation-adjacent document update tool, read `docs/preview-only-document-update-tool-design.md`.
+For validation of the implemented preview-only MCP document update tool, read `docs/session-handoffs/2026-05-17-preview-document-update-validation.md`.
 For MCP-exposed explicit repo document selection validation, also read `docs/session-handoffs/2026-05-16-document-selection-validation.md`.
 
 ## Current Working Guidance
@@ -132,7 +133,7 @@ Keep these repo-specific themes in mind:
 - during MCP/tooling triage, use `bridge_get_tool_inventory` early when available; it is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata without executing bridge tools
 - for MCP search diagnostics, use `.agents/skills/mcp-search-diagnostics/SKILL.md`; `bridge_select_repo_documents` is for deterministic metadata-only file selection, `bridge_regex_text_search` is for exact/regex searches, `bridge_bm25_text_search` is for ranked relevance over explicit documents, and the search tools do not read paths or crawl files
 - when MCP search results include preserved BlogAI evidence, distinguish `canonical-current` sources from `historical-evidence`, `rendered-failure-evidence`, and `diagnostic-trace` sources before recommending action
-- do not introduce MCP mutation tools without the threshold documented in `docs/mcp-controlled-mutation-threshold.md`; today Codex repository edits still happen through normal repo workflows, not MCP mutation tools
+- do not introduce MCP mutation tools without the threshold documented in `docs/mcp-controlled-mutation-threshold.md`; today Codex repository edits still happen through normal repo workflows, not MCP mutation tools, and `bridge_preview_document_update` remains preview-only with no write/apply path
 - preserve the anti-black-box standard: important workflows should be runnable end-to-end with captured evidence that can generate a Mermaid sequence diagram matching the observed application flow
 - require new code to participate in the established logging/correlation pattern when it crosses meaningful boundaries or needs future AI triage
 - preserve the shared tool execution security seams in `VsMcpBridge.Shared.Security`: policy evaluation, approval evaluation when required, redaction, audit envelope emission, secret-reference hooks, and simple capability hooks are contracts for future hardening, not an invitation to add OAuth, sandboxing, MEF, or enterprise security infrastructure in unrelated slices

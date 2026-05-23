@@ -103,6 +103,8 @@ artifacts/logs/*
 !artifacts/logs/mcp-bm25-search-trace-20260516.log
 !artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json
 !artifacts/logs/mcp-document-selection-trace-20260516.log
+!artifacts/logs/mcp-preview-document-update-trace-20260517.log
+!artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json
 !artifacts/logs/blogai-mcp-search-workflow-20260516.log
@@ -156,6 +158,7 @@ StyleCopReport.xml
 !artifacts/logs/mcp-regex-search-trace-20260516.log
 !artifacts/logs/mcp-bm25-search-trace-20260516.log
 !artifacts/logs/mcp-document-selection-trace-20260516.log
+!artifacts/logs/mcp-preview-document-update-trace-20260517.log
 !artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log
 !artifacts/logs/blogai-mcp-search-workflow-20260516.log
 !artifacts/logs/blogai-doc-selection-search-workflow-20260516.log
@@ -524,6 +527,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md
 !/docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md
 !/docs/session-handoffs/2026-05-16-document-selection-validation.md
+!/docs/session-handoffs/2026-05-17-preview-document-update-validation.md
 !/docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md
 !/docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md
 !/docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md
@@ -543,6 +547,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/diagrams/mcp-regex-search-trace-20260516.mmd
 !/docs/diagrams/mcp-bm25-search-trace-20260516.mmd
 !/docs/diagrams/mcp-document-selection-trace-20260516.mmd
+!/docs/diagrams/mcp-preview-document-update-trace-20260517.mmd
 !/docs/diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd
 !/docs/diagrams/blogai-doc-selection-search-workflow-20260516.mmd
 !/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd

@@ -330,6 +330,33 @@ This helper accepts only explicit repo-root-relative include/exclude patterns an
 It does not search content, rank relevance, execute bridge tools, mutate state, call ChatEngine, call the VSIX named pipe, build a hidden cache, or create an index.
 The caller remains responsible for reading selected files and passing explicit `entries` or `documents` into `bridge_regex_text_search` or `bridge_bm25_text_search`.
 
+## MCP Preview Document Update Validation Run
+
+The preview-only document update tool is callable through MCP as `bridge_preview_document_update`:
+
+- run name: `mcp-preview-document-update-trace-20260517`
+- branch: `main`
+- baseline commit: `2ff8d9e`
+- capture date: `2026-05-23`
+- validation mode: shared tests plus MCP wrapper unit coverage
+- MCP tool: `bridge_preview_document_update`
+- bridge tool id: `bridge.previewDocumentUpdate`
+- deterministic test request id: `request-123`
+- deterministic test operation id: `operation-456`
+- observed statuses: `PreviewGenerated`, `NoOp`, `DriftDetected`, `InvalidRequest`
+- observed safety result: no target file mutation on success, no-op, drift, or invalid-path failures
+
+Preview document update artifacts:
+
+- sequence diagram: [`docs/diagrams/mcp-preview-document-update-trace-20260517.mmd`](diagrams/mcp-preview-document-update-trace-20260517.mmd)
+- observed log transcript: [`artifacts/logs/mcp-preview-document-update-trace-20260517.log`](../artifacts/logs/mcp-preview-document-update-trace-20260517.log)
+- run metadata: [`artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json`](../artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-17-preview-document-update-validation.md`](session-handoffs/2026-05-17-preview-document-update-validation.md)
+
+This wrapper accepts only one explicit repo-root-relative target path and caller-supplied expected content or expected SHA-256 content hash plus full replacement content.
+It rejects absolute paths, parent traversal, and wildcards; it does not crawl directories, execute patches, write files, call ChatEngine, call the VSIX named pipe, or create an approval/apply path.
+The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so policy, approval metadata, redaction, audit classification, manifest metadata, and request/operation correlation remain owned by `BridgeToolExecutor`.
+
 ## MCP Search Diagnostic Selection
 
 Use `.agents/skills/mcp-search-diagnostics/SKILL.md` for concise agent guidance before running MCP search diagnostics.
@@ -339,6 +366,7 @@ Use `docs/evidence-classification-guidance.md` when search results need to disti
 - Use `bridge_select_repo_documents` when a workflow needs deterministic repo-root-relative file metadata before building explicit search inputs.
 - Use `bridge_regex_text_search` for exact markers, regex patterns, structural text checks, and deterministic evidence searches.
 - Use `bridge_bm25_text_search` for ranked relevance over a bounded explicit document set.
+- Use `bridge_preview_document_update` only for deterministic preview-only full-document update diffs against one explicit target path.
 - Build the document/text set in the caller and pass only explicit `inputText`, `entries`, or `documents` to MCP.
 - Record evidence category with selected files when category affects whether a finding is actionable.
 - Do not pass paths expecting the MCP tools to read files; they do not crawl files or mutate state.

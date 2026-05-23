@@ -140,6 +140,7 @@ public sealed class VsToolsTests
 
         Assert.Contains(RegexTextSearchTool.ToolId, toolIds);
         Assert.Contains(Bm25TextSearchTool.ToolId, toolIds);
+        Assert.Contains(PreviewDocumentUpdateTool.ToolId, toolIds);
     }
 
     [Fact]
@@ -434,6 +435,68 @@ public sealed class VsToolsTests
         var auditEvent = Assert.Single(auditSink.Events);
         Assert.Equal(Bm25TextSearchTool.ToolId, auditEvent.ToolId);
         Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-request-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task PreviewDocumentUpdateAsync_executes_preview_tool_through_executor_without_mutating_file()
+    {
+        var root = CreateDocumentSelectionFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "example.md");
+            File.WriteAllText(path, "alpha\nbravo\n");
+            var logger = new RecordingBridgeLogger();
+            var auditSink = new InMemoryAuditSink();
+            var policy = new RecordingAllowPolicy();
+            var catalog = new CompiledBridgeToolCatalog(new IBridgeTool[] { new PreviewDocumentUpdateTool(root) });
+            var executor = new BridgeToolExecutor(
+                catalog,
+                logger,
+                new BridgeSecurityRedactor(),
+                auditSink,
+                policy);
+            var tools = new VsTools(
+                new RecordingPipeClient(),
+                new StubChatEngine(),
+                logger,
+                new BridgeToolInventoryService(catalog),
+                executor,
+                root);
+
+            var responseJson = await tools.PreviewDocumentUpdateAsync(
+                targetPath: "docs/example.md",
+                expectedContent: "alpha\nbravo\n",
+                replacementContent: "alpha\ncharlie\n",
+                description: "test preview",
+                ct: CancellationToken.None);
+
+            using var document = JsonDocument.Parse(responseJson);
+            var rootElement = document.RootElement;
+            var data = rootElement.GetProperty("data");
+
+            Assert.True(rootElement.GetProperty("success").GetBoolean());
+            Assert.Equal(PreviewDocumentUpdateTool.ToolId, rootElement.GetProperty("toolId").GetString());
+            Assert.Equal("PreviewGenerated", data.GetProperty("status").GetString());
+            Assert.True(data.GetProperty("previewOnly").GetBoolean());
+            Assert.False(data.GetProperty("noOp").GetBoolean());
+            Assert.Contains("-bravo", data.GetProperty("diff").GetString(), StringComparison.Ordinal);
+            Assert.Contains("+charlie", data.GetProperty("diff").GetString(), StringComparison.Ordinal);
+            Assert.Equal("alpha\nbravo\n", File.ReadAllText(path));
+            Assert.Equal(1, policy.CallCount);
+            Assert.Equal(PreviewDocumentUpdateTool.ToolId, policy.LastContext!.ToolId);
+            var auditEvent = Assert.Single(auditSink.Events);
+            Assert.Equal(AuditEventCategory.DocumentPreview, auditEvent.Category);
+            Assert.Equal(rootElement.GetProperty("requestId").GetString(), auditEvent.RequestId);
+            Assert.Equal(rootElement.GetProperty("operationId").GetString(), auditEvent.OperationId);
+            Assert.Contains(logger.InformationMessages, message => message.Contains("MCP bridge_preview_document_update started", StringComparison.Ordinal));
+            Assert.Contains(logger.InformationMessages, message => message.Contains("Bridge tool execution started", StringComparison.Ordinal)
+                && message.Contains($"[ToolId={PreviewDocumentUpdateTool.ToolId}]", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
     }
 
     [Fact]

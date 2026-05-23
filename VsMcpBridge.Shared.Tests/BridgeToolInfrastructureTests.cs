@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VsMcpBridge.Shared.Composition;
@@ -36,7 +38,13 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpSecretBroker>(provider.GetRequiredService<ISecretBroker>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
-        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.All(
+            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool => tool.Id != PreviewDocumentUpdateTool.ToolId),
+            tool => Assert.Empty(tool.RequiredCapabilities));
+        var previewTool = Assert.Single(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.Equal(new[] { "workspace.previewDocumentUpdate" }, previewTool.RequiredCapabilities.Select(capability => capability.Name).ToArray());
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, previewTool.ApprovalRequirement);
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Equal(BridgeToolManifest.DefaultVersion, tool.Manifest.Identity.Version));
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is CompiledBridgeToolDiscovery);
         Assert.Contains(provider.GetServices<IBridgeToolDiscovery>(), discovery => discovery is MefBridgeToolDiscovery);
@@ -61,7 +69,10 @@ public sealed class BridgeToolInfrastructureTests
         Assert.IsType<NoOpSecretBroker>(provider.GetRequiredService<ISecretBroker>());
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == RegexTextSearchTool.ToolId);
         Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == Bm25TextSearchTool.ToolId);
-        Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.Empty(tool.RequiredCapabilities));
+        Assert.Contains(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.All(
+            provider.GetRequiredService<IBridgeToolCatalog>().GetTools().Where(tool => tool.Id != PreviewDocumentUpdateTool.ToolId),
+            tool => Assert.Empty(tool.RequiredCapabilities));
         Assert.All(provider.GetRequiredService<IBridgeToolCatalog>().GetTools(), tool => Assert.True(tool.Manifest.Execution.ExecutesThroughBridgeToolExecutor));
     }
 
@@ -92,6 +103,12 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal(AuditRiskLevel.Low, regex.RiskLevelHint);
         Assert.True(regex.ExecutesThroughBridgeToolExecutor);
         Assert.Contains(snapshot.Tools, tool => tool.Id == Bm25TextSearchTool.ToolId);
+        var preview = Assert.Single(snapshot.Tools, tool => tool.Id == PreviewDocumentUpdateTool.ToolId);
+        Assert.Equal("Preview Document Update", preview.Name);
+        Assert.Equal("DocumentPreview", preview.Category);
+        Assert.Equal(new[] { "workspace.previewDocumentUpdate" }, preview.RequiredCapabilities);
+        Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, preview.ApprovalRequirement);
+        Assert.Equal(AuditEventCategory.DocumentPreview, preview.AuditCategoryHint);
     }
 
     [Fact]
@@ -1360,6 +1377,208 @@ public sealed class BridgeToolInfrastructureTests
         Assert.Equal("blocked token=[REDACTED]", auditEvent.Metadata["policyReason"]);
     }
 
+    [Fact]
+    public async Task Preview_document_update_generates_deterministic_unified_diff_without_mutating_file()
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "example.md");
+            File.WriteAllText(path, "alpha\nbravo\n");
+            var executor = CreatePreviewExecutor(root, new RecordingBridgeLogger());
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest("docs/example.md", expectedContent: "alpha\nbravo\n", replacementContent: "alpha\ncharlie\n"),
+                CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal(PreviewDocumentUpdateTool.ToolId, result.ToolId);
+            Assert.Equal("request-123", result.RequestId);
+            Assert.Equal("operation-456", result.OperationId);
+            Assert.Equal("PreviewGenerated", result.Data["status"]);
+            Assert.Equal(true, result.Data["previewOnly"]);
+            Assert.Equal(false, result.Data["noOp"]);
+            Assert.Equal(4, result.Data["changedLineCount"]);
+            Assert.Equal(
+                "--- a/docs/example.md\n+++ b/docs/example.md\n@@ -1,2 +1,2 @@\n-alpha\n-bravo\n+alpha\n+charlie\n",
+                result.Data["diff"]);
+            Assert.Equal("alpha\nbravo\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Preview_document_update_detects_no_op_without_mutating_file()
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "example.md");
+            File.WriteAllText(path, "same\n");
+            var executor = CreatePreviewExecutor(root, new RecordingBridgeLogger());
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest("docs/example.md", expectedContent: "same\n", replacementContent: "same\n"),
+                CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal("NoOp", result.Data["status"]);
+            Assert.Equal(true, result.Data["noOp"]);
+            Assert.Equal(string.Empty, result.Data["diff"]);
+            Assert.Equal("same\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Preview_document_update_accepts_expected_content_hash()
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "hash.md");
+            File.WriteAllText(path, "current\n");
+            var executor = CreatePreviewExecutor(root, new RecordingBridgeLogger());
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest(
+                    "docs/hash.md",
+                    expectedContent: null,
+                    replacementContent: "replacement\n",
+                    expectedContentHash: ComputeSha256("current\n")),
+                CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal("PreviewGenerated", result.Data["status"]);
+            Assert.Equal("hash", result.Data["expectedStateMode"]);
+            Assert.Equal("current\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Preview_document_update_detects_drift_without_mutating_file()
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            var path = Path.Combine(root, "docs", "example.md");
+            File.WriteAllText(path, "current\n");
+            var executor = CreatePreviewExecutor(root, new RecordingBridgeLogger());
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest("docs/example.md", expectedContent: "expected\n", replacementContent: "replacement\n"),
+                CancellationToken.None);
+
+            Assert.False(result.Success);
+            Assert.Equal("DriftDetected", result.ErrorCode);
+            Assert.Equal("DriftDetected", result.Data["status"]);
+            Assert.Equal(false, result.Data["expectedMatched"]);
+            Assert.Equal("current\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("../outside.md")]
+    [InlineData("docs/*.md")]
+    [InlineData("C:/temp/file.md")]
+    public async Task Preview_document_update_rejects_invalid_paths(string targetPath)
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "docs", "example.md"), "current\n");
+            var executor = CreatePreviewExecutor(root, new RecordingBridgeLogger());
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest(targetPath, expectedContent: "current\n", replacementContent: "replacement\n"),
+                CancellationToken.None);
+
+            Assert.False(result.Success);
+            Assert.Equal("InvalidTargetPath", result.ErrorCode);
+            Assert.Equal("InvalidRequest", result.Data["status"]);
+            Assert.Equal("current\n", File.ReadAllText(Path.Combine(root, "docs", "example.md")));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Preview_document_update_uses_executor_audit_redaction_and_no_approval_by_default()
+    {
+        var root = CreatePreviewFixtureRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "docs", "secret.md"), "token=raw-current-secret\n");
+            var logger = new RecordingBridgeLogger();
+            var auditSink = new InMemoryAuditSink();
+            var policy = new RecordingCapabilityPolicy(ToolExecutionPolicyDecision.Allow("preview observed"));
+            var executor = new BridgeToolExecutor(
+                new CompiledBridgeToolCatalog(new IBridgeTool[] { new PreviewDocumentUpdateTool(root) }),
+                logger,
+                new BridgeSecurityRedactor(),
+                auditSink,
+                policy);
+
+            var result = await executor.ExecuteAsync(
+                CreatePreviewRequest("docs/secret.md", expectedContent: "token=raw-current-secret\n", replacementContent: "token=raw-result-secret\n"),
+                CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.Equal("PreviewGenerated", result.Data["status"]);
+            Assert.Equal(1, policy.CallCount);
+            Assert.Equal(PreviewDocumentUpdateTool.ToolId, policy.LastContext!.ToolId);
+            Assert.Equal(ToolExecutionApprovalRequirement.NotRequired, policy.LastContext.Manifest!.ApprovalRequirement);
+
+            var auditEvent = Assert.Single(auditSink.Events);
+            Assert.True(auditEvent.Success);
+            Assert.True(auditEvent.Allowed);
+            Assert.Equal(AuditEventCategory.DocumentPreview, auditEvent.Category);
+            Assert.Equal(AuditSeverity.Informational, auditEvent.Severity);
+            Assert.Equal(AuditRiskLevel.Low, auditEvent.RiskLevel);
+            Assert.Equal(AuditOutcome.Succeeded, auditEvent.Outcome);
+            Assert.Equal("Preview Document Update", auditEvent.Metadata["manifestToolName"]);
+            Assert.Equal("DocumentPreview", auditEvent.Metadata["auditCategory"]);
+            Assert.Equal("NotRequired", auditEvent.Metadata["approvalDecision"]);
+
+            var logMessages = logger.VerboseMessages
+                .Concat(logger.InformationMessages)
+                .Concat(logger.WarningMessages)
+                .Concat(logger.Errors.Select(error => error.Message))
+                .Concat(logger.Errors.Select(error => error.Exception?.Message ?? string.Empty))
+                .ToArray();
+            Assert.DoesNotContain(logMessages, message => message.Contains("raw-current-secret", StringComparison.Ordinal));
+            Assert.DoesNotContain(logMessages, message => message.Contains("raw-result-secret", StringComparison.Ordinal));
+            Assert.Contains(logMessages, message => message.Contains("[REDACTED]", StringComparison.Ordinal));
+            Assert.DoesNotContain(auditEvent.Metadata.Values, value => value.Contains("raw-current-secret", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static BridgeToolRequest CreateRequest(string toolId)
         => new BridgeToolRequest
         {
@@ -1368,6 +1587,56 @@ public sealed class BridgeToolInfrastructureTests
             OperationId = "operation-456",
             Arguments = new Dictionary<string, object?> { ["input"] = "hello" }
         };
+
+    private static string CreatePreviewFixtureRoot()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "vs-mcp-bridge-preview-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "docs"));
+        return root;
+    }
+
+    private static BridgeToolExecutor CreatePreviewExecutor(string root, RecordingBridgeLogger logger)
+        => new BridgeToolExecutor(
+            new CompiledBridgeToolCatalog(new IBridgeTool[] { new PreviewDocumentUpdateTool(root) }),
+            logger);
+
+    private static BridgeToolRequest CreatePreviewRequest(
+        string targetPath,
+        string? expectedContent,
+        string replacementContent,
+        string? expectedContentHash = null)
+    {
+        var arguments = new Dictionary<string, object?>
+        {
+            ["targetPath"] = targetPath,
+            ["replacementContent"] = replacementContent
+        };
+
+        if (expectedContent != null)
+            arguments["expectedContent"] = expectedContent;
+
+        if (expectedContentHash != null)
+            arguments["expectedContentHash"] = expectedContentHash;
+
+        return new BridgeToolRequest
+        {
+            ToolId = PreviewDocumentUpdateTool.ToolId,
+            RequestId = "request-123",
+            OperationId = "operation-456",
+            Arguments = arguments
+        };
+    }
+
+    private static string ComputeSha256(string text)
+    {
+        using var sha256 = SHA256.Create();
+        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(text));
+        var builder = new StringBuilder(bytes.Length * 2);
+        foreach (var value in bytes)
+            builder.Append(value.ToString("x2"));
+
+        return builder.ToString();
+    }
 
     private static void AssertAuditClassification(
         BridgeAuditEnvelope auditEvent,
