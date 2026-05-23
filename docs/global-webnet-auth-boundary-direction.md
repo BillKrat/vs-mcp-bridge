@@ -27,6 +27,8 @@ Candidate future boundary:
 
 BlogAI should ask the API/auth boundary whether a request is authenticated. BlogAI should not own long-term identity decisions and should not depend on BlogEngine.NET auth as its authority.
 
+The shared auth capability should be referred to as `AdventuresAuth`. If it later becomes reusable code, `Adventures.Auth` is the possible package or namespace direction. These names are planning labels until a later implementation or packaging slice explicitly creates code.
+
 ## First Functional Expectations
 
 The first functional version should stay modest and prove the reusable boundary works for BlogAI as the first consumer.
@@ -85,3 +87,5 @@ Explicitly deferred:
 No auth code should begin until the reusable Global WebNet boundary direction is explicitly acknowledged in the implementation slice.
 
 The first implementation must remain a local or development functional proof. BlogAI should consume the boundary first, but BlogAI must not own identity decisions. Broader consumers remain future work.
+
+The local prototype design is captured in `docs/adventures-auth-local-prototype-design.md`.

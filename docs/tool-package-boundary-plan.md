@@ -56,6 +56,28 @@ Non-goals:
 - host-specific proposal/apply behavior
 - BlogAI route/cache/database workflows
 
+### Adventures.Auth
+
+Possible future shared auth boundary package or namespace.
+
+Responsibilities, if later approved:
+
+- reusable `AdventuresAuth` contracts
+- auth decision contracts and result shapes
+- redacted audit event contracts
+- correlation field conventions
+- secret redaction and secret-reference expectations for auth flows
+
+Non-goals:
+
+- implementation during the local prototype design slice
+- production identity provider behavior
+- OAuth/OpenID
+- RBAC, tenant, or organization model
+- BlogAI-specific identity ownership
+- BlogEngine.NET auth integration
+- MCP tunnel integration before a separate design slice
+
 ### McpVsBridge.Tools
 
 Visual Studio-specific tool pack.
@@ -111,7 +133,7 @@ Boundary rule:
 - Security and observability contracts move before host-specific implementations.
 - Manifest and capability contracts are shared contracts, not package-manager metadata.
 - MEF remains discovery-only unless a future explicit design slice changes it.
-- Remote tools, OAuth/RBAC/user identity, signed package provenance, sandboxing, persistent policy, and package publishing remain out of scope until separate design and validation slices justify them.
+- Remote tools, OAuth/RBAC/user identity, signed package provenance, sandboxing, persistent policy, and package publishing remain out of scope until separate design and validation slices justify them. `Adventures.Auth` is a planning label only until a later auth implementation or extraction slice approves code.
 - Extraction should happen only after stable seams, tests, and trace artifacts exist.
 
 ## Phased Extraction Plan

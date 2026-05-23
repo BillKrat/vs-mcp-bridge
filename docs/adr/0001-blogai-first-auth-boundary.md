@@ -17,6 +17,7 @@ Current directional shape:
 Existing direction is captured in:
 
 - `docs/global-webnet-auth-boundary-direction.md`
+- `docs/adventures-auth-local-prototype-design.md`
 - `docs/blogai-auth-api-boundary-note.md`
 - `docs/blogai-auth-trust-boundary-flow.md`
 - `docs/session-handoffs/2026-05-17-platform-to-blogai-transition.md`
@@ -35,7 +36,7 @@ The boundary should align with MCP platform security principles already used in 
 
 ## Decision
 
-The first future authentication implementation should validate a reusable Global WebNet auth/API boundary concept that BlogAI consumes first.
+The first future authentication implementation should validate a reusable Global WebNet auth/API boundary concept that BlogAI consumes first. The shared auth capability name is `AdventuresAuth`; `Adventures.Auth` is only a possible future package or namespace if reusable code is later approved.
 
 It should:
 
@@ -137,5 +138,6 @@ Before any auth implementation begins, a future slice should document:
 
 The implementation gate checklist is `docs/blogai-auth-implementation-gate.md`.
 The minimal local prototype objective is clarified in `docs/blogai-minimal-auth-prototype-clarification.md`.
+The local `AdventuresAuth` prototype design is `docs/adventures-auth-local-prototype-design.md`.
 
 No auth implementation is approved by this ADR alone.

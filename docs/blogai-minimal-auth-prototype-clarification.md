@@ -10,7 +10,7 @@ This is documentation only. It does not implement auth, add services or projects
 
 The first acceptable prototype objective is:
 
-Prove that a reusable Global WebNet auth/API boundary can make an authenticated vs unauthenticated access decision for BlogAI as the first consumer while preserving redacted, observable decision evidence.
+Prove that a reusable Global WebNet auth/API boundary, named `AdventuresAuth` for planning purposes, can make an authenticated vs unauthenticated access decision for BlogAI as the first consumer while preserving redacted, observable decision evidence.
 
 The prototype must be:
 
@@ -86,6 +86,12 @@ Expected result:
 
 Use stable event names for local validation evidence:
 
+- `AdventuresAuth.RequestReceived`
+- `AdventuresAuth.LoginEvaluated`
+- `AdventuresAuth.SessionValidated`
+- `AdventuresAuth.AccessAllowed`
+- `AdventuresAuth.AccessDenied`
+- `AdventuresAuth.SecretRedacted`
 - `BlogAiAuth.RequestReceived`
 - `BlogAiAuth.DecisionEvaluated`
 - `BlogAiAuth.AccessAllowed`
@@ -106,6 +112,8 @@ Suggested fields:
 - `CorrelationId`
 - `RequestId`
 - `AuthDecisionId`
+- `ClientApplication`
+- `Environment`
 - `EventName`
 - `Outcome`
 - `ReasonCode`
@@ -167,3 +175,5 @@ The prototype fails the gate if:
 With this clarification in place, the previous gate-review blockers are resolved in documentation and aligned with the reusable Global WebNet boundary direction in `docs/global-webnet-auth-boundary-direction.md`.
 
 The project is ready to consider a later minimal local auth prototype slice, provided that slice keeps the exact objective above and does not add deferred identity, deployment, database, broader-consumer, or legacy runtime scope.
+
+The first local-only `AdventuresAuth` prototype design is captured in `docs/adventures-auth-local-prototype-design.md`.
