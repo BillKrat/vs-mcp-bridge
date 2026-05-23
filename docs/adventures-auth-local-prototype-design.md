@@ -157,3 +157,5 @@ That design keeps BlogAI as the first local consumer of `AdventuresAuth` while p
 The first minimal BlogAI-side consumer prototype plan is `docs/blogai-minimal-auth-consumer-prototype-plan.md`.
 
 Durable validation evidence for the implemented BlogAI consumer boundary is captured in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
+
+The future local API boundary design for hosting this capability without implementing a host yet is captured in `docs/adventures-auth-local-api-boundary-design.md`.

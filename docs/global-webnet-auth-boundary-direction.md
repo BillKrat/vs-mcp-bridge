@@ -91,3 +91,4 @@ The first implementation must remain a local or development functional proof. Bl
 The local prototype design is captured in `docs/adventures-auth-local-prototype-design.md`.
 The first local prototype validation trace is captured in `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`.
 The BlogAI consumer boundary is captured in `docs/blogai-adventures-auth-consumer-design.md`.
+The local API boundary design is captured in `docs/adventures-auth-local-api-boundary-design.md`.

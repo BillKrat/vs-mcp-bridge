@@ -86,6 +86,8 @@ This is not a web host, middleware layer, production auth path, BlogEngine.NET a
 
 Durable validation evidence for the interface-driven consumer flow is captured in `docs/session-handoffs/2026-05-17-blogai-auth-consumer-validation.md`.
 
+The future local API boundary design for exposing `AdventuresAuth` without adding a host yet is captured in `docs/adventures-auth-local-api-boundary-design.md`.
+
 ## Non-Goals
 
 Explicitly out of scope:

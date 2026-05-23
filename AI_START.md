@@ -115,6 +115,7 @@ For the BlogAI auth gate review result, read `docs/session-handoffs/2026-05-17-b
 For the clarified minimal BlogAI auth prototype objective and local validation expectations, read `docs/blogai-minimal-auth-prototype-clarification.md`.
 For the reusable Global WebNet auth/API boundary direction with BlogAI as first consumer, read `docs/global-webnet-auth-boundary-direction.md`.
 For the local-only `AdventuresAuth` prototype design, read `docs/adventures-auth-local-prototype-design.md`.
+For the future local/dev `AdventuresAuth` API boundary design, read `docs/adventures-auth-local-api-boundary-design.md`.
 For the final readiness gate before implementing the local-only `AdventuresAuth` prototype, read `docs/session-handoffs/2026-05-17-adventures-auth-readiness-review.md`.
 For durable validation evidence of the local-only `AdventuresAuth` prototype skeleton, read `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`.
 For the BlogAI consumer boundary for `AdventuresAuth`, read `docs/blogai-adventures-auth-consumer-design.md`.
