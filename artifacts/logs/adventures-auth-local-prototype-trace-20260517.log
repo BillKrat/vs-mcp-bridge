@@ -1,0 +1,191 @@
+# AdventuresAuth Local Prototype Trace - 2026-05-17
+
+Run name: adventures-auth-local-prototype-trace-20260517
+Scope: local/dev-only AdventuresAuth skeleton validation
+Commit under validation: 1a875bc Add minimal local AdventuresAuth prototype skeleton
+Validation path: VsMcpBridge.Shared.Tests/AdventuresAuthTests.cs
+Implementation path: VsMcpBridge.Shared/AdventuresAuth/
+
+## Boundary
+
+This trace validates the current in-process local prototype skeleton only.
+
+No API host/service was created.
+No production deployment was used.
+No persistence/database behavior was used.
+No OAuth/OpenID behavior was used.
+No RBAC, tenant, or organization model was used.
+No external identity provider was used.
+No BlogEngine.NET auth dependency was introduced.
+No MCP tunnel integration was introduced.
+
+## Observed Scenarios
+
+### unauthenticated request denied
+
+Test: Login_without_credential_denies_access
+Service method: AdventuresAuthDecisionService.Login
+Input summary:
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+- development credential: absent
+
+Observed result:
+- Allowed: false
+- Outcome: Denied
+- ReasonCode: DevCredentialRejected
+- Principal: null
+- LocalSessionId: null
+- Events include:
+  - AdventuresAuth.RequestReceived
+  - AdventuresAuth.LoginEvaluated
+  - AdventuresAuth.AccessDenied
+
+### valid local dev credential allowed
+
+Test: Login_with_valid_development_credential_allows_access
+Service method: AdventuresAuthDecisionService.Login
+Input summary:
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+- development credential: valid local marker
+
+Observed result:
+- Allowed: true
+- Outcome: Allowed
+- ReasonCode: DevCredentialAccepted
+- Principal.Subject: local-dev-user
+- Principal.Claims.authMode: DevelopmentOnly
+- Principal.Claims.clientApplication: BlogAI
+- LocalSessionId shape: local-session-{AuthDecisionId}
+- Events include:
+  - AdventuresAuth.RequestReceived
+  - AdventuresAuth.LoginEvaluated
+  - AdventuresAuth.AccessAllowed
+
+### invalid credential denied
+
+Test: Login_with_invalid_development_credential_denies_access
+Service method: AdventuresAuthDecisionService.Login
+Input summary:
+- development credential: invalid local marker
+
+Observed result:
+- Allowed: false
+- Outcome: Denied
+- ReasonCode: DevCredentialRejected
+- Principal: null
+- LocalSessionId: null
+- Events include:
+  - AdventuresAuth.AccessDenied
+
+### active local session validation allowed
+
+Test: ValidateSession_with_active_development_session_allows_access
+Service methods:
+- AdventuresAuthDecisionService.Login
+- AdventuresAuthDecisionService.ValidateSession
+
+Observed result:
+- Allowed: true
+- ReasonCode: LocalSessionAccepted
+- Principal.Subject: local-dev-user
+- LocalSessionId: preserved from local login result
+- Events include:
+  - AdventuresAuth.RequestReceived
+  - AdventuresAuth.SessionValidated
+  - AdventuresAuth.AccessAllowed
+
+### invalid local session denied
+
+Test: ValidateSession_with_invalid_development_session_denies_access
+Service method: AdventuresAuthDecisionService.ValidateSession
+Input summary:
+- local session id: invalid local marker
+
+Observed result:
+- Allowed: false
+- ReasonCode: LocalSessionRejected
+- Principal: null
+- LocalSessionId: null
+- Events include:
+  - AdventuresAuth.AccessDenied
+
+### logout invalidation placeholder
+
+Test: Logout_invalidates_local_session_placeholder
+Service methods:
+- AdventuresAuthDecisionService.Login
+- AdventuresAuthDecisionService.Logout
+- AdventuresAuthDecisionService.ValidateSession
+
+Observed result:
+- Logout Allowed: true
+- Logout ReasonCode: LocalSessionInvalidated
+- Validate-after-logout Allowed: false
+- Validate-after-logout ReasonCode: LocalSessionRejected
+
+### current principal placeholder
+
+Test: CurrentPrincipal_returns_redacted_local_principal_placeholder
+Service methods:
+- AdventuresAuthDecisionService.Login
+- AdventuresAuthDecisionService.CurrentPrincipal
+
+Observed result:
+- Allowed: true
+- ReasonCode: CurrentPrincipalReturned
+- Principal.Subject: local-dev-user
+- Principal.DisplayName: Local Development User
+
+### correlation metadata preserved
+
+Test: Decision_preserves_correlation_metadata
+Service method: AdventuresAuthDecisionService.Login
+Input summary:
+- CorrelationId: corr-123
+- RequestId: request-456
+- AuthDecisionId: auth-789
+- ClientApplication: BlogAI
+- Environment: LocalDevelopment
+
+Observed result:
+- Decision correlation preserves all five fields.
+- Every audit event metadata entry preserves all five fields.
+
+### redaction evidence
+
+Test: Audit_events_redact_secret_like_values
+Service method: AdventuresAuthDecisionService.Login
+Input summary:
+- credential contains token-like, password-like, and bearer-like sentinel values
+- raw sentinel values are intentionally omitted from this durable trace
+
+Observed result:
+- Events include AdventuresAuth.SecretRedacted.
+- Audit metadata includes [REDACTED].
+- Raw token, password, and bearer sentinel values do not appear in audit metadata.
+
+### no persistence/database behavior
+
+Test: Prototype_uses_no_persistence_or_blogengine_dependency
+Observed result:
+- UsesPersistence: false
+- StorageKind: LocalInMemoryOnly
+- AdventuresAuthDecisionService assembly references do not include BlogEngine.
+
+## Validation Commands
+
+Executed:
+- dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj
+- dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj
+- git diff --check
+
+Observed status before artifact commit:
+- Shared test project passed.
+- Shared project build passed.
+- Whitespace validation passed.
+
+Known warning context:
+- Existing nullable/analyzer warnings were observed in shared MVP/VM and MCP test/build paths.
+- No warning or error required changing AdventuresAuth behavior.

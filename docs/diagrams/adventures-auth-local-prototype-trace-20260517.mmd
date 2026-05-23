@@ -1,0 +1,42 @@
+sequenceDiagram
+    autonumber
+    participant Caller as "Local caller / test harness"
+    participant Service as "AdventuresAuthDecisionService"
+    participant Redaction as "Redaction boundary"
+    participant Audit as "Audit/event metadata"
+    participant Result as "Decision result"
+
+    Caller->>Service: "Login without credential<br/>CorrelationId / RequestId / AuthDecisionId"
+    Service->>Audit: "AdventuresAuth.RequestReceived"
+    Service->>Audit: "AdventuresAuth.LoginEvaluated<br/>ReasonCode=DevCredentialRejected"
+    Service->>Audit: "AdventuresAuth.AccessDenied"
+    Service-->>Result: "Denied"
+
+    Caller->>Service: "Login with valid local dev credential"
+    Service->>Audit: "AdventuresAuth.RequestReceived"
+    Service->>Audit: "AdventuresAuth.LoginEvaluated<br/>ReasonCode=DevCredentialAccepted"
+    Service->>Audit: "AdventuresAuth.AccessAllowed"
+    Service-->>Result: "Allowed + local session placeholder"
+
+    Caller->>Service: "Validate active local session"
+    Service->>Audit: "AdventuresAuth.RequestReceived"
+    Service->>Audit: "AdventuresAuth.SessionValidated<br/>ReasonCode=LocalSessionAccepted"
+    Service->>Audit: "AdventuresAuth.AccessAllowed"
+    Service-->>Result: "Allowed + current principal placeholder"
+
+    Caller->>Service: "Validate invalid local session"
+    Service->>Audit: "AdventuresAuth.RequestReceived"
+    Service->>Audit: "AdventuresAuth.SessionValidated<br/>ReasonCode=LocalSessionRejected"
+    Service->>Audit: "AdventuresAuth.AccessDenied"
+    Service-->>Result: "Denied"
+
+    Caller->>Service: "Logout active local session"
+    Service->>Audit: "AdventuresAuth.RequestReceived"
+    Service->>Audit: "AdventuresAuth.SessionValidated<br/>ReasonCode=LocalSessionInvalidated"
+    Service-->>Result: "Session placeholder invalidated"
+
+    Caller->>Service: "Credential with secret-like sentinel values"
+    Service->>Redaction: "Apply BridgeSecurityRedactor"
+    Redaction-->>Service: "[REDACTED] metadata only"
+    Service->>Audit: "AdventuresAuth.SecretRedacted"
+    Service-->>Result: "Decision result excludes raw secret/token values"

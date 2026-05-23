@@ -89,3 +89,4 @@ No auth code should begin until the reusable Global WebNet boundary direction is
 The first implementation must remain a local or development functional proof. BlogAI should consume the boundary first, but BlogAI must not own identity decisions. Broader consumers remain future work.
 
 The local prototype design is captured in `docs/adventures-auth-local-prototype-design.md`.
+The first local prototype validation trace is captured in `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`.

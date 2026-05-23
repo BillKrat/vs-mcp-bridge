@@ -1,0 +1,60 @@
+{
+  "artifact": "adventures-auth-local-prototype-trace-20260517",
+  "date": "2026-05-17",
+  "validatedCommit": "1a875bc",
+  "scope": "local/dev-only AdventuresAuth skeleton validation",
+  "implementationPaths": [
+    "VsMcpBridge.Shared/AdventuresAuth/",
+    "VsMcpBridge.Shared.Tests/AdventuresAuthTests.cs"
+  ],
+  "scenarioCoverage": {
+    "unauthenticatedDenied": true,
+    "validDevCredentialAllowed": true,
+    "invalidCredentialDenied": true,
+    "invalidSessionDenied": true,
+    "activeSessionValidationAllowed": true,
+    "logoutInvalidatesSessionPlaceholder": true,
+    "currentPrincipalPlaceholderReturned": true,
+    "correlationMetadataPreserved": true,
+    "clientApplicationPreserved": true,
+    "environmentPreserved": true,
+    "rawSecretValuesRedactedFromAuditMetadata": true,
+    "noPersistenceOrDatabase": true,
+    "noBlogEngineDependency": true
+  },
+  "eventNamesObserved": [
+    "AdventuresAuth.RequestReceived",
+    "AdventuresAuth.LoginEvaluated",
+    "AdventuresAuth.SessionValidated",
+    "AdventuresAuth.AccessAllowed",
+    "AdventuresAuth.AccessDenied",
+    "AdventuresAuth.SecretRedacted"
+  ],
+  "correlationFields": [
+    "CorrelationId",
+    "RequestId",
+    "AuthDecisionId",
+    "ClientApplication",
+    "Environment"
+  ],
+  "nonGoalsPreserved": {
+    "productionDeployment": false,
+    "apiHostOrServiceCreated": false,
+    "persistenceOrDatabase": false,
+    "oauthOrOpenId": false,
+    "rbac": false,
+    "tenantOrOrganizationModel": false,
+    "externalIdentityProvider": false,
+    "blogEngineAuthCoupling": false,
+    "mcpTunnelIntegration": false
+  },
+  "validationCommands": [
+    "git diff --check",
+    "dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj",
+    "dotnet build ./VsMcpBridge.Shared/VsMcpBridge.Shared.csproj"
+  ],
+  "notes": [
+    "Raw secret-like sentinel values are intentionally not stored in this metadata artifact.",
+    "The current prototype remains an in-process local skeleton under the existing shared project."
+  ]
+}

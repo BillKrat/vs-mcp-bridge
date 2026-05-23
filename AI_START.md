@@ -116,6 +116,7 @@ For the clarified minimal BlogAI auth prototype objective and local validation e
 For the reusable Global WebNet auth/API boundary direction with BlogAI as first consumer, read `docs/global-webnet-auth-boundary-direction.md`.
 For the local-only `AdventuresAuth` prototype design, read `docs/adventures-auth-local-prototype-design.md`.
 For the final readiness gate before implementing the local-only `AdventuresAuth` prototype, read `docs/session-handoffs/2026-05-17-adventures-auth-readiness-review.md`.
+For durable validation evidence of the local-only `AdventuresAuth` prototype skeleton, read `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`.
 For the first practical BlogAI usage path that should pressure-test the MCP/tool platform without premature auth, API, deployment, or package work, read `docs/blogai-functional-pressure-test-plan.md`.
 For the concrete first-session checklist for applying current MCP/tools to BlogAI work, read `docs/blogai-first-pressure-test-session.md`.
 For findings from the first BlogAI pressure-test pass, read `docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md`.

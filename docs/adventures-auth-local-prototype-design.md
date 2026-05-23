@@ -138,3 +138,12 @@ A later implementation slice must restate the local-only objective, name the exa
 The first implementation slice placed the local-only skeleton under `VsMcpBridge.Shared/AdventuresAuth` with tests in `VsMcpBridge.Shared.Tests/AdventuresAuthTests.cs`.
 
 That location was chosen because the slice explicitly avoided creating new projects or services. The code remains an in-process local prototype surface, not a deployed API host, package extraction, production `api.global-webnet.com` service, or BlogEngine.NET integration.
+
+## Durable Validation Evidence
+
+The first durable validation trace is captured in:
+
+- `artifacts/logs/adventures-auth-local-prototype-trace-20260517.log`
+- `artifacts/logs/adventures-auth-local-prototype-trace-20260517.metadata.json`
+- `docs/diagrams/adventures-auth-local-prototype-trace-20260517.mmd`
+- `docs/session-handoffs/2026-05-17-adventures-auth-local-prototype-validation.md`
