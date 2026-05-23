@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    participant Caller as "Temporary direct MCP caller"
+    participant Files as "Selected repo and BlogAI files"
+    participant MCP as "VsMcpBridge.McpServer"
+    participant Wrapper as "bridge_regex_text_search"
+    participant Executor as "BridgeToolExecutor"
+    participant Tool as "RegexTextSearchTool"
+    participant Evidence as "Durable artifacts"
+
+    Caller->>MCP: initialize
+    MCP-->>Caller: serverInfo "VsMcpBridge.McpServer 1.0.0.0"
+    Caller->>MCP: tools/list
+    MCP-->>Caller: 18 tools including bridge_regex_text_search
+    Caller->>Wrapper: smoke search with explicit inputText
+    Wrapper->>Executor: ExecuteAsync("bridge.regexTextSearch")
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: success
+    Executor-->>Wrapper: BridgeToolResult
+    Wrapper-->>Caller: JSON result
+    Caller->>Wrapper: invalid regex smoke search
+    Wrapper->>Executor: ExecuteAsync("bridge.regexTextSearch")
+    Executor->>Tool: ExecuteAsync(request)
+    Tool-->>Executor: InvalidRegex failure
+    Executor-->>Wrapper: structured failure
+    Wrapper-->>Caller: JSON result
+    Caller->>Files: read selected evidence files outside MCP
+    Caller->>Wrapper: search explicit entries for feature/approval-apply-ui-slice
+    Wrapper->>Executor: ExecuteAsync("bridge.regexTextSearch")
+    Executor->>Tool: ExecuteAsync(entries)
+    Tool-->>Executor: 61 matches in historical/evidence entries
+    Executor-->>Wrapper: correlated BridgeToolResult
+    Wrapper-->>Caller: JSON result with requestId and operationId
+    Caller->>Evidence: write log, metadata, handoff, diagram

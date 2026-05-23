@@ -272,6 +272,49 @@ This wrapper accepts only explicit `inputText` or `entries` supplied in the MCP 
 It does not read filesystem paths, crawl repositories, mutate state, call ChatEngine, or call the VSIX named pipe.
 The wrapper builds a `BridgeToolRequest` and calls `IBridgeToolExecutor.ExecuteAsync`, so executable bridge tool policy, approval, redaction, audit, manifest, and correlation behavior remains owned by `BridgeToolExecutor`.
 
+## Explicit-Input MCP Regex Search Workload
+
+The BlogAI stale shared chrome/cache workload was rerun with `bridge_regex_text_search` after the MCP wrapper was added.
+
+- run name: `blogai-stale-chrome-mcp-regex-search-20260516`
+- baseline commit: `da5a9d1`
+- capture date: `2026-05-22`
+- validation mode: direct MCP stdio helper with caller-selected explicit text entries
+- marker: `feature/approval-apply-ui-slice`
+- entries supplied to MCP: `8`
+- files represented by caller-selected entries: `47`
+- successful response request id: `85439ee022a74a1a98f9ac16a0d423e1`
+- successful response operation id: `deadbde2478547d3889330b1c24da8eb`
+- successful response counts: `matchCount=61`, `totalMatchCount=61`, `limited=false`
+
+Observed zero-match entries:
+
+- canonical `docs/blogs/posts` aggregate
+- selected local BlogAI source files
+- current after-update widget row `26512` settings
+
+Observed matching entries:
+
+- stale shared chrome inspection report
+- final rendered route failure after cache clear report
+- preserved before-update widget row `26512` evidence
+- historical DB export sample rows
+- prior stale chrome search handoff
+
+This established the reusable MCP regex pattern for future AI pressure-test workloads:
+
+1. choose a bounded set of source/evidence files in the caller
+2. read those files outside the MCP tool
+3. pass only explicit `inputText` or `entries` to `bridge_regex_text_search`
+4. preserve request id, operation id, inputs, matched entries, and safety notes in durable artifacts
+
+Artifacts:
+
+- sequence diagram: [`docs/diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd`](diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd)
+- observed log transcript: [`artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log`](../artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log)
+- run metadata: [`artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json`](../artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json)
+- session handoff: [`docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md`](session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md)
+
 ## Preconditions
 
 - repository root: `Y:\vs-mcp-bridge`

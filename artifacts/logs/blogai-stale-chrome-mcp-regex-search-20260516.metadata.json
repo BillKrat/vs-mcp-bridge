@@ -1,0 +1,225 @@
+{
+  "runName": "blogai-stale-chrome-mcp-regex-search-20260516",
+  "repository": "Y:/vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "da5a9d1 Expose regex text search through MCP",
+  "captureDate": "2026-05-22",
+  "validationMode": "direct MCP stdio helper using explicit caller-selected text entries",
+  "serverInfo": {
+    "name": "VsMcpBridge.McpServer",
+    "version": "1.0.0.0"
+  },
+  "toolsList": {
+    "toolCount": 18,
+    "includesBridgeRegexTextSearch": true,
+    "includesBridgeGetToolInventory": true,
+    "toolNames": [
+      "bridge_get_tool_inventory",
+      "bridge_regex_text_search",
+      "chat_engine_chat",
+      "chat_engine_explain_code",
+      "chat_engine_explain_error",
+      "chat_engine_ping",
+      "chat_engine_rewrite",
+      "chat_engine_rewrite_with_target",
+      "chat_engine_suggest_error_fix",
+      "chat_engine_suggest_fixes",
+      "chat_engine_suggest_fixes_with_target",
+      "chat_engine_summarize",
+      "vs_get_active_document",
+      "vs_get_error_list",
+      "vs_get_selected_text",
+      "vs_list_solution_projects",
+      "vs_propose_text_edit",
+      "vs_propose_text_edits"
+    ]
+  },
+  "smokeSearch": {
+    "success": true,
+    "toolId": "bridge.regexTextSearch",
+    "matchCount": 1,
+    "totalMatchCount": 1
+  },
+  "invalidRegex": {
+    "success": false,
+    "errorCode": "InvalidRegex",
+    "message": "Invalid regular expression: Invalid pattern '[' at offset 1. Unterminated [] set."
+  },
+  "workload": {
+    "marker": "feature/approval-apply-ui-slice",
+    "mcpToolName": "bridge_regex_text_search",
+    "bridgeToolId": "bridge.regexTextSearch",
+    "requestId": "85439ee022a74a1a98f9ac16a0d423e1",
+    "operationId": "deadbde2478547d3889330b1c24da8eb",
+    "success": true,
+    "matchCount": 61,
+    "totalMatchCount": 61,
+    "limited": false,
+    "entryCount": 8,
+    "entries": [
+      {
+        "index": 0,
+        "label": "canonical docs/blogs/posts aggregate",
+        "files": [
+          "docs/blogs/posts/inference-driven-software-design-with-copilot-pros-and-cons/post.json",
+          "docs/blogs/posts/inference-driven-software-design-with-copilot-pros-and-cons/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-publish-create-trial/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-publish-create-trial/content.html",
+          "docs/blogs/posts/understanding-ai-chat-sessions-models-and-agents/post.json",
+          "docs/blogs/posts/understanding-ai-chat-sessions-models-and-agents/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-2/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-2/content.html",
+          "docs/blogs/posts/why-vsix-project-should-target-net-framework-4-7-2/post.json",
+          "docs/blogs/posts/why-vsix-project-should-target-net-framework-4-7-2/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-5/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-5/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-4/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-4/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-3/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-3/content.html",
+          "docs/blogs/posts/understanding-a-named-pipe-listener/post.json",
+          "docs/blogs/posts/understanding-a-named-pipe-listener/content.html",
+          "docs/blogs/posts/understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe/post.json",
+          "docs/blogs/posts/understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-4-repo-trial/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-4-repo-trial/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-6/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-6/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-1/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-1/content.html",
+          "docs/blogs/posts/wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety/post.json",
+          "docs/blogs/posts/wpf-vsix-threading-understanding-ui-switching-async-behavior-and-pipe-safety/content.html",
+          "docs/blogs/posts/how-stdio-works-in-vs-mcp-bridge/post.json",
+          "docs/blogs/posts/how-stdio-works-in-vs-mcp-bridge/content.html",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-7/post.json",
+          "docs/blogs/posts/vs-mcp-bridge-blog-series-part-7/content.html"
+        ],
+        "charLength": 188429
+      },
+      {
+        "index": 1,
+        "label": "local BlogAI selected source files",
+        "files": [
+          "../BlogAI/BlogEngine/BlogEngine.NET/Custom/Widgets/Common.cs",
+          "../BlogAI/BlogEngine/BlogEngine.NET/AppCode/Api/SettingsController.cs"
+        ],
+        "charLength": 4148
+      },
+      {
+        "index": 2,
+        "label": "current after-update widget settings row 26512",
+        "files": [
+          "docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516-after-update/settings.raw.txt",
+          "docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516-after-update/settings.parsed.json"
+        ],
+        "charLength": 9446
+      },
+      {
+        "index": 3,
+        "label": "stale shared chrome inspection report",
+        "files": [
+          "docs/blogs/stale-shared-feature-branch-link-inspection-20260516.md"
+        ],
+        "charLength": 7657
+      },
+      {
+        "index": 4,
+        "label": "final rendered route failure after cache clear report",
+        "files": [
+          "docs/blogs/final-rendered-route-verification-after-cache-clear-20260516.md"
+        ],
+        "charLength": 9319
+      },
+      {
+        "index": 5,
+        "label": "preserved before-update widget settings row 26512",
+        "files": [
+          "docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516/settings.raw.txt",
+          "docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516/settings.parsed.json",
+          "docs/blogs/source-of-truth/widget-settings/datastore-row-26512-20260516/settings.before-after.diff"
+        ],
+        "charLength": 12519
+      },
+      {
+        "index": 6,
+        "label": "historical db export sample rows",
+        "files": [
+          "docs/blogs/source-of-truth/db-export-20260516/vs-mcp-bridge-blog-series-part-3/content.html",
+          "docs/blogs/source-of-truth/db-export-20260516/vs-mcp-bridge-blog-series-part-4/content.html",
+          "docs/blogs/source-of-truth/db-export-20260516/vs-mcp-bridge-blog-series-part-5/content.html",
+          "docs/blogs/source-of-truth/db-export-20260516/vs-mcp-bridge-blog-series-part-6/content.html",
+          "docs/blogs/source-of-truth/db-export-20260516/understanding-local-mcp-server-over-stdio-and-local-only-communication-over-a-named-pipe/content.html"
+        ],
+        "charLength": 37775
+      },
+      {
+        "index": 7,
+        "label": "prior stale chrome MCP pressure-test handoff",
+        "files": [
+          "docs/session-handoffs/2026-05-16-blogai-stale-chrome-search-findings.md"
+        ],
+        "charLength": 7791
+      }
+    ],
+    "matchedEntries": [
+      {
+        "entryIndex": 3,
+        "label": "stale shared chrome inspection report",
+        "count": 11,
+        "sampleValues": [
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice"
+        ]
+      },
+      {
+        "entryIndex": 4,
+        "label": "final rendered route failure after cache clear report",
+        "count": 32,
+        "sampleValues": [
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice"
+        ]
+      },
+      {
+        "entryIndex": 5,
+        "label": "preserved before-update widget settings row 26512",
+        "count": 5,
+        "sampleValues": [
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice"
+        ]
+      },
+      {
+        "entryIndex": 6,
+        "label": "historical db export sample rows",
+        "count": 5,
+        "sampleValues": [
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice"
+        ]
+      },
+      {
+        "entryIndex": 7,
+        "label": "prior stale chrome MCP pressure-test handoff",
+        "count": 8,
+        "sampleValues": [
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice",
+          "feature/approval-apply-ui-slice"
+        ]
+      }
+    ]
+  },
+  "safety": {
+    "mcpFilesystemReadPerformed": false,
+    "callerReadSelectedFiles": true,
+    "callerSelectedEntryCount": 8,
+    "mcpPathArgumentsProvided": false,
+    "mutationPerformed": false,
+    "bm25McpToolUsed": false
+  }
+}

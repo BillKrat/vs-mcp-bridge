@@ -138,6 +138,10 @@ The next tooling slice exposed the compiled regex search capability through MCP 
 That wrapper executes `bridge.regexTextSearch` through `BridgeToolExecutor` and accepts only explicit `inputText` or `entries` from the MCP request.
 See `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md` and `artifacts/logs/mcp-regex-search-trace-20260516.log`.
 
+A follow-up BlogAI workload then reran this stale chrome search through `bridge_regex_text_search`.
+It confirmed zero matches in canonical `docs/blogs/posts`, selected local BlogAI source files, and current after-update widget row `26512` settings, with matches limited to stale diagnostic reports, preserved before-update widget evidence, historical DB export sample rows, and this handoff.
+See `docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md` and `artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log`.
+
 ## Resume Guidance
 
 Start the next session with:

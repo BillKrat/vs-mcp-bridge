@@ -1,0 +1,27 @@
+Run: blogai-stale-chrome-mcp-regex-search-20260516
+Repository: Y:/vs-mcp-bridge
+Baseline: da5a9d1 Expose regex text search through MCP
+Mode: direct MCP stdio, explicit text entries supplied by caller
+Server: VsMcpBridge.McpServer 1.0.0.0
+tools/list count: 18
+includes bridge_regex_text_search: true
+simple invocation success: true; matchCount=1; totalMatchCount=1
+invalid regex success: false; errorCode=InvalidRegex
+workload marker: feature/approval-apply-ui-slice
+workload success: true; requestId=85439ee022a74a1a98f9ac16a0d423e1; operationId=deadbde2478547d3889330b1c24da8eb
+workload matches: matchCount=61; totalMatchCount=61; limited=false
+entries searched:
+  [0] canonical docs/blogs/posts aggregate (32 file(s), 188429 chars)
+  [1] local BlogAI selected source files (2 file(s), 4148 chars)
+  [2] current after-update widget settings row 26512 (2 file(s), 9446 chars)
+  [3] stale shared chrome inspection report (1 file(s), 7657 chars)
+  [4] final rendered route failure after cache clear report (1 file(s), 9319 chars)
+  [5] preserved before-update widget settings row 26512 (3 file(s), 12519 chars)
+  [6] historical db export sample rows (5 file(s), 37775 chars)
+  [7] prior stale chrome MCP pressure-test handoff (1 file(s), 7791 chars)
+matched entries:
+  [3] stale shared chrome inspection report: 11
+  [4] final rendered route failure after cache clear report: 32
+  [5] preserved before-update widget settings row 26512: 5
+  [6] historical db export sample rows: 5
+  [7] prior stale chrome MCP pressure-test handoff: 8
