@@ -45,6 +45,7 @@ Use these as needed after that:
 - `SolutionFolder/docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
 - `SolutionFolder/docs/first-gated-handoff-preview-tool-candidate.md` for the first bridge-side gated handoff preview/proposal tool candidate
 - `SolutionFolder/docs/gated-handoff-preview-tool-usage-guide.md` for operational use of the preview-only gated handoff proposal tool
+- `SolutionFolder/docs/session-handoffs/2026-05-24-gated-handoff-preview-tool-refinement-backlog.md` for deferred preview-tool refinement candidates after real workflow use
 - `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-tool-readiness-review.md` for the readiness decision before any bridge-side gated handoff tool implementation
 - `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-implementation-readiness.md` for the preview-only gated handoff proposal tool implementation readiness decision
 - `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-validation.md` for durable validation evidence of the implemented preview-only gated handoff proposal tool
