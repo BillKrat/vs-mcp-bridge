@@ -40,6 +40,7 @@ Use these as needed after that:
 - `SolutionFolder/docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
 - `SolutionFolder/docs/session-slice-operating-template.md` for the reusable 60-120 minute session workflow template
 - `SolutionFolder/docs/future-contributor-operating-expectations.md` for behavioral expectations for human, AI, and tool contributors
+- `SolutionFolder/docs/local-only-files.md` for required ignored local files, safe templates, and secret redaction rules
 - `SolutionFolder/docs/blogai-high-resolution-corpus-interaction-research-backlog.md` for the future BlogAI research direction around evidence-localized corpus interaction and hybrid retrieval
 - `SolutionFolder/docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
 - `SolutionFolder/docs/first-gated-handoff-preview-tool-candidate.md` for the first bridge-side gated handoff preview/proposal tool candidate

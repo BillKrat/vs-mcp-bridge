@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copy this file to apiglobalwebnet.pubxml and fill local values there.
+  Do not commit the copied .pubxml file.
+  Do not put passwords, tokens, publish passwords, or credential-bearing values in this template.
+-->
+<Project>
+  <PropertyGroup>
+    <WebPublishMethod>MSDeploy</WebPublishMethod>
+    <PublishProvider>WebDeploy</PublishProvider>
+    <LastUsedBuildConfiguration>Release</LastUsedBuildConfiguration>
+    <LastUsedPlatform>Any CPU</LastUsedPlatform>
+    <LaunchSiteAfterPublish>false</LaunchSiteAfterPublish>
+    <ExcludeApp_Data>false</ExcludeApp_Data>
+    <ProjectGuid>&lt;set locally if required&gt;</ProjectGuid>
+    <MSDeployServiceURL>&lt;set locally&gt;</MSDeployServiceURL>
+    <DeployIisAppPath>&lt;set locally&gt;</DeployIisAppPath>
+    <UserName>&lt;set locally or pass via /p:UserName&gt;</UserName>
+    <_SavePWD>false</_SavePWD>
+    <PublishDatabaseSettings />
+  </PropertyGroup>
+</Project>
