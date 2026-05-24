@@ -55,8 +55,8 @@ This workflow was validated with a temporary console harness that used the produ
 Reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/tool-regex-search-trace-20260509.mmd`](diagrams/tool-regex-search-trace-20260509.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.log`](../SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.log)
-- run metadata: [`SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.metadata.json`](../SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.log`](../artifacts/logs/tool-regex-search-trace-20260509.log)
+- run metadata: [`SolutionFolder/artifacts/logs/tool-regex-search-trace-20260509.metadata.json`](../artifacts/logs/tool-regex-search-trace-20260509.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-09-tool-execution-validation.md`](session-handoffs/2026-05-09-tool-execution-validation.md)
 
 ## Observed Security-Aware Run
@@ -81,8 +81,8 @@ After the foundational security seams were added, the compiled regex text-search
 Security-aware reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/tool-security-trace-20260509.mmd`](diagrams/tool-security-trace-20260509.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/tool-security-trace-20260509.log`](../SolutionFolder/artifacts/logs/tool-security-trace-20260509.log)
-- run metadata: [`SolutionFolder/artifacts/logs/tool-security-trace-20260509.metadata.json`](../SolutionFolder/artifacts/logs/tool-security-trace-20260509.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/tool-security-trace-20260509.log`](../artifacts/logs/tool-security-trace-20260509.log)
+- run metadata: [`SolutionFolder/artifacts/logs/tool-security-trace-20260509.metadata.json`](../artifacts/logs/tool-security-trace-20260509.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-09-tool-security-validation.md`](session-handoffs/2026-05-09-tool-security-validation.md)
 
 This run intentionally used secret-like `apiKey`, `token`, `password`, and bearer authorization inputs. Durable artifacts store only redacted payload evidence and must not contain raw secret values.
@@ -105,8 +105,8 @@ After the minimal MEF discovery seam was added, the discovery boundary was valid
 MEF discovery reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mef-discovery-trace-20260516.mmd`](diagrams/mef-discovery-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.log`](../SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.log`](../artifacts/logs/mef-discovery-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.metadata.json`](../artifacts/logs/mef-discovery-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-mef-discovery-trace-validation.md`](session-handoffs/2026-05-16-mef-discovery-trace-validation.md)
 
 This trace covers MEF discovery start, configured directories, missing-directory behavior, invalid assembly load behavior, discovery completion, catalog composition, and the preserved executor boundary. It deliberately uses the existing shared-test `MefFakeBridgeTool` export and does not add a production tool.
@@ -131,8 +131,8 @@ After approval-aware execution was added to `BridgeToolExecutor`, the approval b
 Approval-aware reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd`](diagrams/tool-approval-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/tool-approval-trace-20260516.log`](../SolutionFolder/artifacts/logs/tool-approval-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/tool-approval-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/tool-approval-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/tool-approval-trace-20260516.log`](../artifacts/logs/tool-approval-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/tool-approval-trace-20260516.metadata.json`](../artifacts/logs/tool-approval-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-tool-approval-validation.md`](session-handoffs/2026-05-16-tool-approval-validation.md)
 
 This trace covers approved and denied approval decisions without adding a runtime user-facing tool, UI approval prompt, proposal approval redesign, or MCP transport change.
@@ -160,8 +160,8 @@ After the lightweight manifest model was added to `BridgeToolDescriptor`, manife
 Manifest metadata reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/tool-manifest-trace-20260516.mmd`](diagrams/tool-manifest-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.log`](../SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.log`](../artifacts/logs/tool-manifest-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.metadata.json`](../artifacts/logs/tool-manifest-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-tool-manifest-validation.md`](session-handoffs/2026-05-16-tool-manifest-validation.md)
 
 This trace proves descriptor-derived manifest metadata is visible through catalog descriptors, `ToolExecutionSecurityContext`, trace logging, and audit metadata.
@@ -187,8 +187,8 @@ After the read-only catalog inventory seam was added, inventory behavior was val
 Inventory reference artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/tool-inventory-trace-20260516.mmd`](diagrams/tool-inventory-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.log`](../SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.log`](../artifacts/logs/tool-inventory-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.metadata.json`](../artifacts/logs/tool-inventory-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-tool-inventory-validation.md`](session-handoffs/2026-05-16-tool-inventory-validation.md)
 
 This trace proves inventory snapshots read descriptor-derived manifest metadata from the catalog and sort by tool id.
@@ -210,7 +210,7 @@ The bridge tool catalog inventory is now visible through MCP as the diagnostic t
 MCP inventory diagnostic artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-tool-inventory-trace-20260516.mmd`](diagrams/mcp-tool-inventory-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-trace-20260516.log`](../SolutionFolder/artifacts/logs/mcp-tool-inventory-trace-20260516.log)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-trace-20260516.log`](../artifacts/logs/mcp-tool-inventory-trace-20260516.log)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-mcp-tool-inventory-validation.md`](session-handoffs/2026-05-16-mcp-tool-inventory-validation.md)
 
 This diagnostic calls only `IBridgeToolInventoryService.GetSnapshot()`.
@@ -236,8 +236,8 @@ The MCP inventory diagnostic was validated through direct MCP stdio after it was
 Live MCP validation artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd`](diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log`](../SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json`](../SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log`](../artifacts/logs/mcp-tool-inventory-live-validation-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json`](../artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`](session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md)
 
 The server log for the live run contains the diagnostic start/completion markers with the same request id and `ToolCount=2`.
@@ -264,8 +264,8 @@ The compiled regex search tool is now callable through MCP as `bridge_regex_text
 Live MCP regex search artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-regex-search-trace-20260516.mmd`](diagrams/mcp-regex-search-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.log`](../SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.log`](../artifacts/logs/mcp-regex-search-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.metadata.json`](../artifacts/logs/mcp-regex-search-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`](session-handoffs/2026-05-16-mcp-regex-search-validation.md)
 
 This wrapper accepts only explicit `inputText` or `entries` supplied in the MCP request.
@@ -294,8 +294,8 @@ The compiled BM25 search tool is now callable through MCP as `bridge_bm25_text_s
 Live MCP BM25 search artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-bm25-search-trace-20260516.mmd`](diagrams/mcp-bm25-search-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.log`](../SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json`](../SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.log`](../artifacts/logs/mcp-bm25-search-trace-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json`](../artifacts/logs/mcp-bm25-search-trace-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`](session-handoffs/2026-05-16-mcp-bm25-search-validation.md)
 
 This wrapper accepts only explicit `documents` or `entries` supplied in the MCP request.
@@ -323,7 +323,7 @@ The explicit repo document selection helper is now callable through MCP as `brid
 Live MCP document selection artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-document-selection-trace-20260516.mmd`](diagrams/mcp-document-selection-trace-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-document-selection-trace-20260516.log`](../SolutionFolder/artifacts/logs/mcp-document-selection-trace-20260516.log)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-document-selection-trace-20260516.log`](../artifacts/logs/mcp-document-selection-trace-20260516.log)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-document-selection-validation.md`](session-handoffs/2026-05-16-document-selection-validation.md)
 
 This helper accepts only explicit repo-root-relative include/exclude patterns and returns deterministic metadata for selected files.
@@ -349,8 +349,8 @@ The preview-only document update tool is callable through MCP as `bridge_preview
 Preview document update artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/mcp-preview-document-update-trace-20260517.mmd`](diagrams/mcp-preview-document-update-trace-20260517.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.log`](../SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.log)
-- run metadata: [`SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json`](../SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.log`](../artifacts/logs/mcp-preview-document-update-trace-20260517.log)
+- run metadata: [`SolutionFolder/artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json`](../artifacts/logs/mcp-preview-document-update-trace-20260517.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-17-preview-document-update-validation.md`](session-handoffs/2026-05-17-preview-document-update-validation.md)
 
 This wrapper accepts only one explicit repo-root-relative target path and caller-supplied expected content or expected SHA-256 content hash plus full replacement content.
@@ -411,8 +411,8 @@ This established the reusable MCP regex pattern for future AI pressure-test work
 Artifacts:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd`](diagrams/blogai-stale-chrome-mcp-regex-search-20260516.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log`](../SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json`](../SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log`](../artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json`](../artifacts/logs/blogai-stale-chrome-mcp-regex-search-20260516.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md`](session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md)
 
 ## Explicit Document Selection Plus MCP Search Workload
@@ -444,8 +444,8 @@ Observed outcome:
 
 Artifacts:
 
-- observed log transcript: [`SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.log`](../SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.log)
-- run metadata: [`SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json`](../SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.log`](../artifacts/logs/blogai-doc-selection-search-workflow-20260516.log)
+- run metadata: [`SolutionFolder/artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json`](../artifacts/logs/blogai-doc-selection-search-workflow-20260516.metadata.json)
 - sequence diagram: [`SolutionFolder/docs/diagrams/blogai-doc-selection-search-workflow-20260516.mmd`](diagrams/blogai-doc-selection-search-workflow-20260516.mmd)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`](session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md)
 

@@ -46,8 +46,8 @@ This workflow was validated on:
 Reference artifacts from this baseline run:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/app-host-ping-trace-20260507.mmd`](diagrams/app-host-ping-trace-20260507.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.log`](../SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.log)
-- run metadata: [`SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.metadata.json`](../SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.log`](../artifacts/logs/app-host-ping-trace-20260507.log)
+- run metadata: [`SolutionFolder/artifacts/logs/app-host-ping-trace-20260507.metadata.json`](../artifacts/logs/app-host-ping-trace-20260507.metadata.json)
 - developer-facing summary: [`SolutionFolder/docs/blog-drafts/app-host-ping-trace-walkthrough-20260507.md`](blog-drafts/app-host-ping-trace-walkthrough-20260507.md)
 
 ## Run Procedure

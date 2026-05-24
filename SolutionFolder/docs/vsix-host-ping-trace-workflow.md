@@ -45,8 +45,8 @@ This workflow was validated on:
 Reference artifacts from this baseline run:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/vsix-host-ping-trace-20260508.mmd`](diagrams/vsix-host-ping-trace-20260508.mmd)
-- observed log transcript: [`SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.log`](../SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.log)
-- run metadata: [`SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.metadata.json`](../SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.metadata.json)
+- observed log transcript: [`SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.log`](../artifacts/logs/vsix-host-ping-trace-20260508.log)
+- run metadata: [`SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.metadata.json`](../artifacts/logs/vsix-host-ping-trace-20260508.metadata.json)
 - developer-facing summary: [`SolutionFolder/docs/blog-drafts/vsix-host-ping-trace-walkthrough-20260508.md`](blog-drafts/vsix-host-ping-trace-walkthrough-20260508.md)
 
 ## Run Procedure

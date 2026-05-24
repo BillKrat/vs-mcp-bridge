@@ -44,8 +44,8 @@ This workflow was manually validated on:
 Reference artifacts from this baseline run:
 
 - sequence diagram: [`SolutionFolder/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd`](diagrams/vsix-host-selected-text-trace-20260509.mmd)
-- observed log artifact: [`SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.log`](../SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.log)
-- run metadata: [`SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.metadata.json`](../SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.metadata.json)
+- observed log artifact: [`SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.log`](../artifacts/logs/vsix-host-selected-text-trace-20260509.log)
+- run metadata: [`SolutionFolder/artifacts/logs/vsix-host-selected-text-trace-20260509.metadata.json`](../artifacts/logs/vsix-host-selected-text-trace-20260509.metadata.json)
 - session handoff: [`SolutionFolder/docs/session-handoffs/2026-05-09-selected-text-validation.md`](session-handoffs/2026-05-09-selected-text-validation.md)
 
 ## Preconditions
