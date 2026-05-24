@@ -531,6 +531,7 @@ VsMcpBridge.Vsix/obj/
 !/docs/session-slice-operating-template.md
 !/docs/future-contributor-operating-expectations.md
 !/docs/first-gated-handoff-preview-tool-candidate.md
+!/docs/blogai-high-resolution-corpus-interaction-research-backlog.md
 !/docs/adventures-auth-local-api-boundary-design.md
 !/docs/blogai-local-auth-ui-integration-design.md
 !/docs/adr/
