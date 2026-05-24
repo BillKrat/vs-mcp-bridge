@@ -131,6 +131,7 @@ For the `BlogAI.Web` production exposure boundary after deployment, read `Soluti
 For the display-only deployed-environment guardrail, inspect `BlogAI.Web/Components/DeploymentGuardrailBanner.razor`; it does not change auth, routing, middleware, or deployment behavior.
 For deployed guardrail validation evidence, read `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`; local and deployed guardrail validation now pass after one explicit WebDeploy retry with the password sourced from an environment variable.
 For the current BlogAI/Auth/WebDeploy state and recommended next work, read `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-auth-webdeploy-state-handoff.md`.
+For BlogAI hosting, authorship, publishing-surface, and future API boundary clarification, read `SolutionFolder/docs/session-handoffs/2026-05-24-blogai-hosting-authorship-clarification.md`.
 For the Auth API admin ownership boundary, read `SolutionFolder/docs/session-handoffs/2026-05-17-auth-api-admin-boundary-decision.md`; auth-admin belongs to the auth service boundary, not BlogAI page components.
 For the local/dev BlogAI auth UI integration design, read `SolutionFolder/docs/blogai-local-auth-ui-integration-design.md`.
 For the readiness review before implementing the local/dev BlogAI auth UI display boundary, read `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-local-auth-ui-readiness-review.md`.
