@@ -186,7 +186,7 @@ public sealed class VsTools
     [McpServerTool(Name = "bridge_select_repo_documents")]
     [Description("Selects deterministic repo-root-relative document metadata from explicit include/exclude patterns. Does not return file contents, search content, execute bridge tools, or mutate state.")]
     public string SelectRepoDocuments(
-        [Description("Explicit repo-root-relative include glob patterns, such as docs/blogs/*.md or docs/session-handoffs/2026-05-16-blogai-*.md. Broad root crawls such as **/* are rejected.")] string[] includePatterns,
+        [Description("Explicit repo-root-relative include glob patterns, such as SolutionFolder/docs/blogs/*.md or SolutionFolder/docs/session-handoffs/2026-05-16-blogai-*.md. Broad root crawls such as **/* are rejected.")] string[] includePatterns,
         [Description("Optional repo-root-relative exclude glob patterns.")] string[]? excludePatterns = null,
         [Description("Optional maximum number of selected files to return. Must be greater than zero when provided.")] int? maxFiles = null,
         [Description("Optional category hints aligned by index with includePatterns.")] string[]? categoryHints = null,

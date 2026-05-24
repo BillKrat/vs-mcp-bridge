@@ -1,0 +1,48 @@
+{
+  "runName": "mcp-tool-inventory-live-validation-20260516",
+  "captureDate": "2026-05-20",
+  "repository": "Y:/vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "633db89 Add MCP tool inventory diagnostic",
+  "validationMode": "Direct MCP stdio helper using ModelContextProtocol.Client",
+  "mcpTool": "bridge_get_tool_inventory",
+  "serverInfo": "VsMcpBridge.McpServer 1.0.0.0",
+  "initializePassed": true,
+  "toolCount": 17,
+  "toolsListIncludesInventory": true,
+  "callIsError": false,
+  "inventoryToolCount": 2,
+  "inventoryToolIds": [
+    "bridge.bm25TextSearch",
+    "bridge.regexTextSearch"
+  ],
+  "deterministicOrderByToolId": true,
+  "manifestFieldsPresent": true,
+  "secretsOrPayloadMarkersPresent": false,
+  "requestId": "286de633c1754c8fb844c283be487d06",
+  "serverLogFile": "C:/Users/billkratochvil/AppData/Local/VsMcpBridge/Logs/McpServer/pipe-client.log",
+  "serverLogMarkers": [
+    "MCP bridge_get_tool_inventory started [RequestId=286de633c1754c8fb844c283be487d06].",
+    "MCP bridge_get_tool_inventory completed [RequestId=286de633c1754c8fb844c283be487d06] [ElapsedMs=3] [ToolCount=2]."
+  ],
+  "boundaryChecks": {
+    "toolExecutionObserved": false,
+    "bridgeToolExecutorInvoked": false,
+    "approvalFlowTriggered": false,
+    "auditPathTriggered": false,
+    "vsixPipeRequestSent": false,
+    "chatEngineRequestSentForDiagnostic": false,
+    "rawPayloadOrSecretValuesExposed": false,
+    "mcpTransportChanged": false
+  },
+  "visualStudioCopilotValidation": {
+    "attempted": false,
+    "reason": "bridge_get_tool_inventory is MCP-only and direct stdio validation covered MCP initialize, tools/list, and tool invocation without requiring VSIX activation."
+  },
+  "artifacts": {
+    "log": "SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log",
+    "metadata": "SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.metadata.json",
+    "diagram": "SolutionFolder/docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd",
+    "handoff": "SolutionFolder/docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md"
+  }
+}

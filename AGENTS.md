@@ -11,28 +11,28 @@ Use this file as the high-level operating guide for AI agents. It is intentional
 Read these first when the task needs repository context:
 
 1. `AI_START.md` for session bootstrap and resume routing.
-2. `docs/ARCHITECTURE.md` for current system behavior. This is the primary architecture source of truth.
-3. `docs/AI_WORKFLOW.md` for AI role boundaries and execution expectations.
-4. The newest relevant file under `docs/session-handoffs/` when resuming or changing an established slice.
+2. `SolutionFolder/docs/ARCHITECTURE.md` for current system behavior. This is the primary architecture source of truth.
+3. `SolutionFolder/docs/AI_WORKFLOW.md` for AI role boundaries and execution expectations.
+4. The newest relevant file under `SolutionFolder/docs/session-handoffs/` when resuming or changing an established slice.
 
 Use targeted docs as needed:
 
-- `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging, diagnostics, activation, and triage.
-- `docs/tool-execution-trace-workflow.md` for compiled bridge tool execution evidence.
-- `docs/MVPVM_OVERVIEW.md` for shared WPF presenter/viewmodel boundaries.
-- `docs/blogs/README.md` for blog source-of-truth and publishing review workflows.
-- `docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations.
+- `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging, diagnostics, activation, and triage.
+- `SolutionFolder/docs/tool-execution-trace-workflow.md` for compiled bridge tool execution evidence.
+- `SolutionFolder/docs/MVPVM_OVERVIEW.md` for shared WPF presenter/viewmodel boundaries.
+- `SolutionFolder/docs/blogs/README.md` for blog source-of-truth and publishing review workflows.
+- `SolutionFolder/docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations.
 
 ## Operating Rules
 
-- Preserve the architecture described in `docs/ARCHITECTURE.md`; update that file when current system behavior changes.
+- Preserve the architecture described in `SolutionFolder/docs/ARCHITECTURE.md`; update that file when current system behavior changes.
 - Keep MCP stdio clean. Route diagnostics through approved UI, file, Debug, or StdErr channels.
 - Preserve the anti-black-box standard: important workflows should be runnable end to end, captured as correlated evidence, and diagrammable from observed logs.
 - New or changed boundary-crossing code should preserve request/operation correlation, structured success/failure results, elapsed timing where useful, and redaction before durable logs or audit metadata.
 - Keep vertical slices incremental. Do not introduce broad framework, transport, auth, sandboxing, persistence, or UI redesign work inside unrelated slices.
 - Keep proposal mutation safety intact: AI tools suggest or propose; validated approval/apply flows mutate.
 - Preserve `BridgeToolExecutor` as the shared bridge tool execution, policy, approval, redaction, and audit boundary.
-- Treat MCP repository mutation tools as future threshold work only. See `docs/mcp-controlled-mutation-threshold.md`; current MCP search/diagnostic tools must remain read-only and explicit-input.
+- Treat MCP repository mutation tools as future threshold work only. See `SolutionFolder/docs/mcp-controlled-mutation-threshold.md`; current MCP search/diagnostic tools must remain read-only and explicit-input.
 - Treat MEF bridge tool support as discovery-only unless a future explicit design slice changes that.
 - During MCP/tooling triage, call `bridge_get_tool_inventory` early when available. It is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata, currently including compiled tools such as `bridge.bm25TextSearch` and `bridge.regexTextSearch`, without executing bridge tools.
 - Use `bridge_select_repo_documents` only for deterministic repo-root-relative metadata selection before explicit-input search workflows. It does not search content, rank relevance, mutate files, or replace caller review of selected documents.
@@ -45,7 +45,7 @@ Choose validation by blast radius:
 - Documentation-only changes: run `git diff --check`.
 - Shared-layer logic changes: run `dotnet test .\VsMcpBridge.Shared.Tests\VsMcpBridge.Shared.Tests.csproj`.
 - VSIX changes: use `.\scripts\build-vsix.ps1 -Restore` and the documented VSIX test runner from `README.md`.
-- Runtime workflow changes: capture durable evidence under the established `artifacts/logs/`, `docs/diagrams/`, and handoff patterns.
+- Runtime workflow changes: capture durable evidence under the established `SolutionFolder/artifacts/logs/`, `SolutionFolder/docs/diagrams/`, and handoff patterns.
 
 ## Git And Codex Rules
 

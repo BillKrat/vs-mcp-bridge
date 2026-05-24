@@ -1,0 +1,173 @@
+<p>[Page:InferenceDriven]</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/ARCHITECTURE.md" target="_blank">SolutionFolder/docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current VS MCP Bridge and BlogAI narrative as of 2026-05-16. Bracket-style tokens are intentional BlogEngine/GwnWikiExtension tokens.</p>
+
+<h1>Inference-Driven Software Design With Copilot: Pros and Cons</h1>
+<h2>Using AI Assistance Without Turning Development Into A Black Box</h2>
+
+<p>Copilot is a useful development assistant. It can complete patterns, suggest code, write tests, and keep a developer moving through mechanical work. The risk is not that Copilot is useless. The risk is treating inference as if it were architecture, verification, and judgment all at once.</p>
+
+<p>That distinction is the heart of the BlogAI story. AI-assisted software design works best when generated code is surrounded by source-of-truth documents, observable workflows, approval boundaries, logs, diagrams, and durable evidence. Without those things, a team can move faster while understanding less.</p>
+
+<p>VS MCP Bridge has become a practical case study for that lesson.</p>
+
+<h3>What Inference Means In Practice</h3>
+
+<p>In software development, inference means the model is producing likely code, explanations, or next steps from the context it can see. That can be powerful, but it is not the same as owning the system model.</p>
+
+<p>The model may know common patterns. It may mirror nearby code. It may produce a convincing implementation. But it does not automatically know which boundaries are non-negotiable, which logs are required for future triage, which security claims would overstate the current system, or which documentation is the source of truth.</p>
+
+<p>That is why inference-driven development needs a workflow around it.</p>
+
+<h3>Where Copilot Helps</h3>
+
+<p>Copilot works well when the local task is clear and the surrounding code already teaches the pattern.</p>
+
+<ul>
+  <li>It can accelerate repetitive edits, tests, and small refactors.</li>
+  <li>It can suggest idiomatic code when the project conventions are visible.</li>
+  <li>It can help explore unfamiliar APIs or fill in routine structure.</li>
+  <li>It can reduce friction when the developer already knows what should happen.</li>
+</ul>
+
+<p>In that role, Copilot behaves like a fast assistant. It is especially useful when the developer can review the output against a clear contract.</p>
+
+<h3>Where Inference Becomes Risky</h3>
+
+<p>The same strengths become risky when the task is architectural, security-sensitive, or poorly bounded.</p>
+
+<ul>
+  <li>A generated change may look correct while bypassing the real execution boundary.</li>
+  <li>A suggested log line may leak data or pollute MCP stdout.</li>
+  <li>A local refactor may erase a correlation id that future troubleshooting depends on.</li>
+  <li>A plausible explanation may imply authentication, sandboxing, or secret storage that does not exist.</li>
+  <li>A quick fix may solve the symptom while leaving no evidence for the next session.</li>
+</ul>
+
+<p>These are not reasons to avoid AI tools. They are reasons to stop treating prompt-to-code as the whole workflow.</p>
+
+<h3>Prompt-To-Code Is Not Enough</h3>
+
+<p>The early mistake in many AI-assisted workflows is assuming that the prompt ends when code appears. In practice, the better workflow is prompt-to-evidence.</p>
+
+<p>A useful AI-generated change should be answerable:</p>
+
+<ul>
+  <li>What boundary did it touch?</li>
+  <li>Which source-of-truth document says this behavior is correct?</li>
+  <li>Which tests or validation steps prove it?</li>
+  <li>Which logs or artifacts would explain it later?</li>
+  <li>Which Mermaid diagram reflects the observed flow?</li>
+  <li>What should a future AI session read before extending it?</li>
+</ul>
+
+<p>That is the difference between code generation and engineering discipline.</p>
+
+<h3>How VS MCP Bridge Changed The Workflow</h3>
+
+<p>The VS MCP Bridge cleanup made this concrete. The project did not become clearer just because an AI generated code. It became clearer because logs, diagrams, handoffs, and architecture documents exposed where the system was vague.</p>
+
+<p>Sequence diagrams helped reveal transport boundaries. Trace logs made request and operation correlation visible. Durable artifacts showed whether execution really flowed through the expected catalog and executor path. Approval and security traces forced a clearer distinction between current plumbing and future hardening.</p>
+
+<p>That evidence led to better architecture:</p>
+
+<ul>
+  <li>the MCP stdio boundary stayed clean</li>
+  <li>the VSIX stayed isolated behind the named-pipe boundary</li>
+  <li>compiled tools gained descriptors, requests, results, catalogs, and executor-owned logging</li>
+  <li>MEF became a discovery seam instead of an execution shortcut</li>
+  <li>approval-aware execution became part of the tool boundary</li>
+  <li>security seams stayed explicit without claiming production authentication or sandboxing</li>
+  <li>audit and redaction became part of reconstructable tool execution</li>
+</ul>
+
+<p>In other words, the AI assistance was useful because the project kept forcing it back through observable architecture.</p>
+
+<h3>Human Review Still Owns The Design</h3>
+
+<p>Copilot can propose. Codex can implement. ChatGPT can explain tradeoffs. None of those tools should silently own the design.</p>
+
+<p>Human review still decides whether a change matches the architecture, whether the risk is acceptable, whether the evidence is enough, and whether the documentation tells the truth. The stronger the tool, the more important that review becomes.</p>
+
+<p>This is especially true for security and approval workflows. A model can generate a policy class or approval hook, but the project still needs to say what is intentionally deferred: OAuth, user identity, real secret storage, sandboxing, signed plugin manifests, tamper-evident audit stores, and SIEM export are not complete just because a seam exists.</p>
+
+<h3>Source Of Truth Beats Chat Memory</h3>
+
+<p>One of the strongest lessons from this project is that durable source files beat chat memory.</p>
+
+<p>The current workflow asks future sessions to start from files such as:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/AI_START.md" target="_blank">AI_START.md</a></li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/ARCHITECTURE.md" target="_blank">SolutionFolder/docs/ARCHITECTURE.md</a></li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/tool-execution-trace-workflow.md" target="_blank">SolutionFolder/docs/tool-execution-trace-workflow.md</a></li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md" target="_blank">SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md</a></li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/blogs/README.md" target="_blank">SolutionFolder/docs/blogs/README.md</a></li>
+</ul>
+
+<p>Those files make the system teachable. They also reduce the chance that an AI session resumes from an outdated mental model.</p>
+
+<h3>Where BlogAI Fits</h3>
+
+<p>BlogAI can help turn this architecture work into learning material, but only if the blog stays aligned with the code.</p>
+
+<p>That is why the current blog cleanup starts from preserved database exports, canonical repo sources, manifest metadata, and explicit token/link rules. Blog posts should not drift away from the system they are explaining. They should point readers back to the current architecture, trace workflows, Mermaid sources, and handoffs that support the claims.</p>
+
+<p>Done well, BlogAI becomes more than a publishing surface. It becomes a way to keep project knowledge synchronized with code, validation artifacts, and operational lessons.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The following diagram sources directly support the story:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> shows how a simple user-visible prompt path can be reconstructed from observed logs.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows the compiled tool execution baseline.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows why approval-aware execution needs observable allow and deny outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows how an operator-facing diagnostic can replace an opaque timeout.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files remain the diagram source of truth. The post references them directly instead of embedding generated images.</p>
+
+<h3>Practical Pros And Cons</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Practice</th>
+      <th>Strength</th>
+      <th>Risk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Copilot as coding assistant</td>
+      <td>Fast local implementation help</td>
+      <td>Can produce plausible but wrong code if review is weak</td>
+    </tr>
+    <tr>
+      <td>Codex-style implementation sessions</td>
+      <td>Can inspect, edit, validate, and commit cohesive slices</td>
+      <td>Needs repository source-of-truth and validation constraints to stay grounded</td>
+    </tr>
+    <tr>
+      <td>Architecture chat and review</td>
+      <td>Good for explaining tradeoffs and surfacing assumptions</td>
+      <td>Can become speculative if not tied back to code and artifacts</td>
+    </tr>
+    <tr>
+      <td>Durable traces and handoffs</td>
+      <td>Make AI-assisted work reconstructable</td>
+      <td>Require discipline to keep current</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Takeaway</h3>
+
+<p>Inference-driven development is useful when it is not treated as autonomous development.</p>
+
+<p>The stronger pattern is human-directed, evidence-backed AI assistance: use Copilot for local acceleration, use Codex or chat tools for broader implementation and reasoning, require source-of-truth documentation, preserve trace evidence, and keep approvals, logs, and boundaries visible.</p>
+
+<p>That is what VS MCP Bridge is trying to teach. The goal is not just prompt-to-code. The goal is prompt-to-evidence, with code as one result of a workflow that remains understandable after the session ends.</p>
+
+<p>See [Display:ChatSessionsModelsAndAgents] for related background on chat sessions, models, and agents.</p>

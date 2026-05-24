@@ -1,0 +1,200 @@
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/ARCHITECTURE.md" target="_blank">SolutionFolder/docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current architecture as of 2026-05-16. This post continues the core series from host correctness into compiled bridge tools, catalog/executor boundaries, and approval-aware execution.</p>
+
+<h1>VS MCP Bridge Blog Series: Part 4</h1>
+<h2>Compiled Tools, Execution Boundaries, and Observable Results</h2>
+
+<p>Part 3 focused on Visual Studio host correctness: UI-thread-sensitive work, tool-window state, proposal lifecycle ownership, and why <code>IProposalManager</code> keeps approval state from becoming incidental UI behavior.</p>
+
+<p>Part 4 moves one layer deeper into the shared tool execution architecture.</p>
+
+<p>The bridge now has a compiled tool path where shared tools are described, discovered, selected, executed, logged, audited, and returned through a single boundary. That boundary is important because tools are where an AI-assisted system can easily become opaque. A tool call should not be a mystery box. It should have a descriptor, a request, a result, a correlation trail, and a predictable failure shape.</p>
+
+<h3>Why A Tool Boundary Exists</h3>
+
+<p>The MCP server exposes a small Visual Studio-backed tool surface over stdio, but the shared bridge also needs a place for reusable compiled tools that are not themselves Visual Studio commands.</p>
+
+<p>The design goal is conservative:</p>
+
+<pre><code>callers ask for a bridge tool
+catalog resolves the tool
+executor owns policy, approval, logging, audit, redaction, and execution
+tool returns a structured result</code></pre>
+
+<p>That shape keeps runtime behavior inspectable. A caller should not instantiate random tool classes and run them directly. If a tool matters enough to be part of the bridge, it should flow through <code>IBridgeToolExecutor</code>.</p>
+
+<h3>The Basic Tool Contract</h3>
+
+<p>The smallest unit is <code>IBridgeTool</code>. It has two responsibilities:</p>
+
+<ul>
+  <li>publish a <code>BridgeToolDescriptor</code>,</li>
+  <li>execute a <code>BridgeToolRequest</code> and return a <code>BridgeToolResult</code>.</li>
+</ul>
+
+<p>The descriptor is the tool's contract surface. It gives the bridge enough metadata to explain what the tool is before it runs:</p>
+
+<ul>
+  <li><code>Id</code>, <code>Name</code>, and <code>Description</code>,</li>
+  <li><code>Category</code>, <code>Source</code>, and <code>Host</code>,</li>
+  <li><code>RequiredCapabilities</code> for future capability-aware policy,</li>
+  <li><code>ApprovalRequirement</code> for tools that must stop for an approval decision.</li>
+</ul>
+
+<p>The request carries the execution identity:</p>
+
+<ul>
+  <li><code>ToolId</code>,</li>
+  <li><code>RequestId</code>,</li>
+  <li><code>OperationId</code>,</li>
+  <li>structured arguments.</li>
+</ul>
+
+<p>The result carries the same identity back out:</p>
+
+<ul>
+  <li><code>ToolId</code>,</li>
+  <li><code>RequestId</code>,</li>
+  <li><code>OperationId</code>,</li>
+  <li><code>Success</code>,</li>
+  <li><code>Message</code>,</li>
+  <li><code>ErrorCode</code>,</li>
+  <li>structured result data.</li>
+</ul>
+
+<p>That identity round trip matters. It lets logs, audit envelopes, tests, and caller-visible results all point to the same operation.</p>
+
+<h3>Catalog First, Then Executor</h3>
+
+<p><code>IBridgeToolCatalog</code> answers two questions:</p>
+
+<ul>
+  <li>what tools are available?</li>
+  <li>can this specific <code>ToolId</code> be resolved?</li>
+</ul>
+
+<p>The current catalog implementation is <code>CompiledBridgeToolCatalog</code>. It builds an in-memory lookup from discovered <code>IBridgeTool</code> instances. Duplicate tool ids fail early, because ambiguous tool identity would make policy, logging, and audit evidence unreliable.</p>
+
+<p>The catalog also tolerates an empty tool set. Empty catalog behavior matters in tests and host composition because it proves the bridge can represent &ldquo;no tools are registered&rdquo; without inventing hidden defaults.</p>
+
+<p>Unknown tools fail through the executor as structured results. The caller receives <code>ErrorCode = UnknownTool</code>, and the request and operation ids are preserved. That is the anti-black-box pattern in small form: even a failure has a shape.</p>
+
+<h3>Compiled Discovery Is The Default Path</h3>
+
+<p><code>CompiledBridgeToolDiscovery</code> adapts DI-registered compiled tools into the catalog. The default shared registration wires the bridge tool services so callers can resolve:</p>
+
+<ul>
+  <li><code>IBridgeToolCatalog</code>,</li>
+  <li><code>IBridgeToolExecutor</code>,</li>
+  <li>compiled tool implementations such as <code>RegexTextSearchTool</code> and <code>Bm25TextSearchTool</code>.</li>
+</ul>
+
+<p>There is also a MEF discovery seam, but it is discovery-only and explicitly constrained. MEF does not own execution, policy, approval, audit, redaction, or transport. Discovered tools still have to run through <code>BridgeToolExecutor</code>.</p>
+
+<h3>BridgeToolExecutor Is The Boundary</h3>
+
+<p><code>BridgeToolExecutor</code> is the important part of the design. It is not just a convenience wrapper around <code>tool.ExecuteAsync</code>. It is the shared execution boundary.</p>
+
+<p>Today that boundary owns:</p>
+
+<ul>
+  <li>start and completion logging,</li>
+  <li>redacted request and result trace payloads,</li>
+  <li>catalog lookup,</li>
+  <li>unknown-tool failure,</li>
+  <li><code>IToolExecutionPolicy</code> evaluation,</li>
+  <li>descriptor-declared required capability metadata,</li>
+  <li>approval evaluation when <code>ApprovalRequirement = Required</code>,</li>
+  <li>secret-reference resolution through the broker seam,</li>
+  <li>tool invocation,</li>
+  <li>structured cancellation and exception results,</li>
+  <li><code>BridgeAuditEnvelope</code> emission,</li>
+  <li>classification metadata for terminal outcomes,</li>
+  <li>request and operation correlation preservation.</li>
+</ul>
+
+<p>That is why callers should not bypass the executor. Bypassing it would also bypass the evidence that makes tool behavior reconstructable.</p>
+
+<h3>Approval-Aware Execution</h3>
+
+<p>The approval-aware execution seam is intentionally small. A tool descriptor can mark itself as requiring approval. If it does, <code>BridgeToolExecutor</code> asks <code>IToolExecutionApprovalService</code> for a decision after policy evaluation and before tool execution.</p>
+
+<p>If approval is denied, the tool is not invoked. The result is a structured failure with <code>ErrorCode = ApprovalDenied</code>. The audit envelope records the approval requirement, decision, and redacted reason. Correlation metadata is preserved.</p>
+
+<p>This is separate from the Visual Studio proposal approval workflow described in Part 3. Proposal approval is the host UI workflow for applying edits. Tool execution approval is a shared executor checkpoint for selected compiled tools.</p>
+
+<h3>The First Concrete Proof: Regex Text Search</h3>
+
+<p><code>RegexTextSearchTool</code> is the first concrete proof of the compiled bridge tool path. It is deliberately small:</p>
+
+<ul>
+  <li>descriptor id: <code>bridge.regexTextSearch</code>,</li>
+  <li>source: compiled,</li>
+  <li>host: shared,</li>
+  <li>arguments: pattern or query, input text or entries, case sensitivity, max results,</li>
+  <li>result data: matches, match count, total match count, and whether results were limited.</li>
+</ul>
+
+<p>The point is not that regex search is the final search story. The point is that it proves the path:</p>
+
+<pre><code>DI registration
+catalog descriptor
+executor lookup
+policy check
+tool invocation
+structured result
+correlated logs
+audit envelope</code></pre>
+
+<p><code>Bm25TextSearchTool</code> extends the same compiled path with request-scoped in-memory ranking. It does not add persistence, crawling, or a background search service. That restraint matters because the architecture is still proving the boundary before turning it into a broad plugin system.</p>
+
+<h3>Tests Make The Boundary Real</h3>
+
+<p>The shared tests cover the shape of the boundary rather than only the happy path. They verify that:</p>
+
+<ul>
+  <li>DI resolves the catalog and executor,</li>
+  <li>compiled tools appear in the catalog,</li>
+  <li>empty catalogs are allowed,</li>
+  <li>duplicate tool ids fail fast,</li>
+  <li>unknown tools return structured failure,</li>
+  <li>fake tools can be invoked through the executor,</li>
+  <li>request and operation ids survive execution,</li>
+  <li>policy denial prevents execution,</li>
+  <li>approval denial prevents execution,</li>
+  <li>normal tools skip approval by default,</li>
+  <li>audit metadata records policy, approval, capabilities, secrets, and classification data.</li>
+</ul>
+
+<p>Those tests are not incidental. They are what stop the executor from becoming a label on top of unstructured tool calls.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The repo already has Mermaid sources that show the compiled tool boundary from several angles:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows DI registration, catalog lookup, regex execution, and result correlation.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-security-trace-20260509.mmd" target="_blank">tool-security-trace-20260509.mmd</a> shows policy evaluation, redaction, audit emission, and preserved request metadata.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-required execution with both allow and deny outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/mef-discovery-trace-20260516.mmd" target="_blank">mef-discovery-trace-20260516.mmd</a> shows optional discovery while preserving executor-routed execution.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. This post references them directly rather than embedding generated images.</p>
+
+<h3>Takeaway</h3>
+
+<p>The compiled bridge tool architecture is valuable because it turns tool execution into an observable contract.</p>
+
+<p>A tool is not just a method call. It has a descriptor, a request, a result, a catalog entry, a policy path, optional approval, redacted logs, an audit envelope, and correlation metadata. That structure gives future tools room to grow without making the runtime harder to understand.</p>
+
+<p>The working rule is simple:</p>
+
+<pre><code>tools can be extensible
+execution must stay centralized
+evidence must stay reconstructable</code></pre>
+
+<p>That is how the bridge supports future extensibility without becoming black-box infrastructure.</p>
+
+<h3>Next In The Series</h3>
+
+<p>The next useful topic is how the bridge turns these execution boundaries into durable validation evidence: logs, metadata, diagrams, and handoffs that let future AI sessions reconstruct what actually happened instead of relying on chat history.</p>

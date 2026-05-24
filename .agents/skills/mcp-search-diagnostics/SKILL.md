@@ -43,8 +43,8 @@ description: Use MCP-exposed bridge search diagnostics over explicit caller-prov
 
 ## References
 
-- `docs/evidence-classification-guidance.md`
-- `docs/tool-execution-trace-workflow.md`
-- `docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`
-- `docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`
-- `docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`
+- `SolutionFolder/docs/evidence-classification-guidance.md`
+- `SolutionFolder/docs/tool-execution-trace-workflow.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-mcp-regex-search-validation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-mcp-bm25-search-validation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-blogai-doc-selection-search-workflow.md`

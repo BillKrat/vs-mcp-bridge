@@ -1,0 +1,123 @@
+{
+  "runName": "blogai-doc-selection-search-workflow-20260516",
+  "repository": "Y:/vs-mcp-bridge",
+  "baseline": "83a79ab Add explicit repo document selection helper",
+  "captureDate": "2026-05-22",
+  "mode": "direct MCP stdio with explicit document selection and explicit search entries",
+  "serverInfo": "VsMcpBridge.McpServer 1.0.0.0",
+  "toolCount": 20,
+  "toolAvailability": {
+    "bridge_select_repo_documents": true,
+    "bridge_regex_text_search": true,
+    "bridge_bm25_text_search": true
+  },
+  "inventory": {
+    "requestId": "c5c3bad2280949518320bcf73ed097d3",
+    "toolCount": 2,
+    "toolIds": [
+      "bridge.bm25TextSearch",
+      "bridge.regexTextSearch"
+    ]
+  },
+  "selection": {
+    "tool": "bridge_select_repo_documents",
+    "requestId": "a967bf52775344298cd42dd57c33c53f",
+    "includePatterns": [
+      "SolutionFolder/docs/blogs/**/*.md",
+      "SolutionFolder/docs/blogs/posts/**/*.html",
+      "SolutionFolder/docs/blogs/posts/**/*.json",
+      "SolutionFolder/docs/session-handoffs/*blogai*.md",
+      "SolutionFolder/docs/session-handoffs/*BlogAI*.md"
+    ],
+    "excludePatterns": [
+      "SolutionFolder/docs/blogs/source-of-truth/db-export-20260516/**/*.json"
+    ],
+    "maxFiles": 120,
+    "candidateCount": 90,
+    "selectedCount": 90,
+    "limited": false,
+    "categoryCounts": {
+      "blog-docs": 53,
+      "canonical-post-content": 16,
+      "canonical-post-metadata": 16,
+      "blogai-handoff": 5
+    }
+  },
+  "regex": [
+    {
+      "term": "feature/approval-apply-ui-slice",
+      "requestId": "18fea4c5bf234c7d885ff2d19e0659f9",
+      "operationId": "29fcdfc81f5a4248a368fedbdf452482",
+      "matchCount": 127,
+      "totalMatchCount": 127,
+      "matchedEntryCount": 28,
+      "limited": false,
+      "canonicalPostContentOrMetadataMatches": 0
+    },
+    {
+      "term": "clearCache",
+      "requestId": "47697749de424c3ab712bfc3381a35d9",
+      "operationId": "0d2cfa4e841645a289c4d9cd760b7072",
+      "matchCount": 22,
+      "totalMatchCount": 22,
+      "matchedEntryCount": 7,
+      "limited": false
+    },
+    {
+      "term": "TextBox",
+      "requestId": "5c42dbf89b8b4d4cbe615889ca062108",
+      "operationId": "4b264e1d0e1b4dbab4f60d4be69d4602",
+      "matchCount": 20,
+      "totalMatchCount": 20,
+      "matchedEntryCount": 8,
+      "limited": false
+    },
+    {
+      "term": "widget",
+      "requestId": "22da636ee06a425d808150d8b00278d4",
+      "operationId": "759553ffb03b42279077a15a0ea99937",
+      "matchCount": 115,
+      "totalMatchCount": 115,
+      "matchedEntryCount": 12,
+      "limited": false
+    },
+    {
+      "term": "route",
+      "requestId": "f37ddb1decc3414e888938b5d1e4a4ec",
+      "operationId": "91c9ffe8c7284e74adefa245a35a8b7d",
+      "matchCount": 238,
+      "totalMatchCount": 238,
+      "matchedEntryCount": 36,
+      "limited": false
+    }
+  ],
+  "bm25": {
+    "query": "BlogAI stale shared chrome cache widget route validation",
+    "requestId": "8e9d6930bc534c249b14c73d81546a9f",
+    "operationId": "f430b1b6ce66493e9e5f9d63dde630c8",
+    "resultCount": 10,
+    "totalResultCount": 75,
+    "limited": true,
+    "topPaths": [
+      "SolutionFolder/docs/session-handoffs/2026-05-16-blogai-stale-chrome-search-findings.md",
+      "SolutionFolder/docs/session-handoffs/2026-05-16-blogai-mcp-search-workflow-findings.md",
+      "SolutionFolder/docs/session-handoffs/2026-05-16-blogai-pressure-test-findings.md",
+      "SolutionFolder/docs/session-handoffs/2026-05-16-blogai-stale-chrome-mcp-regex-search.md",
+      "SolutionFolder/docs/blogs/blogengine-cache-clear-failure-inspection-20260516.md",
+      "SolutionFolder/docs/blogs/final-rendered-route-verification-after-cache-clear-20260516.md",
+      "SolutionFolder/docs/blogs/final-rendered-route-verification-20260516.md",
+      "SolutionFolder/docs/blogs/stale-shared-feature-branch-link-inspection-20260516.md",
+      "SolutionFolder/docs/blogs/README.md",
+      "SolutionFolder/docs/blogs/blogai-cache-reload-inspection-20260516.md"
+    ]
+  },
+  "fallbackUsed": false,
+  "safety": {
+    "mutatedFiles": false,
+    "implementedBlogAiFeatures": false,
+    "implementedAuth": false,
+    "changedDeployment": false,
+    "usedBroadWholeRepoWildcard": false,
+    "changedMcpTransport": false
+  }
+}

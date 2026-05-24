@@ -1,0 +1,61 @@
+{
+  "runName": "mcp-preview-document-update-real-workflow-20260517",
+  "capturedAt": "2026-05-23",
+  "repository": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "startingHead": "f3ad9a2 Implement preview-only document update tool",
+  "captureMethod": "official MCP .NET client over direct stdio",
+  "mcpServerInfo": "VsMcpBridge.McpServer 1.0.0.0",
+  "mcpTool": "bridge_preview_document_update",
+  "bridgeToolId": "bridge.previewDocumentUpdate",
+  "toolsList": {
+    "toolCount": 21,
+    "includedBridgePreviewDocumentUpdate": true
+  },
+  "target": {
+    "path": "SolutionFolder/docs/preview-only-document-update-tool-design.md",
+    "selectionReason": "The design doc describes the preview-only contract and benefits from recording the first real direct-MCP documentation preview workflow.",
+    "expectedStateMode": "expectedContentHash",
+    "expectedContentSha256": "f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae"
+  },
+  "observedResults": {
+    "preview": {
+      "success": true,
+      "status": "PreviewGenerated",
+      "previewOnly": true,
+      "expectedMatched": true,
+      "changedLineCount": 460,
+      "deterministicDiffOnRepeat": true
+    },
+    "noOp": {
+      "success": true,
+      "status": "NoOp"
+    },
+    "drift": {
+      "success": false,
+      "status": "DriftDetected",
+      "errorCode": "DriftDetected"
+    }
+  },
+  "noWriteVerification": {
+    "beforeHash": "f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae",
+    "afterPreviewHash": "f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae",
+    "afterAllMcpCallsHash": "f607d6f798beb0a294ff5682cfaaa3525d8d747f111e60f9982ad0a27ab5e2ae",
+    "mcpWroteFiles": false,
+    "mcpAppliedPatch": false,
+    "codexAppliedAcceptedRepoEditAfterPreview": true
+  },
+  "scopeExclusions": [
+    "no apply/write MCP tool implemented",
+    "no file mutation through MCP",
+    "no automatic patch execution",
+    "no broad repository crawling",
+    "no VSIX named-pipe call",
+    "no production endpoint call"
+  ],
+  "friction": [
+    "raw ad hoc JSON-RPC framing helper timed out before initialize",
+    "full-document diff is deterministic but not minimal",
+    "MCP wrapper does not accept caller-supplied deterministic requestId or operationId"
+  ]
+}

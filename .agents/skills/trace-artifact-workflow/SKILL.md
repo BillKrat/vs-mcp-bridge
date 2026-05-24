@@ -26,13 +26,13 @@ description: Capture repeatable workflow evidence, correlated logs, metadata, an
 
 ## References
 
-- `docs/tool-execution-trace-workflow.md`
+- `SolutionFolder/docs/tool-execution-trace-workflow.md`
 - `.agents/skills/mcp-search-diagnostics/SKILL.md`
-- `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`
-- `docs/app-host-ping-trace-workflow.md`
-- `docs/vsix-host-ping-trace-workflow.md`
-- `docs/vsix-host-selected-text-trace-workflow.md`
-- `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
-- `artifacts/logs/`
-- `docs/diagrams/`
-- `docs/session-handoffs/`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`
+- `SolutionFolder/docs/app-host-ping-trace-workflow.md`
+- `SolutionFolder/docs/vsix-host-ping-trace-workflow.md`
+- `SolutionFolder/docs/vsix-host-selected-text-trace-workflow.md`
+- `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
+- `SolutionFolder/artifacts/logs/`
+- `SolutionFolder/docs/diagrams/`
+- `SolutionFolder/docs/session-handoffs/`

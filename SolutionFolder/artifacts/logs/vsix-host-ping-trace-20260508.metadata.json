@@ -1,0 +1,31 @@
+{
+  "date": "2026-05-08",
+  "repoRoot": "Y:\\vs-mcp-bridge",
+  "branch": "feature/approval-apply-ui-slice",
+  "commit": "224b554",
+  "host": "VsMcpBridge.Vsix",
+  "hostEnvironment": "Visual Studio Experimental Instance",
+  "interactionMode": "UI automation against live VS MCP Bridge tool window",
+  "logging": {
+    "provider": "StdErr",
+    "minimumLevel": "Trace"
+  },
+  "chatEngine": {
+    "observedProviderPath": "OpenAI",
+    "prompt": "ping",
+    "visibleResult": "pong"
+  },
+  "request": {
+    "requestId": "cf7657ab510c489ba96e5b01ce03bfa7"
+  },
+  "artifacts": {
+    "diagram": "SolutionFolder/docs/diagrams/vsix-host-ping-trace-20260508.mmd",
+    "log": "SolutionFolder/artifacts/logs/vsix-host-ping-trace-20260508.log",
+    "blogDraft": "SolutionFolder/docs/blog-drafts/vsix-host-ping-trace-walkthrough-20260508.md"
+  },
+  "notes": [
+    "This run validates the observed VSIX-host path inside the Experimental Instance.",
+    "The interaction was exercised through the live tool window using automation rather than a human click.",
+    "Observed presenter and VSIX chat-service logs shared a single correlation id across the request flow."
+  ]
+}

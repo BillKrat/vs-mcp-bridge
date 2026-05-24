@@ -15,7 +15,7 @@ description: Validate MCP server startup, tool listing, chat ping, and pipe-back
 
 ## Workflow
 
-1. Read `AI_START.md` and `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`.
+1. Read `AI_START.md` and `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`.
 2. Confirm whether the target tool is MCP-only or pipe-backed.
 3. When MCP is reachable, call `bridge_get_tool_inventory` early to inspect deterministic manifest metadata for registered bridge tools. It is read-only, does not execute bridge tools, and currently reports compiled tools such as `bridge.bm25TextSearch` and `bridge.regexTextSearch`.
 4. For search diagnostics, use `.agents/skills/mcp-search-diagnostics/SKILL.md`: choose `bridge_regex_text_search` for exact/regex matching and `bridge_bm25_text_search` for ranked relevance over explicit input text/documents.
@@ -26,10 +26,10 @@ description: Validate MCP server startup, tool listing, chat ping, and pipe-back
 
 ## References
 
-- `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
+- `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
 - `.agents/skills/mcp-search-diagnostics/SKILL.md`
-- `docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`
-- `docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`
-- `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`
-- `artifacts/logs/vsix-activation-diagnostic-trace-20260516.log`
-- `docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-mcp-tool-inventory-live-validation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`
+- `SolutionFolder/artifacts/logs/vsix-activation-diagnostic-trace-20260516.log`
+- `SolutionFolder/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd`

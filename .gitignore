@@ -495,6 +495,16 @@ FodyWeavers.xsd
 # Local History for Visual Studio Code
 .history/
 
+# Repository-organized durable docs, evidence, and scripts.
+# Root /docs and /artifacts remain ignored to discourage new clutter there.
+!SolutionFolder/
+!SolutionFolder/docs/
+!SolutionFolder/docs/**
+!SolutionFolder/artifacts/
+!SolutionFolder/artifacts/**
+!SolutionFolder/scripts/
+!SolutionFolder/scripts/**
+
 # Built Visual Studio Code Extensions
 *.vsix
 !VsMcpBridge.Vsix/

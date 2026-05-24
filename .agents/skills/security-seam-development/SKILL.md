@@ -14,7 +14,7 @@ description: Work on bridge tool policy, approval, redaction, audit, capability,
 
 ## Workflow
 
-1. Read `docs/ARCHITECTURE.md` and `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
+1. Read `SolutionFolder/docs/ARCHITECTURE.md` and `SolutionFolder/docs/session-handoffs/2026-05-16-security-architecture-foundation.md`.
 2. Keep `BridgeToolExecutor` as the execution/security/audit/redaction boundary.
 3. Ensure discovered tools still execute through the executor.
 4. Preserve current defaults unless the slice explicitly changes behavior.
@@ -23,10 +23,10 @@ description: Work on bridge tool policy, approval, redaction, audit, capability,
 
 ## References
 
-- `docs/ARCHITECTURE.md`
-- `docs/tool-execution-trace-workflow.md`
-- `docs/session-handoffs/2026-05-16-security-architecture-foundation.md`
-- `docs/session-handoffs/2026-05-09-tool-security-validation.md`
-- `docs/session-handoffs/2026-05-16-tool-approval-validation.md`
-- `docs/diagrams/tool-security-trace-20260509.mmd`
-- `docs/diagrams/tool-approval-trace-20260516.mmd`
+- `SolutionFolder/docs/ARCHITECTURE.md`
+- `SolutionFolder/docs/tool-execution-trace-workflow.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-security-architecture-foundation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-09-tool-security-validation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-tool-approval-validation.md`
+- `SolutionFolder/docs/diagrams/tool-security-trace-20260509.mmd`
+- `SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd`

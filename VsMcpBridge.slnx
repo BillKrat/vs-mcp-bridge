@@ -6,40 +6,20 @@
     <Project Path="VsMcpBridge.Shared/VsMcpBridge.Shared.csproj" />
   </Folder>
   <Folder Name="/SolutionFolder/">
+    <File Path="AI_START.md" />
+    <File Path="AGENTS.md" />
     <File Path="LICENSE" />
-    <File Path="Minor-refactor.md" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/SolutionFolder/Docs/">
-    <File Path="docs/AI_COLLABORATION.md" />
-    <File Path="docs/AI_HANDOFF.md" />
-    <File Path="docs/CODING_STANDARDS.md" />
-    <File Path="docs/MVPVM_OVERVIEW.md" />
-    <File Path="docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md" />
-  </Folder>
-  <Folder Name="/SolutionFolder/Docs/diagrams/">
-    <File Path="docs/blogs/diagrams/vs-mcp-bridge-bootstrap-sequence.mmd" />
-  </Folder>
-  <Folder Name="/SolutionFolder/Docs/manual-test-fixtures/" />
-  <Folder Name="/SolutionFolder/Docs/manual-test-fixtures/range-edit/">
-    <File Path="docs/manual-test-fixtures/range-edit/DeletionOnlyRange.cs" />
-    <File Path="docs/manual-test-fixtures/range-edit/EndOfFileReplacement.cs" />
-    <File Path="docs/manual-test-fixtures/range-edit/InsertionOnlyRange.cs" />
-    <File Path="docs/manual-test-fixtures/range-edit/README.md" />
-    <File Path="docs/manual-test-fixtures/range-edit/RepeatedSegmentAmbiguity.cs" />
-    <File Path="docs/manual-test-fixtures/range-edit/RepeatedSegmentDisambiguated.cs" />
-    <File Path="docs/manual-test-fixtures/range-edit/StartOfFileReplacement.cs" />
-  </Folder>
-  <Folder Name="/SolutionFolder/Docs/session-handoffs/">
-    <File Path="docs/session-handoffs/2026-04-11-cursor-mcp-runtime-validation.md" />
-    <File Path="docs/session-handoffs/2026-04-12-chatgpt-reset-handoff.md" />
-    <File Path="docs/session-handoffs/2026-04-14-preview-clarity-handoff.md" />
-  </Folder>
+  <Folder Name="/SolutionFolder/docs/" />
+  <Folder Name="/SolutionFolder/artifacts/" />
+  <Folder Name="/SolutionFolder/scripts/" />
   <Folder Name="/Tests/">
     <Project Path="Adventures.ChatEngine.Tests/Adventures.ChatEngine.Tests.csproj" />
     <Project Path="VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj" />
     <Project Path="VsMcpBridge.Vsix.Tests/VsMcpBridge.Vsix.Tests.csproj" />
   </Folder>
+  <Project Path="Adventures.Auth.LocalApi/Adventures.Auth.LocalApi.csproj" />
   <Project Path="BlogAI.Web/BlogAI.Web.csproj" />
   <Project Path="VsMcpBridge.App/VsMcpBridge.App.csproj" />
   <Project Path="VsMcpBridge.Vsix/VsMcpBridge.Vsix.csproj" Id="53f38b92-57a3-4d74-86d0-89d72a57a5a9" />

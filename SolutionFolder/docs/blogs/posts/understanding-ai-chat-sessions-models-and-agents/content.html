@@ -1,0 +1,167 @@
+<p>[Page:ChatSessionsModelsAndAgents]</p>
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/ARCHITECTURE.md" target="_blank">SolutionFolder/docs/ARCHITECTURE.md</a><br />
+<strong>Status:</strong> Canonical repo cleanup aligned to the current VS MCP Bridge and BlogAI narrative as of 2026-05-16. Bracket-style tokens are intentional BlogEngine/GwnWikiExtension tokens.</p>
+
+<h1>Understanding AI Chat Sessions, Models, and Agents</h1>
+<h2>Why Context, Tools, Evidence, and Boundaries Matter</h2>
+
+<p>One of the easiest mistakes to make with modern AI tools is assuming that a chat is a persistent intelligence that keeps thinking between messages. That is not how these systems work. Once that clicks, a lot of confusing behavior suddenly makes sense.</p>
+
+<p>It also explains why the VS MCP Bridge project puts so much weight on architecture docs, durable traces, session handoffs, and source-controlled blog content. If the chat context disappears, the system still needs a way to recover the project model.</p>
+
+<h3>A Chat Is Not A Persistent Mind</h3>
+
+<p>A chat session is a temporary context window wrapped around a model call. On each turn, the application gathers instructions, prior messages, available tool results, selected files, and any other context it chooses to include. The model then generates a response from that input.</p>
+
+<pre>Instructions + context + tool results + current prompt -> model -> response</pre>
+
+<p>The model does not carry goals forward unless those goals are present in the current request. If the working context is lost, the same model can feel like a different assistant because it no longer sees the same constraints, terminology, or decisions.</p>
+
+<blockquote>A chat session is working context, not permanent memory.</blockquote>
+
+<h3>Why Context Loss Feels So Disruptive</h3>
+
+<p>When a desktop app crashes, a session resets, or a context window is compacted, the active conversation may lose important details. Earlier decisions, operating rules, current branch state, and architectural constraints may disappear unless they were preserved somewhere outside the chat.</p>
+
+<p>That is why VS MCP Bridge now treats repository files as the source of truth. <code>AI_START.md</code>, <code>SolutionFolder/docs/ARCHITECTURE.md</code>, trace workflows, logs, Mermaid sources, and session handoffs are not paperwork. They are the durable memory that a future AI session can reload.</p>
+
+<h3>The Main Terms</h3>
+
+<p>These terms often get blurred together, but separating them helps explain what the bridge is doing.</p>
+
+<h4>Model</h4>
+<p>The model is the reasoning engine. It generates output from the input it receives. By itself, it is stateless and does not know the project unless the current context gives it project evidence.</p>
+
+<h4>Session</h4>
+<p>The session is the active conversation context. It may include prior messages, instructions, selected files, tool results, and summaries. It can be extremely useful, but it is not a reliable permanent store.</p>
+
+<h4>Tool</h4>
+<p>A tool is a callable capability outside pure text generation. In VS MCP Bridge, tools can read Visual Studio state, list projects, create edit proposals, or execute shared bridge tools through catalog and executor boundaries.</p>
+
+<h4>Agent</h4>
+<p>An agent is an orchestration layer that uses a model, context, tools, and a control loop to pursue a task. That does not make it magic or autonomous in the human sense. It still needs explicit boundaries, review, observable execution, and durable evidence.</p>
+
+<h4>Orchestration Layer</h4>
+<p>The orchestration layer decides what context to include, which tools are available, when to call them, how to handle results, and how to continue the loop. ChatGPT, Codex, Copilot, and MCP-enabled clients differ mostly in this layer and in the tools they can reach.</p>
+
+<h3>Pure Chat Is Different From Tool-Backed Work</h3>
+
+<p>Pure chat inference can explain, summarize, and reason from the supplied prompt. Tool-backed workflows can observe or change the outside world, so they need stronger boundaries.</p>
+
+<p>VS MCP Bridge exists because AI-assisted coding needs more than free-form conversation. It needs a local MCP server, a clean stdio boundary, a named-pipe bridge into Visual Studio, explicit MCP tools, proposal approval, and diagnostics that show what actually happened.</p>
+
+<p>That changes the trust model. A chat answer can be reviewed as text. A tool call may read active editor state, list solution projects, or create a proposed edit. That kind of workflow needs logs, request ids, tool descriptors, policy decisions, approval states, and structured results.</p>
+
+<h3>How VS MCP Bridge Grounds Agentic Behavior</h3>
+
+<p>In VS MCP Bridge, agentic behavior is grounded by concrete boundaries:</p>
+
+<ul>
+  <li>MCP clients talk to the local MCP server over stdio.</li>
+  <li>The MCP server reaches Visual Studio only through the local named-pipe boundary.</li>
+  <li>The VSIX owns Visual Studio API access and proposal UI state.</li>
+  <li>Proposal tools create proposals; apply still requires explicit approval in the tool window.</li>
+  <li>Shared bridge tools run through <code>BridgeToolExecutor</code>, not directly from callers.</li>
+  <li>Policy, approval, redaction, audit, correlation, and result shaping stay at the execution boundary.</li>
+</ul>
+
+<p>Those boundaries are what keep "the agent did something" from becoming an unhelpful explanation. A future developer should be able to tell which layer received the request, which tool ran, which approval or policy decision applied, and which result was returned.</p>
+
+<h3>Session Continuity Needs Source-Of-Truth Files</h3>
+
+<p>When a session survives, the assistant can use the conversation to maintain continuity. When a session is interrupted, source files have to carry the continuity instead.</p>
+
+<p>That is why the project now asks future sessions to start with repository evidence:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/AI_START.md" target="_blank">AI_START.md</a> gives the resume map.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/ARCHITECTURE.md" target="_blank">SolutionFolder/docs/ARCHITECTURE.md</a> states current behavior.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/tree/main/SolutionFolder/docs/session-handoffs" target="_blank">SolutionFolder/docs/session-handoffs/</a> records validated slices and resume points.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/tree/main/SolutionFolder/artifacts/logs" target="_blank">SolutionFolder/artifacts/logs/</a> preserves observed runs and metadata.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/tree/main/SolutionFolder/docs/diagrams" target="_blank">SolutionFolder/docs/diagrams/</a> stores Mermaid sources for observed flows.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/blogs/README.md" target="_blank">SolutionFolder/docs/blogs/README.md</a> explains how canonical blog content is preserved before public rewrite or publishing.</li>
+</ul>
+
+<p>This is not only useful for AI sessions. It is useful engineering discipline. Durable context reduces dependency on memory, mood, and whatever happens to fit in the next prompt.</p>
+
+<h3>Logs, Traces, Artifacts, And Prompts Work Together</h3>
+
+<p>Prompts tell the assistant what to do. Architecture docs tell it what is true. Logs show what happened. Trace metadata records the run context. Mermaid diagrams explain the observed sequence. Handoffs tell the next session what to trust, what to recheck, and what remains deferred.</p>
+
+<p>That combination is more reliable than any single long chat. It also lets a human reviewer challenge the work: if the diagram says a request crossed the executor boundary, the logs and code should support that claim.</p>
+
+<h3>Approval Is Part Of Orchestration</h3>
+
+<p>Agentic workflows often sound autonomous, but VS MCP Bridge deliberately keeps important operations approval-aware.</p>
+
+<p>The proposal workflow is the clearest example: an MCP tool can create a proposed edit, but the edit is not applied until the user approves it in the host UI. The newer tool-execution approval seam follows the same architectural direction for future selected tools: approval is evaluated at the execution boundary, not hidden inside arbitrary tool code.</p>
+
+<p>That is how AI-assisted development stays understandable. The model can suggest. The tool can prepare. The boundary can log, audit, redact, and classify. The human can review and approve.</p>
+
+<h3>What Context Windows Cannot Solve</h3>
+
+<p>Larger context windows help, but they do not eliminate the need for durable evidence.</p>
+
+<p>A bigger window can include more files and more history, but it can still omit the one constraint that matters. It can still summarize away nuance. It can still be reset. It can still produce a plausible explanation that does not match the actual code.</p>
+
+<p>That is why the repo treats source-of-truth documents, validation artifacts, and canonical blog content as part of the system. They make the project less dependent on any single context window.</p>
+
+<h3>Related Mermaid Trace Sources</h3>
+
+<p>The following diagram sources help make these concepts concrete:</p>
+
+<ul>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/vsix-host-selected-text-trace-20260509.mmd" target="_blank">vsix-host-selected-text-trace-20260509.mmd</a> shows a user-facing prompt path reconstructed from observed logs.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-regex-search-trace-20260509.mmd" target="_blank">tool-regex-search-trace-20260509.mmd</a> shows a compiled bridge tool moving through catalog and executor boundaries.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd" target="_blank">tool-approval-trace-20260516.mmd</a> shows approval-required tool execution with visible allow and deny outcomes.</li>
+  <li><a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd" target="_blank">vsix-activation-diagnostic-trace-20260516.mmd</a> shows how inactive VSIX/named-pipe state becomes an actionable diagnostic instead of an opaque timeout.</li>
+</ul>
+
+<p>Those <code>.mmd</code> files are the diagram source of truth. They matter because they turn abstract AI terminology into observed software behavior.</p>
+
+<h3>A Cleaner Mental Model</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th>Practical Meaning</th>
+      <th>VS MCP Bridge Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Generates output from supplied context</td>
+      <td>The model behind ChatGPT, Codex, or Copilot</td>
+    </tr>
+    <tr>
+      <td>Session</td>
+      <td>Temporary working context</td>
+      <td>The current chat plus instructions, files, and tool results</td>
+    </tr>
+    <tr>
+      <td>Tool</td>
+      <td>Callable capability outside pure text generation</td>
+      <td><code>vs_get_active_document</code>, proposal tools, or shared bridge tools</td>
+    </tr>
+    <tr>
+      <td>Agent</td>
+      <td>Model plus orchestration loop and tools</td>
+      <td>An AI client using MCP tools to inspect and propose changes</td>
+    </tr>
+    <tr>
+      <td>Evidence</td>
+      <td>Durable record that survives context loss</td>
+      <td>Architecture docs, logs, metadata, Mermaid diagrams, handoffs, canonical blog sources</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Takeaway</h3>
+
+<p>Models generate responses. Sessions provide temporary continuity. Agents orchestrate tools and context. Tools touch real systems. Evidence makes the whole workflow reviewable after the session ends.</p>
+
+<p>That is the practical lesson from VS MCP Bridge and BlogAI: AI-assisted development improves when the important knowledge survives outside the chat. Observable boundaries, approval-aware workflows, source-of-truth docs, and durable traces are what keep agentic behavior from becoming AI magic.</p>
+
+<p>See [Display:inference-driven|InferenceDriven] for the companion discussion of inference-driven software design and Copilot's strengths and risks.</p>

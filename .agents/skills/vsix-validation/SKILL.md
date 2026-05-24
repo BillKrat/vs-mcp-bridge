@@ -13,7 +13,7 @@ description: Build and validate the Visual Studio extension host, tests, and liv
 
 ## Workflow
 
-1. Read `README.md`, `docs/ARCHITECTURE.md`, and `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`.
+1. Read `README.md`, `SolutionFolder/docs/ARCHITECTURE.md`, and `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`.
 2. Build the VSIX with `.\scripts\build-vsix.ps1 -Restore`.
 3. Run VSIX tests with the Visual Studio test runner documented in `README.md` when code changes warrant it.
 4. For live validation, launch the Experimental Instance, open `View -> Other Windows -> VS MCP Bridge`, then invoke VS-backed tools.
@@ -23,8 +23,8 @@ description: Build and validate the Visual Studio extension host, tests, and liv
 ## References
 
 - `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
-- `docs/vsix-host-ping-trace-workflow.md`
-- `docs/vsix-host-selected-text-trace-workflow.md`
-- `docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`
+- `SolutionFolder/docs/ARCHITECTURE.md`
+- `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md`
+- `SolutionFolder/docs/vsix-host-ping-trace-workflow.md`
+- `SolutionFolder/docs/vsix-host-selected-text-trace-workflow.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-16-vsix-activation-diagnostic-validation.md`

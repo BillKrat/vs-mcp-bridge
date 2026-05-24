@@ -1,0 +1,51 @@
+{
+  "runName": "mcp-preview-document-update-trace-20260517",
+  "capturedAt": "2026-05-23",
+  "repository": "Y:\\vs-mcp-bridge",
+  "branch": "main",
+  "baselineCommit": "2ff8d9e Design preview-only document update tool",
+  "captureMethod": "shared tests plus MCP wrapper unit coverage",
+  "mcpTool": "bridge_preview_document_update",
+  "bridgeToolId": "bridge.previewDocumentUpdate",
+  "requestId": "request-123",
+  "operationId": "operation-456",
+  "inputSummary": {
+    "targetPath": "SolutionFolder/docs/example.md",
+    "expectedStateModes": ["expectedContent", "expectedContentHash"],
+    "replacementMode": "replacementContent",
+    "operationScope": "full-document preview"
+  },
+  "observedStatuses": [
+    "PreviewGenerated",
+    "NoOp",
+    "DriftDetected",
+    "InvalidRequest"
+  ],
+  "observedResultSummary": {
+    "previewOnly": true,
+    "writesFiles": false,
+    "appliesPatch": false,
+    "callsVsixNamedPipe": false,
+    "callsChatEngine": false,
+    "usesBridgeToolExecutor": true,
+    "declaredCapability": "workspace.previewDocumentUpdate",
+    "approvalRequirement": "NotRequired",
+    "futureApplyRequiresApproval": true,
+    "auditCategory": "DocumentPreview",
+    "redactionValidated": true
+  },
+  "validation": {
+    "sharedTests": "passed",
+    "sharedTestCount": 275
+  },
+  "scopeExclusions": [
+    "no file writes",
+    "no apply capability",
+    "no target document mutation",
+    "no automatic patch execution",
+    "no broad repository crawling",
+    "no VSIX named-pipe call",
+    "no production endpoint calls",
+    "no approval UX changes"
+  ]
+}

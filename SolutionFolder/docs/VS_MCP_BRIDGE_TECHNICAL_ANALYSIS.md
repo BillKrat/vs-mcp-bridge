@@ -1,0 +1,212 @@
+# VS MCP Bridge Technical Analysis
+
+Last updated: 2026-04-12
+
+## Purpose
+
+This document is the living technical reference for `vs-mcp-bridge`.
+
+Its job is to stay grounded in the repository as it exists now, not in an aspirational future architecture.
+
+For fast onboarding, start with `AI_START.md`, then continue with `README.md`, `SolutionFolder/docs/ARCHITECTURE.md`, and `SolutionFolder/docs/gated_turn-based_workflow-Codex.txt`.
+
+## Executive Summary
+
+`vs-mcp-bridge` is a local bridge between an MCP client and a host that can expose IDE or workspace state.
+
+Current host shape:
+
+- `VsMcpBridge.McpServer` is the MCP stdio process
+- `VsMcpBridge.Vsix` is the Visual Studio host
+- `VsMcpBridge.App` is a standalone WPF host for shared bridge behavior
+- `VsMcpBridge.Shared` and `VsMcpBridge.Shared.Wpf` hold the common contracts and UI pieces
+
+The repository has now completed connection-first bring-up for the currently exposed tool slice.
+
+That means the highest-value work has shifted from first proof to selective hardening:
+
+1. preserve and document the validated behavior
+2. add automated coverage for the stdio and named-pipe boundaries
+3. harden edit application and diagnostics
+4. broaden capabilities only after the validated baseline remains stable
+
+## Solution Layout
+
+### `VsMcpBridge.McpServer`
+
+Purpose:
+
+- hosts the MCP stdio server
+- defines MCP tools
+- forwards typed requests to the active host over a named pipe
+
+Key files:
+
+- `Program.cs`
+- `Pipe/PipeClient.cs`
+- `Tools/VsTools.cs`
+
+### `VsMcpBridge.Vsix`
+
+Purpose:
+
+- hosts the bridge inside Visual Studio
+- starts the named-pipe listener
+- handles Visual Studio-backed requests
+- owns the tool window shell
+- now also hosts prompt-box chat request handling through a VSIX-side `IChatRequestService` implementation for parity with the standalone app
+
+Key files:
+
+- `VsMcpBridgePackage.cs`
+- `Pipe/PipeServer.cs`
+- `Services/VsService.cs`
+- `ToolWindows/LogToolWindow.cs`
+- `VsMcpBridge.Shared.Wpf/Views/LogToolWindowControl.xaml`
+
+### `VsMcpBridge.App`
+
+Purpose:
+
+- exercises shared bridge pieces outside the VSIX host
+- serves as a secondary host example
+
+Current phase note:
+
+- this project remains useful as a reference host and separation check, but the main priority has shifted to hardening and automated coverage around the validated VSIX plus MCP path
+
+### `VsMcpBridge.Shared`
+
+Purpose:
+
+- request and response models
+- shared abstractions and services
+- shared diagnostics and MVP/VM support
+
+### `VsMcpBridge.Shared.Wpf`
+
+Purpose:
+
+- shared WPF views that can be hosted outside the VSIX assembly
+
+## Runtime Architecture
+
+```text
+AI client
+  -> MCP over stdio
+VsMcpBridge.McpServer
+  -> JSON line messages over named pipe "VsMcpBridge"
+host
+  -> Visual Studio APIs             (VSIX)
+  -> workspace/file-system services (App)
+```
+
+## Current Constraints
+
+The following constraints are intentional and should be preserved unless Bill decides otherwise:
+
+- no shell execution from the MCP server
+- no direct workspace or solution file writes from the MCP server
+- no general filesystem access outside the solution root, except for bridge diagnostics written under `%LocalAppData%\VsMcpBridge\Logs`
+- no autonomous agent loop
+- edits remain proposal-based rather than silently applied
+- Visual Studio API access stays in the VSIX host
+
+## Current Verified State
+
+Verified recently:
+
+- the solution builds
+- the VSIX project builds
+- the VSIX project has the minimum WPF and JSON support needed for the current scaffold
+- the package no longer references a missing menu resource
+- real Experimental Instance load
+- named-pipe listener startup during package load
+- real MCP-to-pipe-to-VSIX round trips for the current tool surface
+- successful proposal creation, approval, and apply through `vs_propose_text_edit`
+- post-apply connectivity via a follow-up successful read-only tool call
+
+Logging hardening now in place:
+
+- App, VSIX, and MCP host now share a common `IConfiguration` bootstrap path so configuration behavior can evolve consistently across hosts rather than relying on scattered direct environment reads
+- App chat/OpenAI requests emit correlation and elapsed timing logs for start, completion, cancellation, and failure
+- MCP chat tools (`chat_engine_ping`, `chat_engine_chat`) emit correlation and elapsed timing logs at tool boundaries
+- MCP named-pipe client and shared pipe server emit boundary diagnostics with command, request id, success state, and elapsed timing
+- VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`) emit operation-level completion logs including elapsed timing and key result shape (file path, selection length, project/diagnostic count)
+- prompt-box chat input in both hosts now routes through host-specific `IChatRequestService` implementations, enabling comparable request/response behavior for `ping` and OpenAI-backed prompts without App↔VSIX coupling
+
+These additions improve triage for hangs and latency without changing the approval-first edit model.
+
+Current logging direction:
+
+- `Trace` should describe verbose class/process flow across the decoupled bridge so the runtime remains diagnosable during rapid triage
+- `Information` is the default user-facing level and should carry non-verbose operational feedback
+- avoid redundant paired Trace and Information documentation or logging for the same event
+- `StdErr` is the preferred transport-safe out-of-band channel for diagnostics that must not pollute MCP stdio traffic
+- when Trace is enabled, Trace-level output should also surface through the shared UI log view so it is visible to the operator and AI tools during investigation
+- the shared logging pipeline now includes an abstraction seam that can forward trace and possibly information events to additional persistence targets such as SQL; the current first implementation step is a file-backed forwarder
+
+Current observed gap from manual validation on 2026-05-06:
+
+- in the VSIX tool window chat surface, disabling raw prompt/response logging still emits placeholder lines indicating that prompt or response logging is disabled
+- those lines are currently surfacing in front of or alongside useful OpenAI request boundary logs and are not acceptable as user-facing output in their current form
+- the logging direction remains valid, but the UX treatment of disabled raw audit logging needs a focused follow-up slice
+- the next session should address that UX issue before broadening the logging surface further, then continue the Environment-to-IConfiguration migration inventory
+
+## Current Technical Priorities
+
+The next phase should optimize for stability and coverage, not initial runtime proof.
+
+Priority order:
+
+1. add automated coverage for stdio MCP startup and named-pipe request flow
+2. harden proposal/apply behavior, especially document formatting and line-ending preservation
+3. keep diagnostics strong without reintroducing stdout pollution
+4. harden the logging seam so future persistence targets such as file-forwarding and SQL-forwarding can be added without changing core callers
+5. expand capability only after the current validated slice remains stable
+
+## Known Risk Areas
+
+1. The bridge now has a validated runtime path, but automated regression coverage for the MCP and pipe boundaries is still thin.
+2. Edit application still rebuilds the full document and may need hardening around formatting and line endings.
+3. Diagnostics must remain transport-safe for MCP host work so stdio JSON transport stays clean; StdErr and file-backed sinks are acceptable, stdout is not.
+4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
+5. Increased log volume at `Trace` can reduce signal if left enabled continuously; operators should use diagnostic levels during focused investigation windows.
+
+## Operational Note: Tool Window Readiness
+
+During manual testing, the VS MCP Bridge tool window could appear visually ready before startup-related processing and log activity had fully settled.
+
+Observed guidance:
+
+- do not assume the tool window is fully ready the moment it becomes visible
+- when validating interactive behavior, wait until startup log activity has stopped before treating the UI as ready for clicks and text interaction
+
+This is currently preserved as an operational note rather than a confirmed defect.
+
+If a future developer or AI agent sees transient dead-click behavior early in startup, first verify whether the interaction happened before the tool window had actually finished settling before opening a broader thread-lock investigation.
+
+## Guidance For Future Changes
+
+During the current stabilization phase:
+
+- prefer small changes over refactors
+- preserve the validated runtime baseline before broadening behavior
+- fix concrete regressions before improving architecture elegance
+- do not add capabilities just because the bridge could support them later
+- keep docs aligned with verified reality
+
+After the validated baseline is better covered, the likely next technical topics are:
+
+- stronger automated tests around MCP startup and pipe flow
+- clearer protocol/version metadata
+- stronger structured edit models beneath the diff preview
+- continued hardening of the approval/apply workflow
+
+## Related Documents
+
+- `README.md`
+- `SolutionFolder/docs/ARCHITECTURE.md`
+- `SolutionFolder/docs/gated_turn-based_workflow-Codex.txt`
+- `SolutionFolder/docs/CODING_STANDARDS.md`
+- `SolutionFolder/docs/MVPVM_OVERVIEW.md`

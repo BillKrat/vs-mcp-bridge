@@ -7,22 +7,22 @@ AI session entry point:
 - for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
 - for repository-level AI operating rules, read [AGENTS.md](AGENTS.md); task-specific workflows use lightweight `SKILL.md` files under [.agents/skills/](.agents/skills/)
 - for MCP search diagnostics, use [.agents/skills/mcp-search-diagnostics/SKILL.md](.agents/skills/mcp-search-diagnostics/SKILL.md)
-- for ending or pausing an AI-assisted session cleanly, use [AI_STOP.md](AI_STOP.md)
-- for the repeatable App-host `ping` trace workflow and its durable artifacts, use [docs/app-host-ping-trace-workflow.md](docs/app-host-ping-trace-workflow.md)
-- for the repeatable VSIX-host `ping` trace workflow and its durable artifacts, use [docs/vsix-host-ping-trace-workflow.md](docs/vsix-host-ping-trace-workflow.md)
-- for the repeatable VSIX-host selected-text trace workflow and its durable artifacts, use [docs/vsix-host-selected-text-trace-workflow.md](docs/vsix-host-selected-text-trace-workflow.md)
-- for the repeatable compiled bridge tool execution trace workflow and its durable artifacts, use [docs/tool-execution-trace-workflow.md](docs/tool-execution-trace-workflow.md)
-- for the security-aware compiled bridge tool trace artifacts, use [artifacts/logs/tool-security-trace-20260509.log](artifacts/logs/tool-security-trace-20260509.log) and [docs/diagrams/tool-security-trace-20260509.mmd](docs/diagrams/tool-security-trace-20260509.mmd)
-- for the MEF discovery boundary trace artifacts, use [artifacts/logs/mef-discovery-trace-20260516.log](artifacts/logs/mef-discovery-trace-20260516.log) and [docs/diagrams/mef-discovery-trace-20260516.mmd](docs/diagrams/mef-discovery-trace-20260516.mmd)
-- for the approval-aware tool execution boundary trace artifacts, use [artifacts/logs/tool-approval-trace-20260516.log](artifacts/logs/tool-approval-trace-20260516.log) and [docs/diagrams/tool-approval-trace-20260516.mmd](docs/diagrams/tool-approval-trace-20260516.mmd)
-- for the bridge tool manifest metadata trace artifacts, use [artifacts/logs/tool-manifest-trace-20260516.log](artifacts/logs/tool-manifest-trace-20260516.log) and [docs/diagrams/tool-manifest-trace-20260516.mmd](docs/diagrams/tool-manifest-trace-20260516.mmd)
-- for the bridge tool catalog inventory trace artifacts, use [artifacts/logs/tool-inventory-trace-20260516.log](artifacts/logs/tool-inventory-trace-20260516.log) and [docs/diagrams/tool-inventory-trace-20260516.mmd](docs/diagrams/tool-inventory-trace-20260516.mmd)
-- for the MCP-exposed bridge tool inventory diagnostic trace artifacts, use [artifacts/logs/mcp-tool-inventory-trace-20260516.log](artifacts/logs/mcp-tool-inventory-trace-20260516.log) and [docs/diagrams/mcp-tool-inventory-trace-20260516.mmd](docs/diagrams/mcp-tool-inventory-trace-20260516.mmd)
-- for live MCP stdio validation of the inventory diagnostic, use [artifacts/logs/mcp-tool-inventory-live-validation-20260516.log](artifacts/logs/mcp-tool-inventory-live-validation-20260516.log) and [docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd](docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
-- for live MCP stdio validation of the regex search diagnostic, use [artifacts/logs/mcp-regex-search-trace-20260516.log](artifacts/logs/mcp-regex-search-trace-20260516.log) and [docs/diagrams/mcp-regex-search-trace-20260516.mmd](docs/diagrams/mcp-regex-search-trace-20260516.mmd)
-- for live MCP stdio validation of the BM25 search diagnostic, use [artifacts/logs/mcp-bm25-search-trace-20260516.log](artifacts/logs/mcp-bm25-search-trace-20260516.log) and [docs/diagrams/mcp-bm25-search-trace-20260516.mmd](docs/diagrams/mcp-bm25-search-trace-20260516.mmd)
-- for live MCP stdio validation of the explicit repo document selection diagnostic, use [artifacts/logs/mcp-document-selection-trace-20260516.log](artifacts/logs/mcp-document-selection-trace-20260516.log) and [docs/diagrams/mcp-document-selection-trace-20260516.mmd](docs/diagrams/mcp-document-selection-trace-20260516.mmd)
-- for inactive VSIX named-pipe activation diagnostic artifacts, use [artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
+- for ending or pausing an AI-assisted session cleanly, use [SolutionFolder/docs/AI_STOP.md](SolutionFolder/docs/AI_STOP.md)
+- for the repeatable App-host `ping` trace workflow and its durable artifacts, use [SolutionFolder/docs/app-host-ping-trace-workflow.md](SolutionFolder/docs/app-host-ping-trace-workflow.md)
+- for the repeatable VSIX-host `ping` trace workflow and its durable artifacts, use [SolutionFolder/docs/vsix-host-ping-trace-workflow.md](SolutionFolder/docs/vsix-host-ping-trace-workflow.md)
+- for the repeatable VSIX-host selected-text trace workflow and its durable artifacts, use [SolutionFolder/docs/vsix-host-selected-text-trace-workflow.md](SolutionFolder/docs/vsix-host-selected-text-trace-workflow.md)
+- for the repeatable compiled bridge tool execution trace workflow and its durable artifacts, use [SolutionFolder/docs/tool-execution-trace-workflow.md](SolutionFolder/docs/tool-execution-trace-workflow.md)
+- for the security-aware compiled bridge tool trace artifacts, use [SolutionFolder/artifacts/logs/tool-security-trace-20260509.log](SolutionFolder/artifacts/logs/tool-security-trace-20260509.log) and [SolutionFolder/docs/diagrams/tool-security-trace-20260509.mmd](SolutionFolder/docs/diagrams/tool-security-trace-20260509.mmd)
+- for the MEF discovery boundary trace artifacts, use [SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.log](SolutionFolder/artifacts/logs/mef-discovery-trace-20260516.log) and [SolutionFolder/docs/diagrams/mef-discovery-trace-20260516.mmd](SolutionFolder/docs/diagrams/mef-discovery-trace-20260516.mmd)
+- for the approval-aware tool execution boundary trace artifacts, use [SolutionFolder/artifacts/logs/tool-approval-trace-20260516.log](SolutionFolder/artifacts/logs/tool-approval-trace-20260516.log) and [SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd](SolutionFolder/docs/diagrams/tool-approval-trace-20260516.mmd)
+- for the bridge tool manifest metadata trace artifacts, use [SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.log](SolutionFolder/artifacts/logs/tool-manifest-trace-20260516.log) and [SolutionFolder/docs/diagrams/tool-manifest-trace-20260516.mmd](SolutionFolder/docs/diagrams/tool-manifest-trace-20260516.mmd)
+- for the bridge tool catalog inventory trace artifacts, use [SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.log](SolutionFolder/artifacts/logs/tool-inventory-trace-20260516.log) and [SolutionFolder/docs/diagrams/tool-inventory-trace-20260516.mmd](SolutionFolder/docs/diagrams/tool-inventory-trace-20260516.mmd)
+- for the MCP-exposed bridge tool inventory diagnostic trace artifacts, use [SolutionFolder/artifacts/logs/mcp-tool-inventory-trace-20260516.log](SolutionFolder/artifacts/logs/mcp-tool-inventory-trace-20260516.log) and [SolutionFolder/docs/diagrams/mcp-tool-inventory-trace-20260516.mmd](SolutionFolder/docs/diagrams/mcp-tool-inventory-trace-20260516.mmd)
+- for live MCP stdio validation of the inventory diagnostic, use [SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log](SolutionFolder/artifacts/logs/mcp-tool-inventory-live-validation-20260516.log) and [SolutionFolder/docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd](SolutionFolder/docs/diagrams/mcp-tool-inventory-live-validation-20260516.mmd)
+- for live MCP stdio validation of the regex search diagnostic, use [SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.log](SolutionFolder/artifacts/logs/mcp-regex-search-trace-20260516.log) and [SolutionFolder/docs/diagrams/mcp-regex-search-trace-20260516.mmd](SolutionFolder/docs/diagrams/mcp-regex-search-trace-20260516.mmd)
+- for live MCP stdio validation of the BM25 search diagnostic, use [SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.log](SolutionFolder/artifacts/logs/mcp-bm25-search-trace-20260516.log) and [SolutionFolder/docs/diagrams/mcp-bm25-search-trace-20260516.mmd](SolutionFolder/docs/diagrams/mcp-bm25-search-trace-20260516.mmd)
+- for live MCP stdio validation of the explicit repo document selection diagnostic, use [SolutionFolder/artifacts/logs/mcp-document-selection-trace-20260516.log](SolutionFolder/artifacts/logs/mcp-document-selection-trace-20260516.log) and [SolutionFolder/docs/diagrams/mcp-document-selection-trace-20260516.mmd](SolutionFolder/docs/diagrams/mcp-document-selection-trace-20260516.mmd)
+- for inactive VSIX named-pipe activation diagnostic artifacts, use [SolutionFolder/artifacts/logs/vsix-activation-diagnostic-trace-20260516.log](SolutionFolder/artifacts/logs/vsix-activation-diagnostic-trace-20260516.log) and [SolutionFolder/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd](SolutionFolder/docs/diagrams/vsix-activation-diagnostic-trace-20260516.mmd)
 
 The solution is split into host-specific runtimes plus shared infrastructure:
 
@@ -90,7 +90,7 @@ The VSIX includes a WPF tool window for bridge status and approval UX:
 
 Developer note:
 
-- the repository uses MVP/VM so the view stays passive, the viewmodel owns bindable state and commands, and the presenter coordinates workflow and service interaction; see [docs/MVPVM_OVERVIEW.md](docs/MVPVM_OVERVIEW.md) for the repo-specific pattern guide and examples
+- the repository uses MVP/VM so the view stays passive, the viewmodel owns bindable state and commands, and the presenter coordinates workflow and service interaction; see [SolutionFolder/docs/MVPVM_OVERVIEW.md](SolutionFolder/docs/MVPVM_OVERVIEW.md) for the repo-specific pattern guide and examples
 
 Current limitation:
 
@@ -142,9 +142,9 @@ host implementation
   -> workspace / file system / build (App host)
 ```
 
-For current system behavior and request flow, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-For future tool package and namespace boundary planning, see [docs/tool-package-boundary-plan.md](docs/tool-package-boundary-plan.md).
-For the detailed living technical reference and roadmap, see [docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
+For current system behavior and request flow, see [SolutionFolder/docs/ARCHITECTURE.md](SolutionFolder/docs/ARCHITECTURE.md).
+For future tool package and namespace boundary planning, see [SolutionFolder/docs/tool-package-boundary-plan.md](SolutionFolder/docs/tool-package-boundary-plan.md).
+For the detailed living technical reference and roadmap, see [SolutionFolder/docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md](SolutionFolder/docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md).
 
 Blog series:
 
@@ -542,14 +542,14 @@ The most important next work is no longer first-time runtime validation. The bes
 Use these docs together:
 
 - `README.md`: quick orientation and build/test entry point
-- `docs/ARCHITECTURE.md`: single source of truth for current system behavior
-- `docs/gated_turn-based_workflow-Codex.txt`: Bill and Codex collaboration workflow for gated execution
-- `docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
-- `docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
+- `SolutionFolder/docs/ARCHITECTURE.md`: single source of truth for current system behavior
+- `SolutionFolder/docs/gated_turn-based_workflow-Codex.txt`: Bill and Codex collaboration workflow for gated execution
+- `SolutionFolder/docs/MVPVM_OVERVIEW.md`: developer guide to the repository's MVP/VM split with concrete examples
+- `SolutionFolder/docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`: living architecture and roadmap document
 
 ## AI Workflow
 
-For AI role separation and execution rules, see [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md).
+For AI role separation and execution rules, see [SolutionFolder/docs/AI_WORKFLOW.md](SolutionFolder/docs/AI_WORKFLOW.md).
 
 See: `MCP Streaming Policy (STRICT)`
 
