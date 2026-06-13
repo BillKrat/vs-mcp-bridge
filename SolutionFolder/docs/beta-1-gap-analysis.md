@@ -4,7 +4,7 @@
 
 `vs-mcp-bridge` is close to Beta 1, but Beta 1 should not be declared complete yet.
 
-Most Beta 1 capabilities have durable implementation and validation evidence: compiled bridge tools, inventory diagnostics, regex search, BM25 search, document selection, preview-only document update, preview-only gated handoff preview, trace artifacts, approval-gated workflow guidance, deployment validation history, recovery guidance, and contributor guidance.
+Most Beta 1 capabilities have durable implementation and validation evidence: compiled bridge tools, inventory diagnostics, regex search, BM25 search, document selection, preview-only document update, preview-only gated handoff preview, trace artifacts, approval-gated workflow guidance, refreshed deployment validation, recovery guidance, and contributor guidance.
 
 The remaining Beta 1 work is not new feature work. It is a release-candidate validation and evidence pass at the intended Beta 1 commit. The stabilization handoff date mismatch is resolved: git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
 
@@ -25,7 +25,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 | preview-only gated handoff tool | complete | `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-gated-handoff-preview-real-workflow.md`, `SolutionFolder/artifacts/logs/gated-handoff-preview-tool-trace-20260517.*` | None. | trivial |
 | trace artifact workflow | complete | `SolutionFolder/docs/tool-execution-trace-workflow.md`, observed logs under `SolutionFolder/artifacts/logs/`, diagrams under `SolutionFolder/docs/diagrams/` | None for Beta 1. More examples are stretch. | trivial |
 | approval-gated workflow | complete | `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md`, `SolutionFolder/docs/session-handoffs/2026-05-16-tool-approval-validation.md` | None. | trivial |
-| deployment validation | partially complete | `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`, deployed guardrail validation handoff referenced from `AI_START.md` | Refresh deployment/smoke evidence or explicitly accept the existing deployment evidence for the Beta 1 release commit. | medium |
+| deployment validation | complete | `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-deployment-validation-refresh.md` | None. | trivial |
 | recovery guidance | complete | `SolutionFolder/docs/local-only-files.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-local-only-file-recovery-validation.md` | None for Beta 1. Additional templates are stretch only. | trivial |
 | contributor guidance | complete | `AGENTS.md`, `AI_START.md`, `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md` | None. | trivial |
 
@@ -35,7 +35,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 | --- | --- | --- | --- | --- |
 | `VsMcpBridge.Shared.Tests` passing | partially complete | Recent handoffs record passing shared tests, including `313` tests, but Beta 1 should have a release-candidate run at the intended Beta 1 commit. | Run `dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj` and record the result in a Beta 1 validation handoff. | small |
 | VSIX validation passing | partially complete | Full validation and later cleanup evidence show the VSIX build path works, but Beta 1 should have current release-candidate VSIX build/test evidence. | Run `SolutionFolder/scripts/build-vsix.ps1 -Restore` and the documented VSIX test runner, then record results. | small |
-| deployment validation passing | partially complete | Existing WebDeploy evidence is secret-safe and successful, but it predates the Beta 1 definition. Beta 1 needs a current explicit deploy/smoke validation or an accepted no-deploy exception. | Perform one approved deployment validation refresh and smoke `/` plus `/local-dev`, or document an explicit accepted exception. | medium |
+| deployment validation passing | complete | Current deployed smoke validation passed without deployment and refreshed the Beta 1 deployment evidence. | None. | trivial |
 | preview tool validation passing | partially complete | Preview document update and gated handoff preview have durable passing evidence. A final release-candidate validation should confirm both still pass at the intended Beta 1 commit. | Run shared tests plus a focused preview-tool evidence check, then record current status. | small |
 | recovery guidance validation passing | complete | `2026-05-24-local-only-file-recovery-validation.md` records a fresh-clone recovery simulation and passing checks. | None unless Beta 1 release-candidate validation changes local-only guidance. | trivial |
 
@@ -62,7 +62,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 | Preview-only gated handoff validated against real workflow use | complete | No Beta 1 gap. | trivial |
 | Trace artifact workflow guidance exists with observed artifacts | complete | No Beta 1 gap. | trivial |
 | Approval-gated workflow guidance documented and matches tool behavior | complete | No Beta 1 gap. | trivial |
-| Deployment validation has current evidence and protects secrets | partially complete | Existing evidence is good, but Beta 1 needs current release-candidate deployment evidence or an explicit accepted exception. | medium |
+| Deployment validation has current evidence and protects secrets | complete | `2026-05-24-beta-1-deployment-validation-refresh.md` records current deployed smoke passing without deployment and without rendered raw secret-shaped values. | trivial |
 | Recovery guidance has current validation evidence | complete | No Beta 1 gap. | trivial |
 | Contributor guidance identifies docs, validation, and deferred scope | complete | No Beta 1 gap. | trivial |
 | Known limitations documented without being release blockers | complete | No Beta 1 gap. | trivial |
@@ -93,18 +93,10 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 
    Effort: small.
 
-2. Beta 1 deployment validation refresh or accepted exception.
-
-   Why: Deployment validation exists and is secret-safe, but Beta 1 requires current deployment validation passing or an explicitly accepted exception.
-
-   Smallest slice: with explicit deployment approval, rerun BlogAI.Web build, perform one WebDeploy publish using the masked environment-variable credential path, smoke `https://api.global-webnet.com/` and `https://api.global-webnet.com/local-dev`, and record a handoff. If no deploy is desired for Beta 1, create a docs-only accepted-exception note that explains why existing deployment evidence is sufficient.
-
-   Effort: medium for live deploy, trivial for an accepted exception.
-
 ## Risks / Blockers
 
 - No technical blocker is visible for the docs, MCP diagnostics, preview tooling, recovery guidance, or contributor guidance.
-- Live deployment validation is the only medium-effort release gate because it requires explicit approval, correct local secret visibility, and external service smoke checks.
+- Deployment validation refresh is complete. Future deployment attempts still require explicit approval, correct local secret visibility, and external service smoke checks.
 - VSIX validation is environment-sensitive because it depends on the documented Visual Studio/MSBuild path. This is a known limitation, not a repo defect, unless the documented path fails in the expected environment.
 - The stabilization handoff date mismatch has been resolved. Future sessions should use `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md`.
 
@@ -116,11 +108,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
    - Effort: small
    - Includes: shared tests, VSIX build/tests, preview-tool validation, `git diff --check`
 
-2. Refresh deployment validation or record an explicit accepted exception.
-   - Effort: medium for live deployment; trivial for accepted exception
-   - Includes: approved WebDeploy attempt or documented rationale for accepting existing evidence
-
-3. Create a final Beta 1 declaration/checkpoint document.
+2. Create a final Beta 1 declaration/checkpoint document.
    - Effort: small
    - Includes: release commit, validation evidence links, accepted limitations, and deferred scope confirmation
 
@@ -183,17 +171,13 @@ If any future task needs one of these, classify it as post-Beta 1 unless the Bet
 
 ## Estimated Path To Beta 1
 
-The shortest path to Beta 1 is two or three small controlled slices:
+The shortest path to Beta 1 is one or two small controlled slices:
 
 1. Release-candidate validation bundle.
    - Effort: small
    - Outcome: current shared test, VSIX, preview-tool, and whitespace evidence at the intended Beta 1 commit.
 
-2. Deployment validation refresh or accepted exception.
-   - Effort: medium for live deploy; trivial for accepted exception
-   - Outcome: current Beta 1 deployment status with secret-safe evidence.
-
-3. Beta 1 declaration/checkpoint.
+2. Beta 1 declaration/checkpoint.
    - Effort: small
    - Outcome: one final source-of-truth document that says Beta 1 is complete, links evidence, lists limitations, and repeats deferred scope.
 

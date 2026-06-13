@@ -47,7 +47,7 @@ The following capabilities are included in Beta 1 and have existing repository e
 | preview-only gated handoff tool | covered by existing evidence | `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-gated-handoff-preview-real-workflow.md` |
 | trace artifact workflow | covered by existing evidence | `SolutionFolder/docs/tool-execution-trace-workflow.md`, `SolutionFolder/artifacts/logs/`, `SolutionFolder/docs/diagrams/` |
 | approval-gated workflow | covered by existing evidence | `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md`, `SolutionFolder/docs/session-handoffs/2026-05-16-tool-approval-validation.md` |
-| deployment validation | covered by older evidence; current refresh still required or exception needed | `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md` |
+| deployment validation | covered by current refresh evidence | `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-deployment-validation-refresh.md` |
 | recovery guidance | covered by existing evidence | `SolutionFolder/docs/local-only-files.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-local-only-file-recovery-validation.md` |
 | contributor guidance | covered by existing evidence | `AI_START.md`, `AGENTS.md`, `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md` |
 
@@ -125,6 +125,7 @@ Deployment validation evidence:
 
 - `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`
+- `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-deployment-validation-refresh.md`
 
 The evidence records:
 
@@ -133,8 +134,9 @@ The evidence records:
 - no printed secret values
 - successful WebDeploy validation to `https://api.global-webnet.com`
 - smoke checks for `/` and `/local-dev`
+- current Beta 1 deployed smoke refresh passing without deployment
 
-This evidence is valid historical deployment evidence. Per `SolutionFolder/docs/beta-1-gap-analysis.md`, Beta 1 still requires either a current deployment validation refresh at the release-candidate commit or an explicit accepted exception.
+This evidence now includes the current Beta 1 deployed smoke refresh. No deployment was needed because the deployed smoke passed.
 
 ### Deployed Guardrail Validation
 
@@ -251,7 +253,6 @@ Reason:
 Existing evidence is strong enough to show that most Beta 1 capabilities are implemented, bounded, and validated historically. However, the gap analysis still identifies required work before Beta 1 can be declared complete:
 
 - current release-candidate validation bundle run is not yet performed
-- current deployment validation refresh or explicit accepted exception is not yet recorded
 - final Beta 1 declaration/checkpoint is not yet created
 
 This is a narrow readiness gap, not a feature gap.
@@ -270,14 +271,7 @@ Only the remaining required items identified in `SolutionFolder/docs/beta-1-gap-
    - focused preview-tool validation via shared tests or an explicit evidence check
    - `git diff --check`
 
-2. Refresh deployment validation or record an explicit accepted exception.
-
-   Required evidence:
-
-   - approved WebDeploy validation refresh and smoke checks, or
-   - docs-only accepted exception explaining why existing deployment evidence is sufficient for Beta 1
-
-3. Create a final Beta 1 declaration/checkpoint document.
+2. Create a final Beta 1 declaration/checkpoint document.
 
    Required contents:
 
