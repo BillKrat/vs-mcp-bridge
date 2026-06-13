@@ -42,6 +42,7 @@ Use these as needed after that:
 - `SolutionFolder/docs/future-contributor-operating-expectations.md` for behavioral expectations for human, AI, and tool contributors
 - `SolutionFolder/docs/operational-observation-log-template.md` for capturing workflow friction before proposing automation or tooling refinements
 - `SolutionFolder/docs/beta-tooling-observation-policy.md` for classifying beta-environment anomalies before changing architecture, workflow, or tooling
+- `SolutionFolder/docs/beta-1-release-definition.md` for the first releasable Beta milestone scope, validation gates, and out-of-scope boundaries
 - `backlog/README.md` and `backlog/shiny-object-policy.md` for capturing new ideas without interrupting the prioritized beta-release path
 - `SolutionFolder/docs/local-only-files.md` for required ignored local files, safe templates, and secret redaction rules
 - `SolutionFolder/docs/blogai-high-resolution-corpus-interaction-research-backlog.md` for the future BlogAI research direction around evidence-localized corpus interaction and hybrid retrieval
