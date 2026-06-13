@@ -6,6 +6,7 @@ AI session entry point:
 
 - for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
 - for repository-level AI operating rules, read [AGENTS.md](AGENTS.md); task-specific workflows use lightweight `SKILL.md` files under [.agents/skills/](.agents/skills/)
+- for the current implemented, experimental, and not-implemented bridge capability boundaries, read [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md)
 - for MCP search diagnostics, use [.agents/skills/mcp-search-diagnostics/SKILL.md](.agents/skills/mcp-search-diagnostics/SKILL.md)
 - for ending or pausing an AI-assisted session cleanly, use [SolutionFolder/docs/AI_STOP.md](SolutionFolder/docs/AI_STOP.md)
 - for required local-only files, safe templates, and secret redaction rules, use [SolutionFolder/docs/local-only-files.md](SolutionFolder/docs/local-only-files.md)

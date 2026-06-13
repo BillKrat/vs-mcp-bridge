@@ -47,6 +47,7 @@ Use these as needed after that:
 - `SolutionFolder/docs/beta-1-release-decision.md` for the final Beta 1 release status, accepted limitations, deferred scope, and evidence references
 - `SolutionFolder/docs/beta-1-release-candidate-validation-bundle.md` for aggregated Beta 1 readiness evidence, recommendation, and remaining release-candidate work
 - `SolutionFolder/docs/beta-2-observation-gate.md` for preventing Beta 2 scope from forming before enough operational observations exist
+- `SolutionFolder/docs/current-bridge-capabilities.md` for the current implemented, experimental, and not-implemented bridge capability boundaries
 - `SolutionFolder/docs/observations/2026-06-13-selected-file-model-transmission-check.md` for the observation that VSIX selected files support proposal state but do not currently reach normal chat-model requests
 - `backlog/README.md` and `backlog/shiny-object-policy.md` for capturing new ideas without interrupting the prioritized beta-release path
 - `SolutionFolder/docs/local-only-files.md` for required ignored local files, safe templates, and secret redaction rules
