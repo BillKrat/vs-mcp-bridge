@@ -30,7 +30,7 @@ This bundle uses the current repository evidence at checkpoint:
 - starting HEAD: `30d8b8f Create Beta 1 gap analysis`
 - working tree expectation: clean
 
-The requested read-first handoff `SolutionFolder/docs/session-handoffs/2026-05-24-operational-stabilization-checkpoint.md` is not present in the repository. The current available stabilization handoff is `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md`, and `AI_START.md` points to that file.
+The stabilization handoff date is resolved. Git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/docs/session-handoffs/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
 
 ## 2. Capabilities Included In Beta 1
 
@@ -209,7 +209,7 @@ Additional operational limitations recorded by current evidence:
 - live VS-backed MCP validation depends on the Visual Studio Experimental Instance and `VS MCP Bridge` tool window activation
 - deployment validation depends on local WebDeploy setup and `$env:AdventuresOnTheEdgeDP` visibility in the active shell/process
 - validation evidence is durable but manually assembled across docs, logs, metadata, and diagrams
-- the requested 2026-05-24 operational stabilization checkpoint path is not present; the current repository points to the 2026-05-17 stabilization checkpoint
+- the canonical operational stabilization checkpoint is dated 2026-05-17 even though it was later moved under `SolutionFolder/` during the 2026-05-24 repository structure cleanup
 
 ## 5. Accepted Exceptions
 
@@ -252,7 +252,6 @@ Existing evidence is strong enough to show that most Beta 1 capabilities are imp
 
 - current release-candidate validation bundle run is not yet performed
 - current deployment validation refresh or explicit accepted exception is not yet recorded
-- operational stabilization handoff date mismatch is not yet resolved
 - final Beta 1 declaration/checkpoint is not yet created
 
 This is a narrow readiness gap, not a feature gap.
@@ -278,14 +277,7 @@ Only the remaining required items identified in `SolutionFolder/docs/beta-1-gap-
    - approved WebDeploy validation refresh and smoke checks, or
    - docs-only accepted exception explaining why existing deployment evidence is sufficient for Beta 1
 
-3. Resolve the operational stabilization handoff date mismatch.
-
-   Required decision:
-
-   - create a 2026-05-24 stabilization handoff, or
-   - document that `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` remains canonical
-
-4. Create a final Beta 1 declaration/checkpoint document.
+3. Create a final Beta 1 declaration/checkpoint document.
 
    Required contents:
 

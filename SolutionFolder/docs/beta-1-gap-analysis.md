@@ -6,7 +6,7 @@
 
 Most Beta 1 capabilities have durable implementation and validation evidence: compiled bridge tools, inventory diagnostics, regex search, BM25 search, document selection, preview-only document update, preview-only gated handoff preview, trace artifacts, approval-gated workflow guidance, deployment validation history, recovery guidance, and contributor guidance.
 
-The remaining Beta 1 work is not new feature work. It is a release-candidate validation and evidence pass at the intended Beta 1 commit, plus one small documentation consistency check around the missing `SolutionFolder/docs/session-handoffs/2026-05-24-operational-stabilization-checkpoint.md` reference from the current prompt. The repository currently contains `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md`, which appears to be the active stabilization handoff referenced by `AI_START.md`.
+The remaining Beta 1 work is not new feature work. It is a release-candidate validation and evidence pass at the intended Beta 1 commit. The stabilization handoff date mismatch is resolved: git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
 
 No runtime code, deployment automation, repo mutation tooling, Codex execution tooling, production auth, persistence, admin APIs, or BlogEngine.NET integration is required for Beta 1.
 
@@ -53,7 +53,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 | Criterion | Status | Gap / Smallest Slice | Effort |
 | --- | --- | --- | --- |
 | Repository is on intended release commit with clean working tree | partially complete | Current sessions start clean, but the Beta 1 release commit is not declared yet. Recheck at declaration time. | trivial |
-| `AI_START.md`, `AGENTS.md`, and architecture/workflow docs point to active guidance | partially complete | Core pointers exist. The prompt referenced a non-existent `2026-05-24-operational-stabilization-checkpoint.md`; verify whether a new pointer/file is needed or whether `2026-05-17-operational-stabilization-checkpoint.md` is canonical. | trivial |
+| `AI_START.md`, `AGENTS.md`, and architecture/workflow docs point to active guidance | complete | Core pointers exist. The stabilization handoff date mismatch has been resolved; `2026-05-17-operational-stabilization-checkpoint.md` is canonical. | trivial |
 | Compiled bridge tool behavior documented and validated | complete | No Beta 1 gap. | trivial |
 | Bridge tool inventory diagnostics validated and read-only | complete | No Beta 1 gap. | trivial |
 | Regex and BM25 validated as explicit-input, read-only MCP tools | complete | No Beta 1 gap. | trivial |
@@ -101,20 +101,12 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 
    Effort: medium for live deploy, trivial for an accepted exception.
 
-3. Stabilization handoff pointer consistency check.
-
-   Why: The current prompt names `SolutionFolder/docs/session-handoffs/2026-05-24-operational-stabilization-checkpoint.md`, but the repository contains `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` and `AI_START.md` points to the 2026-05-17 file.
-
-   Smallest slice: decide whether to create a 2026-05-24 stabilization handoff, rename nothing and update references, or document that the 2026-05-17 handoff remains canonical.
-
-   Effort: trivial.
-
 ## Risks / Blockers
 
 - No technical blocker is visible for the docs, MCP diagnostics, preview tooling, recovery guidance, or contributor guidance.
 - Live deployment validation is the only medium-effort release gate because it requires explicit approval, correct local secret visibility, and external service smoke checks.
 - VSIX validation is environment-sensitive because it depends on the documented Visual Studio/MSBuild path. This is a known limitation, not a repo defect, unless the documented path fails in the expected environment.
-- The missing 2026-05-24 operational stabilization handoff path is a documentation consistency risk. It does not block runtime readiness, but it should be resolved before declaring Beta 1 so future sessions do not chase a non-existent file.
+- The stabilization handoff date mismatch has been resolved. Future sessions should use `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md`.
 
 ## Prioritized Beta 1 Backlog
 
@@ -128,11 +120,7 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
    - Effort: medium for live deployment; trivial for accepted exception
    - Includes: approved WebDeploy attempt or documented rationale for accepting existing evidence
 
-3. Resolve the operational stabilization handoff date mismatch.
-   - Effort: trivial
-   - Includes: docs-only clarification of whether the 2026-05-17 checkpoint remains canonical
-
-4. Create a final Beta 1 declaration/checkpoint document.
+3. Create a final Beta 1 declaration/checkpoint document.
    - Effort: small
    - Includes: release commit, validation evidence links, accepted limitations, and deferred scope confirmation
 
@@ -195,21 +183,17 @@ If any future task needs one of these, classify it as post-Beta 1 unless the Bet
 
 ## Estimated Path To Beta 1
 
-The shortest path to Beta 1 is three or four small controlled slices:
+The shortest path to Beta 1 is two or three small controlled slices:
 
-1. Docs-only stabilization pointer cleanup.
-   - Effort: trivial
-   - Outcome: no missing handoff path in the release trail.
-
-2. Release-candidate validation bundle.
+1. Release-candidate validation bundle.
    - Effort: small
    - Outcome: current shared test, VSIX, preview-tool, and whitespace evidence at the intended Beta 1 commit.
 
-3. Deployment validation refresh or accepted exception.
+2. Deployment validation refresh or accepted exception.
    - Effort: medium for live deploy; trivial for accepted exception
    - Outcome: current Beta 1 deployment status with secret-safe evidence.
 
-4. Beta 1 declaration/checkpoint.
+3. Beta 1 declaration/checkpoint.
    - Effort: small
    - Outcome: one final source-of-truth document that says Beta 1 is complete, links evidence, lists limitations, and repeats deferred scope.
 

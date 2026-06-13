@@ -14,6 +14,10 @@ This is documentation only. It does not add runtime code, tooling implementation
 - Working tree expectation: clean
 - Deployment performed by this checkpoint: no
 
+## Date Clarification
+
+This handoff remains the canonical operational stabilization checkpoint for the 2026-05-17 stabilization state. Git history shows it was later moved under `SolutionFolder/docs/session-handoffs/` during the 2026-05-24 repository structure cleanup, but the handoff date was not changed by that move.
+
 ## Stable
 
 The following areas are stable enough to use as current operating assumptions:
