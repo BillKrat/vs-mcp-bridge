@@ -42,6 +42,7 @@ Use these as needed after that:
 - `SolutionFolder/docs/future-contributor-operating-expectations.md` for behavioral expectations for human, AI, and tool contributors
 - `SolutionFolder/docs/operational-observation-log-template.md` for capturing workflow friction before proposing automation or tooling refinements
 - `SolutionFolder/docs/beta-tooling-observation-policy.md` for classifying beta-environment anomalies before changing architecture, workflow, or tooling
+- `SolutionFolder/docs/beta-1-release-summary.md` for a concise human-readable summary of the Beta 1 release, validation, limitations, and next-step posture
 - `SolutionFolder/docs/beta-1-release-definition.md` for the first releasable Beta milestone scope, validation gates, and out-of-scope boundaries
 - `SolutionFolder/docs/beta-1-release-decision.md` for the final Beta 1 release status, accepted limitations, deferred scope, and evidence references
 - `SolutionFolder/docs/beta-1-release-candidate-validation-bundle.md` for aggregated Beta 1 readiness evidence, recommendation, and remaining release-candidate work
