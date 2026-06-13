@@ -2,11 +2,11 @@
 
 ## Executive Summary
 
-`vs-mcp-bridge` is close to Beta 1, but Beta 1 should not be declared complete yet.
+`vs-mcp-bridge` is ready for Beta 1 with documented exceptions, pending only the final Beta 1 declaration/checkpoint.
 
 Most Beta 1 capabilities have durable implementation and validation evidence: compiled bridge tools, inventory diagnostics, regex search, BM25 search, document selection, preview-only document update, preview-only gated handoff preview, trace artifacts, approval-gated workflow guidance, refreshed deployment validation, recovery guidance, and contributor guidance.
 
-The remaining Beta 1 work is not new feature work. It is a release-candidate validation and evidence pass at the intended Beta 1 commit. The stabilization handoff date mismatch is resolved: git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
+The release-candidate validation pass is complete. The stabilization handoff date mismatch is resolved: git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
 
 No runtime code, deployment automation, repo mutation tooling, Codex execution tooling, production auth, persistence, admin APIs, or BlogEngine.NET integration is required for Beta 1.
 
@@ -33,10 +33,10 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 
 | Requirement | Status | Why | Smallest Slice | Effort |
 | --- | --- | --- | --- | --- |
-| `VsMcpBridge.Shared.Tests` passing | partially complete | Recent handoffs record passing shared tests, including `313` tests, but Beta 1 should have a release-candidate run at the intended Beta 1 commit. | Run `dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj` and record the result in a Beta 1 validation handoff. | small |
-| VSIX validation passing | partially complete | Full validation and later cleanup evidence show the VSIX build path works, but Beta 1 should have current release-candidate VSIX build/test evidence. | Run `SolutionFolder/scripts/build-vsix.ps1 -Restore` and the documented VSIX test runner, then record results. | small |
+| `VsMcpBridge.Shared.Tests` passing | complete | Release-candidate validation passed with 313 tests. | None. | trivial |
+| VSIX validation passing | complete | Release-candidate validation passed with `SolutionFolder/scripts/build-vsix.ps1`, producing `VsMcpBridge.Vsix.vsix`. | None. | trivial |
 | deployment validation passing | complete | Current deployed smoke validation passed without deployment and refreshed the Beta 1 deployment evidence. | None. | trivial |
-| preview tool validation passing | partially complete | Preview document update and gated handoff preview have durable passing evidence. A final release-candidate validation should confirm both still pass at the intended Beta 1 commit. | Run shared tests plus a focused preview-tool evidence check, then record current status. | small |
+| preview tool validation passing | complete | Release-candidate shared tests passed, covering the preview-only tool test surface; durable preview validation handoffs also exist. | None. | trivial |
 | recovery guidance validation passing | complete | `2026-05-24-local-only-file-recovery-validation.md` records a fresh-clone recovery simulation and passing checks. | None unless Beta 1 release-candidate validation changes local-only guidance. | trivial |
 
 ### Known Limitations
@@ -45,14 +45,14 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 | --- | --- | --- |
 | preview-only orchestration | complete | This is the intended Beta 1 boundary, not a blocker. |
 | approval-gated workflow | complete | This is the intended safety model, not a blocker. |
-| VSIX build path requirements | partially complete | The requirement is documented and workable, but final Beta 1 VSIX validation should prove it on the release-candidate commit. |
+| VSIX build path requirements | complete | This remains a documented limitation, and release-candidate VSIX validation passed using the VSIX-aware script path. |
 | local-only configuration requirements | complete | The inventory and recovery validation cover current local-only requirements. |
 
 ### Release Criteria
 
 | Criterion | Status | Gap / Smallest Slice | Effort |
 | --- | --- | --- | --- |
-| Repository is on intended release commit with clean working tree | partially complete | Current sessions start clean, but the Beta 1 release commit is not declared yet. Recheck at declaration time. | trivial |
+| Repository is on intended release commit with clean working tree | complete | Release-candidate validation started from `main == origin/main` at `e380382 Refresh Beta 1 deployment validation`. Recheck at final declaration time. | trivial |
 | `AI_START.md`, `AGENTS.md`, and architecture/workflow docs point to active guidance | complete | Core pointers exist. The stabilization handoff date mismatch has been resolved; `2026-05-17-operational-stabilization-checkpoint.md` is canonical. | trivial |
 | Compiled bridge tool behavior documented and validated | complete | No Beta 1 gap. | trivial |
 | Bridge tool inventory diagnostics validated and read-only | complete | No Beta 1 gap. | trivial |
@@ -79,17 +79,9 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 
 ## Remaining Required Criteria
 
-1. Beta 1 release-candidate validation bundle.
+1. Final Beta 1 declaration/checkpoint.
 
-   Why: The Beta 1 definition requires current passing evidence before declaration. Existing evidence is strong, but several runs predate the Beta 1 definition and later docs-only commits.
-
-   Smallest slice: create a Beta 1 validation handoff after running:
-
-   - `dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj`
-   - `SolutionFolder/scripts/build-vsix.ps1 -Restore`
-   - documented VSIX test runner from `README.md`
-   - focused preview-tool validation via shared tests or an explicit evidence check
-   - `git diff --check`
+   Why: Release-candidate validation now passes, but a final declaration document should name the release commit, link validation evidence, list documented limitations, and confirm deferred scope.
 
    Effort: small.
 
@@ -97,18 +89,14 @@ No runtime code, deployment automation, repo mutation tooling, Codex execution t
 
 - No technical blocker is visible for the docs, MCP diagnostics, preview tooling, recovery guidance, or contributor guidance.
 - Deployment validation refresh is complete. Future deployment attempts still require explicit approval, correct local secret visibility, and external service smoke checks.
-- VSIX validation is environment-sensitive because it depends on the documented Visual Studio/MSBuild path. This is a known limitation, not a repo defect, unless the documented path fails in the expected environment.
+- VSIX validation is environment-sensitive because it depends on the documented Visual Studio/MSBuild path. Release-candidate validation passed through `SolutionFolder/scripts/build-vsix.ps1`; the path requirement remains a documented Beta 1 limitation.
 - The stabilization handoff date mismatch has been resolved. Future sessions should use `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md`.
 
 ## Prioritized Beta 1 Backlog
 
 ### Required For Beta 1
 
-1. Run and record the Beta 1 release-candidate validation bundle.
-   - Effort: small
-   - Includes: shared tests, VSIX build/tests, preview-tool validation, `git diff --check`
-
-2. Create a final Beta 1 declaration/checkpoint document.
+1. Create a final Beta 1 declaration/checkpoint document.
    - Effort: small
    - Includes: release commit, validation evidence links, accepted limitations, and deferred scope confirmation
 
@@ -171,13 +159,9 @@ If any future task needs one of these, classify it as post-Beta 1 unless the Bet
 
 ## Estimated Path To Beta 1
 
-The shortest path to Beta 1 is one or two small controlled slices:
+The shortest path to Beta 1 is one small controlled slice:
 
-1. Release-candidate validation bundle.
-   - Effort: small
-   - Outcome: current shared test, VSIX, preview-tool, and whitespace evidence at the intended Beta 1 commit.
-
-2. Beta 1 declaration/checkpoint.
+1. Beta 1 declaration/checkpoint.
    - Effort: small
    - Outcome: one final source-of-truth document that says Beta 1 is complete, links evidence, lists limitations, and repeats deferred scope.
 

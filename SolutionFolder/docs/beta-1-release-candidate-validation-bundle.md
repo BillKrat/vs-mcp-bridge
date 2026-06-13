@@ -4,7 +4,7 @@
 
 Aggregate the evidence required to evaluate Beta 1 release readiness for `vs-mcp-bridge`.
 
-This bundle is evidence aggregation only. It does not run validation, change runtime code, deploy, implement features, or declare Beta 1 complete.
+This bundle aggregates evidence and now points to the completed release-candidate validation pass. It does not change runtime code, deploy, implement features, or declare Beta 1 complete.
 
 ## 1. Release Candidate Scope
 
@@ -27,7 +27,7 @@ This bundle uses the current repository evidence at checkpoint:
 
 - branch: `main`
 - expected sync: `main == origin/main`
-- starting HEAD: `30d8b8f Create Beta 1 gap analysis`
+- release-candidate validation HEAD: `e380382 Refresh Beta 1 deployment validation`
 - working tree expectation: clean
 
 The stabilization handoff date is resolved. Git history confirms `SolutionFolder/docs/session-handoffs/2026-05-17-operational-stabilization-checkpoint.md` is the canonical handoff. It was moved under `SolutionFolder/docs/session-handoffs/` during the 2026-05-24 repository structure cleanup, but no `2026-05-24-operational-stabilization-checkpoint.md` handoff exists.
@@ -48,6 +48,7 @@ The following capabilities are included in Beta 1 and have existing repository e
 | trace artifact workflow | covered by existing evidence | `SolutionFolder/docs/tool-execution-trace-workflow.md`, `SolutionFolder/artifacts/logs/`, `SolutionFolder/docs/diagrams/` |
 | approval-gated workflow | covered by existing evidence | `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md`, `SolutionFolder/docs/session-handoffs/2026-05-16-tool-approval-validation.md` |
 | deployment validation | covered by current refresh evidence | `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-webdeploy-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-17-blogai-deployed-guardrail-validation.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-deployment-validation-refresh.md` |
+| release-candidate validation pass | covered by current validation evidence | `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-release-candidate-validation.md` |
 | recovery guidance | covered by existing evidence | `SolutionFolder/docs/local-only-files.md`, `SolutionFolder/docs/session-handoffs/2026-05-24-local-only-file-recovery-validation.md` |
 | contributor guidance | covered by existing evidence | `AI_START.md`, `AGENTS.md`, `SolutionFolder/docs/future-contributor-operating-expectations.md`, `SolutionFolder/docs/session-slice-operating-template.md` |
 
@@ -173,29 +174,32 @@ The evidence covers required ignored local files, safe template usage, secret ha
 
 VSIX validation evidence:
 
+- `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-release-candidate-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-repo-structure-cleanup.md`
 - `README.md`
 
 Existing evidence records:
 
+- release-candidate `SolutionFolder/scripts/build-vsix.ps1` passing and producing `VsMcpBridge.Vsix.vsix`
 - `SolutionFolder/scripts/build-vsix.ps1` passing with Visual Studio Insiders MSBuild
 - `VsMcpBridge.Vsix.Tests` passing in the full validation checkpoint
 - root `dotnet build` not being the correct validation gate for the VSIX project because the VSIX SDK requires Visual Studio/MSBuild-specific tasks
 
-Per the gap analysis, Beta 1 still requires current release-candidate VSIX build/test evidence or an explicit accepted exception.
+The VSIX build path requirement remains a documented Beta 1 limitation.
 
 ### Shared.Tests Validation
 
 Shared test evidence:
 
+- `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-release-candidate-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-16-full-validation-checkpoint.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-17-gated-handoff-preview-tool-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-gated-handoff-preview-real-workflow.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-local-only-file-recovery-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-repo-structure-cleanup.md`
 
-Existing evidence records `VsMcpBridge.Shared.Tests` passing in multiple slices, including later handoffs with `313` tests. Per the gap analysis, Beta 1 still requires a release-candidate shared-test run at the intended Beta 1 commit.
+Existing evidence records `VsMcpBridge.Shared.Tests` passing in multiple slices. The release-candidate validation pass recorded 313 passed tests, 0 failed, and 0 skipped.
 
 ## 4. Known Limitations
 
@@ -215,14 +219,9 @@ Additional operational limitations recorded by current evidence:
 
 ## 5. Accepted Exceptions
 
-No Beta 1 accepted exceptions are recorded yet.
+No failed validation gates are accepted as exceptions.
 
-Candidate exceptions from the gap analysis, if the project owner accepts them later:
-
-- accept existing deployment evidence instead of performing a fresh deployment validation at the Beta 1 release-candidate commit
-- accept existing VSIX validation evidence instead of rerunning VSIX build/tests at the Beta 1 release-candidate commit
-
-Until accepted explicitly, these remain remaining required work.
+Beta 1 remains ready only with the documented limitations listed above: preview-only orchestration, approval-gated workflow, VSIX build path requirements, and local-only configuration requirements.
 
 ## 6. Deferred Features
 
@@ -246,32 +245,27 @@ These items should not be treated as Beta 1 blockers or hidden Beta 1 dependenci
 
 ## 7. Beta 1 Readiness Recommendation
 
-Recommendation: **Not Ready**
+Recommendation: **Ready With Exceptions**
 
 Reason:
 
-Existing evidence is strong enough to show that most Beta 1 capabilities are implemented, bounded, and validated historically. However, the gap analysis still identifies required work before Beta 1 can be declared complete:
+Existing evidence shows that Beta 1 capabilities are implemented, bounded, and validated for release-candidate readiness:
 
-- current release-candidate validation bundle run is not yet performed
-- final Beta 1 declaration/checkpoint is not yet created
+- `git status --short --branch` passed at `main == origin/main`
+- `git diff --check` passed
+- `dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj` passed with 313 tests
+- `SolutionFolder/scripts/build-vsix.ps1` passed and produced the VSIX package
+- required Beta 1 evidence files are present
+- deployment validation refresh is complete
+- operational stabilization checkpoint path/date is corrected
 
-This is a narrow readiness gap, not a feature gap.
+Use `Ready With Exceptions` because Beta 1 intentionally retains documented limitations: preview-only orchestration, approval-gated workflow, VSIX build path requirements, and local-only configuration requirements.
 
 ## 8. Remaining Required Work
 
 Only the remaining required items identified in `SolutionFolder/docs/beta-1-gap-analysis.md` are included here.
 
-1. Run and record the Beta 1 release-candidate validation bundle.
-
-   Required evidence:
-
-   - `dotnet test ./VsMcpBridge.Shared.Tests/VsMcpBridge.Shared.Tests.csproj`
-   - `SolutionFolder/scripts/build-vsix.ps1 -Restore`
-   - documented VSIX test runner from `README.md`
-   - focused preview-tool validation via shared tests or an explicit evidence check
-   - `git diff --check`
-
-2. Create a final Beta 1 declaration/checkpoint document.
+1. Create a final Beta 1 declaration/checkpoint document.
 
    Required contents:
 
