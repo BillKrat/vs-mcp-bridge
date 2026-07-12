@@ -1,70 +1,43 @@
-# Repository Agent Guide
+# Workspace Instructions
 
-## Purpose
+## Skill Routing
 
-`vs-mcp-bridge` is a local MCP integration that exposes selected Visual Studio and workspace state to AI tooling through a conservative host bridge.
+- When the user message matches an installed skill name or a known
+  skill trigger phrase, follow that skill's workflow before improvising
+  an ad hoc one.
+- For session-start requests such as "let's code," "let's get
+  started," "pick up where we left off," or "where were we," route to
+  `lets-code`.
+- For skill-discovery requests such as "help," "what skills are
+  available," "list skills," or "which skill should I use," route to
+  `help-skills`.
+- For new context-bootstrap requests such as "initialize context," "set
+  up project context," "bootstrap context," or "prepare this repo for
+  lets-code/update-context," route to `initialize-context`.
+- For session-end requests such as "update context," "save the
+  session," "checkpoint this," or "wrap up," route to
+  `update-context`.
+- For skill-backup requests such as "sync skills," "backup skills," or
+  "restore skills," route to `sync-skills`.
 
-Use this file as the high-level operating guide for AI agents. It is intentionally small. Follow links to the durable source-of-truth documents instead of expanding this file with copied architecture, runbook, or handoff prose.
+## Shared Skill Behavior
 
-## Source Of Truth
+- Follow the standardized repo-context workflow used by the skills:
+  prefer `.project-context/`, fall back to legacy root-level
+  `INDEX.md` + `Sessions/` + `Topics/`, and only use lightweight git
+  orientation when no context structure exists.
+- Keep skills repo-agnostic. Do not hardcode machine-specific paths,
+  repo names, GitHub owners, or one project's folder layout unless the
+  task explicitly requires it.
+- For skill backup and restore, derive the namespace from the directory
+  that owns `.claude/skills/` rather than from a fixed path.
+- When instructions and a skill cover the same behavior, let the skill
+  define the detailed procedure and keep the instruction file limited to
+  routing and consistency.
 
-Read these first when the task needs repository context:
+## Reuse Standard
 
-1. `AI_START.md` for session bootstrap and resume routing.
-2. `SolutionFolder/docs/ARCHITECTURE.md` for current system behavior. This is the primary architecture source of truth.
-3. `SolutionFolder/docs/AI_WORKFLOW.md` for AI role boundaries and execution expectations.
-4. The newest relevant file under `SolutionFolder/docs/session-handoffs/` when resuming or changing an established slice.
-
-Use targeted docs as needed:
-
-- `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging, diagnostics, activation, and triage.
-- `SolutionFolder/docs/tool-execution-trace-workflow.md` for compiled bridge tool execution evidence.
-- `SolutionFolder/docs/MVPVM_OVERVIEW.md` for shared WPF presenter/viewmodel boundaries.
-- `SolutionFolder/docs/blogs/README.md` for blog source-of-truth and publishing review workflows.
-- `SolutionFolder/docs/gated_turn-based_workflow-Codex.txt` for gated collaboration workflow expectations.
-
-## Operating Rules
-
-- Preserve the architecture described in `SolutionFolder/docs/ARCHITECTURE.md`; update that file when current system behavior changes.
-- Keep MCP stdio clean. Route diagnostics through approved UI, file, Debug, or StdErr channels.
-- Preserve the anti-black-box standard: important workflows should be runnable end to end, captured as correlated evidence, and diagrammable from observed logs.
-- New or changed boundary-crossing code should preserve request/operation correlation, structured success/failure results, elapsed timing where useful, and redaction before durable logs or audit metadata.
-- Keep vertical slices incremental. Do not introduce broad framework, transport, auth, sandboxing, persistence, or UI redesign work inside unrelated slices.
-- Keep proposal mutation safety intact: AI tools suggest or propose; validated approval/apply flows mutate.
-- Preserve `BridgeToolExecutor` as the shared bridge tool execution, policy, approval, redaction, and audit boundary.
-- Treat MCP repository mutation tools as future threshold work only. See `SolutionFolder/docs/mcp-controlled-mutation-threshold.md`; current MCP search/diagnostic tools must remain read-only and explicit-input.
-- Treat MEF bridge tool support as discovery-only unless a future explicit design slice changes that.
-- During MCP/tooling triage, call `bridge_get_tool_inventory` early when available. It is a safe read-only MCP diagnostic that returns deterministic bridge tool manifest metadata, currently including compiled tools such as `bridge.bm25TextSearch` and `bridge.regexTextSearch`, without executing bridge tools.
-- Use `bridge_select_repo_documents` only for deterministic repo-root-relative metadata selection before explicit-input search workflows. It does not search content, rank relevance, mutate files, or replace caller review of selected documents.
-- For MCP search diagnostics, use `bridge_regex_text_search` for exact/regex/structural searches and `bridge_bm25_text_search` for ranked relevance over explicit caller-provided text. These tools do not crawl files, read paths, or mutate state; they execute through `BridgeToolExecutor`. If MCP search is unavailable, deterministic repo search such as `rg` is acceptable, but record which path was used.
-
-## Validation Expectations
-
-Choose validation by blast radius:
-
-- Documentation-only changes: run `git diff --check`.
-- Shared-layer logic changes: run `dotnet test .\VsMcpBridge.Shared.Tests\VsMcpBridge.Shared.Tests.csproj`.
-- VSIX changes: use `.\scripts\build-vsix.ps1 -Restore` and the documented VSIX test runner from `README.md`.
-- Runtime workflow changes: capture durable evidence under the established `SolutionFolder/artifacts/logs/`, `SolutionFolder/docs/diagrams/`, and handoff patterns.
-
-## Git And Codex Rules
-
-- Check branch and working tree before edits.
-- Do not revert unrelated user changes.
-- Prefer terminal `git` commands for repository operations.
-- Avoid Codex Desktop Git/GitHub UI completion flows.
-- Commit messages should describe the completed slice.
-
-## Skills
-
-Task-oriented agent skills live under `.agents/skills/`.
-
-Use them for progressive disclosure:
-
-- `.agents/skills/mcp-validation/SKILL.md`
-- `.agents/skills/vsix-validation/SKILL.md`
-- `.agents/skills/trace-artifact-workflow/SKILL.md`
-- `.agents/skills/architecture-handoff/SKILL.md`
-- `.agents/skills/blog-publishing-review/SKILL.md`
-- `.agents/skills/mcp-search-diagnostics/SKILL.md`
-- `.agents/skills/security-seam-development/SKILL.md`
+- Changes in this repo should stay reusable across `ai-skills`,
+  `architecture-resetta-stone`, `BlogAI`, and `vs-ms-bridge`.
+- Prefer updating the shared convention over adding per-repo special
+  cases.
