@@ -1,0 +1,23 @@
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "D1FF43A1-DA9F-4359-B84C-BFB81443938C",
+  "title": "What Is AI? A Grounded Definition From NIST, RDD, and Compound AI Systems Research",
+  "description": "A source-cited answer to \"what is AI\" — NIST's AI RMF definition, Responsibility-Driven Design's confederation concept, and BAIR's Compound AI Systems research, applied to how VS MCP Bridge actually structures Model, Agent, Tool, Retrieval, Memory, and Security as a confederation rather than one component.",
+  "author": "AI Systems Author",
+  "slug": "what-is-ai-a-grounded-definition",
+  "isPublished": false,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "Artificial Intelligence",
+    "NIST AI RMF",
+    "Responsibility-Driven Design",
+    "Compound AI Systems",
+    "Architecture",
+    "Definitions",
+    "AI Assisted Development"
+  ]
+}

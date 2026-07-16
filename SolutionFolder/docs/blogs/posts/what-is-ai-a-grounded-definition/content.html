@@ -1,0 +1,86 @@
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/architecture-rosetta-stone/blob/main/Standards/glossary.md" target="_blank">architecture-rosetta-stone/Standards/glossary.md</a> (AI and RDD entries)<br />
+<strong>Status:</strong> Repo-drafted 2026-07-16. This post is not yet published to BlogEngine; it is captured here as canonical source ahead of a future publish pass, following the same repo-is-source-of-truth workflow described in <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/blogs/README.md" target="_blank">SolutionFolder/docs/blogs/README.md</a>.</p>
+
+<h1>What Is AI? A Grounded Definition</h1>
+<h2>Why "AI" Is A Confederation, Not A Component</h2>
+
+<p>"What is AI?" sounds like a warm-up question. In practice it is the question that stalls the most AI-assisted development work, because most answers are either marketing language or a shrug. This post answers it the same way the rest of this project's documentation works: cite a primary source, don't recite recalled or assumed knowledge, and label reasoning that goes beyond the source as reasoning.</p>
+
+<h3>The Definition, From The Source</h3>
+
+<p>The U.S. National Institute of Standards and Technology defines an AI system in its AI Risk Management Framework (AI RMF 1.0, January 2023) as:</p>
+
+<blockquote>"An engineered or machine-based system that can, for a given set of objectives, generate outputs such as predictions, recommendations, or decisions influencing real or virtual environments. AI systems are designed to operate with varying levels of autonomy."</blockquote>
+
+<p>That wording is itself adapted from the OECD's 2019 Recommendation on AI and ISO/IEC 22989:2022 — NIST cites both. It is a public-domain U.S. government publication (17 U.S.C. &sect;105), so it can be quoted directly rather than paraphrased.</p>
+
+<h3>What Actually Distinguishes AI From Traditional Software</h3>
+
+<p>NIST's AI RMF Appendix B, "How AI Risks Differ from Traditional Software Risks," makes the practical distinction: traditional software's behavior comes from logic a person wrote. An AI system's core reasoning comes substantially from patterns learned from training data instead. Every AI-specific risk NIST lists traces back to that one fact:</p>
+
+<ul>
+  <li>Behavior can shift when training data shifts &mdash; drift &mdash; with no code change.</li>
+  <li>Large-scale trained models exhibit emergent properties whose failure modes are harder to predict than an ordinary bug.</li>
+  <li>AI systems are not subject to the same controls as traditional code development, which makes them harder to test in the deterministic way conventional software is tested.</li>
+</ul>
+
+<p>That is the real reason AI-assisted tools need different guardrails than a normal library dependency &mdash; not because they are more powerful, but because their core logic was not written, it was learned.</p>
+
+<h3>Why "AI" Isn't One Component</h3>
+
+<p>Two unrelated sources converge on the same conclusion from opposite directions.</p>
+
+<p>Responsibility-Driven Design (Wirfs-Brock &amp; McKean, <em>Object Design: Roles, Responsibilities, and Collaborations</em>, Addison-Wesley 2002) describes an "Object Organization" or confederation: a group of objects, none individually responsible for the whole outcome, that jointly serve a purpose no single member could deliver alone (p.17), sometimes represented outward by one "gatekeeper" object. That is general object-oriented design theory, written in 2002, with nothing to do with machine learning.</p>
+
+<p>BAIR's 2024 research post, "The Shift from Models to Compound AI Systems," makes the identical argument specifically about AI: state-of-the-art results increasingly come from systems with multiple interacting components &mdash; models, retrievers, tools, memory stores &mdash; rather than one monolithic model, because a single model cannot be made reliable, grounded, stateful, and safe all at once.</p>
+
+<p>Sixty years and a completely different field apart, and both land on the same design conclusion: capability comes from the confederation, not from any one member of it.</p>
+
+<h3>Applied To VS MCP Bridge</h3>
+
+<p>That confederation view maps directly onto how this project already separates concerns. No single piece "is" the AI system &mdash; each one covers a gap the model alone cannot:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Piece</th>
+      <th>What Gap It Covers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>The only piece whose behavior is genuinely learned rather than coded</td>
+    </tr>
+    <tr>
+      <td>Agent / orchestration</td>
+      <td>Gives the confederation direction &mdash; goal decomposition, step sequencing</td>
+    </tr>
+    <tr>
+      <td>Tool</td>
+      <td>Deterministic execution the model cannot do reliably by itself</td>
+    </tr>
+    <tr>
+      <td>Retrieval</td>
+      <td>Grounds the model in facts outside its training data &mdash; the direct answer to NIST's stale/detached-data risk</td>
+    </tr>
+    <tr>
+      <td>Memory</td>
+      <td>Persistence the model has none of on its own</td>
+    </tr>
+    <tr>
+      <td>Security / approval boundary</td>
+      <td>Bounds a component that cannot fully self-police its own outputs</td>
+    </tr>
+    <tr>
+      <td>Diagnostics / observability</td>
+      <td>The direct answer to NIST's "increased opacity" risk</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This is the same list of boundaries described in the companion post on chat sessions, models, and agents &mdash; MCP server over stdio, the named-pipe boundary into Visual Studio, proposal approval, <code>BridgeToolExecutor</code> &mdash; just named against an external, citable definition of AI instead of project-local vocabulary alone. The boundaries were not invented to be cautious; they exist because no single model call can be reliable, grounded, stateful, and safe at the same time. That is a documented property of how these systems work, not a house style choice.</p>
+
+<h3>Takeaway</h3>
+
+<p>An AI system, per NIST, is an engineered system that generates outputs like predictions, recommendations, or decisions with varying autonomy. What makes it different from traditional software is that its core logic was learned from data, not written by a person &mdash; which is exactly why it drifts, behaves unpredictably at scale, and resists deterministic testing. And because no single learned component can be made reliable, grounded, stateful, and safe all at once, real AI systems are confederations of narrower pieces, each covering a gap the others cannot. That is not a project-specific opinion; it is where a 2002 design theory book and 2024 systems research converge, applied here to how VS MCP Bridge is actually built.</p>
