@@ -1,0 +1,23 @@
+{
+  "blogId": "27604F05-86AD-47EF-9E05-950BB762570C",
+  "postId": "8DC75D0E-314A-4130-82DA-2765A2B4D752",
+  "title": "Understanding the Model Node: What It Actually Does (and Doesn't Do)",
+  "description": "A concrete walkthrough of what happens when you upload a document and query it — chunking, embedding, vector search, context assembly, generation — and why the Model itself does far less of that than it feels like from the outside.",
+  "author": "AI Systems Author",
+  "slug": "understanding-the-model-node-what-it-actually-does",
+  "isPublished": false,
+  "allowComments": true,
+  "categories": [
+    "AI Systems Author",
+    "MCP Bridge"
+  ],
+  "tags": [
+    "Artificial Intelligence",
+    "Models",
+    "RAG",
+    "Retrieval",
+    "Context Window",
+    "Architecture",
+    "AI Assisted Development"
+  ]
+}

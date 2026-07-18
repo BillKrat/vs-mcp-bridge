@@ -1,0 +1,87 @@
+<p><strong>Source of Truth:</strong> <a href="https://github.com/BillKrat/architecture-rosetta-stone/blob/main/Topics/rosetta-stone-ai-node-definitions.md" target="_blank">architecture-rosetta-stone/Topics/rosetta-stone-ai-node-definitions.md</a> (Model section, Q&amp;A log)<br />
+<strong>Status:</strong> Repo-drafted 2026-07-17, captured from a live Q&amp;A session. Companion piece to <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/blogs/posts/what-is-ai-a-grounded-definition/content.html" target="_blank">What Is AI? A Grounded Definition</a> and <a href="https://github.com/BillKrat/vs-mcp-bridge/blob/main/SolutionFolder/docs/blogs/posts/understanding-ai-chat-sessions-models-and-agents/content.html" target="_blank">Understanding AI Chat Sessions, Models, and Agents</a>. Not yet published to BlogEngine.</p>
+
+<h1>Understanding the Model Node</h1>
+<h2>What It Actually Does (and Doesn't Do)</h2>
+
+<p>Here is a natural, reasonable mental model of "chat with your document": you upload a file, the model reads it, then you ask questions and the model answers from what it read.</p>
+
+<p>Almost none of that is what actually happens. Walking through it concretely is the fastest way to see how much less the Model itself is doing than it feels like from the outside &mdash; and why that gap is exactly why systems like this separate Model from Retrieval, Memory, and Agent instead of treating "the AI" as one thing.</p>
+
+<h3>What Happens When You Upload a Document</h3>
+
+<p>Nothing involving the Model. Specifically, in order:</p>
+
+<ol>
+  <li>If the file is a binary (PDF, .docx), its text gets extracted first &mdash; a parsing step, not a Model step.</li>
+  <li>The extracted text gets <strong>chunked</strong> &mdash; split into paragraphs or fixed-size pieces.</li>
+  <li>Each chunk gets converted into a vector (an <strong>embedding</strong>). This step does involve a trained neural network doing inference &mdash; but typically a separate, smaller, specialized embedding model, not the same large generative model you chat with.</li>
+  <li>Those chunk-vectors go into a vector store. The original chunk text is also kept somewhere retrievable.</li>
+</ol>
+
+<p>At the end of that sequence, the Model has done nothing. It hasn't seen the document. It doesn't know it exists.</p>
+
+<h3>What Happens When You Ask a Question</h3>
+
+<ol>
+  <li>Your query gets embedded into a vector too (the same embedding-model step as above).</li>
+  <li>That query vector gets compared against the stored chunk-vectors &mdash; a similarity search. This is math run against a precomputed index. No large model is involved in this step at all.</li>
+  <li>The top-matching chunks come back out as <strong>text</strong> &mdash; the vectors were only ever the search mechanism.</li>
+  <li>Your query, the retrieved chunks, and any system instructions get assembled into one prompt.</li>
+  <li>Only now does the Model do anything: generate a response from whatever text just landed in its context window.</li>
+</ol>
+
+<p>This is the standard retrieval-augmented generation pattern (Lewis et al., 2020). It's also exactly the pattern challenged by <a href="https://www.global-webnet.com" target="_blank">recent Direct Corpus Interaction (DCI) research</a>, which argues that pre-chunking a corpus into a fixed top-k candidate set can bottleneck a capable agent that could instead search and read the corpus directly. Different proposed architecture, same underlying point: retrieval and generation are separable concerns, not one blended "the AI did it."</p>
+
+<h3>Two Steps That Look Alike But Aren't</h3>
+
+<p>The similarity search (step 2 above) and the Model's generation step feel similar from outside &mdash; both take an input and produce a relevant-looking output. Mechanically they're different categories of work:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Similarity Search</th>
+      <th>Model Generation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>What it operates on</td>
+      <td>A precomputed, stored vector index</td>
+      <td>Whatever text is currently in the context window</td>
+    </tr>
+    <tr>
+      <td>What it does</td>
+      <td>Finds the closest existing match by distance</td>
+      <td>Synthesizes new text, token by token</td>
+    </tr>
+    <tr>
+      <td>Is it "reasoning"?</td>
+      <td>No &mdash; fixed math, no learned judgment in the moment</td>
+      <td>Yes &mdash; runs the input through trained weights</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The Misconception Worth Naming Directly</h3>
+
+<p>It's natural to assume the Model, when generating, is somehow consulting what it was trained on &mdash; "looking things up" in its training data the way the similarity search looks things up in a vector index.</p>
+
+<p>It isn't, and it can't. <strong>The Model has no access to its training data at inference time, at all.</strong> Training data did its job once, during training: it shaped a large set of numbers (weights). Once training is done, those weights are what's left &mdash; a fixed function. When you talk to the Model, it isn't searching anything; it's running your current context through that already-shaped function. Nothing about the training data itself is present or reachable at that moment.
+
+This is also the precise, mechanical reason systems ground models in retrieval at all: since the Model can never look anything up on its own, anything it needs to know that isn't baked into its weights has to be handed to it directly, inside the context window, every single time.</p>
+
+<h3>So Who Assembles the Context Window?</h3>
+
+<p>Not the Model &mdash; it only ever receives an already-built prompt. And, somewhat counter-intuitively, not memory/storage either. A memory component is a container: it holds conversation history and long-term state, and answers with what it has when asked. It doesn't decide what should go into this particular prompt, how much of it, or in what order &mdash; that's a decision, not stored knowledge, and deciding is a different kind of responsibility than holding.
+
+That decision belongs to whatever is directing the overall task &mdash; the orchestration/agent layer: pull from memory, pull from retrieval results, add instructions, combine them into one prompt sized to fit.</p>
+
+<p>Which leads to a genuinely useful piece of intuition: a smaller context window doesn't mean information gets "forgotten" so much as it means there's less room, so material competes for the same limited space and older or less-relevant pieces get crowded out by newer ones. Nothing is erased; it's just no longer included in what got assembled this time.</p>
+
+<h3>Takeaway</h3>
+
+<p>The Model's real job is narrow: take whatever text it's handed, generate a response. It doesn't touch files, doesn't search anything, doesn't remember anything between calls, and doesn't consult its own training data while running. Everything that feels like "the AI understanding my document" is actually a chain of separate, mundane steps &mdash; extraction, chunking, embedding, storage, search, assembly &mdash; each owned by a different part of the system, handing the Model exactly and only what it needs for this one call.</p>
+
+<p>Seeing that chain clearly is what makes the rest of the system's architecture make sense: retrieval, memory, and orchestration aren't extra complexity bolted onto "the real AI." They're the parts doing most of the actual work, around a Model that does one thing well and nothing else.</p>
