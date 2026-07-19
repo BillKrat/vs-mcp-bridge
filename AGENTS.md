@@ -41,3 +41,23 @@
   `architecture-rosetta-stone`, `BlogAI`, and `vs-mcp-bridge`.
 - Prefer updating the shared convention over adding per-repo special
   cases.
+
+## vs-mcp-bridge-Specific Note (added 2026-07-19)
+
+This repo does **not** use the `.project-context/` or legacy
+`INDEX.md` + `Sessions/` + `Topics/` layout the shared skills above
+expect. It has its own, more mature, already-working convention:
+`AI_START.md` for session-start orientation, and
+`SolutionFolder/docs/session-handoffs/` for session-end persistence.
+
+Do **not** run `initialize-context` in this repo — it would create a
+`.project-context/` structure that duplicates and conflicts with the
+existing one. If `lets-code`/`update-context` are invoked here anyway,
+they'll correctly report "context not initialized" per their own
+documented fallback (no shared context structure found); when that
+happens, read `AI_START.md` directly instead of initializing a new one.
+
+This is a deliberate exception to the Reuse Standard above, not an
+oversight — `AI_START.md`/`session-handoffs` predates the shared
+`.project-context/` convention and already works, so it isn't being
+replaced just for consistency's sake.
