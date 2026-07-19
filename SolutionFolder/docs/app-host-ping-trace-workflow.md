@@ -1,5 +1,8 @@
 # App Host Ping Trace Workflow
 
+> **Note (2026-07-19):** The methodology in this document is still valid for future sprint validation. Any dated log/diagram artifacts it references predate the early-design reset (see `SolutionFolder/docs/current-bridge-capabilities.md`) and are historical evidence only — do not treat them as current validation.
+
+
 Use this workflow to repeat the observed end-to-end `ping` validation against `VsMcpBridge.App`, capture durable artifacts, and compare the resulting sequence against the current code.
 
 ## Purpose
@@ -21,7 +24,7 @@ It does not prove the VSIX runtime path directly. If a future session needs the 
 
 ## Preconditions
 
-- repository root: `Y:\vs-mcp-bridge`
+- repository root: `Y:s-mcp-bridge`
 - branch should be recorded before the run
 - `VsMcpBridge.App/appsettings.json` should enable diagnostic logging:
   - `VsMcpBridge:Logging:Provider = StdErr`
@@ -57,7 +60,7 @@ Reference artifacts from this baseline run:
 From the repository root:
 
 ```powershell
-Set-Location 'Y:\vs-mcp-bridge'
+Set-Location 'Y:s-mcp-bridge'
 dotnet run --project .\VsMcpBridge.App\VsMcpBridge.App.csproj
 ```
 
@@ -136,7 +139,8 @@ sequenceDiagram
 	UI->>Presenter: SubmitProposalCommand
 	Presenter->>Presenter: SubmitProposalAsync()
 	Presenter->>Presenter: Log Trace "request submission started"
-	Presenter->>VM: LastSubmittedRequestText="ping"\nIsRequestInProgress=true
+	Presenter->>VM: LastSubmittedRequestText="ping"
+IsRequestInProgress=true
 	Presenter->>Presenter: TryDispatchPromptRequestAsync("ping")
 	Presenter->>Presenter: Log Trace "dispatch evaluating route"
 	Presenter->>Chat: SendAsync("ping", requestId)
@@ -148,7 +152,8 @@ sequenceDiagram
 	Presenter->>Presenter: Log Trace "chat request service returned response"
 	Presenter->>Presenter: CompletePromptRequest("pong", requestId)
 	Presenter->>Presenter: Log Trace "response is being applied"
-	Presenter->>VM: IsRequestInProgress=false\nStatusMessage="pong"
+	Presenter->>VM: IsRequestInProgress=false
+StatusMessage="pong"
 	Presenter->>Presenter: Log Trace "response application completed"
 	Presenter->>Presenter: Log Trace "request handled through request routing path"
 	VM-->>UI: Visible result shows "pong"

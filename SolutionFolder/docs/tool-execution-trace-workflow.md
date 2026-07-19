@@ -1,5 +1,8 @@
 # Bridge Tool Execution Trace Workflow
 
+> **Note (2026-07-19):** The methodology in this document is still valid for future sprint validation. Any dated log/diagram artifacts it references predate the early-design reset (see `SolutionFolder/docs/current-bridge-capabilities.md`) and are historical evidence only — do not treat them as current validation.
+
+
 Use this workflow to repeat the observed bridge tool execution validation, capture durable artifacts, and compare the resulting sequence against the current shared tool code.
 
 ## Purpose
@@ -451,7 +454,7 @@ Artifacts:
 
 ## Preconditions
 
-- repository root: `Y:\vs-mcp-bridge`
+- repository root: `Y:s-mcp-bridge`
 - branch and commit should be recorded before the run
 - current shared tests should pass:
 

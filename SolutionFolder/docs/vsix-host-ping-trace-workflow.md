@@ -1,5 +1,8 @@
 # VSIX Host Ping Trace Workflow
 
+> **Note (2026-07-19):** The methodology in this document is still valid for future sprint validation. Any dated log/diagram artifacts it references predate the early-design reset (see `SolutionFolder/docs/current-bridge-capabilities.md`) and are historical evidence only — do not treat them as current validation.
+
+
 Use this workflow to repeat the observed end-to-end `ping` validation against the VSIX host running inside the Visual Studio Experimental Instance, capture durable artifacts, and compare the resulting sequence against the current code.
 
 ## Purpose
@@ -21,7 +24,7 @@ It does not replace the App-host workflow. Keep App-host and VSIX-host observati
 
 ## Preconditions
 
-- repository root: `Y:\vs-mcp-bridge`
+- repository root: `Y:s-mcp-bridge`
 - branch should be recorded before the run
 - launch the Experimental Instance with:
   - `VSMCPBRIDGE_VsMcpBridge__Logging__Provider = StdErr`
@@ -56,10 +59,10 @@ Reference artifacts from this baseline run:
 From a PowerShell session rooted at the repository:
 
 ```powershell
-Set-Location 'Y:\vs-mcp-bridge'
+Set-Location 'Y:s-mcp-bridge'
 $env:VSMCPBRIDGE_VsMcpBridge__Logging__Provider = 'StdErr'
 $env:VSMCPBRIDGE_VsMcpBridge__Logging__MinimumLevel = 'Trace'
-Start-Process devenv.exe '/RootSuffix Exp Y:\vs-mcp-bridge\VsMcpBridge.slnx'
+Start-Process devenv.exe '/RootSuffix Exp Y:s-mcp-bridge\VsMcpBridge.slnx'
 ```
 
 Expected startup evidence:
@@ -135,7 +138,8 @@ sequenceDiagram
 	UI->>Presenter: SubmitProposalCommand
 	Presenter->>Presenter: SubmitProposalAsync()
 	Presenter->>Presenter: Log Trace "request submission started"
-	Presenter->>VM: LastSubmittedRequestText="ping"\nIsRequestInProgress=true
+	Presenter->>VM: LastSubmittedRequestText="ping"
+IsRequestInProgress=true
 	Presenter->>Presenter: TryDispatchPromptRequestAsync("ping")
 	Presenter->>Presenter: Log Trace "dispatch evaluating route"
 	Presenter->>Chat: SendAsync("ping", requestId)
@@ -148,7 +152,8 @@ sequenceDiagram
 	Presenter->>Presenter: Log Trace "chat request service returned response"
 	Presenter->>Presenter: CompletePromptRequest("pong", requestId)
 	Presenter->>Presenter: Log Trace "response is being applied"
-	Presenter->>VM: IsRequestInProgress=false\nStatusMessage="pong"
+	Presenter->>VM: IsRequestInProgress=false
+StatusMessage="pong"
 	Presenter->>Presenter: Log Trace "response application completed"
 	Presenter->>Presenter: Log Trace "request handled through request routing path"
 	VM-->>UI: Visible result shows "pong"

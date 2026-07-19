@@ -1,5 +1,8 @@
 # VSIX Host Selected-Text Trace Workflow
 
+> **Note (2026-07-19):** The methodology in this document is still valid for future sprint validation. Any dated log/diagram artifacts it references predate the early-design reset (see `SolutionFolder/docs/current-bridge-capabilities.md`) and are historical evidence only — do not treat them as current validation.
+
+
 Use this workflow to repeat the observed end-to-end selected-text validation against the VSIX host running inside the Visual Studio Experimental Instance, capture durable artifacts, and compare the resulting sequence against the current code.
 
 ## Purpose
@@ -37,7 +40,7 @@ This workflow was manually validated on:
 - VS service operation: `GetSelectedText`
 - operation id: `ce4e2bba4e324963932b1ba7e8a6c20c`
 - elapsed time: `18 ms`
-- selected file: `Y:\vs-mcp-bridge\VsMcpBridge.Vsix\Services\ProposalFilePicker.cs`
+- selected file: `Y:s-mcp-bridge\VsMcpBridge.Vsix\Services\ProposalFilePicker.cs`
 - selection length: `208`
 - interaction mode: manual validation against the live VS MCP Bridge tool window
 
@@ -50,7 +53,7 @@ Reference artifacts from this baseline run:
 
 ## Preconditions
 
-- repository root: `Y:\vs-mcp-bridge`
+- repository root: `Y:s-mcp-bridge`
 - branch should be recorded before the run
 - current tests should pass before manual validation, especially:
 
@@ -73,10 +76,10 @@ Avoid selecting secrets or sensitive content because the selected text may appea
 From a PowerShell session rooted at the repository:
 
 ```powershell
-Set-Location 'Y:\vs-mcp-bridge'
+Set-Location 'Y:s-mcp-bridge'
 $env:VSMCPBRIDGE_VsMcpBridge__Logging__Provider = 'StdErr'
 $env:VSMCPBRIDGE_VsMcpBridge__Logging__MinimumLevel = 'Trace'
-Start-Process devenv.exe '/RootSuffix Exp Y:\vs-mcp-bridge\VsMcpBridge.slnx'
+Start-Process devenv.exe '/RootSuffix Exp Y:s-mcp-bridge\VsMcpBridge.slnx'
 ```
 
 Expected startup evidence:
@@ -175,7 +178,8 @@ sequenceDiagram
 	UI->>Presenter: SubmitProposalCommand
 	Presenter->>Presenter: SubmitProposalAsync()
 	Presenter->>Presenter: Log Trace "request submission started"
-	Presenter->>VM: LastSubmittedRequestText="what is the selected text"\nIsRequestInProgress=true
+	Presenter->>VM: LastSubmittedRequestText="what is the selected text"
+IsRequestInProgress=true
 	Presenter->>Presenter: TryDispatchPromptRequestAsync("what is the selected text")
 	Presenter->>Presenter: Log Trace "dispatch evaluating route"
 	Presenter->>Presenter: Log Trace "routed to built-in selected text handler"
@@ -186,7 +190,8 @@ sequenceDiagram
 	Presenter->>Presenter: BuildSelectedTextSummary(response)
 	Presenter->>Presenter: CompletePromptRequest(summary, requestId)
 	Presenter->>Presenter: Log Trace "response is being applied"
-	Presenter->>VM: IsRequestInProgress=false\nStatusMessage=selected-text summary
+	Presenter->>VM: IsRequestInProgress=false
+StatusMessage=selected-text summary
 	Presenter->>Presenter: Log Trace "response application completed"
 	Presenter->>Presenter: Log Trace "request handled through request routing path"
 	VM-->>UI: Visible result shows selected text summary
