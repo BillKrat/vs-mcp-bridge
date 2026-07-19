@@ -340,11 +340,7 @@ This can be summarized as:
 
 `Propose -> Approve -> Apply -> Result`
 
-Current verified state for this workflow:
-
-- proposal creation works
-- approval and apply were validated successfully
-- a follow-up `vs_get_active_document` call succeeded after apply
+See [current-bridge-capabilities.md](current-bridge-capabilities.md) — this workflow is design intent, not verified or working functionality.
 
 Current limitation:
 
@@ -359,24 +355,13 @@ Low-priority UI backlog:
 - clean up the bottom control layout in the tool window without changing the workflow
 - investigate intermittent `GridSplitter` responsiveness in the tool window
 
-## Current Verified Runtime Slice
+## Current Stage
 
-The repository is past initial MCP bring-up and through end-to-end runtime validation for the current tool surface.
-
-What is verified:
-
-- the solution builds
-- the VSIX project builds
-- the named-pipe listener starts during package load
-- Cursor can connect to the project-local MCP server through `.cursor/mcp.json`
-- the current read-only MCP tools work end to end
-- `vs_propose_text_edit` works through proposal, approval, and apply
-- `vs_propose_text_edits` now works through proposal creation and the shared approval/apply pipeline
-- post-apply connectivity was verified with a successful follow-up `vs_get_active_document` call
-
-Observed runtime note:
-
-- `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` was observed after apply, but it did not block the bridge or subsequent tool calls
+Early design. Nothing described in this document is built, working, or
+supported functionality — see
+[current-bridge-capabilities.md](current-bridge-capabilities.md) for the
+current stage and what happens next (architectural design → gap analysis →
+prioritized backlog → sprints).
 
 ## Related Documents
 

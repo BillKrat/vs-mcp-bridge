@@ -1,5 +1,8 @@
 # Beta 1 Release Candidate Validation Bundle
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## Purpose
 
 Aggregate the evidence required to evaluate Beta 1 release readiness for `vs-mcp-bridge`.
@@ -8,7 +11,7 @@ This bundle aggregates evidence and now points to the completed release-candidat
 
 ## 1. Release Candidate Scope
 
-The Beta 1 release candidate scope is defined by `SolutionFolder/docs/beta-1-release-definition.md`.
+The Beta 1 release candidate scope is defined by `SolutionFolder/docs/archive/beta-1-release-definition.md`.
 
 Beta 1 is intended to prove that `vs-mcp-bridge` can support real AI-assisted development through conservative, observable, approval-gated boundaries:
 
@@ -263,7 +266,7 @@ Use `Ready With Exceptions` because Beta 1 intentionally retains documented limi
 
 ## 8. Remaining Required Work
 
-Only the remaining required items identified in `SolutionFolder/docs/beta-1-gap-analysis.md` are included here.
+Only the remaining required items identified in `SolutionFolder/docs/archive/beta-1-gap-analysis.md` are included here.
 
 1. Create a final Beta 1 declaration/checkpoint document.
 

@@ -12,11 +12,11 @@ Do not redirect active work without explicit prioritization.
 
 Prefer completing the active slice before expanding scope.
 
-The beta path has priority over novelty.
+The current design/gap-analysis/backlog phase has priority over novelty.
 
 ## What This Prevents
 
-- interrupting a validated slice with speculative work
+- interrupting the current phase with speculative work
 - starting automation because an idea is interesting
 - treating a captured idea as approved implementation scope
 - allowing tools or agents to self-expand into adjacent work
@@ -27,5 +27,5 @@ The beta path has priority over novelty.
 1. Capture the idea in a backlog item.
 2. Note why it may matter.
 3. Note the disruption risk if pursued now.
-4. Return to the active beta-release path.
+4. Return to the current design/gap-analysis/backlog phase.
 5. Revisit the backlog only when explicitly prioritized.

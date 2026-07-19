@@ -1,6 +1,6 @@
 # VS MCP Bridge Technical Analysis
 
-Last updated: 2026-04-12
+Last updated: 2026-07-19
 
 ## Purpose
 
@@ -21,14 +21,11 @@ Current host shape:
 - `VsMcpBridge.App` is a standalone WPF host for shared bridge behavior
 - `VsMcpBridge.Shared` and `VsMcpBridge.Shared.Wpf` hold the common contracts and UI pieces
 
-The repository has now completed connection-first bring-up for the currently exposed tool slice.
-
-That means the highest-value work has shifted from first proof to selective hardening:
-
-1. preserve and document the validated behavior
-2. add automated coverage for the stdio and named-pipe boundaries
-3. harden edit application and diagnostics
-4. broaden capabilities only after the validated baseline remains stable
+The project is in early design. Basic infrastructure exists (the host shape
+above), but no functionality is committed, working, or supported yet — see
+[current-bridge-capabilities.md](current-bridge-capabilities.md). Work ahead
+follows architectural design, then a gap analysis, then a prioritized
+backlog, then sprints; nothing here should be read as a validated baseline.
 
 ## Solution Layout
 
@@ -73,7 +70,7 @@ Purpose:
 
 Current phase note:
 
-- this project remains useful as a reference host and separation check, but the main priority has shifted to hardening and automated coverage around the validated VSIX plus MCP path
+- this project's role (reference host and separation check) is design intent; nothing here is built or working functionality yet
 
 ### `VsMcpBridge.Shared`
 
@@ -112,62 +109,35 @@ The following constraints are intentional and should be preserved unless Bill de
 - edits remain proposal-based rather than silently applied
 - Visual Studio API access stays in the VSIX host
 
-## Current Verified State
+## Current Stage
 
-Verified recently:
+Early design — see [current-bridge-capabilities.md](current-bridge-capabilities.md).
+Nothing in this repository is verified, working, or supported functionality;
+treat every item below as design direction, not delivered behavior.
 
-- the solution builds
-- the VSIX project builds
-- the VSIX project has the minimum WPF and JSON support needed for the current scaffold
-- the package no longer references a missing menu resource
-- real Experimental Instance load
-- named-pipe listener startup during package load
-- real MCP-to-pipe-to-VSIX round trips for the current tool surface
-- successful proposal creation, approval, and apply through `vs_propose_text_edit`
-- post-apply connectivity via a follow-up successful read-only tool call
-
-Logging hardening now in place:
-
-- App, VSIX, and MCP host now share a common `IConfiguration` bootstrap path so configuration behavior can evolve consistently across hosts rather than relying on scattered direct environment reads
-- App chat/OpenAI requests emit correlation and elapsed timing logs for start, completion, cancellation, and failure
-- MCP chat tools (`chat_engine_ping`, `chat_engine_chat`) emit correlation and elapsed timing logs at tool boundaries
-- MCP named-pipe client and shared pipe server emit boundary diagnostics with command, request id, success state, and elapsed timing
-- VSIX read operations (`GetActiveDocument`, `GetSelectedText`, `ListSolutionProjects`, `GetErrorList`) emit operation-level completion logs including elapsed timing and key result shape (file path, selection length, project/diagnostic count)
-- prompt-box chat input in both hosts now routes through host-specific `IChatRequestService` implementations, enabling comparable request/response behavior for `ping` and OpenAI-backed prompts without App↔VSIX coupling
-
-These additions improve triage for hangs and latency without changing the approval-first edit model.
-
-Current logging direction:
+Logging design direction:
 
 - `Trace` should describe verbose class/process flow across the decoupled bridge so the runtime remains diagnosable during rapid triage
 - `Information` is the default user-facing level and should carry non-verbose operational feedback
 - avoid redundant paired Trace and Information documentation or logging for the same event
 - `StdErr` is the preferred transport-safe out-of-band channel for diagnostics that must not pollute MCP stdio traffic
 - when Trace is enabled, Trace-level output should also surface through the shared UI log view so it is visible to the operator and AI tools during investigation
-- the shared logging pipeline now includes an abstraction seam that can forward trace and possibly information events to additional persistence targets such as SQL; the current first implementation step is a file-backed forwarder
-
-Current observed gap from manual validation on 2026-05-06:
-
-- in the VSIX tool window chat surface, disabling raw prompt/response logging still emits placeholder lines indicating that prompt or response logging is disabled
-- those lines are currently surfacing in front of or alongside useful OpenAI request boundary logs and are not acceptable as user-facing output in their current form
-- the logging direction remains valid, but the UX treatment of disabled raw audit logging needs a focused follow-up slice
-- the next session should address that UX issue before broadening the logging surface further, then continue the Environment-to-IConfiguration migration inventory
+- the shared logging pipeline should include an abstraction seam that can forward trace and possibly information events to additional persistence targets such as SQL, starting with a file-backed forwarder
 
 ## Current Technical Priorities
 
-The next phase should optimize for stability and coverage, not initial runtime proof.
+The next phase is design, not implementation hardening.
 
 Priority order:
 
-1. add automated coverage for stdio MCP startup and named-pipe request flow
-2. harden proposal/apply behavior, especially document formatting and line-ending preservation
-3. keep diagnostics strong without reintroducing stdout pollution
-4. harden the logging seam so future persistence targets such as file-forwarding and SQL-forwarding can be added without changing core callers
-5. expand capability only after the current validated slice remains stable
+1. complete architectural design
+2. run a gap analysis against that design
+3. prioritize the resulting backlog
+4. execute sprints against the prioritized backlog, committing only to what each sprint delivers
 
 ## Known Risk Areas
 
-1. The bridge now has a validated runtime path, but automated regression coverage for the MCP and pipe boundaries is still thin.
+1. There is no automated regression coverage for the MCP and pipe boundaries yet.
 2. Edit application still rebuilds the full document and may need hardening around formatting and line endings.
 3. Diagnostics must remain transport-safe for MCP host work so stdio JSON transport stays clean; StdErr and file-backed sinks are acceptable, stdout is not.
 4. Non-blocking `NotificationReceived` JsonRpc warnings were observed after apply and may deserve investigation only if they become user-visible or disruptive.
@@ -188,20 +158,17 @@ If a future developer or AI agent sees transient dead-click behavior early in st
 
 ## Guidance For Future Changes
 
-During the current stabilization phase:
+During the current design phase:
 
-- prefer small changes over refactors
-- preserve the validated runtime baseline before broadening behavior
-- fix concrete regressions before improving architecture elegance
-- do not add capabilities just because the bridge could support them later
-- keep docs aligned with verified reality
+- do not add capabilities before the architectural design, gap analysis, and backlog prioritization that are supposed to justify them
+- keep docs aligned with actual reality — no capability claim belongs in this document until a sprint has delivered and validated it
+- prefer small, reviewable design decisions over speculative scope
 
-After the validated baseline is better covered, the likely next technical topics are:
-
-- stronger automated tests around MCP startup and pipe flow
-- clearer protocol/version metadata
-- stronger structured edit models beneath the diff preview
-- continued hardening of the approval/apply workflow
+Once sprints are underway, likely next technical topics include automated
+tests around MCP startup and pipe flow, clearer protocol/version metadata,
+structured edit models beneath the diff preview, and the approval/apply
+workflow — but which of these matter, and in what order, is exactly what the
+gap analysis and backlog prioritization are for.
 
 ## Related Documents
 

@@ -1,5 +1,8 @@
 # Beta 2 Observation Gate
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## Purpose
 
 Prevent Beta 2 scope from being driven by imagination rather than operational evidence.
@@ -112,7 +115,7 @@ Classify potential Beta 2 inputs in this order:
 3. Workflow
 4. Architecture
 
-This order keeps Beta 2 from treating beta-environment anomalies as architecture requirements. Use `SolutionFolder/docs/beta-tooling-observation-policy.md` when a proposed Beta 2 item appears to originate from beta-environment behavior.
+This order keeps Beta 2 from treating beta-environment anomalies as architecture requirements. Use `SolutionFolder/docs/archive/beta-tooling-observation-policy.md` when a proposed Beta 2 item appears to originate from beta-environment behavior.
 
 ## Planning Threshold
 

@@ -1,12 +1,14 @@
 # VS MCP Bridge
 
+**Status: Early design.** Basic infrastructure exists; no functionality is committed, working, or supported yet. See [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md) for what that means and what happens next (architectural design → gap analysis → prioritized backlog → sprints).
+
 `vs-mcp-bridge` is a local integration that exposes selected IDE and workspace state to AI tooling through the Model Context Protocol (MCP).
 
 AI session entry point:
 
 - for starting or resuming an AI-assisted session, read [AI_START.md](AI_START.md) first
 - for repository-level AI operating rules, read [AGENTS.md](AGENTS.md); task-specific workflows use lightweight `SKILL.md` files under [.agents/skills/](.agents/skills/)
-- for the current implemented, experimental, and not-implemented bridge capability boundaries, read [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md)
+- for the project's current early-design stage and what that means, read [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md)
 - for MCP search diagnostics, use [.agents/skills/mcp-search-diagnostics/SKILL.md](.agents/skills/mcp-search-diagnostics/SKILL.md)
 - for ending or pausing an AI-assisted session cleanly, use [SolutionFolder/docs/AI_STOP.md](SolutionFolder/docs/AI_STOP.md)
 - for required local-only files, safe templates, and secret redaction rules, use [SolutionFolder/docs/local-only-files.md](SolutionFolder/docs/local-only-files.md)
@@ -36,86 +38,17 @@ The solution is split into host-specific runtimes plus shared infrastructure:
 - `VsMcpBridge.Shared.Tests`: unit tests for the shared layer
 - `VsMcpBridge.Vsix.Tests`: unit tests for VSIX-specific composition and service logic
 
-## What It Does Today
+## What This Repository Is Today
 
-Current supported capabilities:
+This repository holds early-stage infrastructure only: host projects, MCP
+transport, named-pipe plumbing between the MCP server and the VSIX, and a
+tool-window UI shell. None of that adds up to working or supported
+functionality yet, and nothing here should be relied on.
 
-- read the active Visual Studio document
-- read the current text selection
-- list solution projects
-- read the Visual Studio Error List
-- propose text edits as diffs
-- propose multi-file text edits through MCP as one approval-gated proposal
-- route proposed edits into the tool window for approval or rejection
-- apply approved edits inside Visual Studio through the VSIX host
-- select deterministic repo-root-relative document metadata through MCP for explicit-input search workflows
-- execute compiled in-memory bridge tools through the shared catalog/executor boundary, including regex text search and minimal BM25-style ranked text search over caller-supplied documents
-
-The bridge is intentionally conservative at this stage:
-
-- Visual Studio API access stays inside the VSIX
-- the MCP server only talks to the VSIX over a local named pipe
-- edits still require explicit approval in the tool window before they are applied
-- diagnostics and unhandled exception capture are built in
-- shared bridge infrastructure is now decoupled from the VSIX so other hosts can provide their own implementations
-
-The standalone app now serves two purposes:
-
-- it is a reference host for developers who want to use the bridge outside a VSIX
-- it validates that host-specific code stays out of the VSIX when it belongs in shared or in an alternate host
-
-Prompt-box chat behavior now works in both hosts through a shared presenter seam:
-
-- the shared presenter routes non-built-in prompt requests through host-registered `IChatRequestService` implementations
-- both `VsMcpBridge.App` and `VsMcpBridge.Vsix` now support `ping` from the request input surface (`ping -> pong` in non-OpenAI mode)
-- built-in operational prompts remain unchanged (`what is the active file`, `list solution projects`, `show error list`)
-
-Host behavior today:
-
-- `VsMcpBridge.Vsix` provides Visual Studio-backed behavior through DTE and Visual Studio services
-- `VsMcpBridge.App` provides workspace/file-system-backed behavior while reusing the same shared presenter, viewmodel, pipe server, approval workflow, and WPF view
-
-The VSIX includes a WPF tool window for bridge status and approval UX:
-
-- the view lives in `VsMcpBridge.Shared.Wpf` as a passive WPF control
-- tool window state is exposed through a viewmodel
-- UI orchestration lives in a presenter using an MVPVM-style split
-- bindings and commands use `CommunityToolkit.Mvvm`
-- `ProposalFilePath` can be entered manually or selected with `Browse`
-- `Browse` only sets `ProposalFilePath`; the existing load workflow still populates both panes
-- the original pane stays read-only, while the proposed pane is editable before submit and read-only while approval is pending
-- `Submit Proposal` stays disabled until the file loads successfully and the proposed text differs from the loaded original
-- approve or reject clicks do not immediately reset the proposal UI; terminal outcomes drive the reset instead
-- after a terminal outcome, pending approval state is cleared, completed proposal callbacks cannot be reused, and proposal-entry state is refreshed from `ProposalFilePath`
-- apply failures are surfaced in the tool window as concise status text in addition to the bridge logs
-- the terminal status message remains visible in the tool window after the proposal cycle completes
-
-Developer note:
-
-- the repository uses MVP/VM so the view stays passive, the viewmodel owns bindable state and commands, and the presenter coordinates workflow and service interaction; see [SolutionFolder/docs/MVPVM_OVERVIEW.md](SolutionFolder/docs/MVPVM_OVERVIEW.md) for the repo-specific pattern guide and examples
-
-Current limitation:
-
-- MCP proposal creation now supports both request shapes:
-- legacy single-file: `filePath`, `originalText`, `proposedText`
-- multi-file: `fileEdits: [{ filePath, originalText, proposedText }]`
-- `vs_propose_text_edit` remains backward compatible for existing single-file callers
-- `vs_propose_text_edits` is now available for additive multi-file proposal creation
-- new proposals may carry one or more single-file `RangeEdit` entries in addition to `Diff`
-- multi-range proposals now show a simple reviewed change list with sequence number, original segment, and updated segment
-- the reviewed change list appears in both pending review and last completed proposal review
-- multi-file proposals now show an Included Files list so proposal membership is explicit during review
-- the Included Files list appears in both pending review and last completed proposal review
-- preview remains diff-first, with unified diff still serving as the primary preview format shown to the operator
-- review mode now rebalances the tool window layout to prioritize inspection during pending review and last completed review
-- the Original Text and Proposed Text comparison area remains visible in compact form during review instead of being collapsed away
-- proposal outcomes now use standardized messaging across hosts
-- outcome messages include file count and explicitly state when no changes were applied on proposal-wide failures or rejection
-- apply prefers range-based replacement when `RangeEdit`/`RangeEdits` metadata is present, and falls back to full-document apply when range metadata is absent
-- single-file multi-range apply is all-or-nothing across the full range set
-- ambiguity or drift in any intended range fails the entire apply explicitly instead of guessing or partially applying
-- the tool window review surface is now scrollable and resizable enough for practical inspection, but it still uses the compact review model rather than a dedicated review mode
-- live manual validation should focus on multi-range success, drift failure after submit and before approve, and adjacent/nearby range behavior; ambiguity failure is primarily an automated safety proof
+Functionality will be designed and delivered deliberately: architectural
+design, then a gap analysis, then a prioritized backlog, then sprints.
+Capability claims belong in this README only once a sprint has delivered and
+validated them. See [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md) for the full explanation.
 
 ## Solution Structure
 
@@ -442,26 +375,13 @@ The following are not allowed:
 
 Any future multi-file ChatEngine proposal implementation must define a strict output schema before creating multi-file proposals.
 
-## VSIX Review Experience v1
+## VSIX Review Experience
 
-The current review UI provides:
-
-- source/type visibility for AI and manual proposals
-- target file or file count visibility
-- status visibility for pending review, approved/applied, rejected, and failed proposals
-- a lightweight proposal preview
-- the existing diff/review surface
-- inline error display for failed proposals
-- visual confirmation for applied proposals
-- `From error` context for error-driven workflows
-- keyboard shortcuts:
-  - `Enter -> approve`
-  - `Esc -> reject`
-
-Intentional limitation:
-
-- no proposal history model exists
-- the UI tracks only one pending proposal and one last completed proposal
+Design intent, not a working feature: proposals will need a review UI that
+shows source/type, target scope, status, a diff-first preview, and clear
+approve/reject affordances, with no durable proposal history in this early
+scope. Nothing described here is built, working, or committed until a sprint
+delivers it — see [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md).
 
 ## Test
 
@@ -502,42 +422,17 @@ Important build note:
 
 ## Current Status
 
-The repository is now past initial MCP bring-up and through end-to-end runtime validation for the current tool surface.
-
-What is verified:
-
-- the solution builds
-- the VSIX project builds
-- the shared and VSIX layers are separated cleanly in the source tree
-- the VSIX source includes a command table, package bootstrap, and tool-window scaffold
-- the bridge uses DI and interface-based services across the shared and VSIX layers
-- the Visual Studio Experimental Instance loads the VSIX successfully
-- the named-pipe listener starts during package load
-- Cursor can connect to the project-local MCP server through `.cursor/mcp.json`
-- the current read-only MCP tools work end to end:
-  - `vs_get_active_document`
-  - `vs_get_selected_text`
-  - `vs_list_solution_projects`
-  - `vs_get_error_list`
-- `vs_propose_text_edit` works through proposal, approval, and apply
-- post-apply connectivity was verified with a successful follow-up `vs_get_active_document` call
-- Visual Studio Insiders Copilot Agent can activate the repo-local `vs-mcp-bridge` MCP server from the Experimental Instance after the `VS MCP Bridge` tool window initializes the VSIX side
-- direct MCP stdio validation succeeds with 16 tools listed and `chat_engine_ping` returning `pong`
-
-Observed runtime note:
-
-- `JsonRpc Warning: No target methods are registered that match "NotificationReceived"` was observed after apply, but it did not block the bridge or subsequent tool calls
-- `scripts\validate-mcp.ps1` may hang while building its temporary helper before MCP initialization; direct MCP stdio validation and live VS-backed calls should be used to distinguish helper-build issues from server activation failures
-- a failed Copilot activation can leave an orphaned `VsMcpBridge.McpServer.exe` process that locks Debug output files; stop that process before rebuilding
+Early design. Nothing in this repository is verified, working, or supported
+functionality — only early infrastructure exists. See
+[SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md)
+for what that means.
 
 ## Next Steps
 
-The most important next work is no longer first-time runtime validation. The best next targets are:
-
-- add or expand targeted automated coverage around the MCP server and pipe boundary
-- harden the edit-application model so formatting and line endings are preserved more reliably
-- improve protocol/connection diagnostics without polluting stdio MCP transport
-- investigate non-blocking post-apply notification noise only if it becomes actionable
+1. complete architectural design
+2. run a gap analysis against that design
+3. prioritize the resulting backlog
+4. execute sprints against the prioritized backlog, committing only to what each sprint delivers
 
 ## Documentation Guidance
 

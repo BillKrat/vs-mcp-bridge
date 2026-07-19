@@ -10,7 +10,7 @@ Rule:
 
 ## Operating Rule
 
-Active execution must remain focused on the current prioritized beta-release path.
+Active execution must remain focused on the current phase: architectural design, then gap analysis, then backlog prioritization, then sprints.
 
 New ideas must be captured here unless they are required to complete the currently active slice. A captured idea may be reviewed, refined, grouped, split, closed, or prioritized later.
 
@@ -28,7 +28,7 @@ This backlog rule applies equally to:
 - future agents
 - future tools
 
-No contributor or tool should redirect active work away from the current prioritized beta-release path without explicit prioritization.
+No contributor or tool should redirect active work away from the current design/gap-analysis/backlog phase without explicit prioritization.
 
 ## How To Add An Item
 
@@ -43,7 +43,7 @@ Keep backlog items practical and bounded. The goal is to preserve useful ideas w
 
 Backlog items may be reviewed later when:
 
-- the active beta-release slice is complete
+- the active design/gap-analysis slice is complete
 - repeated friction proves the idea matters
 - a human explicitly asks to prioritize backlog work
 - the item becomes a blocker for the active path

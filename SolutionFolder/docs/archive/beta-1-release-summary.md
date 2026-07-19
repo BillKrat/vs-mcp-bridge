@@ -1,5 +1,8 @@
 # Beta 1 Release Summary
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## What Beta 1 Is
 
 Beta 1 is the first released operating milestone for `vs-mcp-bridge`.
@@ -82,7 +85,7 @@ Beta 1 is not production auth, not autonomous execution, and not a production or
 
 ## How Beta 2 Will Be Chosen
 
-Beta 2 scope will be chosen through `SolutionFolder/docs/beta-2-observation-gate.md`.
+Beta 2 scope will be chosen through `SolutionFolder/docs/archive/beta-2-observation-gate.md`.
 
 Beta 2 work must originate from operational observations, repeated workflow friction, deployment friction, contributor onboarding friction, DCI-derived architectural insight validated against usage, or validated user demand.
 
@@ -101,6 +104,6 @@ Do not create a Beta 2 backlog from speculative automation, theoretical architec
 
 - Use Beta 1 as the stable operating baseline.
 - Record operational observations with `SolutionFolder/docs/operational-observation-log-template.md`.
-- Apply `SolutionFolder/docs/beta-2-observation-gate.md` before creating any Beta 2 backlog.
+- Apply `SolutionFolder/docs/archive/beta-2-observation-gate.md` before creating any Beta 2 backlog.
 - Keep future work preview-first and approval-gated unless a separate design gate explicitly changes that.
 - Keep production auth, autonomous execution, automatic deployment, repo mutation tooling, and BlogEngine.NET integration deferred until validated evidence supports separate design work.

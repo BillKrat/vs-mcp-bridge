@@ -1,14 +1,17 @@
 # Beta 1 Release Decision
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## Purpose
 
 Record the final release decision for Beta 1.
 
 This decision is based entirely on:
 
-- `SolutionFolder/docs/beta-1-release-definition.md`
-- `SolutionFolder/docs/beta-1-gap-analysis.md`
-- `SolutionFolder/docs/beta-1-release-candidate-validation-bundle.md`
+- `SolutionFolder/docs/archive/beta-1-release-definition.md`
+- `SolutionFolder/docs/archive/beta-1-gap-analysis.md`
+- `SolutionFolder/docs/archive/beta-1-release-candidate-validation-bundle.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-release-candidate-validation.md`
 
 No runtime code, deployment, auth behavior, tooling behavior, or feature scope changes are introduced by this document.
@@ -93,9 +96,9 @@ Deferred features should not be treated as Beta 1 blockers or hidden Beta 1 depe
 
 ## Evidence References
 
-- `SolutionFolder/docs/beta-1-release-definition.md`
-- `SolutionFolder/docs/beta-1-gap-analysis.md`
-- `SolutionFolder/docs/beta-1-release-candidate-validation-bundle.md`
+- `SolutionFolder/docs/archive/beta-1-release-definition.md`
+- `SolutionFolder/docs/archive/beta-1-gap-analysis.md`
+- `SolutionFolder/docs/archive/beta-1-release-candidate-validation-bundle.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-release-candidate-validation.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-beta-1-deployment-validation-refresh.md`
 - `SolutionFolder/docs/session-handoffs/2026-05-24-local-only-file-recovery-validation.md`

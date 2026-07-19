@@ -1,5 +1,8 @@
 # Beta 1 Gap Analysis
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## Executive Summary
 
 `vs-mcp-bridge` is ready for Beta 1 with documented exceptions, pending only the final Beta 1 declaration/checkpoint.

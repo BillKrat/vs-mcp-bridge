@@ -2,161 +2,64 @@
 
 ## Purpose
 
-Set expectations for what `vs-mcp-bridge` currently does, what is experimental, and what is not implemented.
+Set expectations for what `vs-mcp-bridge` currently is, so nothing here is
+mistaken for working or supported functionality.
 
-This document describes current repository state. It does not create new scope, roadmap commitments, runtime behavior, tooling changes, or deployment behavior.
+This document describes current repository state. It does not create new
+scope, roadmap commitments, runtime behavior, tooling changes, or deployment
+behavior.
 
-## Beta 1 Status
+## Current Stage: Early Design
 
-Beta 1 is released with documented exceptions.
+`vs-mcp-bridge` is in early design. Basic infrastructure exists — host
+projects, MCP transport, named-pipe plumbing, a tool-window shell — but there
+is no finished, designed, or supported functionality. Nothing in this
+repository should be treated as working at any level, and no capability
+should be assumed to exist, be stable, or be safe to depend on.
 
-The release proves that selected Visual Studio and repository context can support AI-assisted workflows through conservative, observable, human-approved boundaries.
+Anything that has previously run during development — a tool call answered,
+a build succeeding, a session connecting — was an isolated technical spike
+while building infrastructure, not delivered or validated functionality.
+Spikes are not commitments and are not covered by this document.
 
-Use these documents as the release baseline:
+## Process Going Forward
 
-- `SolutionFolder/docs/beta-1-release-summary.md`
-- `SolutionFolder/docs/beta-1-release-decision.md`
-- `SolutionFolder/docs/beta-2-observation-gate.md`
+Functionality will be added deliberately, in this order:
 
-Beta 1 is not production auth, not autonomous execution, and not a production orchestration platform.
+1. complete architectural design
+2. run a gap analysis against that design
+3. prioritize the resulting backlog
+4. execute sprints against the prioritized backlog
 
-## Implemented Capabilities
-
-Current implemented capabilities include:
-
-- VSIX-hosted Visual Studio bridge surface
-- standalone WPF app host for shared presenter and viewmodel reuse
-- shared bridge contracts, diagnostics, pipe dispatch, and tool-window orchestration
-- local named-pipe communication between the MCP server and VSIX host
-- active Visual Studio document inspection
-- selected text inspection
-- solution project listing
-- Visual Studio Error List inspection
-- compiled bridge tool inventory diagnostics
-- regex search over explicit caller-provided text
-- minimal BM25-style ranked search over explicit caller-provided documents
-- deterministic repo-root-relative document metadata selection
-- preview-only document update validation
-- proposal-only text edit workflows
-- multi-file proposal review through one approval-gated proposal
-- approval-gated apply inside Visual Studio
-- trace artifact workflow guidance
-- deployment validation evidence
-- recovery guidance
-- contributor guidance
-
-## Experimental Capabilities
-
-Current experimental capabilities are intentionally constrained:
-
-- prompt-box chat through host-registered `IChatRequestService` implementations
-- preview-only document update tooling
-- preview-only gated handoff proposal tooling
-- BlogAI pressure-test workflows that use the bridge as an observation surface
-- MCP search diagnostics over explicit caller-supplied text or documents
-- document selection helpers that return metadata for caller-side review
-
-Experimental capabilities should remain preview-first, observable, and approval-gated unless a separate design slice changes that boundary.
-
-## Not Implemented
-
-The following are not current bridge capabilities:
-
-- autonomous execution
-- automatic Codex execution
-- selected-file model transmission
-- autonomous deployment
-- background agents
-- autonomous mutation
-- direct MCP repository mutation
-- automatic blog publishing
-- production auth
-- OAuth, OpenID, or RBAC
-- persistence or database-backed workflow state
-- admin APIs
-- BlogEngine.NET integration as a managed production feature
-- automatic deployment retries
-- hidden filesystem crawling for MCP search tools
-
-Deferred items are not hidden Beta 1 dependencies. They require separate observation, design, and approval before implementation.
-
-## Known Constraints
-
-Known current constraints include:
-
-- workflow remains approval-gated
-- orchestration remains preview-only
-- MCP search tools require explicit caller-provided text or documents
-- document selection returns metadata, not model-ready context
-- VSIX build and validation have path requirements
-- local-only configuration files must be recreated from documented templates
-- deployment validation is manual smoke validation, not automatic deployment
-- proposal UI tracks current and last-completed proposal state rather than durable proposal history
-- the bridge is a local integration, not a hosted multi-user service
-
-## Usage Expectations
-
-Use the bridge for observable, human-controlled AI-assisted workflows:
-
-- inspect active Visual Studio state
-- gather deterministic diagnostic evidence
-- run explicit-input MCP search diagnostics
-- prepare preview-only proposals
-- review proposed edits before applying
-- record operational observations before proposing new automation
-
-Do not treat the bridge as an autonomous operator, deployment system, background worker, or production authorization boundary.
-
-### Selected Files
-
-Selected files participate in proposal/edit workflows:
-
-- selected paths are tracked in proposal state
-- selected file contents are loaded into proposal drafts
-- selected files support preview, approval, and apply workflows
-
-Selected files do not currently reach normal model chat context:
-
-- selected file content is not appended to normal chat model requests
-- selected file paths are not sent to the model in normal chat requests
-- the chat request payload sends the typed prompt as `messages[0].content`
-
-For chat-model context, selected-file behavior is currently effectively cosmetic. For proposal/edit workflows, it is functional state.
+Capability claims for this repository are made only once a sprint delivers
+and validates them — never ahead of that, and never based on a spike or a
+one-off manual test. Until a sprint says otherwise, assume nothing works.
 
 ## Common Misconceptions
 
-Misconception: Selecting a file in the VSIX tool window sends that file to the model.
+Misconception: Because infrastructure exists (hosts, transport, pipe,
+tool-window shell), the bridge does something useful today.
 
-Reality: Selection supports proposal/edit state. Normal chat requests send only the typed prompt.
+Reality: Infrastructure is not functionality. No feature is considered
+working or supported until a sprint delivers it.
 
-Misconception: MCP search tools can read file paths or crawl the repository.
+Misconception: Something observed running once during development (a tool
+call, a build, a connection) means that capability is available now.
 
-Reality: MCP search diagnostics operate over explicit text, `entries`, or `documents` provided by the caller.
+Reality: Development-time spikes are not delivered functionality and are not
+safe to rely on. See "Current Stage" above.
 
-Misconception: Beta 1 release means autonomous execution is available.
+Misconception: This repository supports autonomous execution, automatic
+Codex execution, autonomous mutation, autonomous deployment, or background
+agents.
 
-Reality: Beta 1 explicitly excludes autonomous execution, automatic Codex execution, autonomous mutation, and automatic deployment.
-
-Misconception: Preview-only gated handoff tooling can execute Codex work.
-
-Reality: It supports preview and review. It does not execute commands, mutate repositories, deploy, or create background continuations.
-
-Misconception: Deployment validation means deployment is automated.
-
-Reality: Deployment validation is evidence that deployed smoke checks passed. It is not bridge-side deployment automation.
+Reality: None of that exists, is designed, or is planned for the near term.
+Any future automation would require its own explicit design and approval,
+not an incremental addition to existing code.
 
 ## Future Direction
 
-Future work should be chosen through the Beta 2 observation gate:
-
-1. observe
-2. record
-3. classify
-4. confirm recurrence
-5. prioritize
-6. plan
-7. implement
-
-Valid future work must originate from operational observations, repeated workflow friction, deployment friction, contributor onboarding friction, DCI-derived architectural insight validated against usage, or validated user demand.
-
-Do not create a Beta 2 backlog from interesting ideas, speculative automation, theoretical architecture improvements, or capability for capability's sake.
+Future work is chosen only through the process above — architectural design,
+gap analysis, prioritized backlog, sprints — not from interesting ideas,
+speculative automation, theoretical architecture improvements, or capability
+for capability's sake.

@@ -1,5 +1,8 @@
 # Selected File Context Transmission Readiness Review
 
+> **Superseded.** This describes an earlier "Beta 1/Beta 2 release" model that no longer reflects current project positioning. As of 2026-07-19 the project is in early design, prior to gap analysis, backlog prioritization, and sprints. See `SolutionFolder/docs/current-bridge-capabilities.md` for current status.
+
+
 ## Purpose
 
 Evaluate whether selected-file context transmission is ready to become a Beta 2 planning candidate.
@@ -18,7 +21,7 @@ Current capability boundary:
 
 Planning gate:
 
-- `SolutionFolder/docs/beta-2-observation-gate.md`
+- `SolutionFolder/docs/archive/beta-2-observation-gate.md`
 
 The observed behavior is that selected files participate in proposal/edit workflows but do not currently reach normal chat-model context. In normal VSIX chat requests, the model receives the typed prompt only as `messages[0].content`.
 

@@ -27,11 +27,12 @@ This file does not replace the detailed docs. It tells you what to read next and
 Read these first in order:
 
 1. `README.md`
-2. `AGENTS.md`
-3. `SolutionFolder/docs/ARCHITECTURE.md`
-4. `SolutionFolder/docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
-5. `SolutionFolder/docs/CODING_STANDARDS.md`
-6. `SolutionFolder/docs/AI_WORKFLOW.md`
+2. `SolutionFolder/docs/current-bridge-capabilities.md`
+3. `AGENTS.md`
+4. `SolutionFolder/docs/ARCHITECTURE.md`
+5. `SolutionFolder/docs/VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`
+6. `SolutionFolder/docs/CODING_STANDARDS.md`
+7. `SolutionFolder/docs/AI_WORKFLOW.md`
 
 Use these as needed after that:
 
@@ -41,15 +42,9 @@ Use these as needed after that:
 - `SolutionFolder/docs/session-slice-operating-template.md` for the reusable 60-120 minute session workflow template
 - `SolutionFolder/docs/future-contributor-operating-expectations.md` for behavioral expectations for human, AI, and tool contributors
 - `SolutionFolder/docs/operational-observation-log-template.md` for capturing workflow friction before proposing automation or tooling refinements
-- `SolutionFolder/docs/beta-tooling-observation-policy.md` for classifying beta-environment anomalies before changing architecture, workflow, or tooling
-- `SolutionFolder/docs/beta-1-release-summary.md` for a concise human-readable summary of the Beta 1 release, validation, limitations, and next-step posture
-- `SolutionFolder/docs/beta-1-release-definition.md` for the first releasable Beta milestone scope, validation gates, and out-of-scope boundaries
-- `SolutionFolder/docs/beta-1-release-decision.md` for the final Beta 1 release status, accepted limitations, deferred scope, and evidence references
-- `SolutionFolder/docs/beta-1-release-candidate-validation-bundle.md` for aggregated Beta 1 readiness evidence, recommendation, and remaining release-candidate work
-- `SolutionFolder/docs/beta-2-observation-gate.md` for preventing Beta 2 scope from forming before enough operational observations exist
-- `SolutionFolder/docs/current-bridge-capabilities.md` for the current implemented, experimental, and not-implemented bridge capability boundaries
+- `SolutionFolder/docs/archive/` for the superseded Beta 1/Beta 2 release-milestone docs, kept for history only — they do not reflect current project status
 - `SolutionFolder/docs/observations/2026-06-13-selected-file-model-transmission-check.md` for the observation that VSIX selected files support proposal state but do not currently reach normal chat-model requests
-- `backlog/README.md` and `backlog/shiny-object-policy.md` for capturing new ideas without interrupting the prioritized beta-release path
+- `backlog/README.md` and `backlog/shiny-object-policy.md` for capturing new ideas without interrupting the prioritized backlog
 - `SolutionFolder/docs/local-only-files.md` for required ignored local files, safe templates, and secret redaction rules
 - `SolutionFolder/docs/blogai-high-resolution-corpus-interaction-research-backlog.md` for the future BlogAI research direction around evidence-localized corpus interaction and hybrid retrieval
 - `SolutionFolder/docs/chatgpt-codex-gated-handoff-workflow.md` for the future ChatGPT to Codex gated handoff workflow design
