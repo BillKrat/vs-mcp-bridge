@@ -142,30 +142,46 @@ A good closeout prompt is:
 
 ## Latest Session Closeout
 
-Date: 2026-05-08
-Branch: `feature/approval-apply-ui-slice`
+Date: 2026-07-19
+Branch: `main`
 
 ### What Changed
 
-- preserved the validated placeholder-path fix and its regression tests from the earlier slice
-- confirmed the prior App-host and VSIX-host ping trace workflow session was fully completed before the later context-loss issue
-- confirmed manual VSIX behavior that `what is the active file` works as expected in the prompt UI
-- created `SolutionFolder/docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md` for the new stopping point
-- updated `AI_START.md` so the next session resumes from the incomplete selected-text prompt investigation
+- repositioned the project as early design (not "Beta 1 released") across
+  `README.md`, `current-bridge-capabilities.md`, `ARCHITECTURE.md`,
+  `VS_MCP_BRIDGE_TECHNICAL_ANALYSIS.md`, and `AI_START.md`
+- archived the ~15-doc Beta 1/Beta 2 release-milestone apparatus to
+  `SolutionFolder/docs/archive/` with superseded banners
+- fixed the CI workflow's stale script path (broken since 2026-05-24, ~8
+  weeks of consecutive failures); confirmed green
+- caught and contained a late finding: `AI_START.md` was defaulting new
+  sessions to a stale pre-reset resume point plus an undisclosed BlogAI/Auth
+  narrative in the same "verified" language — relabeled as historical, not
+  fully repositioned (see Known Issues below)
+- deleted 3 stale, fully-merged branches; resolved a GitHub ruleset that was
+  blocking the deletion by creating a narrower `main`-only ruleset and
+  removing the old all-branches one
+- created
+  `SolutionFolder/docs/session-handoffs/2026-07-19-early-design-repositioning-and-repo-cleanup.md`
+  with full detail
 
 ### Validation Performed
 
-- previously validated placeholder-path fix remains documented as:
-  - `VsMcpBridge.Vsix.Tests`: 25/25 passed
-  - workspace build: successful
-- manual VSIX validation confirmed `what is the active file` behaves as expected when no real editor document is active
+- CI green on latest push (`671e474`)
+- `git status` clean, `main` in sync with `origin/main`
+- repo-wide greps for stale "Beta 1/2"/"verified"/"works end to end"
+  language across active docs come back clean
+- `git branch -r` confirms only `origin/main` remains; ruleset settings
+  confirmed via browser
 
 ### Current Working Tree State
 
-- validated but uncommitted changes remain in the working tree
-- modified files currently include code/doc updates for the placeholder-path fix plus AI/handoff documentation updates
-- if the session stops before commit, resume from `SolutionFolder/docs/session-handoffs/2026-05-08-selected-text-prompt-investigation-handoff.md`
+- clean; all work committed and pushed to `origin/main`
 
 ### Recommended Next Step
 
-- reproduce `what is the selected text` in the Experimental Instance with a known selection, capture the visible response and logs, and compare the observed flow against presenter routing and `VsService.GetSelectedTextAsync`
+- see "Recommended Next Steps" in
+  `SolutionFolder/docs/session-handoffs/2026-07-19-early-design-repositioning-and-repo-cleanup.md`:
+  architectural design → gap analysis → prioritized backlog → sprints
+- known follow-up, not done today: reposition the BlogAI/Auth narrative
+  still referenced from `AI_START.md`'s historical archive section
