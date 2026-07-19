@@ -38,6 +38,6 @@
 ## Reuse Standard
 
 - Changes in this repo should stay reusable across `ai-skills`,
-  `architecture-resetta-stone`, `BlogAI`, and `vs-ms-bridge`.
+  `architecture-rosetta-stone`, `BlogAI`, and `vs-mcp-bridge`.
 - Prefer updating the shared convention over adding per-repo special
   cases.
