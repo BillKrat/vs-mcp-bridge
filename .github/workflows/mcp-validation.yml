@@ -22,4 +22,4 @@ jobs:
 
       - name: Run MCP validation script
         shell: pwsh
-        run: .\scripts\validate-mcp.ps1
+        run: .\SolutionFolder\scripts\validate-mcp.ps1
