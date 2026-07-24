@@ -1,8 +1,23 @@
 # VS MCP Bridge
 
-**Status: Early design.** Basic infrastructure exists; no functionality is committed, working, or supported yet. See [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md) for what that means and what happens next (architectural design → gap analysis → prioritized backlog → sprints).
+> **Direction change — not recommended for download.** This repository is
+> being redesigned from its current early-stage implementation. Two things
+> changed the design basis since the code in this repo was written: an
+> official, provider-neutral Model Context Protocol C# SDK now exists
+> (developed jointly by Anthropic and Microsoft), removing the need to
+> build protocol-level plumbing from scratch, and MCP's own maintainers are
+> shipping the largest revision to the protocol since its launch — the
+> 2026-07-28 spec update — explicitly built on lessons learned across the
+> ecosystem's first two years. The existing code below predates both of
+> those and **will be refactored completely** rather than incrementally
+> evolved. Anything you clone from this repository today is pre-redesign
+> and should not be treated as a starting point. See
+> [SolutionFolder/docs/mcp-starter-kit-vision.md](SolutionFolder/docs/mcp-starter-kit-vision.md)
+> for the new vision statement and the research behind it.
 
-`vs-mcp-bridge` is a local integration that exposes selected IDE and workspace state to AI tooling through the Model Context Protocol (MCP).
+**Status: Early design, redirection in progress.** Basic infrastructure exists from before this direction change; no functionality is committed, working, or supported. See [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md) for what that means and what happens next (architectural design → gap analysis → prioritized backlog → sprints), and [SolutionFolder/docs/mcp-starter-kit-vision.md](SolutionFolder/docs/mcp-starter-kit-vision.md) for the new direction driving that design.
+
+`vs-mcp-bridge` is a local integration that exposes selected IDE and workspace state to AI tooling through the Model Context Protocol (MCP). The sections below describe the pre-redesign implementation and remain for historical/reference purposes only.
 
 AI session entry point:
 
@@ -408,14 +423,18 @@ Important build note:
 
 ## Current Status
 
-Early design. Nothing in this repository is verified, working, or supported
-functionality — only early infrastructure exists. See
+Early design, and now mid-redirection. Nothing in this repository is
+verified, working, or supported functionality — only early, pre-redesign
+infrastructure exists, and that infrastructure will be refactored
+completely rather than built on. See
 [SolutionFolder/docs/current-bridge-capabilities.md](SolutionFolder/docs/current-bridge-capabilities.md)
-for what that means.
+for what "early design" means, and
+[SolutionFolder/docs/mcp-starter-kit-vision.md](SolutionFolder/docs/mcp-starter-kit-vision.md)
+for why the direction changed.
 
 ## Next Steps
 
-1. complete architectural design
+1. complete architectural design against the new vision (Claude + the official MCP C# SDK + VSIX + a decoupled shared core)
 2. run a gap analysis against that design
 3. prioritize the resulting backlog
 4. execute sprints against the prioritized backlog, committing only to what each sprint delivers

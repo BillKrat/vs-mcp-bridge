@@ -36,6 +36,11 @@ Read these first in order:
 
 Use these as needed after that:
 
+- `SolutionFolder/docs/mcp-starter-kit-vision.md` for the current vision
+  statement (Claude + official MCP C# SDK + VSIX + decoupled desktop core,
+  scoped to enabling BlogAI development) and the full research trail behind
+  it — read this before starting the architectural design phase
+  `current-bridge-capabilities.md` calls for
 - `SolutionFolder/docs/MVPVM_OVERVIEW.md` for UI/presenter/viewmodel boundaries
 - `SolutionFolder/docs/LOGGING_DIAGNOSTIC_RUNBOOK.md` for logging/diagnostic validation and triage
 - `SolutionFolder/docs/tool-package-boundary-plan.md` for future Adventures.Mcp, Adventures.Tools, and host-specific tool-pack planning
