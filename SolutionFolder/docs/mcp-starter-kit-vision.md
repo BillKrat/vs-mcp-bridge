@@ -17,14 +17,6 @@ concrete problem this project exists to solve. Everything else — the VSIX,
 the shared core, eventual reuse by other developers — is in service of that,
 not a separate goal pursued for its own sake.
 
-**Why Claude, not Copilot (Bill's stated basis, `claude-reasoning` — his
-lived experience, not independently measured by Claude):** months of
-comparable work in Copilot, ChatGPT, and Codex versus roughly a week of
-comparable output in Claude. Two additional data points: at work, Bill
-twice borrowed a Claude license from a colleague evaluating it for the
-company, both times for a critical task, both times completed successfully
-in under three days.
-
 ## Vision statement — three components
 
 1. **Claude + the official MCP C# SDK** (`ModelContextProtocol`, NuGet
@@ -58,20 +50,6 @@ authorization rewrite targets (see Research below). Reeled back to the
 original scope: enabling BlogAI development. If organizational reuse becomes
 relevant later, it gets its own gap analysis at that time, not baked into v1
 architecture.
-
-## On "nobody else does this" — explicitly not the basis for this project
-
-Earlier framing evaluated whether existing VS-MCP tooling made this
-redundant. Bill's correction, recorded verbatim because it reframes the
-premise: **"'nobody else does this' is not a risk or consideration —
-'everyone built MCP' and we see how that landed."** The project's basis
-isn't novelty; it's that building on Claude, the official MCP SDK, and
-Anthropic's own hard-won lessons (see the MCP spec research below — the
-incoming rewrite is explicitly framed by its maintainers as encoding "hard
-lessons... learned over the past two years") is expected to produce
-something solid and trustworthy regardless of how many other MCP
-integrations exist. Precedent or its absence isn't the risk framing being
-used here.
 
 ---
 
